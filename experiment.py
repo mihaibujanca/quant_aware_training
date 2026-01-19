@@ -28,6 +28,7 @@ SEEDS = [42, 123, 999]
 WIDTHS = [4, 8, 16, 32, 64, 128]
 DEPTHS = [2, 4, 6, 8, 10]
 ROUNDING_MODES = [None, "nearest", "floor", "ceil"]  # None = baseline (no quant)
+BIT_WIDTHS = [8, 4]
 EPOCHS = 3000
 LR = 1e-4
 TARGET_DIM = 100
@@ -83,17 +84,17 @@ def compute_gradient_norm(model):
     return total_norm ** 0.5
 
 
-def run_experiment(seed, width, depth, rounding_mode):
+def run_experiment(seed, width, depth, rounding_mode, bits=8):
     """Run a single experiment configuration."""
     mode_name = rounding_mode if rounding_mode else "baseline"
-    run_name = f"s{seed}_w{width}_d{depth}_{mode_name}"
+    run_name = f"s{seed}_w{width}_d{depth}_{mode_name}_b{bits}"
 
     # TensorBoard writer
     writer = SummaryWriter(log_dir=f"{LOG_DIR}/{run_name}")
 
     # Log hyperparameters
     writer.add_hparams(
-        {"seed": seed, "width": width, "depth": depth, "rounding": mode_name, "lr": LR},
+        {"seed": seed, "width": width, "depth": depth, "rounding": mode_name, "bits": bits, "lr": LR},
         {},  # metrics will be added at the end
         run_name=run_name
     )
@@ -104,7 +105,7 @@ def run_experiment(seed, width, depth, rounding_mode):
                 depth=depth, activation_fn=torch.nn.ReLU)
 
     if rounding_mode is not None:
-        prepare_qat_with_rounding(model, rounding_mode=rounding_mode, backend="qnnpack")
+        prepare_qat_with_rounding(model, rounding_mode=rounding_mode, backend="qnnpack", bits=bits)
 
     # Training setup
     criterion = torch.nn.CrossEntropyLoss()
@@ -177,13 +178,16 @@ def run_experiment(seed, width, depth, rounding_mode):
         "width": width,
         "depth": depth,
         "rounding": mode_name,
+        "bits": bits,
         **final_metrics
     }
 
 
 def main():
-    # All combinations
-    configs = list(itertools.product(SEEDS, WIDTHS, DEPTHS, ROUNDING_MODES))
+    # All combinations (baseline only runs once per seed/width/depth, not per bit width)
+    quant_configs = list(itertools.product(SEEDS, WIDTHS, DEPTHS, ["nearest", "floor", "ceil"], BIT_WIDTHS))
+    baseline_configs = [(s, w, d, None, 8) for s, w, d in itertools.product(SEEDS, WIDTHS, DEPTHS)]
+    configs = baseline_configs + quant_configs
     total_runs = len(configs)
 
     print(f"\n{'='*60}")
@@ -192,6 +196,7 @@ def main():
     print(f"Widths: {WIDTHS}")
     print(f"Depths: {DEPTHS}")
     print(f"Rounding modes: {ROUNDING_MODES}")
+    print(f"Bit widths: {BIT_WIDTHS}")
     print(f"Epochs per run: {EPOCHS}")
     print(f"Logs: {LOG_DIR}")
     print(f"Plots: {PLOT_DIR}")
@@ -200,13 +205,13 @@ def main():
     results = []
     start_time = time.time()
 
-    for i, (seed, width, depth, rounding_mode) in enumerate(configs):
+    for i, (seed, width, depth, rounding_mode, bits) in enumerate(configs):
         mode_name = rounding_mode if rounding_mode else "baseline"
         run_start = time.time()
 
-        print(f"[{i+1}/{total_runs}] seed={seed}, width={width}, depth={depth}, rounding={mode_name}")
+        print(f"[{i+1}/{total_runs}] seed={seed}, width={width}, depth={depth}, rounding={mode_name}, bits={bits}")
 
-        result = run_experiment(seed, width, depth, rounding_mode)
+        result = run_experiment(seed, width, depth, rounding_mode, bits)
         results.append(result)
 
         run_time = time.time() - run_start

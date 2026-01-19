@@ -20,14 +20,26 @@ class FakeQuantizeWithRounding(torch.ao.quantization.FakeQuantize):
             X = fake_quantize_with_rounding(
                 X, scale, zero_point,
                 self.quant_min, self.quant_max,
-                self.rounding_mode
+                self.rounding_mode,
+                self.qscheme,
+                self.ch_axis,
             )
         return X
 
 
-def fake_quantize_with_rounding(x, scale, zero_point, quant_min, quant_max, rounding_mode):
+def _reshape_qparams_for_broadcast(x, scale, zero_point, qscheme, ch_axis):
+    if qscheme in (torch.per_channel_affine, torch.per_channel_symmetric):
+        view_shape = [1] * x.dim()
+        view_shape[ch_axis] = -1
+        scale = scale.reshape(view_shape)
+        zero_point = zero_point.reshape(view_shape)
+    return scale, zero_point
+
+
+def fake_quantize_with_rounding(x, scale, zero_point, quant_min, quant_max, rounding_mode, qscheme, ch_axis):
     """Fake quantize with custom rounding mode (differentiable via straight-through estimator)."""
     # Scale to quantized domain
+    scale, zero_point = _reshape_qparams_for_broadcast(x, scale, zero_point, qscheme, ch_axis)
     x_scaled = x / scale + zero_point.float()
 
     # Apply rounding
@@ -52,7 +64,7 @@ def fake_quantize_with_rounding(x, scale, zero_point, quant_min, quant_max, roun
     return x_dequant
 
 
-def prepare_qat_with_rounding(model, rounding_mode="nearest", backend="qnnpack"):
+def prepare_qat_with_rounding(model, rounding_mode="nearest", backend="qnnpack", bits=8):
     """
     Prepare a model for QAT with a specific rounding mode.
 
@@ -63,17 +75,39 @@ def prepare_qat_with_rounding(model, rounding_mode="nearest", backend="qnnpack")
         model: The model to prepare for QAT
         rounding_mode: "nearest", "floor", or "ceil"
         backend: Quantization backend ("qnnpack" for ARM, "x86" for Intel)
+        bits: Bit width for quantization (4 or 8)
 
     Returns:
         The prepared model (modified in place)
     """
+    from torch.ao.quantization import QConfig
+    from torch.ao.quantization.observer import MovingAverageMinMaxObserver, MovingAveragePerChannelMinMaxObserver
+
     torch.backends.quantized.engine = backend
-    model.qconfig = get_default_qat_qconfig(backend)
+
+    if bits == 8:
+        quant_min, quant_max = -128, 127
+    elif bits == 4:
+        quant_min, quant_max = -8, 7
+    else:
+        raise ValueError(f"bits must be 4 or 8, got {bits}")
+
+    model.qconfig = QConfig(
+        activation=FakeQuantizeWithRounding.with_args(
+            observer=MovingAverageMinMaxObserver,
+            quant_min=quant_min, quant_max=quant_max,
+            dtype=torch.qint8, qscheme=torch.per_tensor_affine,
+            rounding_mode=rounding_mode,
+        ),
+        weight=FakeQuantizeWithRounding.with_args(
+            observer=MovingAveragePerChannelMinMaxObserver,
+            quant_min=quant_min, quant_max=quant_max,
+            dtype=torch.qint8, qscheme=torch.per_channel_symmetric,
+            rounding_mode=rounding_mode,
+        ),
+    )
     model.train()
     prepare_qat(model, inplace=True)
-
-    # Replace standard FakeQuantize modules with our custom rounding version
-    _replace_fake_quantize_modules(model, rounding_mode)
 
     return model
 
@@ -188,6 +222,8 @@ def _extract_weights_and_params(module, prefix, float_weights, quant_params):
                 "quant_min": wfq.quant_min,
                 "quant_max": wfq.quant_max,
                 "dtype": wfq.dtype,
+                "qscheme": wfq.qscheme,
+                "ch_axis": wfq.ch_axis,
             }
 
         _extract_weights_and_params(child, full_name, float_weights, quant_params)
@@ -212,6 +248,8 @@ def _apply_custom_rounding(module, prefix, float_weights, quant_params, rounding
                 params["quant_min"],
                 params["quant_max"],
                 rounding_mode,
+                params["qscheme"],
+                params["ch_axis"],
             )
 
             # Get bias if present
@@ -223,9 +261,10 @@ def _apply_custom_rounding(module, prefix, float_weights, quant_params, rounding
         _apply_custom_rounding(child, full_name, float_weights, quant_params, rounding_mode)
 
 
-def _quantize_tensor(tensor, scale, zero_point, quant_min, quant_max, rounding_mode):
+def _quantize_tensor(tensor, scale, zero_point, quant_min, quant_max, rounding_mode, qscheme, ch_axis):
     """Quantize a tensor with custom rounding mode, returning a quantized tensor."""
     # Scale the tensor
+    scale, zero_point = _reshape_qparams_for_broadcast(tensor, scale, zero_point, qscheme, ch_axis)
     scaled = tensor / scale + zero_point.float()
 
     # Apply rounding mode
@@ -239,9 +278,20 @@ def _quantize_tensor(tensor, scale, zero_point, quant_min, quant_max, rounding_m
     # Clamp to valid range
     clamped = torch.clamp(rounded, quant_min, quant_max)
 
+    dequantized = (clamped - zero_point.float()) * scale
+
     # Convert to quantized tensor
+    if qscheme in (torch.per_channel_affine, torch.per_channel_symmetric):
+        return torch.quantize_per_channel(
+            dequantized,
+            scale.reshape(-1).float(),
+            zero_point.reshape(-1).to(torch.int64),
+            ch_axis,
+            torch.qint8,
+        )
+
     return torch.quantize_per_tensor(
-        (clamped - zero_point.float()) * scale,  # dequantized values
+        dequantized,
         scale.item(),
         zero_point.item(),
         torch.qint8,
