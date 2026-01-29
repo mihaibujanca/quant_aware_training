@@ -1,7 +1,30 @@
 import copy
 import torch
 import torch.nn as nn
-from torch.ao.quantization import convert, prepare_qat, get_default_qat_qconfig
+from torch.ao.quantization import convert, prepare_qat
+
+
+# =============================================================================
+# Bit-width constants
+# =============================================================================
+
+SUPPORTED_BITS = {
+    2: (-2, 1),
+    4: (-8, 7),
+    8: (-128, 127),
+}
+
+
+def get_quant_range(num_bits):
+    """Get (quant_min, quant_max) for a given bit width."""
+    if num_bits not in SUPPORTED_BITS:
+        raise ValueError(f"Unsupported num_bits: {num_bits}. Supported: {list(SUPPORTED_BITS.keys())}")
+    return SUPPORTED_BITS[num_bits]
+
+
+# =============================================================================
+# Fake quantization
+# =============================================================================
 
 
 class FakeQuantizeWithRounding(torch.ao.quantization.FakeQuantize):
@@ -64,6 +87,94 @@ def fake_quantize_with_rounding(x, scale, zero_point, quant_min, quant_max, roun
     return x_dequant
 
 
+def fake_quantize(x, scale, zero_point, num_bits=8):
+    """Fake quantize: quantize then dequantize (stays in float32)."""
+    quant_min, quant_max = get_quant_range(num_bits)
+
+    x_scaled = x / scale + zero_point
+    x_rounded = torch.round(x_scaled)
+    x_clamped = torch.clamp(x_rounded, quant_min, quant_max)
+    x_dequant = (x_clamped - zero_point) * scale
+
+    return x_dequant
+
+
+def fake_quantize_with_error(x, scale, zero_point, num_bits=8):
+    """Fake quantize with STE and return quantization error (pre - post)."""
+    quant_min, quant_max = get_quant_range(num_bits)
+
+    x_scaled = x / scale + zero_point
+    x_rounded = torch.round(x_scaled)
+    x_ste = x_scaled + (x_rounded - x_scaled).detach()
+    x_clamped = torch.clamp(x_ste, quant_min, quant_max)
+    x_dequant = (x_clamped - zero_point) * scale
+    error = x - x_dequant
+
+    return x_dequant, error
+
+
+def compute_scales(activations, num_bits=8):
+    """
+    Compute scale factors and zero points from activation tensors.
+
+    Args:
+        activations: List of activation tensors at quantization points
+        num_bits: Bit width for quantization
+
+    Returns:
+        scale_factors: List of scale factors (one per activation)
+        zero_points: List of zero points (all 0.0 for symmetric quantization)
+    """
+    _, quant_max = get_quant_range(num_bits)
+
+    scale_factors = []
+    zero_points = []
+
+    for acts in activations:
+        abs_max = max(abs(acts.min().item()), abs(acts.max().item()))
+        scale = abs_max / quant_max if abs_max > 0 else 1.0
+        scale_factors.append(scale)
+        zero_points.append(0.0)
+
+    return scale_factors, zero_points
+
+
+def calibrate_model(model, calibration_data, num_bits=8):
+    """
+    Generic calibration for models with get_quant_activations() method.
+
+    Args:
+        model: Model with get_quant_activations(x) method
+        calibration_data: Input data for calibration
+        num_bits: Bit width for quantization
+
+    Returns:
+        scale_factors, zero_points
+    """
+    model.eval()
+    with torch.no_grad():
+        activations = model.get_quant_activations(calibration_data)
+    return compute_scales(activations, num_bits)
+
+
+def calibrate_quantization(model, calibration_data, num_bits=8):
+    """
+    Calibrate scale/zero_point for MLP models (legacy, for backwards compatibility).
+
+    Returns lists of scale factors and zero points, one per hidden layer.
+    """
+    model.eval()
+    activations = []
+
+    with torch.no_grad():
+        x = calibration_data
+        for layer in model.layers[:-1]:
+            x = model.relu(layer(x))
+            activations.append(x.clone())
+
+    return compute_scales(activations, num_bits)
+
+
 def prepare_qat_with_rounding(model, rounding_mode="nearest", backend="qnnpack", bits=8):
     """
     Prepare a model for QAT with a specific rounding mode.
@@ -84,13 +195,7 @@ def prepare_qat_with_rounding(model, rounding_mode="nearest", backend="qnnpack",
     from torch.ao.quantization.observer import MovingAverageMinMaxObserver, MovingAveragePerChannelMinMaxObserver
 
     torch.backends.quantized.engine = backend
-
-    if bits == 8:
-        quant_min, quant_max = -128, 127
-    elif bits == 4:
-        quant_min, quant_max = -8, 7
-    else:
-        raise ValueError(f"bits must be 4 or 8, got {bits}")
+    quant_min, quant_max = get_quant_range(bits)
 
     model.qconfig = QConfig(
         activation=FakeQuantizeWithRounding.with_args(

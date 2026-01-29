@@ -1,4 +1,95 @@
+import os
+import urllib.request
+
 import numpy as np
+import torch
+
+
+# =============================================================================
+# MNIST
+# =============================================================================
+
+
+def load_mnist_flat(batch_size=256, data_dir='./data'):
+    """
+    Load MNIST dataset with images flattened to 784-dim vectors.
+
+    Returns:
+        train_loader: DataLoader for training
+        test_loader: DataLoader for testing
+    """
+    from torchvision import datasets, transforms
+
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Lambda(lambda x: x.view(-1))
+    ])
+
+    train_data = datasets.MNIST(data_dir, train=True, download=True, transform=transform)
+    test_data = datasets.MNIST(data_dir, train=False, download=True, transform=transform)
+
+    train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(test_data, batch_size=batch_size, shuffle=False)
+
+    return train_loader, test_loader
+
+
+# =============================================================================
+# Shakespeare (character-level)
+# =============================================================================
+
+
+def load_shakespeare(seq_len=128, data_dir='./data'):
+    """
+    Load tiny Shakespeare dataset for character-level language modeling.
+
+    Returns:
+        train_X: Training sequences (token ids), shape (n_train, seq_len)
+        train_Y: Training targets, shape (n_train, seq_len)
+        test_X: Test sequences, shape (n_test, seq_len)
+        test_Y: Test targets, shape (n_test, seq_len)
+        vocab_size: Number of unique characters
+        char_to_idx: Dict mapping char -> int
+        idx_to_char: Dict mapping int -> char
+    """
+    data_path = os.path.join(data_dir, 'shakespeare.txt')
+    os.makedirs(data_dir, exist_ok=True)
+
+    if not os.path.exists(data_path):
+        url = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
+        print(f"Downloading Shakespeare from {url}...")
+        urllib.request.urlretrieve(url, data_path)
+
+    with open(data_path, 'r') as f:
+        text = f.read()
+
+    # Build vocabulary
+    chars = sorted(list(set(text)))
+    char_to_idx = {c: i for i, c in enumerate(chars)}
+    idx_to_char = {i: c for i, c in enumerate(chars)}
+
+    # Tokenize
+    data = torch.tensor([char_to_idx[c] for c in text], dtype=torch.long)
+
+    # Split into sequences
+    n_seqs = len(data) // (seq_len + 1)
+    data = data[:n_seqs * (seq_len + 1)]
+    data = data.view(n_seqs, seq_len + 1)
+
+    X = data[:, :-1]
+    Y = data[:, 1:]
+
+    # Train/test split (90/10)
+    n_train = int(len(X) * 0.9)
+    train_X, train_Y = X[:n_train], Y[:n_train]
+    test_X, test_Y = X[n_train:], Y[n_train:]
+
+    return train_X, train_Y, test_X, test_Y, len(chars), char_to_idx, idx_to_char
+
+
+# =============================================================================
+# Synthetic datasets
+# =============================================================================
 
 
 class AffineEmbedding:

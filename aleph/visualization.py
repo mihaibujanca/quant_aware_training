@@ -3,6 +3,70 @@ import matplotlib.pyplot as plt
 import torch
 
 
+# =============================================================================
+# Model wrappers for plotting
+# =============================================================================
+
+
+class QuantizedWrapper:
+    """Wraps a model to call forward_quantized() for plotting."""
+
+    def __init__(self, model, scale_factors, zero_points, num_bits=8):
+        self.model = model
+        self.sf = scale_factors
+        self.zp = zero_points
+        self.bits = num_bits
+
+    def eval(self):
+        self.model.eval()
+
+    def __call__(self, x):
+        return self.model.forward_quantized(x, self.sf, self.zp, num_bits=self.bits)
+
+
+class OracleWrapper:
+    """Wraps a model to call forward_with_oracle_correction() for plotting."""
+
+    def __init__(self, model, scale_factors, zero_points, correct_every_n=3, num_bits=8):
+        self.model = model
+        self.sf = scale_factors
+        self.zp = zero_points
+        self.n = correct_every_n
+        self.bits = num_bits
+
+    def eval(self):
+        self.model.eval()
+
+    def __call__(self, x):
+        out, _ = self.model.forward_with_oracle_correction(
+            x, self.sf, self.zp, self.n, num_bits=self.bits
+        )
+        return out
+
+
+class LearnedCorrectionWrapper:
+    """Wraps a model to call forward_quantized_with_correction() for plotting."""
+
+    def __init__(self, model, scale_factors, zero_points, num_bits=8):
+        self.model = model
+        self.sf = scale_factors
+        self.zp = zero_points
+        self.bits = num_bits
+
+    def eval(self):
+        self.model.eval()
+
+    def __call__(self, x):
+        return self.model.forward_quantized_with_correction(
+            x, self.sf, self.zp, num_bits=self.bits
+        )
+
+
+# =============================================================================
+# Plotting
+# =============================================================================
+
+
 def plot_decision_boundary(model, X, y, title, ax, embedding=None):
     """
     Plot decision boundary for a 2D classifier.

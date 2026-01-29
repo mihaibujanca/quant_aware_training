@@ -1,0 +1,24 @@
+# @package _global_
+experiment:
+  name: classification
+  type: classification
+
+# Model architecture
+model:
+  hidden_size: 64
+  depth: 6
+
+# Dataset
+data:
+  name: spirals
+  n_samples: 2000
+  noise: 0.3
+  n_turns: 3
+  target_dim: 100
+
+# Training overrides
+epochs: 1000
+learned_epochs: 600
+batch_size: null  # full batch
+lr: 1e-3
+learned_lr: 1e-4
