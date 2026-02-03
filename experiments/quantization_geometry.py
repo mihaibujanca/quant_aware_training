@@ -1,11 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.spatial import ConvexHull, HalfspaceIntersection
-from scipy.optimize import linprog
+from scipy.spatial import ConvexHull
 import torch
 import torch.nn as nn
-from matplotlib.patches import Polygon
-from matplotlib.collections import PatchCollection
 import warnings
 
 class QuantizationGeometry:
@@ -408,6 +405,18 @@ def analyze_saturation_events(model, n_samples=1000, bits=8):
             x = torch.relu(x)
 
     return saturation_counts
+
+
+class SimpleNet(nn.Module):
+    """Minimal MLP for geometry experiments."""
+    def __init__(self, dims=[2, 8, 8, 4, 1]):
+        super().__init__()
+        self.layers = nn.ModuleList([nn.Linear(dims[i], dims[i+1]) for i in range(len(dims)-1)])
+
+    def forward(self, x):
+        for layer in self.layers[:-1]:
+            x = torch.relu(layer(x))
+        return self.layers[-1](x)
 
 
 # ============ Run experiments ============
