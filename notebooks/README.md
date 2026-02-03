@@ -2,7 +2,7 @@
 
 Exploratory notebooks. Plots output to `plots/`.
 
-Shared utility functions live in `qgeom/` (geometry primitives, drawing, manifold generation).
+Shared utility functions live in `aleph/qgeom/` (geometry primitives, drawing, manifold generation).
 
 | File | Description |
 |------|-------------|
@@ -12,4 +12,5 @@ Shared utility functions live in `qgeom/` (geometry primitives, drawing, manifol
 | `geometric_entropy.ipynb` | Explores the relationship between quantization error volume, entropy, and geometry. Studies how error shape changes through linear vs nonlinear layers. |
 | `lowdim_geometry_report_card.ipynb` | Unified geometry/entropy/fate report cards on controlled 2D scenarios (linear-only, ReLU-boundary, saturation-heavy). Includes policy ranking preview. |
 | `transformer_geometry_report_card.ipynb` | High-dimensional 4-bit transformer report card using the same metric schema as low-dimensional experiments. |
+| `classification_quantization_geometry.ipynb` | Classification-aware quantization geometry: decision boundary perturbation, fate analysis, and correctability on trained 2D classifiers. |
 | `policy_comparison_report_card.ipynb` | Compares geometry-guided correction placement against evenly-spaced baseline under equal correction budget. |
