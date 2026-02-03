@@ -14,3 +14,20 @@ data/
 runs/
 plots/
 decision_boundaries.png
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/*.ipynb
+
+# Auto-generated
+uv.lock
+
+# In-progress experiment output
+lambda_long_sweep_transformer.txt
+
+# OS
+.DS_Store
+resources/
+.context/
+.vscode/
+.codex_context/
