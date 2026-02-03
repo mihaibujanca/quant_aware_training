@@ -23,7 +23,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from aleph.quantization import fake_quantize, fake_quantize_with_error, get_quant_range, compute_scales
+from aleph.quantization import fake_quantize, fake_quantize_with_error, get_quant_range
 from aleph.datasets import make_spirals, embed_dataset_in_high_dimensional_space
 
 log = logging.getLogger(__name__)
