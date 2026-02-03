@@ -15,10 +15,6 @@ Usage:
 
 import argparse
 
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 import json
 import torch
 import torch.nn as nn
@@ -670,7 +666,7 @@ def run_autoencoder(num_bits, layer_loss_weight, correction_hidden=32, seed=42):
     }
 
 
-def run_transformer(num_bits, layer_loss_weight, correction_hidden=32, seed=42):
+def run_transformer(num_bits, layer_loss_weight, correction_hidden=128, seed=42):
     """Transformer language modeling on Shakespeare."""
     torch.manual_seed(seed)
 
@@ -678,9 +674,9 @@ def run_transformer(num_bits, layer_loss_weight, correction_hidden=32, seed=42):
 
     model = TransformerWithCorrection(
         vocab_size=vocab_size,
-        d_model=128,
+        d_model=256,
         n_heads=4,
-        n_layers=4,
+        n_layers=8,
         d_ff=512,
         max_seq_len=128,
         dropout=0.1,
@@ -784,7 +780,8 @@ def main():
     print("Lambda Sweep: Hybrid Distillation")
     print("=" * 70)
 
-    tasks = ["classification", "autoencoder"]
+    # tasks = ["classification", "autoencoder"]
+    tasks = []
     if args.with_transformer:
         tasks.append("transformer")
 
