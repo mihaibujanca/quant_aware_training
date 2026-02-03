@@ -1,0 +1,3 @@
+# Pair notebooks with percent-format Python scripts.
+# Edit the .py file; regenerate .ipynb with: jupytext --sync <file>.py
+formats = "notebooks///ipynb,notebooks///py:percent"
