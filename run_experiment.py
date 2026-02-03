@@ -29,7 +29,9 @@ from omegaconf import DictConfig, OmegaConf
 from sklearn.model_selection import train_test_split
 
 from aleph.datasets import load_mnist_flat, load_shakespeare, make_spirals, embed_dataset_in_high_dimensional_space
- 
+from aleph.models import AutoencoderWithCorrection, MLPWithCorrection, MLPWithLearnedCorrection, TransformerWithCorrection
+from aleph.qgeom.transformer_analysis import collect_transformer_layer_reports
+
 from aleph.quantization import calibrate_model
 
 log = logging.getLogger(__name__)
@@ -233,6 +235,22 @@ def run_transformer(cfg: DictConfig):
     # Calibrate
     X_calib = train_X[:cfg.batch_size].to(device)
     scale_factors, zero_points = calibrate_model(model, X_calib, num_bits=cfg.bits)
+    geometry_report = None
+
+    if cfg.get("geometry_report", False):
+        report_batch = test_X[: min(len(test_X), cfg.batch_size)].to(device)
+        geometry_report = collect_transformer_layer_reports(
+            model,
+            report_batch,
+            scale_factors,
+            zero_points,
+            num_bits=cfg.bits,
+            task_name="transformer_shakespeare",
+        )
+        with open("geometry_report.json", "w") as f:
+            import json
+
+            json.dump(geometry_report.to_dict(), f, indent=2)
 
     # Evaluate
     model.eval()
@@ -306,6 +324,7 @@ def run_transformer(cfg: DictConfig):
         "ppl_quant": torch.exp(torch.tensor(loss_quant)).item(),
         "ppl_corrected": torch.exp(torch.tensor(loss_corrected)).item(),
         "recovery_pct": recovery,
+        "geometry_report_path": "geometry_report.json" if geometry_report is not None else None,
     }
 
 

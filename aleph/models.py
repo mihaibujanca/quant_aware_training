@@ -256,8 +256,13 @@ class CorrectionMLP(nn.Module):
                 nn.ReLU(),
                 nn.Linear(hidden_size, size),
             )
+            # Start as identity/no-op correction to avoid hurting baseline behavior.
+            nn.init.zeros_(self.net[2].weight)
+            nn.init.zeros_(self.net[2].bias)
         else:
             self.net = nn.Linear(size, size)
+            nn.init.zeros_(self.net.weight)
+            nn.init.zeros_(self.net.bias)
 
     def forward(self, x):
         return self.net(x)

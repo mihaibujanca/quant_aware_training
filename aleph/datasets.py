@@ -4,13 +4,16 @@ import urllib.request
 import numpy as np
 import torch
 
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_DEFAULT_DATA_DIR = os.path.join(_REPO_ROOT, 'data')
+
 
 # =============================================================================
 # MNIST
 # =============================================================================
 
 
-def load_mnist_flat(batch_size=256, data_dir='./data'):
+def load_mnist_flat(batch_size=256, data_dir=_DEFAULT_DATA_DIR):
     """
     Load MNIST dataset with images flattened to 784-dim vectors.
 
@@ -39,7 +42,7 @@ def load_mnist_flat(batch_size=256, data_dir='./data'):
 # =============================================================================
 
 
-def load_shakespeare(seq_len=128, data_dir='./data'):
+def load_shakespeare(seq_len=128, data_dir=_DEFAULT_DATA_DIR):
     """
     Load tiny Shakespeare dataset for character-level language modeling.
 

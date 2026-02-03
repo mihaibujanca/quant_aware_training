@@ -8,6 +8,7 @@ device: auto  # auto, cpu, cuda
 
 # Quantization
 bits: 4
+geometry_report: false
 
 # Correction
 correction_every: 2
