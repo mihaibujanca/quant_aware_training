@@ -3,7 +3,7 @@ Aleph: Quantization-aware training and learned correction layers.
 """
 
 # Submodules
-from aleph import datasets, models, quantization, visualization
+from aleph import datasets, models, quantization, training, visualization
 
 # Models
 from aleph.models import (
@@ -12,8 +12,12 @@ from aleph.models import (
     MLPWithLearnedCorrection,
     AutoencoderWithCorrection,
     TransformerWithCorrection,
+    CorrectionNet,
     CorrectionMLP,
 )
+
+# Training
+from aleph.training import train_with_qat
 
 # Quantization utilities
 from aleph.quantization import (
@@ -45,6 +49,7 @@ __all__ = [
     "datasets",
     "models",
     "quantization",
+    "training",
     "visualization",
     # Models
     "MLP",
@@ -52,7 +57,10 @@ __all__ = [
     "MLPWithLearnedCorrection",
     "AutoencoderWithCorrection",
     "TransformerWithCorrection",
+    "CorrectionNet",
     "CorrectionMLP",
+    # Training
+    "train_with_qat",
     # Quantization
     "get_quant_range",
     "fake_quantize",

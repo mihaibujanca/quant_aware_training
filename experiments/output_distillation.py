@@ -23,162 +23,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from aleph.models import CorrectionNet, MLPWithCorrection
 from aleph.quantization import fake_quantize, fake_quantize_with_error, get_quant_range
 from aleph.datasets import make_spirals, embed_dataset_in_high_dimensional_space
 
 log = logging.getLogger(__name__)
-
-
-class CorrectionNet(nn.Module):
-    """
-    Small network that predicts a correction from accumulated quantization error.
-
-    Input: accumulated quantization error (same shape as layer activations)
-    Output: correction to add to quantized activations
-
-    Can optionally quantize its own internal activations for fully-quantized inference.
-    """
-
-    def __init__(self, size, hidden_size=32):
-        super().__init__()
-
-        if hidden_size and hidden_size > 0:
-            self.layers = nn.Sequential(
-                nn.Linear(size, hidden_size),
-                nn.ReLU(),
-                nn.Linear(hidden_size, size),
-            )
-        else:
-            # Linear correction only
-            self.layers = nn.Linear(size, size)
-
-        self.hidden_size = hidden_size
-
-        # Quantization scales (set by calibrate())
-        self._scales = {}
-
-    def forward(self, error, quantize=False, num_bits=8):
-        """
-        Args:
-            error: Accumulated quantization error
-            quantize: If True, also quantize this network's activations
-            num_bits: Bit width when quantize=True
-        """
-        if not quantize or self.hidden_size == 0:
-            return self.layers(error)
-
-        # Quantized forward (only for networks with hidden layer)
-        h = F.relu(self.layers[0](error))
-        if 'hidden' in self._scales:
-            h = fake_quantize(h, self._scales['hidden'], 0.0, num_bits=num_bits)
-        out = self.layers[2](h)
-        if 'output' in self._scales:
-            out = fake_quantize(out, self._scales['output'], 0.0, num_bits=num_bits)
-        return out
-
-    def calibrate(self, sample_errors, num_bits=8):
-        """Compute quantization scales from sample inputs."""
-        _, quant_max = get_quant_range(num_bits)
-
-        with torch.no_grad():
-            if self.hidden_size and self.hidden_size > 0:
-                h = F.relu(self.layers[0](sample_errors))
-                abs_max = max(abs(h.min().item()), abs(h.max().item()))
-                self._scales['hidden'] = abs_max / quant_max if abs_max > 0 else 1.0
-                out = self.layers[2](h)
-            else:
-                out = self.layers(sample_errors)
-
-            abs_max = max(abs(out.min().item()), abs(out.max().item()))
-            self._scales['output'] = abs_max / quant_max if abs_max > 0 else 1.0
-
-
-class MLPWithCorrection(nn.Module):
-    """
-    MLP classifier with correction networks inserted at regular intervals.
-
-    Used for the quantized correction experiment. Separate from the main
-    codebase models to avoid breaking the overnight sweeps.
-    """
-
-    def __init__(self, input_size, hidden_size, num_classes, depth,
-                 correction_every_n=2, correction_hidden=32):
-        super().__init__()
-
-        # Backbone
-        layers = []
-        in_dim = input_size
-        for _ in range(depth):
-            layers.append(nn.Linear(in_dim, hidden_size))
-            in_dim = hidden_size
-        self.backbone = nn.ModuleList(layers)
-        self.head = nn.Linear(hidden_size, num_classes)
-        self.relu = nn.ReLU()
-
-        # Correction networks (one per correction point)
-        self.correction_positions = [i for i in range(depth) if (i + 1) % correction_every_n == 0]
-        self.corrections = nn.ModuleDict({
-            str(i): CorrectionNet(hidden_size, correction_hidden)
-            for i in self.correction_positions
-        })
-
-    def forward(self, x):
-        """Standard float forward."""
-        for layer in self.backbone:
-            x = self.relu(layer(x))
-        return self.head(x)
-
-    def forward_quantized(self, x, scales, num_bits=8):
-        """Quantized forward, no correction."""
-        for i, layer in enumerate(self.backbone):
-            x = self.relu(layer(x))
-            x = fake_quantize(x, scales[i], 0.0, num_bits=num_bits)
-        return self.head(x)
-
-    def forward_with_correction(self, x, scales, num_bits=8, quantize_correction=False):
-        """Quantized forward with correction networks."""
-        error_accum = None
-
-        for i, layer in enumerate(self.backbone):
-            x = self.relu(layer(x))
-            x, err = fake_quantize_with_error(x, scales[i], 0.0, num_bits=num_bits)
-
-            error_accum = err if error_accum is None else error_accum + err
-
-            if str(i) in self.corrections:
-                correction = self.corrections[str(i)](error_accum, quantize=quantize_correction, num_bits=num_bits)
-                x = x + correction
-                error_accum = None
-
-        return self.head(x)
-
-    def calibrate(self, x, num_bits=8):
-        """Calibrate backbone quantization scales."""
-        _, quant_max = get_quant_range(num_bits)
-        scales = []
-
-        with torch.no_grad():
-            for layer in self.backbone:
-                x = self.relu(layer(x))
-                abs_max = max(abs(x.min().item()), abs(x.max().item()))
-                scales.append(abs_max / quant_max if abs_max > 0 else 1.0)
-
-        return scales
-
-    def calibrate_corrections(self, x, scales, num_bits=8):
-        """Calibrate correction networks by collecting sample errors."""
-        error_accum = None
-
-        with torch.no_grad():
-            for i, layer in enumerate(self.backbone):
-                x = self.relu(layer(x))
-                _, err = fake_quantize_with_error(x, scales[i], 0.0, num_bits=num_bits)
-
-                error_accum = err if error_accum is None else error_accum + err
-
-                if str(i) in self.corrections:
-                    self.corrections[str(i)].calibrate(error_accum, num_bits=num_bits)
-                    error_accum = None
 
 
 def run_experiment(
@@ -228,7 +77,7 @@ def run_experiment(
     model.eval()
     with torch.no_grad():
         acc_float = (model(X_test).argmax(1) == y_test).float().mean().item()
-        acc_quant = (model.forward_quantized(X_test, scales, num_bits).argmax(1) == y_test).float().mean().item()
+        acc_quant = (model.forward_quantized(X_test, scales, num_bits=num_bits).argmax(1) == y_test).float().mean().item()
 
     log.info(f"Float: {acc_float:.4f}, Quantized: {acc_quant:.4f}")
 
