@@ -62,11 +62,14 @@ from aleph.qgeom import (
 BITS = 4
 DELTA = 1.0 / (2 ** (BITS - 1))
 SEED = 42
+DATASET = "spirals"  # "moons" or "spirals"
+HIDDEN_DIM = 32
+DEPTH = 12
+LR = 0.001
+EMBED_DIM = 100  # for the high-dimensional embedding experiment
 PLOT_RANGE = 2.5
 GRID_N = 50
 QUIVER_N = 12
-DATASET = "moons"  # "moons" or "spirals"
-EMBED_DIM = 100  # for the high-dimensional embedding experiment
 
 torch.manual_seed(SEED)
 np.random.seed(SEED)
@@ -117,14 +120,15 @@ def extract_weights(model, delta=DELTA):
 
 
 if DATASET == "moons":
-    X_data, y_data = make_moons(n_samples=500, noise=0.15, random_state=SEED)
+    X_data, y_data = make_moons(n_samples=2000, noise=0.15, random_state=SEED)
 elif DATASET == "spirals":
-    X_data, y_data = make_spirals(n_samples=500, noise=0.5, random_state=SEED)
+    X_data, y_data = make_spirals(n_samples=2000, noise=0.5, n_turns=3, random_state=SEED)
+    X_data *= 2.0
 else:
     raise ValueError(f"Unknown dataset: {DATASET}")
 # create model externally and pass it to the trainer for reproducibility
-model = make_mlp(hidden_dim=8, depth=8)
-model, acc = train_model(model, X_data, y_data)
+model = make_mlp(hidden_dim=HIDDEN_DIM, depth=DEPTH)
+model, acc = train_model(model, X_data, y_data, lr=LR)
 weights, biases, weights_q = extract_weights(model)
 
 # adapt the printed architecture to the actual trained model
@@ -612,8 +616,8 @@ fig, axes = plt.subplots(1, 4, figsize=(18, 4.5))
 for col, depth in enumerate([2, 3, 4, 5]):
     torch.manual_seed(SEED)
     # create the model with the desired depth, then train it (pass model in)
-    m = make_mlp(hidden_dim=8, depth=depth)
-    m, a = train_model(m, X_data, y_data)
+    m = make_mlp(hidden_dim=HIDDEN_DIM, depth=depth)
+    m, a = train_model(m, X_data, y_data, lr=LR)
     w, bs, wq = extract_weights(m)
     t = CanonicalSpaceTracker(w)
     ft = forward_pass(X_t, w, bs)
@@ -678,8 +682,8 @@ grid_high_t = torch.tensor(grid_high, dtype=torch.float32)
 # Train a high-D model with the same depth as the 2D model
 depth_main = n_layers - 1
 torch.manual_seed(SEED)
-model_high = make_mlp(hidden_dim=8, depth=depth_main, input_dim=EMBED_DIM)
-model_high, acc_high = train_model(model_high, X_high, y_data)
+model_high = make_mlp(hidden_dim=HIDDEN_DIM, depth=depth_main, input_dim=EMBED_DIM)
+model_high, acc_high = train_model(model_high, X_high, y_data, lr=LR)
 weights_h, biases_h, weights_hq = extract_weights(model_high)
 n_layers_h = len(weights_h)
 
