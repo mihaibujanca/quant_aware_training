@@ -209,13 +209,18 @@ grid_1d = np.linspace(-PLOT_RANGE, PLOT_RANGE, GRID_N)
 xx, yy = np.meshgrid(grid_1d, grid_1d)
 grid_t = torch.tensor(np.stack([xx.ravel(), yy.ravel()], axis=1), dtype=torch.float32)
 
-# Decision boundary: float vs quantized
-float_logits = forward_pass(grid_t, weights, biases).post_acts[-1]
+# Decision boundary: float vs quantized vs corrected
+float_grid_trace = forward_pass(grid_t, weights, biases)
+float_logits = float_grid_trace.post_acts[-1]
 quant_logits = forward_pass(grid_t, weights_q, biases).post_acts[-1]
+corrector_grid = PerfectCorrection(weights, weights_q, biases)
+corr_grid_trace, _ = corrector_grid.run(grid_t, float_grid_trace)
+corr_logits = corr_grid_trace.post_acts[-1]
 
-fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+fig, axes = plt.subplots(1, 3, figsize=(17, 5))
 for ax, logits, title in [(axes[0], float_logits, 'Float'),
-                           (axes[1], quant_logits, f'Quantized ({BITS}-bit)')]:
+                           (axes[1], quant_logits, f'Quantized ({BITS}-bit)'),
+                           (axes[2], corr_logits, 'Corrected (oracle)')]:
     probs = torch.sigmoid(logits).numpy().reshape(GRID_N, GRID_N)
     ax.contourf(xx, yy, probs, levels=20, cmap='RdBu_r', alpha=0.8)
     ax.contour(xx, yy, probs, levels=[0.5], colors='k', linewidths=2)
@@ -688,13 +693,18 @@ for i, (W, Wq) in enumerate(zip(weights_h, weights_hq)):
     print(f"  L{i}: {tuple(W.shape)} -> ||E||_F = {torch.linalg.norm(E, 'fro'):.4f}")
 
 # %%
-# Decision boundary: float vs quantized (projected back to 2D manifold)
-float_logits_h = forward_pass(grid_high_t, weights_h, biases_h).post_acts[-1]
+# Decision boundary: float vs quantized vs corrected (projected to 2D manifold)
+float_grid_h = forward_pass(grid_high_t, weights_h, biases_h)
+float_logits_h = float_grid_h.post_acts[-1]
 quant_logits_h = forward_pass(grid_high_t, weights_hq, biases_h).post_acts[-1]
+corrector_grid_h = PerfectCorrection(weights_h, weights_hq, biases_h)
+corr_grid_h, _ = corrector_grid_h.run(grid_high_t, float_grid_h)
+corr_logits_h = corr_grid_h.post_acts[-1]
 
-fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+fig, axes = plt.subplots(1, 3, figsize=(17, 5))
 for ax, logits, title in [(axes[0], float_logits_h, 'Float'),
-                           (axes[1], quant_logits_h, f'Quantized ({BITS}-bit)')]:
+                           (axes[1], quant_logits_h, f'Quantized ({BITS}-bit)'),
+                           (axes[2], corr_logits_h, 'Corrected (oracle)')]:
     probs = torch.sigmoid(logits).numpy().reshape(GRID_N, GRID_N)
     ax.contourf(xx, yy, probs, levels=20, cmap='RdBu_r', alpha=0.8)
     ax.contour(xx, yy, probs, levels=[0.5], colors='k', linewidths=2)
