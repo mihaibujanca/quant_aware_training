@@ -19,8 +19,10 @@
 # **Question**: When we quantize a neural network's weights, error accumulates
 # through layers. Can we correct it? How much? Where should we focus?
 #
-# **Setup**: A trained MLP (2→8→8→1) classifying moons, with 4-bit weight
-# quantization. Biases stay float (they cancel in the error math).
+# **Setup**: A trained MLP classifying 2D data (moons or spirals), with 4-bit
+# weight quantization. Biases stay float (they cancel in the error math). We
+# first analyze 2D inputs directly, then embed the same manifold in 100D to
+# test whether findings generalize to high-dimensional ambient spaces.
 #
 # **Approach**: We run the float and quantized networks side by side, measure
 # where errors come from (this layer vs propagated from earlier layers), and
@@ -35,6 +37,11 @@
 
 # %%
 import numpy as np  # only for matplotlib mesh grids
+import matplotlib
+try:
+    get_ipython()  # exists in Jupyter/IPython
+except NameError:
+    matplotlib.use('Agg')  # non-interactive: savefig works, show() is a no-op
 import matplotlib.pyplot as plt
 from typing import List, Optional, Set
 
@@ -43,6 +50,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.datasets import make_moons
 
+from aleph.datasets import make_spirals, embed_dataset_in_high_dimensional_space
 from aleph.qgeom import (
     CanonicalSpaceTracker,
     ForwardTrace,
@@ -57,11 +65,14 @@ SEED = 42
 PLOT_RANGE = 2.5
 GRID_N = 50
 QUIVER_N = 12
+DATASET = "moons"  # "moons" or "spirals"
+EMBED_DIM = 100  # for the high-dimensional embedding experiment
 
 torch.manual_seed(SEED)
 np.random.seed(SEED)
 
 print(f"Quantization: {BITS}-bit, delta={DELTA:.6f}")
+print(f"Dataset: {DATASET}")
 
 # %% [markdown]
 # ## Setup: Train and Quantize
@@ -105,7 +116,12 @@ def extract_weights(model, delta=DELTA):
     return weights, biases, weights_q
 
 
-X_data, y_data = make_moons(n_samples=500, noise=0.15, random_state=SEED)
+if DATASET == "moons":
+    X_data, y_data = make_moons(n_samples=500, noise=0.15, random_state=SEED)
+elif DATASET == "spirals":
+    X_data, y_data = make_spirals(n_samples=500, noise=0.5, random_state=SEED)
+else:
+    raise ValueError(f"Unknown dataset: {DATASET}")
 # create model externally and pass it to the trainer for reproducibility
 model = make_mlp(hidden_dim=8, depth=8)
 model, acc = train_model(model, X_data, y_data)
@@ -607,20 +623,289 @@ plt.show()
 
 # %% [markdown]
 # ---
+# ## Experiment 6: High-Dimensional Embedding
+#
+# Do the 2D findings hold when the manifold is embedded in a high-dimensional
+# ambient space? This is closer to practical networks where data lives on a
+# low-dimensional manifold within a high-dimensional input space (e.g.,
+# natural images on a manifold within pixel space).
+#
+# We embed the same 2D dataset into 100D via a random affine projection
+# $X_{\text{high}} = X_{\text{2D}} \cdot W_{\text{embed}} + b_{\text{embed}}$
+# and repeat the same analysis with a 100→8→...→8→1 network.
+
+# %%
+# Embed the 2D data in EMBED_DIM dimensions
+X_high, embedding = embed_dataset_in_high_dimensional_space(
+    X_data, target_dim=EMBED_DIM, random_state=SEED
+)
+X_high_t = torch.tensor(X_high, dtype=torch.float32)
+
+# Embed the 2D visualization grid in high-D
+grid_high = embedding.transform(np.stack([xx.ravel(), yy.ravel()], axis=1))
+grid_high_t = torch.tensor(grid_high, dtype=torch.float32)
+
+# Train a high-D model with the same depth as the 2D model
+depth_main = n_layers - 1
+torch.manual_seed(SEED)
+model_high = make_mlp(hidden_dim=8, depth=depth_main, input_dim=EMBED_DIM)
+model_high, acc_high = train_model(model_high, X_high, y_data)
+weights_h, biases_h, weights_hq = extract_weights(model_high)
+n_layers_h = len(weights_h)
+
+arch_h = [weights_h[0].shape[1]] + [int(W.shape[0]) for W in weights_h]
+arch_str_h = ' -> '.join(str(d) for d in arch_h)
+print(f"High-D architecture: {arch_str_h}")
+print(f"High-D float accuracy: {acc_high:.1%}")
+print(f"\nPer-layer quantization error:")
+for i, (W, Wq) in enumerate(zip(weights_h, weights_hq)):
+    E = Wq - W
+    print(f"  L{i}: {tuple(W.shape)} -> ||E||_F = {torch.linalg.norm(E, 'fro'):.4f}")
+
+# %% [markdown]
+# ### 6a. Error Attribution
+
+# %%
+tracker_h = CanonicalSpaceTracker(weights_h)
+ft_h = forward_pass(X_high_t, weights_h, biases_h)
+qt_h = forward_pass(X_high_t, weights_hq, biases_h)
+attrib_h = error_attribution(X_high_t, weights_h, weights_hq, ft_h, qt_h, tracker_h)
+
+local_h = [r['local_output'].norm(dim=-1).mean().item() for r in attrib_h]
+prop_h = [r['propagated_output'].norm(dim=-1).mean().item() for r in attrib_h]
+total_h = [r['total_output'].norm(dim=-1).mean().item() for r in attrib_h]
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# 2D recap
+ax = axes[0]
+ax.bar(layers_idx, local_out, label='Local', color='steelblue')
+ax.bar(layers_idx, prop_out, bottom=local_out, label='Propagated', color='coral')
+for i, (lo, po) in enumerate(zip(local_out, prop_out)):
+    t = lo + po
+    if t > 0:
+        ax.text(i, t + max(total_out) * 0.02, f'{po/t*100:.0f}%',
+                ha='center', fontsize=7, color='coral')
+ax.set_xlabel('Layer')
+ax.set_ylabel('Mean pre-ReLU error')
+ax.set_title(f'2D input ({arch_str})')
+ax.legend(fontsize=8)
+
+# High-D
+ax = axes[1]
+idx_h = list(range(n_layers_h))
+ax.bar(idx_h, local_h, label='Local', color='steelblue')
+ax.bar(idx_h, prop_h, bottom=local_h, label='Propagated', color='coral')
+for i, (lo, po) in enumerate(zip(local_h, prop_h)):
+    t = lo + po
+    if t > 0:
+        ax.text(i, t + max(total_h) * 0.02, f'{po/t*100:.0f}%',
+                ha='center', fontsize=7, color='coral')
+ax.set_xlabel('Layer')
+ax.set_title(f'{EMBED_DIM}D input ({arch_str_h})')
+ax.legend(fontsize=8)
+
+plt.suptitle(f'Error Decomposition: 2D vs {EMBED_DIM}D ({BITS}-bit)', y=1.02)
+plt.tight_layout()
+plt.savefig('plots/canonical_highd_attribution.png', dpi=150, bbox_inches='tight')
+plt.show()
+
+print("High-D layer-by-layer:")
+for i, (lo, po, to) in enumerate(zip(local_h, prop_h, total_h)):
+    t = lo + po
+    pct = po / t * 100 if t > 0 else 0
+    print(f"  L{i} ({tuple(weights_h[i].shape)}): local={lo:.4f}, prop={po:.4f}, "
+          f"total={to:.4f} ({pct:.0f}% prop)")
+
+# %% [markdown]
+# ### 6b. Error Heatmap
+#
+# We visualize error on the original 2D manifold coordinates by embedding
+# the 2D grid into 100D and running it through the high-D network.
+
+# %%
+fg_h = forward_pass(grid_high_t, weights_h, biases_h)
+qg_h = forward_pass(grid_high_t, weights_hq, biases_h)
+
+# Show a subset of layers for deep networks
+if n_layers_h <= 6:
+    show_h = list(range(n_layers_h))
+else:
+    show_h = list(range(3)) + list(range(n_layers_h - 3, n_layers_h))
+
+fig, axes = plt.subplots(1, len(show_h), figsize=(4.5 * len(show_h), 4))
+for col, i in enumerate(show_h):
+    ax = axes[col] if len(show_h) > 1 else axes
+    err = (qg_h.post_acts[i] - fg_h.post_acts[i]).norm(dim=-1).numpy()
+    im = ax.contourf(xx, yy, err.reshape(GRID_N, GRID_N), levels=20, cmap='viridis')
+    plt.colorbar(im, ax=ax, label='||â - a||')
+    ax.scatter(X_data[y_data == 0, 0], X_data[y_data == 0, 1],
+               c='white', s=6, alpha=0.3, edgecolors='none')
+    ax.scatter(X_data[y_data == 1, 0], X_data[y_data == 1, 1],
+               c='white', s=6, alpha=0.3, edgecolors='none')
+    ax.set_title(f'L{i} ({tuple(weights_h[i].shape)})', fontsize=9)
+    ax.set_xlim(-PLOT_RANGE, PLOT_RANGE)
+    ax.set_ylim(-PLOT_RANGE, PLOT_RANGE)
+    ax.set_aspect('equal')
+
+layer_desc = ', '.join(f'L{i}' for i in show_h)
+plt.suptitle(f'Post-activation error ({EMBED_DIM}D, layers {layer_desc})', y=1.02)
+plt.tight_layout()
+plt.savefig('plots/canonical_highd_heatmap.png', dpi=150, bbox_inches='tight')
+plt.show()
+
+# %% [markdown]
+# ### 6c. Perfect Correction
+
+# %%
+corrector_h = PerfectCorrection(weights_h, weights_hq, biases_h)
+corr_h_trace, _ = corrector_h.run(X_high_t, ft_h)
+
+uncorr_h = [(qt_h.post_acts[i] - ft_h.post_acts[i]).norm(dim=-1).mean().item()
+            for i in range(n_layers_h)]
+corr_h_errs = [(corr_h_trace.post_acts[i] - ft_h.post_acts[i]).norm(dim=-1).mean().item()
+               for i in range(n_layers_h)]
+
+print("High-D per-layer residual after correction:")
+for i, (ue, ce) in enumerate(zip(uncorr_h, corr_h_errs)):
+    print(f"  L{i}: uncorrected={ue:.4f}, corrected={ce:.2e}")
+
+# %% [markdown]
+# ### 6d. Partial Correction
+
+# %%
+strategies_h = [
+    (set(range(n_layers_h)), "All layers"),
+    ({0}, "Layer 0 only"),
+    ({n_layers_h // 2}, f"Layer {n_layers_h//2} only (middle)"),
+    ({n_layers_h - 1}, f"Layer {n_layers_h-1} only (output)"),
+    (set(), "No correction"),
+]
+
+print(f"Partial correction (output error):")
+print(f"  {'Strategy':<35s} {'2D':>10s} {f'{EMBED_DIM}D':>10s}")
+print("  " + "-" * 58)
+for correct_at, label in strategies_h:
+    rt_2d, _ = corrector.run(X_t, float_trace, correct_at=correct_at)
+    err_2d = (rt_2d.post_acts[-1] - float_trace.post_acts[-1]).norm(dim=-1).mean().item()
+    rt_hd, _ = corrector_h.run(X_high_t, ft_h, correct_at=correct_at)
+    err_hd = (rt_hd.post_acts[-1] - ft_h.post_acts[-1]).norm(dim=-1).mean().item()
+    print(f"  {label:<35s} {err_2d:>10.4f} {err_hd:>10.4f}")
+
+# %% [markdown]
+# ### 6e. ReLU Disagreement
+
+# %%
+relu_h = ReLUDisagreementTracker(fg_h, qg_h)
+
+print("ReLU disagreement comparison:")
+print(f"  {'Layer':<8s} {'2D':>8s} {f'{EMBED_DIM}D':>8s}")
+print("  " + "-" * 28)
+for i in range(min(len(relu_tracker.fractions), len(relu_h.fractions))):
+    print(f"  L{i:<5d} {relu_tracker.fractions[i]*100:>7.1f}% {relu_h.fractions[i]*100:>7.1f}%")
+
+# Show spatial structure of disagreement for high-D
+n_relu_h = len(relu_h.disagreements)
+if n_relu_h > 0:
+    if n_relu_h <= 4:
+        show_relu_h = list(range(n_relu_h))
+    else:
+        show_relu_h = [0, n_relu_h // 3, 2 * n_relu_h // 3, n_relu_h - 1]
+    fig, axes = plt.subplots(1, len(show_relu_h), figsize=(4.5 * len(show_relu_h), 4))
+    if len(show_relu_h) == 1:
+        axes = [axes]
+    for col, i in enumerate(show_relu_h):
+        ax = axes[col]
+        mask = relu_h.any_disagreement(i).float().numpy()
+        ax.contourf(xx, yy, mask.reshape(GRID_N, GRID_N),
+                    levels=[-0.5, 0.5, 1.5], colors=['white', 'coral'], alpha=0.7)
+        ax.scatter(X_data[y_data == 0, 0], X_data[y_data == 0, 1],
+                   c='#1f77b4', s=8, alpha=0.3, edgecolors='none')
+        ax.scatter(X_data[y_data == 1, 0], X_data[y_data == 1, 1],
+                   c='#d62728', s=8, alpha=0.3, edgecolors='none')
+        ax.set_title(f'L{i}: {relu_h.fractions[i]*100:.1f}%', fontsize=9)
+        ax.set_xlim(-PLOT_RANGE, PLOT_RANGE)
+        ax.set_ylim(-PLOT_RANGE, PLOT_RANGE)
+        ax.set_aspect('equal')
+    plt.suptitle(f'ReLU Disagreement ({EMBED_DIM}D)', y=1.02)
+    plt.tight_layout()
+    plt.savefig('plots/canonical_highd_relu.png', dpi=150, bbox_inches='tight')
+    plt.show()
+
+# %% [markdown]
+# ### 6f. Geometric Metrics
+
+# %%
+geo_h = compute_geometric_metrics(weights_h, weights_hq, tracker_h)
+
+print(f"High-D geometric metrics:")
+print(f"  {'Layer':<6s} {'Shape':<12s} {'||E||_2':<9s} {'||W||_2':<9s} "
+      f"{'||T_L||_2':<10s} {'cond(T_L)':<12s}")
+print("  " + "-" * 62)
+for m in geo_h:
+    print(f"  {m['layer']:<6d} {str(m['shape']):<12s} {m['spectral_E']:<9.4f} "
+          f"{m['spectral_W']:<9.4f} {m['amplification']:<10.4f} {m['cond_T']:<12.4f}")
+
+# %% [markdown]
+# ---
 # ## Summary
+
+# %%
+print("=== 2D vs High-D Comparison ===\n")
+
+# Error compounding
+print("1. Error compounding:")
+last_2d_pct = prop_out[-1] / (local_out[-1] + prop_out[-1]) * 100 if (local_out[-1] + prop_out[-1]) > 0 else 0
+last_hd_pct = prop_h[-1] / (local_h[-1] + prop_h[-1]) * 100 if (local_h[-1] + prop_h[-1]) > 0 else 0
+print(f"   2D:    L0 total={total_out[0]:.4f} -> L{n_layers-1} total={total_out[-1]:.4f} "
+      f"({last_2d_pct:.0f}% propagated)")
+print(f"   {EMBED_DIM}D:  L0 total={total_h[0]:.4f} -> L{n_layers_h-1} total={total_h[-1]:.4f} "
+      f"({last_hd_pct:.0f}% propagated)")
+
+# Correction residual
+print("\n2. Perfect correction residual (output layer):")
+print(f"   2D:    {corr_errs[-1]:.2e}")
+print(f"   {EMBED_DIM}D:  {corr_h_errs[-1]:.2e}")
+
+# Output-only correction
+rt_2d_out, _ = corrector.run(X_t, float_trace, correct_at={n_layers - 1})
+err_2d_out = (rt_2d_out.post_acts[-1] - float_trace.post_acts[-1]).norm(dim=-1).mean().item()
+rt_hd_out, _ = corrector_h.run(X_high_t, ft_h, correct_at={n_layers_h - 1})
+err_hd_out = (rt_hd_out.post_acts[-1] - ft_h.post_acts[-1]).norm(dim=-1).mean().item()
+print(f"\n3. Output-layer-only correction:")
+print(f"   2D:    {err_2d_out:.4f}")
+print(f"   {EMBED_DIM}D:  {err_hd_out:.4f}")
+
+# ReLU disagreement
+print(f"\n4. ReLU disagreement (max across layers):")
+max_relu_2d = max(relu_tracker.fractions) * 100
+max_relu_hd = max(relu_h.fractions) * 100
+print(f"   2D:    {max_relu_2d:.1f}%")
+print(f"   {EMBED_DIM}D:  {max_relu_hd:.1f}%")
+
+# Condition numbers (last hidden layer — output layer is always rank-1 so cond=1)
+print(f"\n5. Condition number at last hidden layer (L{n_layers-2}):")
+print(f"   2D:    {geo[-2]['cond_T']:.1f}")
+print(f"   {EMBED_DIM}D:  {geo_h[-2]['cond_T']:.1f}")
+
+# %% [markdown]
+# **Findings**:
 #
 # | Finding | Implication |
 # |---------|-------------|
 # | Error compounds through layers (propagated grows from 0% to 85-93%) | Early correction has outsized impact |
 # | Perfect oracle correction gives zero residual at every layer | The correction formula $C_L = -E_L \hat{a} - W_L \varepsilon$ is exact |
 # | Output-layer-only correction achieves near-zero error | Bottleneck layers (wide→narrow) can absorb upstream error |
-# | ReLU disagreement is ~1-5% at shallow depth, up to 30% at depth 8 | Practical corrections will struggle near decision boundaries, especially in deep networks |
-# | Canonical errors become increasingly rank-1 with depth (63-77% at L0, 100% by later layers) | Error has geometric structure that simplifies with depth, not random noise |
+# | ReLU disagreement is ~1-5% at shallow depth, up to 30% at depth 8 | Practical corrections will struggle near decision boundaries |
+# | Canonical errors become increasingly rank-1 with depth | Error has geometric structure, not random noise |
+#
+# If the 2D and high-D numbers above agree, the 2D analysis provides a valid
+# (and visualizable) model for understanding quantization error dynamics. The
+# high-dimensional ambient space changes the first layer's geometry (100→8 vs
+# 2→8) but not the fundamental error compounding behavior, because the data
+# manifold's intrinsic dimensionality (2D) determines the effective rank.
 #
 # **Next step** (efficiency phase): replace the oracle with a learned correction
 # that estimates $\varepsilon_{L-1}$ from the quantized activations alone. The
 # canonical space framework identifies where to focus that correction
 # (bottleneck layers, high-error spatial regions).
-
-# %% [markdown]
-#
