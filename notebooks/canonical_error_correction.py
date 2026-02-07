@@ -203,6 +203,35 @@ class PerfectCorrection:
             a = a_new
         return ForwardTrace(pre_acts, post_acts), corrections
 
+# %%
+# Grid for all 2D visualizations
+grid_1d = np.linspace(-PLOT_RANGE, PLOT_RANGE, GRID_N)
+xx, yy = np.meshgrid(grid_1d, grid_1d)
+grid_t = torch.tensor(np.stack([xx.ravel(), yy.ravel()], axis=1), dtype=torch.float32)
+
+# Decision boundary: float vs quantized
+float_logits = forward_pass(grid_t, weights, biases).post_acts[-1]
+quant_logits = forward_pass(grid_t, weights_q, biases).post_acts[-1]
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+for ax, logits, title in [(axes[0], float_logits, 'Float'),
+                           (axes[1], quant_logits, f'Quantized ({BITS}-bit)')]:
+    probs = torch.sigmoid(logits).numpy().reshape(GRID_N, GRID_N)
+    ax.contourf(xx, yy, probs, levels=20, cmap='RdBu_r', alpha=0.8)
+    ax.contour(xx, yy, probs, levels=[0.5], colors='k', linewidths=2)
+    ax.scatter(X_data[y_data == 0, 0], X_data[y_data == 0, 1],
+               c='#1f77b4', s=12, alpha=0.5, edgecolors='white', linewidths=0.3)
+    ax.scatter(X_data[y_data == 1, 0], X_data[y_data == 1, 1],
+               c='#d62728', s=12, alpha=0.5, edgecolors='white', linewidths=0.3)
+    ax.set_title(title)
+    ax.set_xlim(-PLOT_RANGE, PLOT_RANGE)
+    ax.set_ylim(-PLOT_RANGE, PLOT_RANGE)
+    ax.set_aspect('equal')
+plt.suptitle(f'Decision Boundary ({arch_str})')
+plt.tight_layout()
+plt.savefig('plots/canonical_decision_boundary.png', dpi=150, bbox_inches='tight')
+plt.show()
+
 # %% [markdown]
 # ---
 # ## Experiment 1: Error Compounds Through Layers
@@ -273,10 +302,6 @@ for i, (lo, po, to) in enumerate(zip(local_out, prop_out, total_out)):
 # ### Where in input space is the error?
 
 # %%
-grid_1d = np.linspace(-PLOT_RANGE, PLOT_RANGE, GRID_N)
-xx, yy = np.meshgrid(grid_1d, grid_1d)
-grid_t = torch.tensor(np.stack([xx.ravel(), yy.ravel()], axis=1), dtype=torch.float32)
-
 float_grid = forward_pass(grid_t, weights, biases)
 quant_grid = forward_pass(grid_t, weights_q, biases)
 
@@ -662,6 +687,30 @@ for i, (W, Wq) in enumerate(zip(weights_h, weights_hq)):
     E = Wq - W
     print(f"  L{i}: {tuple(W.shape)} -> ||E||_F = {torch.linalg.norm(E, 'fro'):.4f}")
 
+# %%
+# Decision boundary: float vs quantized (projected back to 2D manifold)
+float_logits_h = forward_pass(grid_high_t, weights_h, biases_h).post_acts[-1]
+quant_logits_h = forward_pass(grid_high_t, weights_hq, biases_h).post_acts[-1]
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+for ax, logits, title in [(axes[0], float_logits_h, 'Float'),
+                           (axes[1], quant_logits_h, f'Quantized ({BITS}-bit)')]:
+    probs = torch.sigmoid(logits).numpy().reshape(GRID_N, GRID_N)
+    ax.contourf(xx, yy, probs, levels=20, cmap='RdBu_r', alpha=0.8)
+    ax.contour(xx, yy, probs, levels=[0.5], colors='k', linewidths=2)
+    ax.scatter(X_data[y_data == 0, 0], X_data[y_data == 0, 1],
+               c='#1f77b4', s=12, alpha=0.5, edgecolors='white', linewidths=0.3)
+    ax.scatter(X_data[y_data == 1, 0], X_data[y_data == 1, 1],
+               c='#d62728', s=12, alpha=0.5, edgecolors='white', linewidths=0.3)
+    ax.set_title(title)
+    ax.set_xlim(-PLOT_RANGE, PLOT_RANGE)
+    ax.set_ylim(-PLOT_RANGE, PLOT_RANGE)
+    ax.set_aspect('equal')
+plt.suptitle(f'Decision Boundary ({arch_str_h}, projected to 2D manifold)')
+plt.tight_layout()
+plt.savefig('plots/canonical_highd_decision_boundary.png', dpi=150, bbox_inches='tight')
+plt.show()
+
 # %% [markdown]
 # ### 6a. Error Attribution
 
@@ -909,3 +958,6 @@ print(f"   {EMBED_DIM}D:  {geo_h[-2]['cond_T']:.1f}")
 # that estimates $\varepsilon_{L-1}$ from the quantized activations alone. The
 # canonical space framework identifies where to focus that correction
 # (bottleneck layers, high-error spatial regions).
+
+# %% [markdown]
+#
