@@ -33,6 +33,12 @@ from aleph.qgeom.policy import (
     score_correction_points,
     simulate_policy,
 )
+from aleph.qgeom.canonical import (
+    CanonicalSpaceTracker,
+    ForwardTrace,
+    ReLUDisagreementTracker,
+    error_attribution,
+)
 from aleph.qgeom.transformer_analysis import (
     collect_transformer_traces,
     collect_transformer_layer_reports,
@@ -77,4 +83,8 @@ __all__ = [
     "collect_transformer_layer_reports",
     "quantize_decompose_tensor",
     "run_report_to_layer_gain_map",
+    "CanonicalSpaceTracker",
+    "ForwardTrace",
+    "ReLUDisagreementTracker",
+    "error_attribution",
 ]
