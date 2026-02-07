@@ -611,15 +611,16 @@ plt.show()
 #
 # | Finding | Implication |
 # |---------|-------------|
-# | Error compounds through layers (propagated grows from 0% to ~50%) | Early correction has outsized impact |
+# | Error compounds through layers (propagated grows from 0% to 85-93%) | Early correction has outsized impact |
 # | Perfect oracle correction gives zero residual at every layer | The correction formula $C_L = -E_L \hat{a} - W_L \varepsilon$ is exact |
 # | Output-layer-only correction achieves near-zero error | Bottleneck layers (wide→narrow) can absorb upstream error |
-# | ReLU disagreement is ~1-3% and spatially structured | Practical corrections will struggle near decision boundaries |
-# | Canonical errors are highly directional (>99% in 1 PC) | Error has geometric structure, not random noise |
+# | ReLU disagreement is ~1-5% at shallow depth, up to 30% at depth 8 | Practical corrections will struggle near decision boundaries, especially in deep networks |
+# | Canonical errors become increasingly rank-1 with depth (63-77% at L0, 100% by later layers) | Error has geometric structure that simplifies with depth, not random noise |
 #
 # **Next step** (efficiency phase): replace the oracle with a learned correction
 # that estimates $\varepsilon_{L-1}$ from the quantized activations alone. The
-# canonical space framework tells us where to focus that learned correction.
+# canonical space framework identifies where to focus that correction
+# (bottleneck layers, high-error spatial regions).
 
 # %% [markdown]
 #
