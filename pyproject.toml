@@ -29,6 +29,7 @@ packages = ["aleph"]
 [dependency-groups]
 dev = [
     "pre-commit>=4.0",
+    "pytest>=8.0",
     "jupytext>=1.16",
     "nbdime>=4.0",
     "nbstripout>=0.8",

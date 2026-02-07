@@ -23,6 +23,7 @@ Regenerate with: `make brief repomap`
 
 ## Rules
 
+0. **Always use PyTorch** for numerical code unless there's a very specific reason for numpy (e.g. scipy interop, matplotlib mesh grids). All new library code, notebooks, and analysis should use `torch.Tensor`, not `np.ndarray`.
 1. **Never scan the entire repo.** Only open files I point you to or that you must edit.
 2. **Use `rg` / `grep` to locate symbols.** Open only the relevant snippet, not whole files.
 3. **Output unified diffs only.** Do not paste full file contents.
