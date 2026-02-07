@@ -7,9 +7,12 @@ error. These errors compound through the network. This document reports
 experiments measuring that compounding, decomposing it into sources, and
 testing whether an oracle correction can eliminate it.
 
-All experiments use MLPs (2→8→...→8→1) trained on the moons dataset with
-4-bit delta quantization (5000 epochs, Adam optimizer). The analysis code
-lives in `aleph/qgeom/canonical.py` and the notebook in
+The primary configuration uses MLPs trained on the spirals dataset (2000
+samples, 3 turns, 2× scaled) with width-32 hidden layers, depth 12, 4-bit
+delta quantization, Adam optimizer (lr=0.001, 5000 epochs). We also test
+embedding the same 2D manifold into 100D to verify findings generalize.
+
+The analysis code lives in `aleph/qgeom/canonical.py` and the notebook in
 `notebooks/canonical_error_correction.py`.
 
 ## Quantization method
@@ -46,17 +49,6 @@ $$\hat{z}_L - z_L = \underbrace{E_L \cdot \hat{a}_{L-1}}_{\text{local}} + \under
   ε_{L-1} from all previous layers.
 - Computed exactly as `propagated = total - local` (no approximations).
 
-### Canonical space
-
-Errors at different layers have different dimensions (2D input, 8D hidden,
-1D output). To compare them, we map everything back to input space via the
-pseudoinverse of the cumulative transform T_L = W_L ⋯ W_1:
-
-$$\text{canonical error} = T_L^+ \cdot \text{output error}$$
-
-This is a linear approximation — it ignores ReLU nonlinearities, so it's
-exact for the linear component and approximate for the rest.
-
 ### Perfect (oracle) correction
 
 At each layer, apply: C_L = -E_L · â_{L-1} - W_L · ε_{L-1}
@@ -65,6 +57,19 @@ This exactly undoes both local and propagated error, recovering the float
 pre-activation: ẑ_L + C_L = z_L. It's an oracle because it needs the float
 activations to compute ε_{L-1}.
 
+### Canonical space
+
+Errors at different layers have different dimensions (2D input, 32D hidden,
+1D output). To compare them, we map everything back to input space via the
+pseudoinverse of the cumulative transform T_L = W_L ⋯ W_1:
+
+$$\text{canonical error} = T_L^+ \cdot \text{output error}$$
+
+This is a linear approximation — it ignores ReLU nonlinearities, so it's
+exact for the linear component and approximate for the rest. Condition
+numbers grow with depth (reaching 126 at depth 12 for the 2D model), making
+canonical comparisons approximate but still informative for moderate depths.
+
 ### ReLU disagreement
 
 Where sign(z_float) ≠ sign(z_quant), the quantized and float networks make
@@ -72,164 +77,135 @@ different on/off decisions. This is the only source of nonlinear error — and
 the one thing perfect correction can't fix in general (though it does fix it
 when we correct at every layer, since then pre-activations match exactly).
 
-## Results by depth
+## Primary results: spirals, depth 12, width 32
 
-All models trained with seed=42, 5000 epochs, Adam. Depth 16 requires
-lr=0.005 (lower than the default lr=0.01) to converge.
+**Config**: 2→32×12→1, spirals (n=2000, 3 turns, 2× scale), 4-bit, lr=0.001
 
-### Depth 2 (3 layers: 2→8→8→1)
+**Float accuracy**: 92.8%
 
-**Float accuracy**: 99.8%
+### Error attribution
 
-| Layer | Shape  | Local  | Propagated | Total  | % Propagated |
-|-------|--------|--------|------------|--------|--------------|
-| L0    | (8,2)  | 0.1198 | 0.0000     | 0.1198 | 0%           |
-| L1    | (8,8)  | 1.1958 | 0.6026     | 1.5211 | 34%          |
-| L2    | (1,8)  | 0.5785 | 7.7729     | 8.2966 | 93%          |
+| Layer | Shape   | Local   | Propagated | Total    | % Propagated |
+|-------|---------|---------|------------|----------|--------------|
+| L0    | (32,2)  | 0.1994  | 0.0000     | 0.1994   | 0%           |
+| L1    | (32,32) | 0.5616  | 0.1703     | 0.6212   | 23%          |
+| L2    | (32,32) | 0.4028  | 0.3981     | 0.5935   | 50%          |
+| L3    | (32,32) | 0.3519  | 0.6077     | 0.7556   | 63%          |
+| L4    | (32,32) | 0.4635  | 1.2373     | 1.3795   | 73%          |
+| L5    | (32,32) | 0.5050  | 2.6709     | 2.8062   | 84%          |
+| L6    | (32,32) | 0.6795  | 5.0720     | 5.0859   | 88%          |
+| L7    | (32,32) | 1.0150  | 6.6069     | 6.7137   | 87%          |
+| L8    | (32,32) | 1.6730  | 13.9324    | 14.1236  | 89%          |
+| L9    | (32,32) | 3.5488  | 28.7663    | 29.5667  | 89%          |
+| L10   | (32,32) | 8.3475  | 61.2720    | 63.0692  | 88%          |
+| L11   | (32,32) | 14.6569 | 124.1130   | 126.3674 | 89%          |
+| L12   | (1,32)  | 5.9420  | 87.8461    | 93.4747  | 94%          |
 
-Correction residual: ~10⁻⁶ at every layer (float32 precision).
+Error grows from 0.20 at L0 to 93.47 at the output (~470× amplification
+across 13 layers). Propagated error dominates by L3 (63%) and reaches 94%
+at the output. This is dramatically more error than the old moons/width-8
+configuration (~8.5 at depth 8), because the wider network has more weights
+to quantize and the spirals dataset requires more complex decision boundaries.
 
-Partial correction:
-- Output layer only (L2) → 0.0000 (bottleneck absorbs everything)
-- Middle layer only (L1) → 0.6007
-- Layer 0 only → 4.0887
-- No correction → 8.2966
+### Perfect correction
 
-ReLU disagreement: 0.7% (L0), 4.6% (L1).
+Correction residual ~10⁻⁶ at every layer (float32 precision), confirming
+the math holds for deeper, wider networks.
 
-![Depth 2 error attribution](figures/depth2_attribution.png)
-![Depth 2 error heatmap](figures/depth2_heatmap.png)
-![Depth 2 ReLU disagreement](figures/depth2_relu.png)
+### Partial correction
 
-### Depth 4 (5 layers: 2→8→8→8→8→1)
+| Strategy | Output error |
+|----------|-------------|
+| All layers | 0.0000 |
+| Layer 0 only | 71.29 |
+| Layer 6 only (middle) | 4.90 |
+| Output layer only (L12) | 0.0000 |
+| No correction | 93.47 |
 
-**Float accuracy**: 100%
+Output-layer-only correction still works perfectly — the (1, 32) bottleneck
+discards 31 of 32 error dimensions. Single interior layer correction at L6
+reduces error from 93.47 to 4.90 (95% reduction) — much more effective than
+at width-8, because the wider layers give correction more degrees of freedom.
 
-| Layer | Shape  | Local  | Propagated | Total  | % Propagated |
-|-------|--------|--------|------------|--------|--------------|
-| L0    | (8,2)  | 0.1246 | 0.0000     | 0.1246 | 0%           |
-| L1    | (8,8)  | 0.3975 | 0.1279     | 0.4252 | 24%          |
-| L2    | (8,8)  | 0.6633 | 1.2079     | 0.9261 | 65%          |
-| L3    | (8,8)  | 1.6302 | 2.4689     | 2.2597 | 60%          |
-| L4    | (1,8)  | 0.1401 | 1.3722     | 1.4110 | 91%          |
+### ReLU disagreement
 
-Propagated error dominates by L3-L4. Total error grows from 0.12 to 1.41
-(~12x amplification across 5 layers).
+Ranges from 2% (L0) to 11.5% (L7). More uniform across layers than at
+width-8, where disagreement spiked dramatically at specific layers. The
+wider representation means individual quantization errors are smaller
+relative to the activation magnitudes.
 
-Correction residual: ~10⁻⁷ at every layer.
+### Geometric metrics
 
-Partial correction:
-- Output layer only (L4) → 0.0000
-- Layer 0 only → 0.6591
-- Middle layer only (L2) → 1.2371
-- No correction → 1.4110
+| Layer | ||E||₂ | ||W||₂ | cond(T_L) |
+|-------|--------|--------|-----------|
+| L0    | 0.2154 | 2.7246 | 1.2       |
+| L4    | 0.3779 | 6.5994 | 26.0      |
+| L8    | 0.3805 | 3.7165 | 129.9     |
+| L11   | 0.3949 | 5.7325 | 125.6     |
+| L12   | 0.1914 | 2.2094 | 1.0       |
 
-ReLU disagreement: 0.8–3.4% per layer.
+Condition numbers stay moderate (max 130 at the hidden layers) — much better
+than width-8 depth-8 (cond 5089). The wider hidden layers provide more
+numerical stability for the canonical transform.
 
-![Depth 4 error attribution](figures/depth4_attribution.png)
-![Depth 4 error heatmap](figures/depth4_heatmap.png)
-![Depth 4 ReLU disagreement](figures/depth4_relu.png)
+## 2D vs 100D comparison
 
-### Depth 8 (9 layers: 2→8×8→1)
+We embed the same 2D spirals manifold into 100D via a random affine
+projection (X_high = X_2d @ W_embed + b_embed) and train a
+100→32×12→1 network with the same hyperparameters.
 
-**Float accuracy**: 100%
+### Side-by-side comparison
 
-| Layer | Shape  | Local  | Propagated | Total  | % Propagated |
-|-------|--------|--------|------------|--------|--------------|
-| L0    | (8,2)  | 0.1153 | 0.0000     | 0.1153 | 0%           |
-| L1    | (8,8)  | 0.2848 | 0.1377     | 0.3486 | 33%          |
-| L2    | (8,8)  | 0.1432 | 0.2481     | 0.2583 | 63%          |
-| L3    | (8,8)  | 0.2774 | 0.1933     | 0.3152 | 41%          |
-| L4    | (8,8)  | 0.2623 | 0.3716     | 0.4918 | 59%          |
-| L5    | (8,8)  | 0.3080 | 1.0051     | 1.0186 | 77%          |
-| L6    | (8,8)  | 0.6589 | 2.0572     | 2.3804 | 76%          |
-| L7    | (8,8)  | 1.5719 | 5.2239     | 6.0907 | 77%          |
-| L8    | (1,8)  | 1.3583 | 9.7492     | 8.4824 | 88%          |
+| Metric | 2D | 100D |
+|--------|-----|------|
+| Float accuracy | 92.8% | 93.3% |
+| Output error (uncorrected) | 93.47 | 8.82 |
+| % propagated at output | 94% | 99% |
+| Perfect correction residual | ~10⁻⁶ | ~10⁻⁷ |
+| Output-layer-only correction | 0.0000 | 0.0000 |
+| Max ReLU disagreement | 11.5% | 18.0% |
+| cond(T₁₁) | 126 | 564,000,000 |
 
-Error grows from 0.12 to 8.48 (~70x). The growth is not monotone — it's
-slow in the early layers (L0-L4) where weight spectral norms are modest
-(||W||₂ ≈ 1.6–3.1), then accelerates dramatically at L5 where one layer has
-||W||₂ = 8.0 (a large spectral norm amplifies both signal and error).
+### What changes
 
-**Error drops from L7 (6.09) to L8 (8.48 total, but uncorrected post-act
-is 8.48 vs L7's 5.70)**. Wait — the total error does continue growing, but
-the output layer projects 8D→1D, so only the component of the 8D error
-aligned with W₈ reaches the output. The 7 orthogonal dimensions are
-discarded.
+1. **Lower absolute error**: the 100D model has 8.82 total output error vs
+   93.47 for 2D. The 100D first layer (32, 100) distributes quantization
+   error across more dimensions, and the subsequent layers see a different
+   weight distribution. The error compounding pattern differs quantitatively.
 
-**Condition numbers blow up**: cond(T₈) = 5089. The cumulative transform
-becomes ill-conditioned with depth. The correction formula is unaffected (it
-operates in output space), but canonical space comparisons get unreliable.
+2. **Higher propagated fraction**: 99% propagated at output (vs 94% for 2D).
+   The 100→32 first layer's larger quantization error propagates more
+   aggressively relative to subsequent local errors.
 
-**ReLU disagreement spikes**: L5=21%, L6=16%, L7=31%. The deeper layers with
-large weight norms cause more neurons to flip sign. This is a qualitative
-shift — at depth 2–4, disagreement stays under 5%.
+3. **Condition numbers explode**: cond(T₁₁) = 564M in 100D vs 126 in 2D.
+   The 100→32 projection introduces severe ill-conditioning from the start.
+   Canonical space is numerically meaningless for 100D; the correction
+   formula is unaffected.
 
-Partial correction:
-- Output layer only (L8) → 0.0000 (still works)
-- Middle layer only (L4) → 0.1954
-- Layer 0 only → 5.8101
-- No correction → 8.4824
+4. **ReLU disagreement is slightly higher**: max 18% vs 11.5%. The different
+   weight landscape in 100D produces more neurons near zero.
 
-![Depth 8 error attribution](figures/depth8_attribution.png)
-![Depth 8 error heatmap](figures/depth8_heatmap.png)
-![Depth 8 ReLU disagreement](figures/depth8_relu.png)
+### What stays the same
 
-### Depth 16 (17 layers: 2→8×16→1)
+- Error compounds through layers in both settings.
+- Perfect correction works to float32 precision in both.
+- Output-layer-only correction achieves zero error in both (bottleneck
+  absorption).
+- Error is spatially structured in both (concentrates away from training
+  data on the 2D manifold).
 
-**Float accuracy**: 100% (requires lr=0.005; lr=0.01 fails to converge)
-
-| Layer | Shape  | Local  | Propagated | Total  | % Propagated |
-|-------|--------|--------|------------|--------|--------------|
-| L0    | (8,2)  | 0.1009 | 0.0000     | 0.1009 | 0%           |
-| L1    | (8,8)  | 0.1708 | 0.0486     | 0.1859 | 22%          |
-| L2    | (8,8)  | 0.1016 | 0.1592     | 0.2098 | 61%          |
-| ...   |        |        |            |        |              |
-| L8    | (8,8)  | 0.2904 | 0.2905     | 0.4624 | 50%          |
-| ...   |        |        |            |        |              |
-| L12   | (8,8)  | 0.7596 | 2.4135     | 2.7087 | 76%          |
-| L13   | (8,8)  | 1.6846 | 2.6688     | 3.1644 | 61%          |
-| L14   | (8,8)  | 3.3446 | 2.5405     | 4.9626 | 43%          |
-| L15   | (8,8)  | 2.3092 | 8.5290     | 9.7620 | 79%          |
-| L16   | (1,8)  | 1.5217 | 8.7703     | 9.8629 | 85%          |
-
-Error grows from 0.10 to 9.86 (~100x across 17 layers). The pattern
-is qualitatively different from shallower networks:
-
-1. **Slow start, fast finish**: error stays below 0.5 for the first 8
-   layers, then ramps exponentially in L12-L16. The network learned
-   small weight norms early (||W||₂ ≈ 1.4–2.1) and larger norms late
-   (||W||₂ up to 4.9 at L12).
-
-2. **Local error sometimes dominates late layers**: L14 has only 43%
-   propagated — the local error (3.34) exceeds propagated (2.54). This
-   happens when a layer has both large quantization error and large
-   activations to multiply it against.
-
-3. **Condition numbers become extreme**: cond(T₁₅) = 2.9M. Canonical
-   space mapping is numerically meaningless at this depth. The correction
-   formula still works (residual ~10⁻⁶) because it never uses the
-   canonical transform.
-
-4. **ReLU disagreement reaches 14% at L14**. Still spatially structured
-   but more widespread than at shallower depths.
-
-Partial correction:
-- Output layer only (L16) → 0.0000 (still works!)
-- Layer 0 only → 8.97 (negligible improvement)
-- Middle layer only (L8) → 9.10 (negligible improvement)
-- No correction → 9.86
-
-Output-layer-only correction continues to work because the (1,8) bottleneck
-discards 7 of 8 error dimensions. However, single-layer correction at any
-*interior* layer is now nearly useless — the error from other layers
-dominates.
-
-![Depth 16 error attribution](figures/depth16_attribution.png)
-![Depth 16 error heatmap](figures/depth16_heatmap.png)
-![Depth 16 ReLU disagreement](figures/depth16_relu.png)
+**Bottom line**: the 2D analysis is a valid model for understanding
+quantization error dynamics. The high-dimensional ambient space changes
+absolute magnitudes and conditioning but not the qualitative behavior.
 
 ## How to read the plots
+
+### Decision boundary
+
+Three panels: float model, quantized model, oracle-corrected model. The
+color shows P(class 1) from blue (0) to red (1), with the decision boundary
+(P=0.5) as a black line. Training data is overlaid. Quantization visibly
+distorts the boundary; correction restores it exactly.
 
 ### Attribution bar chart
 
@@ -242,168 +218,72 @@ quantization mistakes are increasingly dominating.
 ### Error heatmap
 
 Each panel shows one layer. The x/y axes are input space coordinates; the
-color is **output-space** error magnitude ||â_L - a_L|| at that layer (not
-canonical space — the dimensions differ per layer). White dots are training
-data. Error concentrates away from the training data because the network
-extrapolates large activations outside the data manifold, and larger
-activations → larger quantization error. The color scale grows across panels
-(check the colorbars) — this is the compounding.
+color is **output-space** error magnitude ||â_L - a_L|| at that layer.
+White dots are training data. Error concentrates away from the training data
+because the network extrapolates large activations outside the data
+manifold, and larger activations → larger quantization error. The color
+scale grows across panels (check the colorbars) — this is the compounding.
 
 ### ReLU disagreement map
 
 Red regions = at least one neuron at that layer made a different on/off
 decision in the quantized vs float network. These are inputs where
 sign(z_float) ≠ sign(z_quant) for some neuron. They cluster near the
-network's decision boundaries where neurons are close to zero. Low overall
-rate (1–5% at 4-bit for shallow networks, up to 30% for deep) but spatially
-structured.
+network's decision boundaries where neurons are close to zero.
 
 ## Key findings
 
 ### 1. Error compounds, driven by weight spectral norms
 
-In trained networks (depth 2–16), propagated error grows from 0% at layer 0
-to 85–93% at the output. Total error grows roughly exponentially with depth.
-The rate depends on ||W_L||₂: layers with ||W||₂ > 3 cause sharp jumps
-(e.g., depth-8 L5 with ||W||₂ = 8.0 causes a 2x error increase in one
-step), while layers with ||W||₂ ≈ 1.5 grow slowly.
+Propagated error grows from 0% at L0 to 89–99% at the output. Total error
+grows roughly exponentially with depth. The rate depends on ||W_L||₂:
+layers with large spectral norms cause sharp jumps, while layers with
+||W||₂ ≈ 1.5 grow slowly. At width-32 depth-12, total output error reaches
+93.5 (~470× amplification) — enough to visibly distort the decision boundary.
 
-### 2. Perfect correction works exactly at all depths
+### 2. Perfect correction works exactly
 
 The correction formula C_L = -E_L·â - W_L·ε recovers float pre-activations
 to float32 machine precision (~10⁻⁶ to 10⁻⁷) at every layer, for every
-depth tested (2 through 16). This confirms the math: quantization error is
-fully characterized by the local + propagated decomposition.
+configuration tested. This confirms the math: quantization error is fully
+characterized by the local + propagated decomposition. The corrected
+decision boundary is visually indistinguishable from the float boundary.
 
 ### 3. Bottleneck layers absorb upstream error
 
-Correcting only the output layer (8→1) achieves near-zero output error at
-every depth tested, including depth 16. The rank-1 projection discards the
-7 dimensions of accumulated 8D error orthogonal to the output weight vector.
+Correcting only the output layer achieves near-zero output error in every
+configuration tested — width-8 through width-32, depth 2 through 12, both
+2D and 100D inputs. The rank-1 projection discards all but one dimension of
+accumulated error.
 
-This generalizes: any wide→narrow transition is a natural error absorption
-point. Correction effort should concentrate at bottlenecks.
-
-However, single-interior-layer correction becomes useless at depth 16 —
-correcting L8 alone reduces error from 9.86 to 9.10 (7% improvement). In
-deep networks, you need either the bottleneck trick or correction at many
-layers.
+At width-32, single-interior-layer correction is much more effective than at
+width-8: correcting L6 alone reduces error from 93.47 to 4.90 (95%
+reduction). The wider layers give correction more degrees of freedom to
+absorb error.
 
 ### 4. Error is spatially structured, not random noise
 
 The error heatmaps show that quantization error concentrates in specific
 spatial regions (large activations, typically away from training data). The
-canonical-space PCA analysis shows >99% of error variance along a single
-direction — the quantization grid imposes a preferred error direction.
+canonical-space PCA shows error variance concentrating along fewer directions
+with depth (100% in one component by the later layers). This structure is
+good news for learned corrections: a correction network doesn't need to
+handle arbitrary noise, just a structured, low-rank perturbation.
 
-This structure is good news for learned corrections: a correction network
-doesn't need to handle arbitrary noise, just a structured, low-rank
-perturbation.
+### 5. ReLU disagreement grows with depth but stays manageable
 
-### 5. ReLU disagreement grows with depth
+At width-32 depth-12, disagreement ranges from 2–12% per layer — more
+uniform than width-8 networks where it spiked to 30%+ at specific layers.
+Wider networks distribute quantization error across more neurons, keeping
+individual perturbations small relative to activations. These disagreement
+regions are the hard cases for any non-oracle correction.
 
-At depth 2–4, disagreement is 1–5% and localized near decision boundaries.
-At depth 8, it spikes to 21–31% in the later layers. At depth 16, most
-layers stay under 5% but a few hit 14%. These are the hard cases for any
-non-oracle correction — where the quantized network makes fundamentally
-different routing decisions.
+### 6. Findings generalize to high-dimensional inputs
 
-### 6. Canonical space degrades with depth
-
-The condition number of T_L grows exponentially: from ~2 at L0 to 5000 at
-depth 8 and 2.9M at depth 16. Canonical space error comparisons become
-numerically meaningless beyond ~5 layers. The correction formula is
-unaffected because it operates in output space, not canonical space.
-
-### 7. 2D findings generalize to high-dimensional inputs
-
-To check whether the 2D analysis is an artifact of low dimensionality, we
-embed the same 2D moons manifold into 100D via a random affine projection
-(X_high = X_2d @ W_embed + b_embed) and repeat all experiments with a
-100→8→8→...→8→1 network (depth 8, same as the 2D baseline).
-
-#### Setup
-
-The high-D model trains to 100% accuracy (same as 2D). The first layer
-is now (8, 100) — 800 weights instead of 16 — so its Frobenius quantization
-error is much larger (||E||_F = 1.02 vs 0.14 for the 2D first layer).
-
-#### Side-by-side comparison (depth 8)
-
-| Metric | 2D | 100D |
-|--------|-----|------|
-| Output error (uncorrected) | 8.48 | 11.76 |
-| % propagated at output | 88% | 88% |
-| Perfect correction residual | ~2×10⁻⁶ | ~4×10⁻⁶ |
-| Output-layer-only correction | 0.0000 | 0.0000 |
-| Max ReLU disagreement | 30.7% | 10.0% |
-| cond(T₇) (last hidden layer) | 5,089 | 47,000,000 |
-
-#### Error attribution by layer (100D, depth 8)
-
-| Layer | Shape    | Local  | Propagated | Total   | % Propagated |
-|-------|----------|--------|------------|---------|--------------|
-| L0    | (8,100)  | 0.7610 | 0.0000     | 0.7610  | 0%           |
-| L1    | (8,8)    | 1.6459 | 0.5106     | 1.7641  | 24%          |
-| L2    | (8,8)    | 1.1072 | 1.3062     | 1.7076  | 54%          |
-| L3    | (8,8)    | 1.9186 | 1.3336     | 1.7870  | 41%          |
-| L4    | (8,8)    | 1.7577 | 1.4490     | 2.1689  | 45%          |
-| L5    | (8,8)    | 1.7954 | 1.8855     | 2.6397  | 51%          |
-| L6    | (8,8)    | 2.4308 | 3.7932     | 4.2658  | 61%          |
-| L7    | (8,8)    | 5.5886 | 7.2205     | 10.0340 | 56%          |
-| L8    | (1,8)    | 1.6028 | 11.2632    | 11.7625 | 88%          |
-
-#### Partial correction (100D)
-
-| Strategy | 2D error | 100D error |
-|----------|----------|------------|
-| All layers | 0.0000 | 0.0000 |
-| Layer 0 only | 5.81 | 10.44 |
-| Layer 4 only (middle) | 0.20 | 4.30 |
-| Output layer only (L8) | 0.0000 | 0.0000 |
-| No correction | 8.48 | 11.76 |
-
-#### What changes
-
-1. **Higher absolute error at L0**: the (8, 100) first layer has 50× more
-   weights than (8, 2), so its quantization error is ~5× larger. This
-   propagates forward, making all subsequent errors larger in absolute terms.
-
-2. **Local error stays significant deeper**: in 2D, local error becomes a
-   small fraction by L5. In 100D, local error remains comparable to
-   propagated error through L5 (51% propagated) before propagated takes
-   over. The larger first-layer error and higher per-layer quantization
-   errors (more weights in L0) keep the local contribution relevant longer.
-
-3. **Condition numbers explode faster**: cond(T₇) = 47M in 100D vs 5K in
-   2D. The 100→8 first-layer projection introduces severe ill-conditioning
-   from the start (cond(T₀) = 15 vs 1.7). Canonical space is useless for
-   100D; the correction formula is unaffected.
-
-4. **ReLU disagreement is lower**: max 10% vs 31% in 2D. The 100→8
-   compression at L0 appears to produce activations that are further from
-   zero, reducing sign-flip sensitivity. This is good news for practical
-   corrections in high-D.
-
-#### What stays the same
-
-- Error compounds at the same rate (88% propagated at output in both).
-- Perfect correction works to float32 precision in both.
-- Output-layer-only correction achieves zero error in both (bottleneck
-  absorption).
-- Error is spatially structured in both (concentrates away from training
-  data on the 2D manifold).
-
-**Bottom line**: the 2D analysis is a valid model for understanding
-quantization error dynamics. The high-dimensional ambient space changes
-absolute magnitudes and conditioning but not the qualitative behavior.
-
-### 8. Experimental setup limits
-
-Deep networks (depth ≥ 16) require learning rate tuning to converge, adding
-a confound. The width-8 hidden layers are much narrower than practical
-networks, so the bottleneck absorption effect (which relies on wide→narrow
-transitions) may be less dramatic when hidden dimensions are larger.
+The 2D analysis provides a valid model for understanding quantization error
+dynamics. Embedding the same 2D manifold in 100D changes absolute
+magnitudes and conditioning but not the qualitative behavior: error
+compounds, correction works, bottleneck absorption holds.
 
 ## What's next
 
