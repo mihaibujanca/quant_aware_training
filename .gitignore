@@ -36,3 +36,4 @@ package-lock.json
 
 # Experiment result JSONs (reproducible from scripts)
 docs/*.json
+media/
