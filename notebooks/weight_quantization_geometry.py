@@ -1520,3 +1520,5 @@ print("5. Flips are rare (~few %) because weight quant error is small vs signal 
 print("6. The geometric 'chopping' by ReLU (dead/mixed) is the dominant effect")
 
 # %%
+
+# %%
