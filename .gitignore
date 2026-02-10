@@ -31,3 +31,8 @@ resources/
 .context/
 .vscode/
 .codex_context/
+.pytest_cache/
+package-lock.json
+
+# Experiment result JSONs (reproducible from scripts)
+docs/*.json
