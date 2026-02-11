@@ -1,54 +1,47 @@
 # Manim: Geometric Weight Quantization Story
 
-This animation track follows `docs/geometric_error_correction_brief.md` with a 2->2->2 ReLU toy model.
+This track is now split into focused scene modules under:
 
-## File
+- `/Users/mihai/Projects/quant_aware_training/animations/quantization_story/`
 
-- `animations/geometric_weight_quantization.py`
+Entrypoint (for rendering):
 
-## Scenes
+- `/Users/mihai/Projects/quant_aware_training/animations/geometric_weight_quantization.py`
 
-1. `OpeningScene`
-   - Introduces quantization and piecewise-affine form.
-2. `PartitionToTransportScene` (recommended)
-   - Single narrative scene: partition shift in input space -> mapped output geometry -> affine transport correction -> remaining topological residual.
-3. `PartitionShiftScene` (legacy split)
-   - Shows float vs quantized ReLU boundaries and the changed region.
-4. `GridDistortionScene` (legacy split)
-   - Compares mapped grids (input, float output, quantized output).
-5. `ActivationSpaceComparisonScene`
-   - Shows why raw layer-wise L2 on activations can be misleading, then compares against affine-aligned residuals on the same manifold samples.
-6. `ErrorDecompositionScene`
-   - Decomposes output error into metric vs topological components.
-7. `CorrectionCascadeScene`
-   - Visualizes layer-wise correction and the first-order inverse formula.
-8. `FullNarrativeScene`
-   - Convenience scene that stitches all segments.
+Legacy monolith backup:
+
+- `/Users/mihai/Projects/quant_aware_training/animations/legacy_geometric_weight_quantization.py`
+
+## Scene structure (current)
+
+1. `LayerProgressionScene`
+   - What a simple ReLU network does step by step: `W,b` then `ReLU` per layer.
+2. `QuantizationComparisonScene`
+   - Add quantization and show float vs quantized trajectories diverge.
+3. `LinearCorrectionScene`
+   - Fit a full-precision affine correction on same-region points.
+4. `TopologyFailureScene`
+   - Show where linear correction fails because topology changed.
+5. `FullNarrativeScene`
+   - Convenience stitch of the 4 scenes.
 
 ## Render commands
 
 ```bash
-manim -pqh animations/geometric_weight_quantization.py OpeningScene
-manim -pqh animations/geometric_weight_quantization.py PartitionToTransportScene
-manim -pqh animations/geometric_weight_quantization.py PartitionShiftScene
-manim -pqh animations/geometric_weight_quantization.py GridDistortionScene
-manim -pqh animations/geometric_weight_quantization.py ActivationSpaceComparisonScene
-manim -pqh animations/geometric_weight_quantization.py ErrorDecompositionScene
-manim -pqh animations/geometric_weight_quantization.py CorrectionCascadeScene
+manim -pqh animations/geometric_weight_quantization.py LayerProgressionScene
+manim -pqh animations/geometric_weight_quantization.py QuantizationComparisonScene
+manim -pqh animations/geometric_weight_quantization.py LinearCorrectionScene
+manim -pqh animations/geometric_weight_quantization.py TopologyFailureScene
+manim -pqh animations/geometric_weight_quantization.py OneDErrorGrowthScene
 manim -pqh animations/geometric_weight_quantization.py FullNarrativeScene
 ```
 
-Use `-pql` while iterating quickly and `-pqh` for final quality.
+Use `-pql` while iterating.
 
-## Main knobs to edit
+## Files to edit
 
-Inside `animations/geometric_weight_quantization.py`:
-
-- `StoryConfig.bits`: quantization bit-width.
-- `StoryConfig.extent`: visible coordinate range.
-- `StoryConfig.circle_radius` and `StoryConfig.circle_samples`: manifold sampling.
-- `W1`, `b1`, `W2`, `b2`: network geometry.
-
-## Next extension (activation quantization)
-
-Keep this file weight-only for now. For activation quantization, add a second module and inject activation rounding between layer outputs while preserving the same scene structure so comparisons stay direct.
+- Shared math/helpers/constants: `/Users/mihai/Projects/quant_aware_training/animations/quantization_story/common.py`
+- Scene 1: `/Users/mihai/Projects/quant_aware_training/animations/quantization_story/scene_01_layer_progression.py`
+- Scene 2: `/Users/mihai/Projects/quant_aware_training/animations/quantization_story/scene_02_quantization.py`
+- Scene 3: `/Users/mihai/Projects/quant_aware_training/animations/quantization_story/scene_03_linear_correction.py`
+- Scene 4: `/Users/mihai/Projects/quant_aware_training/animations/quantization_story/scene_04_topology_failure.py`
