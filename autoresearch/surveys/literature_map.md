@@ -340,6 +340,24 @@ A well-trained, grokked network has the sparsest possible partition structure ne
 
 ---
 
+### Bounding and Counting Linear Regions (Serra, Tjandraatmadja, Ramalingam, ICML 2018)
+
+**arXiv:** 1711.02114
+
+**Main results:**
+1. Tighter upper/lower bounds for max number of linear regions in rectifier networks
+2. First exact method for counting regions: formulated as mixed-integer linear programming (MIP)
+3. Key condition: "a deep network can only have more regions than a shallow counterpart with the same number of neurons **if that number exceeds the input dimension**"
+
+**For compression:**
+- The condition "neurons > input_dim" is always true for our networks (2→32×12 has neurons >> 2). So deep architectures can represent more regions than shallow ones → depth is meaningful for our networks.
+- The MIP approach for counting regions later evolved into the MIP approach for finding stable neurons (Serra 2021)
+- A MNIST network (784-dim input, 22 total hidden neurons) produces 10^7 regions — computation takes tens of hours. **This is why approximate stability checking matters.**
+
+**Assessment:** CONTEXT — foundational background for Serra 2021 (which supersedes this for compression purposes). Depth separation result confirms that depth reduction is expensive.
+
+---
+
 ### Depth Separation for ReLU Networks (Arora et al., ICLR 2018)
 
 **arXiv:** 1611.01491
