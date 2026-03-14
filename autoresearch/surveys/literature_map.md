@@ -1,6 +1,6 @@
 # Geometric Compression — Literature Map
 
-**Last updated:** 2026-03-14
+**Last updated:** 2026-03-14 (batch 2)
 **Problem:** Given a trained ReLU MLP, construct a smaller network computing the same function — analytically, not by distillation.
 
 ---
@@ -190,6 +190,112 @@ Relative flatness predicts generalization; neural collapse is not necessary for 
 **arXiv:** 2510.08638
 
 SAEs on DINOv2 show representations cluster around discrete archetypes via convex combinations. Minkowski geometry of representations. **Relevant to interpretability, not compression of MLPs.** The transformer attention context makes this distant from our problem.
+
+---
+
+---
+
+### Reverse-Engineering Deep ReLU Networks (Rolnick & Kording, ICML 2020)
+
+**URL:** https://proceedings.mlr.press/v119/rolnick20a/rolnick20a.pdf
+**User label:** "More ReLU theory stuff"
+
+**Main idea:** Proves that you can reconstruct the full architecture, weights, and biases of a deep ReLU network by querying its outputs — without any prior knowledge of the network's structure. The key insight is that first-layer neuron boundaries are flat hyperplanes in input space; deeper neurons have "bent hyperplanes" that bend exactly where they intersect boundaries from earlier layers. By measuring these bends, you recover inter-layer weights.
+
+**Algorithm (white-box version is simpler than the paper's black-box version):**
+1. For each neuron z, its boundary Bz is an (n-1)-dim piecewise linear surface
+2. First-layer neurons: Bz is a full hyperplane with equation W₁ᵢ·x + b₁ᵢ = 0 → weights and biases directly readable
+3. Deeper neurons: Bz bends when it crosses Bz' for z' in an earlier layer; the amount of bending encodes the weight between z' and z
+4. Boundary points found by binary search along line segments; hyperplane equations by local linear regression at boundary points
+
+**Why it matters for our problem:** This is the closest thing to a constructive "function extraction" algorithm. Given a trained ReLU network (white-box: we have the weights), we can:
+1. Enumerate boundary hyperplanes from weights directly (no queries needed)
+2. Track bending structure to confirm layer assignment
+3. Extract the affine map for each region from the masked weight product
+
+The Rolnick & Kording algorithm is designed for black-box access (only output queries). For our white-box case, we already have all the machinery from MASO to do this analytically. But the paper's **theoretical result is important**: it confirms that the piecewise linear partition completely determines the network up to permutation and scaling isomorphisms. This is the theoretical basis for why partition-based compression is lossless — the partition IS the function.
+
+**Key theoretical result:** Theorem 2 — given the set of all boundary points between linear regions, the full architecture and weights are recoverable (up to permutation and scaling). This means: two networks implementing the same piecewise linear function have the same partition up to these isomorphisms.
+
+**What's new vs. MASO:** MASO gives analysis tools; Rolnick & Kording prove the converse: from partition → unique network (up to iso). This closes the loop for compression: if we can construct a network with the same partition, it computes the same function.
+
+**Limitation:** Black-box algorithm requires O(n_in × total_neurons × log n₁) queries. For white-box, we bypass this entirely using weight matrices.
+
+---
+
+### Interpreting Neural Networks through the Polytope Lens (Black, Sharkey et al., Conjecture, 2023)
+
+**URL:** https://www.lesswrong.com/posts/eDicGjD9yte6FLSie/interpreting-neural-networks-through-the-polytope-lens
+**User label:** "another research thread relating to SplineCam"
+
+**Main idea:** Proposes polytopes (linear regions defined by activation patterns / spline codes) as the fundamental unit of neural network computation. The key move: instead of interpreting individual neurons or directions, interpret the *polytope* — the set of inputs sharing the same binary activation pattern. Within a polytope, the network is a fixed affine map; between adjacent polytopes (differing by one neuron flip), the maps are similar.
+
+**Empirical findings:**
+1. **Monosemanticity:** Clustering spline codes by Hamming distance produces monosemantic groups — regions that "mean" the same thing. Individual neurons are polysemantic; polytope clusters are not.
+2. **Semantic boundaries = polytope boundaries:** Inter-class activation pairs have statistically higher polytope boundary density (Hamming distance / Euclidean distance) than intra-class pairs. Effect increases at higher layers. The inter/intra difference is small but highly significant (p=3.8e-46).
+3. **Spline code clustering:** Hamming distance in spline code space captures semantic similarity even without magnitude information.
+
+**What it gives us for compression:**
+1. **Hamming distance is the right merging metric.** Adjacent regions (Hamming distance 1) implement nearly the same affine map. This is the principled basis for region merging: merge regions within Hamming radius r.
+2. **Spline code clustering = coarsening the partition.** Find clusters in Hamming space, assign one representative affine map per cluster. The accuracy loss is bounded by how different the affine maps are within each cluster.
+3. **The "representational flow" framing:** Networks achieve representational convergence by routing semantically similar inputs to nearby polytopes. A compressed network with fewer polytopes just routes inputs to coarser regions — acceptable if the affine maps within each cluster are similar.
+4. **Monosemantic regions are the natural compression target.** Rather than merging random adjacent regions, merge regions within monosemantic Hamming clusters. This preserves semantic structure.
+
+**Gap:** All experiments on InceptionV1 and GPT2-small (large networks). No experiments on actual compression or accuracy impact of merging.
+
+---
+
+### The Geometry of Concepts: SAE Feature Structure (Li, Michaud, Baek, Engels, Tegmark, Entropy 2025)
+
+**arXiv:** 2410.19750
+**User label:** "potentially useful for metrics? Ways to probe networks and find structure?"
+
+**Main idea:** Examines sparse autoencoder (SAE) feature geometry in LLMs (Gemma-2-2b) at three scales:
+1. **Crystal (atomic):** Pairwise difference vectors between semantically related SAE features form approximate parallelograms/trapezoids — semantic transformations correspond to consistent directions (man→woman, country→capital). Revealed by projecting out "distractor" directions via LDA.
+2. **Brain (meso):** Functionally co-occurring features also cluster geometrically; math/code features form a spatial "lobe." Quantified by mutual information between co-occurrence clusters and cosine-similarity clusters (AMI 954σ above null).
+3. **Galaxy (macro):** Feature point cloud has power-law eigenvalue spectrum, steepest in middle layers (slope −0.47 at layer 12 vs −0.24 at early/late layers). Middle layers = information bottleneck.
+
+**Relevance to compression:**
+- The power-law eigenvalue finding is directly relevant: middle layers of trained networks have the most compressed (non-isotropic, low-dimensional) representations. This is empirical evidence that the function being computed is low-dimensional relative to the ambient activation space — the classic argument for compression.
+- The co-occurrence + geometry alignment (features that fire together cluster together) provides an analysis tool: if you run similar analysis on MLP activations, you get a natural clustering of neurons for merging.
+- LDA for removing "distractor" directions is useful: before computing region similarity, project out directions that vary due to irrelevant input features (e.g. word length, input scaling).
+
+**Honest assessment for our problem:** Primarily about LLM interpretability via SAEs. The geometry analysis tools (power-law eigenvalue spectrum, co-occurrence clustering, LDA projection) are applicable to our MLPs but require adaptation. Not a compression paper.
+
+---
+
+### Johnson–Lindenstrauss Lemma + SplineCam Application
+
+**URL:** https://en.wikipedia.org/wiki/Johnson%E2%80%93Lindenstrauss_lemma
+
+**Statement:** For any ε ∈ (0,1) and N points in ℝⁿ, there exists a linear map f: ℝⁿ → ℝᵏ with k ≥ 8(ln N)/ε² such that all pairwise distances are preserved to within (1±ε) factor. The map is a random Gaussian projection (A ~ N(0,1)^{k×n}, scaled by 1/√k).
+
+**Key parameters:** For N=1000 points, ε=0.5 (50% distortion): k ≥ 8·ln(1000)/0.25 ≈ 221 dimensions. For ε=0.1: k ≈ 5500. The bound is tight — you genuinely need O(log N / ε²) dimensions.
+
+**The SplineCam problem:** SplineCam enumerates the exact piecewise linear partition in a 2D affine subspace (a plane cutting through input space). For 2D inputs it's exact. For high-D inputs (n >> 2), a single 2D cut reveals only the partition structure along that particular plane.
+
+**The user's idea — JL-guided multi-projection SplineCam:**
+
+The partition structure in ℝⁿ has an "effective dimension" determined by how many distinct activation patterns appear in the data. If K patterns are observed, the relevant structure lives in a subspace of dimension at most K (each pattern is a vertex in binary code space). JL says this structure can be approximately preserved in k = O(log K / ε²) dimensions.
+
+This suggests a concrete algorithm:
+1. Observe K distinct activation patterns from the data
+2. Compute a JL random projection to ℝᵏ with k = O(log K / ε²) ≈ 10-50 dimensions for typical K
+3. Run SplineCam in this k-dimensional projected space (still computationally intensive, but tractable for k=10-20)
+4. The resulting partition in projected space approximates the important structure of the original partition
+
+**What JL buys us:** It tells us that the "intrinsic dimensionality" of the partition structure is determined by K (number of observed patterns), not n (ambient input dimension). For our spirals/moons networks where K << 2^n, the relevant structure may live in a low-dimensional subspace.
+
+**Practical numbers for our setting:**
+- Spirals network (2→32×12→1): input dim = 2, so this is already low-D. JL irrelevant.
+- Torus SDF (3D input): same.
+- Higher-D test case (100D embedding, n=100): if K = 1000 observed patterns, JL says k ≈ 220 (ε=0.5) to see the structure. Still > 2D, so SplineCam still only gives a 2D slice.
+
+**Revised assessment of the user's idea:** JL doesn't directly tell us we can get away with a few 2D projections. What it tells us is: the partition structure has effective dimension k = O(log K). For SplineCam, the right question becomes: how many random 2D projections cover this k-dimensional structure? Answer: O(k) projections of dimension 2 give O(k) independent "views" of a k-dimensional structure. With k = O(log K), that's O(log K) projections.
+
+**Actionable:** For a network with K observed activation patterns, take O(log K) random 2D projections through the data distribution, run SplineCam on each, collect boundary densities across projections. This gives a statistically sound sample of the partition structure without full enumeration. The JL guarantee ensures these projections aren't redundant (they cover independent directions).
+
+**Open question:** How does the partition look in a JL-projected space vs. the original? Is the boundary density in the projected space predictive of the partition's complexity in the full space? This is testable empirically.
 
 ---
 
