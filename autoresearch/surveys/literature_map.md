@@ -1,7 +1,34 @@
 # Geometric Compression — Literature Map
 
-**Last updated:** 2026-03-14 (batch 2)
+**Last updated:** 2026-03-14 (batch 3)
 **Problem:** Given a trained ReLU MLP, construct a smaller network computing the same function — analytically, not by distillation.
+
+---
+
+## THE SYNTHESIS GAP (main open problem)
+
+**What we know:**
+1. A trained ReLU network defines a piecewise affine function f: ℝⁿ → ℝ with partition {P_i} and maps {A_i x + b_i}.
+2. Rolnick & Kording (2020): the partition **uniquely determines** the network up to permutation and scaling — partition IS function.
+3. Hanin & Rolnick (2019): the number of **actually observed** activation patterns is at most N^d (N=total neurons, d=input dim), independent of depth. Far below the theoretical 2^N.
+4. Polytope Lens: regions within Hamming radius r of each other have **similar affine maps** — natural merging criterion.
+
+**What we don't have:**
+- A constructive algorithm to go from K observed (pattern, affine_map) pairs → minimal ReLU network computing the same function.
+- A bound on how many neurons are needed to represent K piecewise affine regions.
+- A tested merging procedure that produces a valid smaller network.
+
+**The core algorithmic challenge:**
+Two adjacent regions can be merged iff their affine maps agree: A_i = A_j (they're literally the same linear function). When does this happen? When all differing neurons (those with bit flip at the shared boundary) have zero effect on the output. This is testable: check if W_{out} × (W_{layer at boundary}) is zero for the differing neuron column.
+
+**Strongest near-term lead (now confirmed):** Berzins (2306.07212) Section 5.4 demonstrates **78% parameter reduction with no accuracy loss** by:
+1. Dead neuron removal (always-inactive → delete)
+2. Always-active neuron collapse (always-linear → ≤D neurons per layer)
+This is implementable directly from our white-box weight access.
+
+**Next open question:** After removing stable neurons, how do you further compress the unstable (genuinely nonlinear) neurons? This is the hard part — no algorithm exists yet. The synthesis problem remains open for the unstable core.
+
+**Papers to fetch next:** Balestriero et al. NeurIPS 2019 "The geometry of deep networks: Power diagram subdivision" — might bridge power diagrams (SplInterp) to general ReLU networks.
 
 ---
 
@@ -39,6 +66,24 @@ Papers are rated:
 
 ---
 
+### Power Diagram Geometry of Deep Networks (Balestriero, Cosentino, Aazhang, Baraniuk, NeurIPS 2019)
+
+**arXiv:** 1905.08443
+
+**Main result:** Each MASO layer's partition corresponds to a **power diagram** (weighted Voronoi). Composing layers = progressively subdividing the power diagram. The full network's partition is an analytical expression of this progressive subdivision.
+
+**Critical finding:** "The subdivision process constrains the affine maps on the (exponentially many) power diagram regions to greatly reduce their complexity." This means: adjacent regions don't have arbitrary affine maps — they're related by the subdivision structure (derived from the same product of weight matrices, just with different neuron masks). This is the theoretical basis for why many adjacent regions have similar affine maps → mergeable.
+
+**What it gives us:**
+1. The partition has a **structured geometric form** (power diagram), not arbitrary polytopes
+2. The affine map on each region is determined by the power diagram parameters (centroids, weights) + layer weights
+3. Compression = finding a coarser power diagram that approximates the same function on the data distribution
+4. **Connects to SplInterp** (2025): SplInterp showed SAE partitions are K-th order power diagrams — Balestriero 2019 shows general ReLU nets produce power diagrams too. Same geometric structure, different architecture.
+
+**Gap:** Provides analytical form but no algorithm for finding the minimal/coarsest power diagram consistent with a given function. The synthesis direction is: given a desired power diagram (fewer cells), derive the network weights.
+
+---
+
 ### Local Complexity of Linear Regions (Patel & Montúfar, ICML 2025)
 
 **arXiv:** 2412.18283
@@ -73,6 +118,8 @@ Papers are rated:
 
 **Gap:** SAE context — the target here is interpretability, not compression of the original network. The spline structure is of the SAE, not of the MLP being analyzed.
 
+**BUT: synthesis direction exists for SAEs.** Theorem 2.3 says: given a desired partition (K-th order power diagram), you can derive the SAE encoding parameters analytically. This is a working example of "desired geometry → network weights" for a specific architecture. The question is whether this extends to general MLPs.
+
 ---
 
 ### Topological Signatures of Activation Patterns (Bosca et al., 2025)
@@ -95,6 +142,8 @@ Papers are rated:
 **Key limitation:** All experiments on 2D inputs, small networks. Laplacian computation scales as O(V²) in regions. The "polytope count grows polynomially with width, exponentially with depth" — acknowledged by authors. No compression experiments.
 
 **Immediate next step:** Implement the dual graph + weighted Laplacian for our spirals/moons networks. The Fiedler partition gives us a free clustering of activation patterns. Merge patterns in the same Fiedler cluster and measure the approximation error.
+
+**Reassessment (after reading full paper):** Harder constraint than expected — all experiments on ℝ² inputs explicitly. Cell complex homology computation becomes intractable for higher-D inputs (authors acknowledge exponential scaling). The Fiedler partition idea is sound and may still be useful for our 2D spirals/moons experiments, but doesn't scale to the compression problem in general. **Downgrade to USEFUL.**
 
 ---
 
@@ -162,6 +211,98 @@ Papers are rated:
 **Connection to our problem:** This shows that the piecewise affine structure of a ReLU network can be *globally modified* by adjusting activation function parameters. For compression: if we find the curvature parameter that best approximates the original function with a simpler partition, this is a form of analytic simplification. Limited to a 1D space of functions though.
 
 **Verdict:** Weak connection. More relevant to fine-tuning/robustness than compression.
+
+---
+
+### Few Activation Patterns in Practice (Hanin & Rolnick, NeurIPS 2019)
+
+**arXiv:** 1906.00904
+
+**Main result:** The average number of distinct activation patterns in a ReLU network at initialization (and during training) is bounded by N^d, where N = total neurons, d = input dimension. This bound is **independent of depth** and empirically tight — even on memorization tasks.
+
+**Why it matters for compression:**
+- Theoretical max is 2^N (exponential in neurons). Actual patterns are N^d (polynomial in neurons, exponential in input dim).
+- For our spirals network (2→32×12→1): N=384 neurons, d=2 inputs → bound = 384² ≈ 148k patterns. But we likely see far fewer in practice because training uses far less than the expressivity budget.
+- Compression argument: the function only needs to be correct on the ~N^d regions that actually matter. The rest (exponentially many) are never visited and can be ignored.
+- This directly bounds the complexity of the "synthesis target" — we need to represent at most N^d distinct regions, not 2^N.
+
+**Caution:** The bound N^d scales **exponentially in input dimension d**. For high-D problems (e.g. CIFAR d=3072), this bound is vacuous. Only useful for low-D inputs or after dimensionality reduction.
+
+---
+
+### ReLU Stability and Exact Compression (Serra, Yu, Kumar, Ramalingam, NeurIPS 2021)
+
+**arXiv:** 2102.07804
+**Code:** https://github.com/yuxwind/ExactCompression
+
+**Main idea:** A ReLU unit is *stable* on a given input domain if it always fires (positive pre-activation) or never fires (zero pre-activation) for all inputs in that domain. Stable units can be eliminated analytically without any retraining:
+- Always-inactive (stable-0): remove entirely (contributes nothing)
+- Always-active (stable-1): the ReLU is effectively linear → can fold into the affine part of the next layer
+
+**Algorithm:** Instead of solving one MIP per neuron (prior art), solve **one MIP for all neurons jointly**, achieving 183x speedup over state-of-art on CIFAR-10.
+
+**Results:**
+- With L1 regularization (no accuracy drop): up to 56% parameter removal on CIFAR-10
+- Works on 5×100 and 2×800 networks in minutes
+
+**Critical for our approach:**
+1. This is the cleanest form of "no-retraining compression" — provably exact on the given domain
+2. The stability check needs the input domain to be bounded. For our networks: use the training data bounding box or convex hull.
+3. L1 regularization during training increases the fraction of stable neurons → compression-aware training (but NOT our use case — we want post-hoc)
+4. Without L1, typical networks have fewer stable neurons, but still some. The fraction depends on architecture and task complexity.
+
+**Gap:** Requires solving a MIP per network, which has worst-case exponential complexity. In practice fast for small networks. For large networks, approximate methods (interval arithmetic, LP relaxation) are needed.
+
+---
+
+### Polyhedral Complex Extraction via Edge Subdivision (Berzins, 2023)
+
+**arXiv:** 2306.07212
+**Code:** https://github.com/arturs-berzins/relu_edge_subdivision
+
+**Main idea:** Instead of subdividing regions (redundant: 2^(D-1) regions share each edge), subdivide **edges**. Sign-vectors (binary activation patterns at each vertex) encode all combinatorial structure. Linear interpolation between vertices with opposite signs finds new boundary vertices. GPU-accelerated tensor ops throughout.
+
+**Performance:**
+- O(|V|) optimal (with sorting: O(|V| log |V|)), hash-table improvement = linear
+- 20x faster than SplineCam for D=2
+- Seconds for millions of cells on consumer GPU (RTX 3090)
+- D>8 impractical due to exponential growth of complex (hard limit)
+
+**Pruning section (Section 5.4) — most relevant for us:**
+1. **Dead neurons**: neuron whose folded hyperplane never intersects the input domain boundary → always-inactive → remove entirely
+2. **Always-active neurons**: neuron whose whole shape is in the positive half-space of ReLU → contributes fixed affine function → any >D always-active neurons in one layer are linearly dependent → **compress to D neurons with adjusted outgoing weights**
+3. **Demonstrated result**: 2,50,50,1 → 2,25,19,1 (2751 → 589 params, **78% reduction** with no accuracy loss!)
+
+**Key insight (point 2):** If a layer has k neurons all always-active, their outputs are always on the linear region, so they just compute W_2 @ W_1 x = (W_2 W_1) x — a single linear map. This is equivalent to D neurons in the layer. No ReLU, no nonlinearity contributed.
+
+**Connection to our problem:** This is the specific case of the synthesis gap that IS tractable:
+- Identify stable neurons in each layer
+- Remove dead neurons (zero params)
+- Merge always-active neurons into the effective linear map (at most D survivors)
+- The remaining "unstable" neurons define the piecewise linear structure
+- Build the compressed network from the unstable neurons only
+
+**Limitation:** Only applies to the bounded input domain defined by the extracted complex. For distribution-based compression (data-driven), use the training data convex hull as the domain.
+
+**Note:** References "Balestriero et al. (2019) The geometry of deep networks: Power diagram subdivision" (NeurIPS 2019) — connects power diagrams to deep network geometry (pre-SplInterp). Should fetch.
+
+---
+
+### Depth Separation for ReLU Networks (Arora et al., ICLR 2018)
+
+**arXiv:** 1611.01491
+
+**Main result:** Depth separation theorem — there exist functions representable by a depth-k² ReLU network (total size k³) that require at least ½k^(k+1) neurons if constrained to depth ≤ k. The lower bound uses zonotope geometry.
+
+**Why it matters for compression:**
+- Hard limit: you cannot in general compress a deep network to a shallow network without exponential blowup in width.
+- **This bounds what "geometric compression" can achieve**: if the target function was learned specifically because of depth (depth efficiency), compression must preserve depth structure.
+- For our use case: width reduction within the same depth is safe; depth reduction is exponentially costly in general.
+
+**Practical implication:** Our compression strategy should target:
+1. Pruning dead neurons (within-layer)
+2. Merging neurons with nearly-identical activation patterns (within-layer)
+3. NOT trying to reduce depth — this risks exponential representation loss
 
 ---
 
