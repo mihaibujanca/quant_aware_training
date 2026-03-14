@@ -1,6 +1,6 @@
 # Geometric Compression — Literature Map
 
-**Last updated:** 2026-03-14 (batch 9)
+**Last updated:** 2026-03-14 (batch 10)
 **Problem:** Given a trained ReLU MLP, construct a smaller network computing the same function — analytically, not by distillation.
 
 ---
@@ -283,6 +283,27 @@ A well-trained, grokked network has the sparsest possible partition structure ne
 **Gap:** Paper is in the interpretability framing; compression results are not the main evaluation. No quantitative compression ratios reported. The merging strategy is described but not algorithmically specified in detail.
 
 **Assessment:** CORE — must read for the merging strategy details. Full HTML paper worth fetching for algorithm section.
+
+---
+
+### On the Algorithmic Construction of Deep ReLU Networks (2025)
+
+**arXiv:** 2506.19104
+**Relevance:** CORE — the only paper we've found that explicitly constructs ReLU networks to implement known functions analytically
+
+**Main idea:** Treats neural networks as algorithms, not trained models. Key contributions:
+1. **Constructive synthesis:** Given a target function (e.g., a sorting algorithm), explicitly constructs a ReLU network implementing it exactly — not approximately, not by training.
+2. **Recursion + parallelism:** Constructed networks are typically recursive (depth = recursion depth) and parallel (width = parallel branches). Deep networks are more efficient than shallow because recursion depth is bounded by network depth.
+3. **Continuity constraint:** ReLU networks must be continuous — this is the binding constraint when constructing networks for discontinuous algorithms. The paper identifies this as the fundamental limitation of the ReLU representation.
+4. **Complexity:** Constructed networks can have billions of parameters but are built analytically from the algorithm structure.
+
+**Why this is CORE for our problem:**
+- This is the most direct treatment of the synthesis direction: given a piecewise affine function (our compressed target), construct a minimal ReLU network implementing it.
+- The recursive structure insight is directly applicable: after extracting the partition (activation patterns + affine maps), the construction of the compressed network can be formulated as a recursive problem on the partition's tree structure.
+- Continuity constraint = the fundamental challenge of Phase 3 merging. Two adjacent regions can only be merged (their boundary hyperplane removed) if the affine maps agree on that boundary — exactly the continuity requirement.
+- The "neural network as algorithm" framing inverts the usual problem: instead of training → analysis, it's specification → construction. Our compression pipeline needs exactly this: partition + maps → network.
+
+**Gap:** Paper focuses on constructing networks for known mathematical functions (sorting, etc.), not for extracting a smaller network from a large trained one. The "trained large network → small network with same function" direction is not addressed directly. But the constructive tools developed here are the right primitives.
 
 ---
 
@@ -619,6 +640,80 @@ Both formalised as orthogonal operators. Proves: within rank-distance 1, folding
 
 ---
 
+### Fast and Exact Enumeration of Deep Networks Partition Regions (2024)
+
+**arXiv:** 2401.11188
+**Relevance:** USEFUL — first exact algorithm for partition enumeration; directly enables region census experiments
+
+**Main idea:** First parallel algorithm for exact enumeration of all linear regions of a piecewise affine deep network. Key findings:
+1. **Exact vs. approximate:** Prior work (including SplineCam) only computed partitions on 2D/3D slices or estimated by random sampling. This gives the exact full-dimensional partition.
+2. **Complexity scales linearly** with input dimension and region count — not exponentially.
+3. **Key empirical finding:** Uniform random sampling is efficient for finding large-volume regions, but exponentially costly (in input dimension) for small regions. The distribution of region sizes is highly non-uniform — most of the partition's volume is in a few large regions, but many small regions exist near boundaries.
+
+**Relevance to compression:**
+- Directly implements the region census needed for agenda item 3. We can run this on our spiral/moons networks and get the exact region count and size distribution.
+- The large-volume / small-volume split is crucial: large regions are stable (far from boundaries) and candidates for Phase 1/2 removal. Small regions are near boundaries and harder to compress.
+- The linear scaling with input dimension makes this tractable for our networks (2D input spirals → trivially fast; 100D embedding → may be large but feasible).
+- Running this tells us: how many distinct activation patterns are actually observed, how concentrated the volume is, and where small "corner" regions are.
+
+---
+
+### Training Dynamics of Deep Network Linear Regions (Balestriero group, 2023)
+
+**arXiv:** 2310.12977
+**Relevance:** USEFUL — explains where linear regions are at the end of training; directly informs compression strategy
+
+**Main idea:** Studies how the partition of input space evolves during training for piecewise affine networks. Three key findings:
+1. **Phases of local complexity:** Local complexity (density of linear regions around data points) follows a multi-phase curve: decreases after init, then rises, then descends.
+2. **Region migration:** In the final descent phase, linear regions migrate **away from training/test data** toward the decision boundary. The network becomes nearly linear everywhere except at the decision boundary.
+3. **Generalization correlation:** The different LC phases correlate with memorization vs. generalization regimes.
+
+**Relevance to compression:**
+- The migration finding is critical: after training, the complex partition structure is concentrated at the decision boundary. The vast majority of input space (where data lives) is nearly linear = just a few large affine regions.
+- This directly justifies Phase 1/2 compression: most neurons are "dead" or "always-active" on the data distribution not because of pathology, but as a result of the training dynamics (regions migrate away from data).
+- For our spirals experiments: by the time training converges, the bulk of the spiral interior has nearly-flat activation — only neurons near the decision boundary have complex patterns. Compression ratio ∝ boundary length / total volume.
+- Measurement strategy: run region census at several training checkpoints to observe the migration, not just at final checkpoint.
+
+---
+
+### Gradient Descent Quantizes ReLU Network Features (Saxe group, 2018)
+
+**arXiv:** 1803.08367
+**Relevance:** USEFUL — SGD implicitly concentrates weight vectors to a small set of directions; compression can exploit this
+
+**Main idea:** For feedforward ReLU networks trained with gradient descent (including plain GD) from small initialization:
+1. **Quantization effect:** Weight vectors concentrate at a small number of directions determined by the input data distribution — finitely many directions, independent of network size.
+2. **Data-determined directions:** The discrete set of weight directions is determined by the input data, not by random initialization or network width. Larger network → more weights pointing in the same directions.
+3. **Analogy to linear interpolation:** The quantization of weight directions is analogous to linear interpolation — weights in over-parameterized networks end up as linear combinations of a small basis.
+
+**Relevance to compression:**
+- If SGD already concentrates weight vectors to K distinct directions for a dataset of N points (K << N and K << W), then a compressed network with K neurons per layer represents the same function.
+- This is an implicit justification for why Phase 2 (always-active neuron collapse to ≤D directions per layer) works: training already pushes the neurons toward a D-dimensional subspace.
+- The data-determined directions are exactly the basis for the affine maps A_ω in each region — if all weight vectors concentrate to K directions, then the effective rank of each A_ω is ≤ K.
+- Practical implication: after training, compute the clustering of weight directions per layer. The number of distinct clusters = effective width needed for that layer.
+
+**Honest assessment:** Published 2018, before modern understanding of feature learning. The "quantization" is an asymptotic statement for small init/LR and may not hold for modern training. But the direction is right: SGD doesn't explore the full weight space randomly — it finds structured solutions.
+
+---
+
+### Defining Neural Network Architecture through Polytope Structures of Dataset (2024)
+
+**arXiv:** 2402.02407
+**Relevance:** USEFUL — derives upper/lower bounds on required network width from dataset polytope structure; inverse algorithm recovers polytopes from trained network
+
+**Main idea:** Connects the geometric complexity of a dataset (expressed as polytope structure) to the required neural network width.
+1. **Width bounds:** Upper bound = number of polytope facets needed to separate classes. Lower bound = from simplicial complex structure of the boundary.
+2. **Manifold generalization:** For datasets on manifolds, the required width scales with the geometric complexity of the manifold.
+3. **Inverse algorithm:** Given a trained network, extract the polytope structure of the dataset it was trained on. Applied to MNIST/CIFAR10: these datasets can be "encapsulated" by ≤2 polytopes with few faces.
+
+**Relevance to compression:**
+- The width bound is a direct answer to "what is the minimal network width?" — it depends on the dataset geometry, not the training procedure.
+- The inverse algorithm is exactly what we need for region census: run it on our spiral/moons networks to extract the polytope structure the network has learned to implement.
+- "≤2 polytopes with few faces" for MNIST means the learned function is geometrically simple despite high-dimensional input — strong compression is possible.
+- For spirals/moons (2D, clear decision boundary): the polytope structure should be recoverable exactly, giving us the minimal width analytically.
+
+---
+
 ## CONTEXT (background, not directly applicable)
 
 ### Geometry of Grokking: Norm Minimization on the Zero-Loss Manifold (Musat, 2025)
@@ -630,6 +725,35 @@ Both formalised as orthogonal operators. Proves: within rank-distance 1, folding
 **For compression (updated assessment):** The norm-minimization result means post-grokking networks converge toward minimum-norm (= minimum-rank) solutions on the zero-loss manifold. This directly supports: (a) our empirical finding that rank₉₅ ≈ 2 at most layers, and (b) why compression should be maximally feasible post-grokking — the network has simplified its weights as much as possible while maintaining zero training loss. The zero-loss manifold framing also suggests: the set of networks equivalent on training data forms a manifold, and minimum-norm solutions are the most compressible points on this manifold.
 
 **Assessment:** CONTEXT (upgraded) — not a compression algorithm, but provides strong theoretical basis for *why* well-trained networks are compressible. Read alongside Deep Grokking (2402.15555).
+
+---
+
+### Space Folding in ReLU Networks (Bréchet et al., 2025 / Manz et al., 2025)
+
+**arXiv:** 2502.09954 (quantitative analysis), 2503.08502 (generalization + regularization)
+**Relevance:** CONTEXT — analysis tool for the activation structure; not directly a compression algorithm
+
+**Main idea (2502.09954 — Bréchet):** First quantitative analysis of the "space folding" phenomenon in ReLU networks. Measures how straight paths in input space become non-convex (folded) in activation (Hamming) space. Introduces a range-based measure of folding and proves equivalence between convexity in input space and in activation space.
+
+**Main idea (2503.08502 — Manz):** Generalizes the folding measure to other activations via equivalence classes. Key finding: folding *increases* with depth when generalization error is low, and *decreases* when generalization degrades. Learned symmetries (e.g., reflection invariance) manifest as high folding values.
+
+**Relevance to compression:**
+- Space folding = same input region maps to the same activation pattern despite coming from different locations in input space. High folding = many inputs share activation patterns = fewer effective regions = more compressible.
+- The correlation between folding and generalization means well-trained networks have high folding = are more compressible. Gives a measurable predictor of compression ratio before running the full region census.
+- The symmetry connection: if the learned function is invariant under some transformation (reflection, rotation), the folding captures this and the compressed network only needs to implement one half.
+
+**Honest assessment:** These papers develop analysis tools; they don't give a compression algorithm. Useful for measuring compression potential and understanding why it's high. Not yet actionable for Phase 3.
+
+---
+
+### Geometry-induced Regularization in Deep ReLU Neural Networks (2024)
+
+**arXiv:** 2402.08269
+**Relevance:** CONTEXT — geometric explanation of implicit regularization; connection between local dimension and region count
+
+**Main idea:** The output space of a deep ReLU network partitions into regions of distinct local dimension (analogous to a stratified manifold). This stratification is invariant under ReLU symmetries (positive rescalings, permutations). Local dimension correlates with: (a) regularization strength, (b) flatness of minima, (c) saddle-to-saddle training dynamics. For shallow networks, local dimension ≈ count of linear regions.
+
+**Relevance to compression:** Provides a unified geometric explanation for why trained networks find structured solutions. The stratified structure of the parameter space implies that training converges to low-dimensional strata — the same low-dimensionality that makes the function compressible. Context for understanding why Phase 1/2 work (low-dimensional parameter manifold = few effective neurons).
 
 ---
 
