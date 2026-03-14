@@ -1,6 +1,6 @@
 # Geometric Compression — Literature Map
 
-**Last updated:** 2026-03-14 (batch 3)
+**Last updated:** 2026-03-14 (batch 6)
 **Problem:** Given a trained ReLU MLP, construct a smaller network computing the same function — analytically, not by distillation.
 
 ---
@@ -220,6 +220,72 @@ A well-trained, grokked network has the sparsest possible partition structure ne
 
 ---
 
+### Equivalent and Approximate Transformations of Deep Neural Networks (Kumar, Serra, Ramalingam, 2019)
+
+**arXiv:** 1905.11428
+
+**Main idea:** Formalises the idea of transforming a trained ReLU network into an equivalent or approximate network with fewer units/layers — analytically, no retraining. Three transformation types:
+1. **Exact (stable neuron removal):** ReLUs that are always-active or always-inactive for all valid inputs can be safely removed with zero loss. Always-inactive → delete; always-active → fold into next layer's affine map.
+2. **Local exact (domain restriction):** For a smaller input domain, more neurons become stable → more can be removed + some layers collapsed.
+3. **Global linear approximation:** For any feed-forward ReLU network there exists an equivalent 2-hidden-layer shallow network — but requires potentially exponential width to represent all activation patterns. **Key insight: only need to account for patterns that define actual linear regions, not all 2^N.**
+
+**Results (MNIST):**
+- L1-reg + adversarial training → dramatically fewer linear regions (more stable neurons → more compressible)
+- This proves intentional training can enable effective lossless compression
+
+**Directly relevant to Phase 1/2:**
+- This is the theoretical paper behind Serra 2021 (same group). Proves equivalent transformations exist and gives the stable-neuron criterion.
+- "Some layers collapsed" for local exact: if a layer becomes all-stable within a subdomain, its contribution becomes linear → collapse into adjacent layer. This is Berzins §5.4's always-active compression, formally grounded.
+- The 2-layer global approximation result shows the depth lower bound for exact representation (log n₀+1 layers). Below this, exponential width needed → don't try to shallow-compress.
+
+**Assessment:** CORE — foundational justification for Phase 1/2. Read before implementing stable neuron removal.
+
+---
+
+### The Geometry of ReLU Networks through the ReLU Transition Graph (Dhayalkar, 2025)
+
+**arXiv:** 2505.11692
+
+**Main idea:** Introduces the **ReLU Transition Graph (RTG)**: nodes = linear regions (unique activation patterns observed on data), edges = pairs of regions differing by exactly one neuron flip (Hamming distance 1). This is a direct formalisation of the Hamming-1 adjacency that underlies region merging.
+
+**Key results:**
+1. **Tight combinatorial bounds** on RTG size and diameter — precise counts, not just asymptotics
+2. **RTG connectivity proof** — the graph of linear regions is always connected (you can always walk from one region to any other via Hamming-1 steps). This means the partition has no isolated components.
+3. **VC-dimension interpreted as RTG graph-theoretic property** — the VC dimension corresponds to structural properties of the RTG
+4. **Entropy and average degree of RTG → generalization error bound** — networks with sparser RTGs (fewer edges per region) generalise better
+5. "Opens new avenues for compression, regularization, and complexity control rooted in RTG analysis"
+
+**For compression:**
+- The RTG diameter bound constrains how many merging steps are needed to collapse the partition
+- Connectivity means any target coarser partition is reachable by sequential Hamming-1 merges
+- Average degree = average number of mergeable neighbours per region → high-degree regions are "in the interior" of semantically similar clusters → merge candidates
+
+**Assessment:** CORE — directly formalises the combinatorial structure of our merging problem. The RTG is precisely the graph we'd traverse in Phase 3.
+
+---
+
+### Unwrapping The Black Box of Deep ReLU Networks: Interpretability, Diagnostics, and Simplification (Sudjianto et al., 2020)
+
+**arXiv:** 2011.04041
+
+**Main idea:** Uses *local linear representation* — the same MASO framework (activation pattern → local affine map) — to build a practical toolkit for interpretability, diagnostics, and **simplification** of pre-trained ReLU networks. Each input maps to a Local Linear Model (LLM): W_eff(x) = product of active weight matrices along the forward path.
+
+**Key contribution for compression — the merging strategy:**
+- Clusters inputs by their LLM (if W_eff(x_1) ≈ W_eff(x_2), merge their regions)
+- Proposes an "effective merging strategy" demonstrated to simplify networks while maintaining accuracy
+- Validated on simulation, UCI benchmark datasets, and real credit risk data
+
+**What it gives us:**
+1. A working implementation of effective weight extraction: W_eff(x) = composition of masked layer weights along activation path. This IS SplineCam's Equation 3-4, implemented end-to-end.
+2. A merging criterion: similarity of W_eff across inputs. Inputs mapping to similar W_eff can be served by a single merged region.
+3. A practical simplification pipeline for pre-trained networks — closest thing in the literature to our Phase 3 target.
+
+**Gap:** Paper is in the interpretability framing; compression results are not the main evaluation. No quantitative compression ratios reported. The merging strategy is described but not algorithmically specified in detail.
+
+**Assessment:** CORE — must read for the merging strategy details. Full HTML paper worth fetching for algorithm section.
+
+---
+
 ## USEFUL
 
 ### Auto-Compressing Networks (Dorovatas, Paraskevopoulos, Potamianos, NeurIPS 2025 oral)
@@ -263,6 +329,67 @@ A well-trained, grokked network has the sparsest possible partition structure ne
 **Connection to our problem:** This shows that the piecewise affine structure of a ReLU network can be *globally modified* by adjusting activation function parameters. For compression: if we find the curvature parameter that best approximates the original function with a simpler partition, this is a form of analytic simplification. Limited to a 1D space of functions though.
 
 **Verdict:** Weak connection. More relevant to fine-tuning/robustness than compression.
+
+---
+
+### Cut Less, Fold More: Model Compression through the Lens of Projection Geometry (Saukh et al., ICLR 2026)
+
+**arXiv:** 2602.18116
+
+**Main idea:** Frames two dominant calibration-free compression approaches geometrically:
+- **Structured pruning** = axis-aligned projection (set weights to zero)
+- **Model folding** = low-rank projection via weight clustering (merge similar weight groups)
+
+Both formalised as orthogonal operators. Proves: within rank-distance 1, folding yields **provably smaller parameter reconstruction error** than pruning. Under mild smoothness, also smaller functional perturbation.
+
+**Results:** Evaluated on >1000 checkpoints (ResNet18, ViT-B/32, CLIP, LLaMA 60M/130M). Folding typically achieves higher post-compression accuracy, especially at moderate-high compression. No calibration data or retraining required.
+
+**For our problem:** This is a working no-retraining compression method that achieves good results. Folding = neuron merging via weight clustering — closely related to our Phase 3 goal. The geometric framing (projections as operators) is a useful lens. Key difference from our approach: folding treats weights as vectors to cluster, not as components of a piecewise affine function. No activation pattern information used.
+
+**Assessment:** USEFUL — confirms calibration-free compression works at scale. The folding = weight clustering idea is a practical Phase 3 fallback if exact activation-pattern merging proves too expensive.
+
+---
+
+### Unveiling the Training Dynamics of ReLU Networks through a Linear Lens (Ye, 2025)
+
+**arXiv:** 2511.05628
+
+**Main idea:** Recasts a multi-layer ReLU network as an equivalent single-layer linear model with **input-dependent effective weights**: W_eff(x) = product of weight matrices masked by the activation pattern of x. Tracks W_eff evolution during training. Key finding: as training progresses, W_eff for same-class inputs **converges** while W_eff for different classes **diverges** — class-specific decision boundaries emerge from this convergence.
+
+**Connection to our problem:**
+- W_eff(x) is exactly SplineCam's A_ω (the affine map for input x's region ω). This paper provides empirical evidence that W_eff is the right object to track.
+- Convergence of W_eff within classes → regions belonging to the same class have similar affine maps → they're mergeable (the affine maps are approximately equal across the class).
+- **Direct implication**: after training, partition the inputs by class label, compute W_eff within each class partition, check similarity. High similarity = high compression potential.
+
+**Assessment:** USEFUL — confirms the effective weight framework. The within-class convergence finding is a new compression criterion: regions can be merged when their W_eff has converged to a common value.
+
+---
+
+### Sufficient Conditions for Stability of Minimum-Norm Interpolating Deep ReLU Networks (El Harzli et al., 2026)
+
+**arXiv:** 2602.13910
+
+**Main results:**
+1. A deep ReLU network achieves good generalization stability if it contains a stable sub-network **followed by a low-rank weight layer**
+2. Without the low-rank assumption on the subsequent layer, stability is not guaranteed even with a stable sub-network
+
+**For our problem:** The low-rank layer requirement connects to the effective rank result from our prior experiments (rank₉₅ ≈ 2 at most layers). Networks trained with weight decay or gradient descent bias tend toward low-rank solutions. The "stable sub-network" concept (sub-network that doesn't change outputs under training point removal) is different from MASO stability (stable-0/1 neurons), but both point to identifying the "inert" part of the network.
+
+**Assessment:** USEFUL (marginal) — generalization stability framework, not compression framework. The low-rank+stable-subnetwork result is suggestive but doesn't give a compression algorithm.
+
+---
+
+### Who Said Neural Networks Aren't Linear? — The Linearizer (Berman, Hallak, Shocher, 2025)
+
+**arXiv:** 2510.08570
+
+**Main idea:** Given a neural network f, finds non-standard vector spaces where f acts as a linear operator. Constructs a "Linearizer" architecture: f(x) = g_y⁻¹(A g_x(x)) where g_x, g_y are invertible neural networks and A is a linear operator. Uses algebraic "transport of structure" — the vector space operations on X and Y are defined through g_x and g_y. Composition of two Linearizers sharing a network = another Linearizer.
+
+**Applications:** Single-step diffusion, idempotent generative models, modular style transfer.
+
+**For our problem:** The Linearizer identifies the "hidden linear structure" of a nonlinear network. If the target function f is already approximately linear near the data, g_x and g_y can be trivial → f IS linear on the data → 1 region → maximally compressed. This is a different path to the same conclusion as our grokking compression argument. Not directly a compression algorithm but provides a theoretical lens.
+
+**Assessment:** CONTEXT — elegant theoretical framework, different application domain. File for the "what does it mean for a ReLU network to be linear?" thread.
 
 ---
 
