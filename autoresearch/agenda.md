@@ -40,13 +40,6 @@
 
 ### P2
 
-7. **Survey: Non-distillation model compression methods (2023-2026)**
-   - Search for recent work on compressing neural networks by analyzing the function they compute, rather than training a student. Keywords: "piecewise linear compression", "network function extraction", "activation region compression", "analytic model compression". Check arxiv and Google Scholar.
-   - Type: literature
-   - Confirmed if: find ≥2 papers with working methods that construct compressed models without SGD
-   - Refuted if: all methods found still rely on SGD/distillation for the compressed model
-   - Inconclusive if: methods exist but limited to specific architectures or toy problems
-
 8. **Minimal network construction from known partition**
    - Given the extracted partition from items 4-5 (set of affine maps over convex regions), construct the smallest ReLU MLP that implements the same piecewise linear function. Use the theoretical result that a PWL function with K pieces in R^n can be represented by a network with O(K) neurons. Implement this construction for 2D inputs.
    - Depends on: items 4, 5
@@ -66,6 +59,20 @@
    - Commit: (see cycle_001_manifest.txt)
    - Artifact: `autoresearch/surveys/balestriero_spline_theory.md`
    - Key finding: Activation pattern census (Technique 1) and affine map extraction (Technique 2) are directly actionable from MASO theory; SplineCam (Technique 3) provides exact 2D enumeration. Gap: analysis-to-synthesis route for minimal network construction remains open.
+
+### Cycle 003
+
+7. **Survey: Non-distillation model compression methods (2023-2026)**
+   - Type: literature
+   - Outcome: **confirmed** — found ≥2 papers with working no-SGD compression methods
+   - Cycle: 003
+   - Commit: 66021d0
+   - Artifact: `autoresearch/surveys/literature_map.md`
+   - Key findings:
+     - **Serra et al. NeurIPS 2021 (2102.07804)**: ReLU stability criterion — MIP-based dead/always-active neuron detection → 56% connection removal, 183x faster than prior art. No SGD required.
+     - **Berzins 2023 (2306.07212)**: GPU-accelerated partition extraction + §5.4 pruning demo → 78% parameter reduction (2,50,50,1 → 2,25,19,1) via dead + always-active removal. Constructive, no SGD.
+     - **3-Phase algorithm** identified: Phase 1 (dead neuron removal) + Phase 2 (always-active collapse to ≤D neurons/layer) = solvable analytically. Phase 3 (merging genuinely unstable neurons) = open problem.
+     - Depth reduction ruled out: Arora et al. (1611.01491) proves exponential neuron cost for depth reduction → target width compression only.
 
 ### Cycle 002
 
