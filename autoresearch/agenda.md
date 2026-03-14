@@ -4,12 +4,6 @@
 
 ### P0
 
-2. **Survey: Tropical geometry and neural networks**
-   - Read Zhang et al. "Tropical Geometry of Deep Neural Networks" (2018) and Maragos et al. "Tropical Geometry and Machine Learning" (2021). Focus on: (a) do tropical polynomials provide more compact representations of piecewise linear functions than weight matrices, (b) algorithms for converting ReLU networks to tropical form, (c) computational complexity of the conversion.
-   - Type: literature
-   - Confirmed if: tropical representations offer provably or empirically fewer parameters for the same piecewise linear function, with a computable conversion
-   - Refuted if: tropical representation is equally or more expensive, or conversion is intractable
-   - Inconclusive if: theoretical advantage exists but no practical algorithm is available
 
 3. **Linear region census on trained networks**
    - For trained MLPs on spirals and moons (2D), count distinct linear regions activated by the data. Method: forward pass each data point, record binary ReLU activation pattern (on/off per unit per layer), count unique patterns. Also compute theoretical maximum (product of 2^width per layer). Compare.
@@ -72,3 +66,13 @@
    - Commit: (see cycle_001_manifest.txt)
    - Artifact: `autoresearch/surveys/balestriero_spline_theory.md`
    - Key finding: Activation pattern census (Technique 1) and affine map extraction (Technique 2) are directly actionable from MASO theory; SplineCam (Technique 3) provides exact 2D enumeration. Gap: analysis-to-synthesis route for minimal network construction remains open.
+
+### Cycle 002
+
+2. **Survey: Tropical geometry and neural networks**
+   - Type: literature
+   - Outcome: **inconclusive** — tropical polynomial form is exponentially large (intractable for deep nets); practical TropNNC algorithm uses zonotope clustering but never builds a compact tropical form
+   - Cycle: 002
+   - Commit: TBD
+   - Artifact: `autoresearch/results/cycle_002_summary.md`
+   - Key finding: Tropical geometry = dead end for direct compression. One salvageable idea: neurons-as-zonotope-generators motivates clustering-based pruning (overlaps with MASO region merging). Do NOT pursue tropical algebra further.

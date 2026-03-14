@@ -1,0 +1,3 @@
+cycle	item	type	outcome	key_metric	description	commit	paths
+001	1	literature	confirmed	6 implementable techniques identified (>=3 required)	Survey: Balestriero piecewise linear / spline theory	092abc4	autoresearch/surveys/balestriero_spline_theory.md,autoresearch/results/cycle_001_summary.md
+002	2	literature	inconclusive	tropical polynomial form exponentially large; TropNNC uses zonotope clustering (works) but never builds compact tropical form	Survey: Tropical geometry and neural networks	TBD	autoresearch/results/cycle_002_summary.md
