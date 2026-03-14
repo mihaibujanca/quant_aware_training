@@ -66,6 +66,34 @@ Papers are rated:
 
 ---
 
+### SplineCam: Exact Partition Visualization (Humayun, Balestriero, Balakrishnan, Baraniuk, CVPR 2024)
+
+**arXiv:** 2302.12828
+**Code:** https://bit.ly/splinecam-git
+
+**Main idea:** Provably exact method for computing the 2D partition of any CPWL network — the first exact method. BFS on the hyperplane arrangement graph, restricted to 2D slices. Computes partition statistics: region count, region volume, eccentricity, decision boundary.
+
+**Key formula (Equations 3-4, direct use for us):**
+For each region ω defined by activation pattern q_ω^ℓ (binary vector for layer ℓ), the affine map is:
+```
+A_ω^ℓ = ∏ diag(q_ω^i) W^i        (product of masked weight matrices)
+b_ω^ℓ = diag(q_ω^ℓ) b^ℓ + sum of accumulated bias corrections
+```
+This is the **constructive formula** for extracting the affine map analytically from weights + activation patterns. This is what we need for the synthesis direction.
+
+**Empirical findings directly relevant to compression:**
+1. "Not all neurons actively partake in the regression task... while for the first layer all 10 hyperplanes intersect the input domain, for the last layer only 4 of the 10 neurons intersect." → **Direct visual evidence of the stable neuron pruning opportunity**
+2. "Variation is considerably low between random 2D orientations" → a single 2D slice can characterize the partition structure. Supports the JL + SplineCam approach.
+3. DA training → higher partition density near test data → better generalizability (partition density ↔ generalization)
+
+**Limitation:** Only 2D slices. For D=3 (torus SDF) it's directly applicable. For higher-D, use random 2D projections.
+
+**Partition statistics as compression quality metrics:**
+- ARV (Average Region Volume), NR (Number of Regions): before vs after compression
+- Ideally: same NR at training data locations, lower NR elsewhere
+
+---
+
 ### Power Diagram Geometry of Deep Networks (Balestriero, Cosentino, Aazhang, Baraniuk, NeurIPS 2019)
 
 **arXiv:** 1905.08443
@@ -81,6 +109,30 @@ Papers are rated:
 4. **Connects to SplInterp** (2025): SplInterp showed SAE partitions are K-th order power diagrams — Balestriero 2019 shows general ReLU nets produce power diagrams too. Same geometric structure, different architecture.
 
 **Gap:** Provides analytical form but no algorithm for finding the minimal/coarsest power diagram consistent with a given function. The synthesis direction is: given a desired power diagram (fewer cells), derive the network weights.
+
+---
+
+### Deep Grokking: Local Complexity and Delayed Robustness (Humayun, Balestriero, Baraniuk, ICML 2024)
+
+**arXiv:** 2402.15555
+
+**Main finding:** Grokking (delayed generalization) is a **phase transition in the partition structure**:
+- Pre-grokking: linear regions randomly distributed across input space
+- Post-grokking: linear regions **migrate away from training data** toward the decision boundary
+- Post-grokking: the mapping is locally **linear near training samples** (low local complexity there)
+
+**Direct implication for compression:**
+A well-trained, grokked network has the sparsest possible partition structure near its training data. The function is locally linear (constant affine map) over large neighborhoods of each training point. This means:
+- Compression IS possible without accuracy loss on training data
+- The minimal number of regions needed ≈ the number of distinct local linear behaviors on the training set
+- After grokking, this number should be much smaller than the number of network neurons
+
+**Compression strategy informed by this paper:**
+1. Check if network has grokked (partition density at training data → low after grokking)
+2. If grokked: high compression is achievable (function is "simple" near the data)
+3. If not grokked: compression may reduce accuracy (function still uses all its capacity near data)
+
+**Connection to Local Complexity (Patel & Montúfar 2025):** Same concept, different formalization. Humayun is empirical/phenomenological (first paper introducing the idea), Patel & Montúfar is the formal mathematical treatment.
 
 ---
 
