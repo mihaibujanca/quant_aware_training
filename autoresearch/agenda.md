@@ -122,6 +122,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Type: analysis
    - Outcome: **confirmed** — exact-open nanochat benchmark and explicit `gpt2` proxy benchmark are both now documented, with concrete path conventions and acquisition procedures
    - Cycle: 004
-   - Commit: TBD
+   - Commit: e25470e
    - Artifact: `autoresearch/results/cycle_004_summary.md`
    - Key finding: the exact-open target is `karpathy/nanochat` base checkpoints plus `climbmix-400b-shuffle`, but those assets are not present locally; the only benchmark runnable immediately on this machine is the cached `gpt2` proxy path, which must remain clearly labeled proxy-only.

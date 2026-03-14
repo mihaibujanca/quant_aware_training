@@ -3,22 +3,25 @@
 ## Completed (last 5)
 | Cycle | Item | Type | Outcome | Key Finding |
 |-------|------|------|---------|-------------|
-| 001 | Survey: Balestriero piecewise linear / spline theory | literature | confirmed | 6 implementable techniques identified: activation census, affine map extraction, SplineCam for 2D, partition extraction, effective rank analysis, network reconstruction |
+| 004 | Benchmark lock-in and asset audit | analysis | confirmed | Exact-open target is nanochat + climbmix; current machine only has runnable `gpt2` proxy path |
+| 003 | Survey: Non-distillation model compression methods (2023-2026) | literature | confirmed | Dead-neuron removal and always-active collapse are the strongest no-SGD exact baselines |
+| 002 | Survey: Tropical geometry and neural networks | literature | inconclusive | Tropical polynomial form is not an operational compression path; zonotope clustering is the only salvageable idea |
+| 001 | Survey: Balestriero piecewise linear / spline theory | literature | confirmed | Activation census and affine-map extraction are directly actionable from MASO theory |
 
 ## Insights
-- MASO theory (Balestriero) provides direct path to activation pattern analysis and affine map extraction for ReLU networks
-- SplineCam enables exact enumeration of piecewise linear partitions on 2D inputs (actionable for moons/spirals networks)
-- Compression opportunity: gap between theoretical max linear regions (2^depth × layer_widths) and empirically activated patterns remains unquantified
+- The benchmark ladder is now locked: `nanochat` + `climbmix-400b-shuffle` is the exact-open target, `gpt2` is the current proxy, `hf_random` is smoke only.
+- Exact white-box pruning is the first serious no-SGD baseline; Serra/Berzins-style stable-channel removal should be treated as mandatory, not optional.
+- Tropical geometry remains de-prioritized for direct compression; it does not supply a compact constructive representation for deep nets.
+- MASO-style local-map reasoning is still the most concrete route to transformer FFN analysis.
 
 ## Next
-**Item 2 (P0):** Tropical geometry literature survey — Zhang et al. (2018), Maragos et al. (2021) — check if tropical polynomials provide parameter-efficient alternative representations for piecewise linear functions.
-
-**Item 3 (P0):** Linear region census on trained networks — count unique activation patterns on spirals/moons data vs. theoretical maximum. Executable via existing models in `aleph/models.py`.
+Item 10: Single-block swap localization curve — now that the benchmark policy is explicit, measure where analytic FFN compression fails inside the full model, starting with `gpt2` unless local nanochat assets are added.
 
 ## Dead Ends
-- None yet (agenda is exploratory)
+- Tropical geometry as a direct compression representation
+- Treating proxy `gpt2` runs as if they answered the exact-open benchmark
 
 ## Open Questions
-- How many unique linear regions do trained networks actually activate vs. theoretical capacity?
-- Can tropical geometry improve on weight matrix compression for PWL functions?
-- At what merging threshold (similarity > X%) do regions merge without accuracy loss?
+- How predictive are single-block local metrics of full-model degradation after the swap?
+- Do pretrained transformer FFNs contain enough stable or near-linear channels to make exact pruning material?
+- When nanochat assets are added, do the proxy conclusions transfer or break?
