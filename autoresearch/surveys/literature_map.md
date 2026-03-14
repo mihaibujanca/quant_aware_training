@@ -365,6 +365,40 @@ Both formalised as orthogonal operators. Proves: within rank-distance 1, folding
 
 ---
 
+### The Geometric Structure of Fully-Connected ReLU Layers (Larsson, 2023)
+
+**arXiv:** 2310.03482
+
+**Main idea:** Formalises the geometry of a single ReLU layer. The layer induces a natural partition of input space into "sectors." Key result: **a ReLU layer = projection onto a polyhedral cone followed by an affine transformation**. This geometric view simplifies the preimage computation for decision boundaries.
+
+**Results:**
+- A feed-forward network with one hidden ReLU layer can only generate **at most d distinct decision boundaries** (modulo affine transformation), where d = input dimension
+- Explicit characterisation of how adding more layers multiplies the number of reachable boundaries
+
+**For compression:** The "at most d boundaries per layer" result is a compressibility bound. If a trained 1-hidden-layer network only uses ≤d of its neurons' boundaries, the rest are redundant. For deep networks, each additional layer multiplies the decision boundary count, but many multiplications may be trivial (near-identity layers → compressible).
+
+**Assessment:** USEFUL — clean geometric characterisation, relevant for bounding what a single layer contributes.
+
+---
+
+### What Kinds of Functions do Deep Neural Networks Learn? Insights from Variational Spline Theory (Parhi & Nowak, SIAM 2022)
+
+**arXiv:** 2105.03361
+
+**Main idea:** Variational framework for deep ReLU networks. Proves a **representer theorem**: deep ReLU networks are solutions to regularized data fitting over a function space consisting of compositions of Banach spaces of 2nd-order bounded variation (Radon domain). The optimal solutions have:
+- Skip connections
+- **Low-rank weight matrices** (rank bounded by number of data points)
+- Connection to variational splines
+
+**For compression:**
+1. The low-rank weight matrix result provides theoretical support for our empirical finding (rank₉₅ ≈ 2 at most layers). Minimum-norm training → low-rank weights → compressible.
+2. The Radon-domain bounded variation space is the function class that ReLU networks are biased toward. Functions in this class are maximally "smooth" in a sparsity-promoting sense → fewer linear regions needed.
+3. Skip connections are theoretically optimal → don't prune skip connections in residual networks.
+
+**Assessment:** USEFUL — theoretical support for low-rank bias and function class of deep ReLU. Backs up our compression hypothesis from a functional analysis perspective.
+
+---
+
 ### Sufficient Conditions for Stability of Minimum-Norm Interpolating Deep ReLU Networks (El Harzli et al., 2026)
 
 **arXiv:** 2602.13910
@@ -505,12 +539,15 @@ Both formalised as orthogonal operators. Proves: within rank-distance 1, folding
 
 ## CONTEXT (background, not directly applicable)
 
-### Geometry of Grokking (Musat, 2025)
+### Geometry of Grokking: Norm Minimization on the Zero-Loss Manifold (Musat, 2025)
 
 **arXiv:** 2511.01938
-**User label:** "Potentially useful"
 
-Explains grokking via norm minimization on the zero-loss manifold. Uses differential geometry and Morse theory. **Not relevant to compression** — about generalization dynamics during training, not about the structure of what the trained network computes.
+**Main result:** Post-memorization training = gradient descent minimizing weight norm on the zero-loss manifold. Formally proved in the infinitesimal lr/weight-decay limit. Derives closed-form post-memorization dynamics for the first layer of a 2-layer network.
+
+**For compression (updated assessment):** The norm-minimization result means post-grokking networks converge toward minimum-norm (= minimum-rank) solutions on the zero-loss manifold. This directly supports: (a) our empirical finding that rank₉₅ ≈ 2 at most layers, and (b) why compression should be maximally feasible post-grokking — the network has simplified its weights as much as possible while maintaining zero training loss. The zero-loss manifold framing also suggests: the set of networks equivalent on training data forms a manifold, and minimum-norm solutions are the most compressible points on this manifold.
+
+**Assessment:** CONTEXT (upgraded) — not a compression algorithm, but provides strong theoretical basis for *why* well-trained networks are compressible. Read alongside Deep Grokking (2402.15555).
 
 ---
 
