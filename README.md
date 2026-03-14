@@ -1,95 +1,21 @@
-# Quant-Aware Training: Tomorrow-First Brief
+# Geometric Neural Network Compression Plan
 
-This README is intentionally opinionated and operational.
-Use it as the first checkpoint before running new experiments.
+## What This Project Is About
 
-## Current Working Direction (Locked For Now)
+Neural networks trained via gradient descent are massively overparameterized relative to the functions they learn. The optimization process (SGD, Adam, etc.) *requires* this redundancy — it's how gradient-based methods navigate the loss landscape. But the resulting trained function is typically much simpler than the network that represents it. A ReLU network, for example, builds piecewise linear approximations of smooth curves using many small linear segments, each requiring its own parameters. The network is the shipyard; the function is the ship.
 
-1. Primary objective: use geometric analysis of quantization error to design **efficient correction** (rank/structure aware), not just to show correction works.
-2. Quantization regime for current phase: **weight-only**.
-3. Success metric hierarchy:
-   - Final: task recovery.
-   - Required validation: correction must be shown as **pre-activation recovery**, not extra task capacity.
-4. `c_local` is an **analysis upper baseline**, not a deployable target.
-5. Low-dimensional experiments are for **intuition + scaffolding** for high-dimensional work.
+**The thesis:** given a trained network and the dataset it was trained on, we can extract the geometric structure of the learned function and re-encode it in a much smaller network — not by pruning or distilling via gradient descent, but by *reading out the geometry* and constructing a compressed representation analytically or semi-analytically.
 
-## Tomorrow: First 30 Minutes Checklist
+This is different from distillation. Distillation trains a small network against the big network's outputs using SGD, which means the small network inherits the same overparameterization problems. We want to bypass SGD for the compression step entirely, or reduce it to a brief cleanup phase.
 
-1. Re-read this file and confirm the working direction still holds.
-2. Resolve documentation contradictions listed in "High-Value Gaps".
-3. Pick one canonical experiment matrix for current phase (weight-only, classification-first, then transformer).
-4. Write down acceptance criteria for "model learned the task enough to analyze."
-5. Only then start implementation/experiments.
+**The long-term goal** is a general-purpose "compression algorithm" (possibly a meta-network / hypernetwork) that takes any trained network + dataset and produces a compressed network. This project is the first experimental step toward that goal.
 
-## High-Value Gaps (Priority Order)
+## Definition of Success
 
-1. No single source of truth for current assumptions.
-   - Consequence: experiments and summaries drift in meaning.
-2. Contradictory narrative on linear correction.
-   - Some docs claim linear is best practical recipe.
-   - Current direction is: linear/c_local are baselines to characterize what is fixable.
-3. Quantization regime drift (weight-only vs activation/full fake quant).
-   - Current phase is weight-only, but docs/notebooks mix regimes in summaries.
-4. Weak standardization of benchmark setup.
-   - Hard to compare findings across low-dim, classification, transformer.
-5. Non-capacity validation is not uniformly enforced.
-   - Float ablation / "is this just extra capacity?" checks are inconsistent across experiments.
-6. Task-learned gate is unevenly applied.
-   - Some analyses run on weakly trained models, which invalidates geometric conclusions.
-7. Theory docs are not yet ready to drive experiments.
-   - Tropical doc is useful reading, but review explicitly flags overclaims and missing bridges.
+**Minimum:** geometric compression achieves comparable quality to distillation at the same parameter count, with faster construction time.
 
-## Where the Current Contradictions Live
+**Target:** geometric compression achieves the same quality as distillation at 2-5x fewer parameters, or significantly better quality at the same parameter count.
 
-### A) Linear correction presented as deployment default (needs reframing)
+**Stretch:** geometric compression matches or exceeds the quality of a small network trained from scratch on the original data, meaning the source network + geometric extraction provides a genuine advantage over just retraining.
 
-- `/Users/mihai/Projects/quant_aware_training/docs/transformer_correction_sweep.md`
-- `/Users/mihai/Projects/quant_aware_training/docs/sweep_results.md`
-- `/Users/mihai/Projects/quant_aware_training/docs/quantization_correction_system.md`
-
-### B) Evidence that constrained linear recoverability is weak in current regime
-
-- `/Users/mihai/Projects/quant_aware_training/docs/geometry_overnight_12h_report.md`
-  - Q1 not supported under 4-bit constrained correction.
-
-### C) Weight-only focus vs mixed-regime docs
-
-- Weight-only/core geometry direction:
-  - `/Users/mihai/Projects/quant_aware_training/docs/geometric_error_correction_brief.md`
-  - `/Users/mihai/Projects/quant_aware_training/docs/canonical_quantization_error.md`
-- Mixed/full fake quant emphasis:
-  - `/Users/mihai/Projects/quant_aware_training/docs/quantization_correction_system.md`
-  - `/Users/mihai/Projects/quant_aware_training/notebooks/activation_quantization_geometry.py`
-
-### D) Theory maturity mismatch
-
-- Reading doc with strong claims:
-  - `/Users/mihai/Projects/quant_aware_training/docs/tropical_geometry.md`
-- Review that flags correctness/scope issues:
-  - `/Users/mihai/Projects/quant_aware_training/docs/tropical_geometry_review.md`
-
-## Minimal Acceptance Rules Before Geometry Analysis
-
-1. The model must have clearly learned the task (not random/undertrained behavior).
-2. Report task performance metrics in every run artifact.
-3. For correction experiments, include a non-capacity sanity check:
-   - Apply learned correction to float path and verify it does not act as generic task booster.
-4. State quantization regime explicitly in every summary:
-   - `weight-only` vs `activation-only` vs `full weight+activation`.
-
-## Immediate Documentation Targets (Do First)
-
-1. Add an "ACTIVE ASSUMPTIONS" section to:
-   - `/Users/mihai/Projects/quant_aware_training/docs/geometric_error_correction_brief.md`
-2. Add a "PHASE STATUS: READING ONLY, NOT EXPERIMENTAL GROUND TRUTH" banner to:
-   - `/Users/mihai/Projects/quant_aware_training/docs/tropical_geometry.md`
-3. Add a "REGIME DECLARATION" line to major result docs:
-   - `/Users/mihai/Projects/quant_aware_training/docs/sweep_results.md`
-   - `/Users/mihai/Projects/quant_aware_training/docs/transformer_correction_sweep.md`
-   - `/Users/mihai/Projects/quant_aware_training/docs/quantization_correction_system.md`
-
-## Not Decided Yet (Ask Tomorrow)
-
-1. Policy optimization target: ranking quality vs actual post-training gain.
-2. Priority open question among transformer-side hypotheses.
-3. Final benchmark matrix once transitioning from classification to transformer/GPT-2 track.
+Any of these outcomes produces a publishable result. Even negative results (geometric info doesn't help) are informative for the field.

@@ -669,6 +669,184 @@ def analyze_c_local(model, X, device, num_bits, float_residuals, bs=64):
 
 
 # =============================================================================
+# Analysis A: Activation-aware SVD
+# =============================================================================
+
+def analyze_svd_activation_aware(model, X, device, num_bits, corrections, d_model, bs=64):
+    """SVD of corrections weighted by activation importance.
+
+    LQER insight: raw SVD treats all directions equally, but activation
+    statistics reveal which directions actually matter. Weight the
+    correction matrix rows by how much each token's activation contributes
+    to the output, then SVD the weighted matrix.
+    """
+    model.eval()
+    n_layers = len(corrections)
+
+    # Collect per-block post-FFN activation norms as importance weights
+    # These tell us which tokens matter most for the correction
+    results = []
+
+    for L in range(n_layers):
+        C = corrections[L]  # (N, d_model)
+        N = C.shape[0]
+
+        # Strategy 1: Weight by activation norm (how "active" each token is)
+        # Tokens with large activations propagate more error
+        act_norms = C.norm(dim=1, keepdim=True)  # (N, 1)
+        act_norms = act_norms / (act_norms.mean() + 1e-8)  # normalize
+
+        # Strategy 2: Weight by column — which d_model dimensions carry more
+        # correction energy across the data? Use column norms of float residuals.
+        float_res = torch.zeros(1)  # placeholder
+        for i in range(0, X.shape[0], bs):
+            xb = X[i:i + bs].to(device)
+            _, residuals = model.forward_with_hooks(xb)
+            r = residuals[L].reshape(-1, d_model).cpu()
+            if float_res.shape[0] == 1:
+                float_res = r
+            else:
+                float_res = torch.cat([float_res, r], dim=0)
+            if float_res.shape[0] >= N:
+                break
+        float_res = float_res[:N]
+
+        # Column-wise importance: std of float activations per dimension
+        col_importance = float_res.std(dim=0)  # (d_model,)
+        col_importance = col_importance / (col_importance.mean() + 1e-8)
+
+        # Weighted corrections: scale columns by activation importance
+        C_weighted = C * col_importance.unsqueeze(0)  # (N, d_model)
+
+        U, S, Vh = torch.linalg.svd(C_weighted, full_matrices=False)
+        S = S.cpu()
+        energy = (S ** 2).cumsum(0) / (S ** 2).sum()
+
+        rank_90 = int((energy < 0.90).sum()) + 1
+        rank_95 = int((energy < 0.95).sum()) + 1
+        rank_99 = int((energy < 0.99).sum()) + 1
+
+        # Also: task-weighted SVD using output layer gradient direction
+        # (which dimensions of the residual stream matter for next-token prediction)
+        results.append({
+            "block": L,
+            "rank_90": rank_90,
+            "rank_95": rank_95,
+            "rank_99": rank_99,
+            "top_1_frac": float(S[0] ** 2 / (S ** 2).sum()),
+            "top_8_frac": float((S[:8] ** 2).sum() / (S ** 2).sum()),
+            "top_32_frac": float((S[:min(32, len(S))] ** 2).sum() / (S ** 2).sum()),
+            "singular_values_top16": S[:16].tolist(),
+        })
+
+    return results
+
+
+# =============================================================================
+# Analysis B: Full c_local decomposition (W1 vs W2)
+# =============================================================================
+
+@torch.no_grad()
+def analyze_c_local_full(model, X, device, num_bits, bs=64):
+    """Decompose per-block FFN error into W1 and W2 components.
+
+    c_full = ffn_quant(x) - ffn_float(x)         (total FFN error)
+    c_W2   = E_W2 @ a_float                       (W2 error on float activations)
+    c_W1   = W2_float @ (GELU(W1q@x) - GELU(W1@x))  (W1 error through GELU + float W2)
+    c_cross = c_full - c_W2 - c_W1                (cross-term: E_W2 @ delta_a)
+    """
+    model.eval()
+    n_layers = model.n_layers
+    results = []
+
+    for L in range(n_layers):
+        block = model.blocks[L]
+        W1_float = block.ffn[0].weight.data.clone()
+        W1_quant = quantize_tensor_uniform(W1_float, num_bits)
+        b1 = block.ffn[0].bias.data.clone() if block.ffn[0].bias is not None else None
+
+        W2_float = block.ffn[2].weight.data.clone()
+        W2_quant = quantize_tensor_uniform(W2_float, num_bits)
+        b2 = block.ffn[2].bias.data.clone() if block.ffn[2].bias is not None else None
+
+        E_W2 = W2_quant - W2_float
+
+        c_full_norms = []
+        c_W2_norms = []
+        c_W1_norms = []
+        c_cross_norms = []
+
+        for i in range(0, X.shape[0], bs):
+            xb = X[i:i + bs].to(device)
+            B, T = xb.shape
+            pos = torch.arange(T, device=device).unsqueeze(0)
+            x = model.drop(model.tok_emb(xb) + model.pos_emb(pos))
+
+            for l in range(L):
+                x = model.blocks[l](x)
+
+            # Block L: attention + layernorm
+            x_post_attn = x + block.attn(block.ln1(x))
+            x_ln = block.ln2(x_post_attn)
+
+            # Float path
+            pre_gelu_float = F.linear(x_ln, W1_float, b1)
+            a_float = block.ffn[1](pre_gelu_float)
+            ffn_float = F.linear(a_float, W2_float, b2)
+
+            # Quantized path
+            pre_gelu_quant = F.linear(x_ln, W1_quant, b1)
+            a_quant = block.ffn[1](pre_gelu_quant)
+            ffn_quant = F.linear(a_quant, W2_quant, b2)
+
+            # Full error
+            c_full = ffn_quant - ffn_float  # (B, T, d_model)
+
+            # W2-only component: E_W2 applied to float activations
+            c_W2 = F.linear(a_float, E_W2, None)
+
+            # W1-only component: float W2 applied to GELU activation difference
+            delta_a = a_quant - a_float  # from W1 quantization
+            c_W1 = F.linear(delta_a, W2_float, None)
+
+            # Cross term: E_W2 applied to delta_a (second-order)
+            c_cross = c_full - c_W2 - c_W1
+
+            # Flatten and collect norms
+            def _norms(t):
+                return t.reshape(-1, t.shape[-1]).norm(dim=1).cpu()
+
+            c_full_norms.append(_norms(c_full))
+            c_W2_norms.append(_norms(c_W2))
+            c_W1_norms.append(_norms(c_W1))
+            c_cross_norms.append(_norms(c_cross))
+
+        full_norm = torch.cat(c_full_norms).mean().item()
+        W2_norm = torch.cat(c_W2_norms).mean().item()
+        W1_norm = torch.cat(c_W1_norms).mean().item()
+        cross_norm = torch.cat(c_cross_norms).mean().item()
+
+        # Energy fractions (squared norms, summed over all tokens)
+        full_energy = (torch.cat(c_full_norms) ** 2).sum().item()
+        W2_energy = (torch.cat(c_W2_norms) ** 2).sum().item()
+        W1_energy = (torch.cat(c_W1_norms) ** 2).sum().item()
+        cross_energy = (torch.cat(c_cross_norms) ** 2).sum().item()
+
+        results.append({
+            "block": L,
+            "full_error_norm": full_norm,
+            "W2_component_norm": W2_norm,
+            "W1_component_norm": W1_norm,
+            "cross_component_norm": cross_norm,
+            "W2_energy_frac": W2_energy / full_energy if full_energy > 0 else 0,
+            "W1_energy_frac": W1_energy / full_energy if full_energy > 0 else 0,
+            "cross_energy_frac": cross_energy / full_energy if full_energy > 0 else 0,
+        })
+
+    return results
+
+
+# =============================================================================
 # Perplexity evaluation
 # =============================================================================
 
@@ -947,6 +1125,28 @@ def main():
               f"after_c_local={r['residual_after_c_local']:.4f}, "
               f"reduction={r['error_reduction_frac']:.1%}")
 
+    # ── Analysis A: Activation-aware SVD ────────────────────────────────
+    print("\n=== Analysis A: Activation-Aware SVD ===")
+    svd_aware_results = analyze_svd_activation_aware(
+        model, cal_X, device, cfg["num_bits"], corrections, cfg["d_model"]
+    )
+    for s in svd_aware_results:
+        print(f"  Block {s['block']}: rank_95={s['rank_95']}, rank_99={s['rank_99']}, "
+              f"top-8={s['top_8_frac']:.1%}, top-32={s['top_32_frac']:.1%}")
+    # Compare with raw SVD
+    print("  --- vs raw SVD ---")
+    for raw, aware in zip(svd_results, svd_aware_results):
+        print(f"  Block {raw['block']}: rank_95 {raw['rank_95']} → {aware['rank_95']}, "
+              f"rank_99 {raw['rank_99']} → {aware['rank_99']}")
+
+    # ── Analysis B: Full c_local decomposition ───────────────────────────
+    print("\n=== Analysis B: Full c_local (W1 vs W2 decomposition) ===")
+    c_local_full_results = analyze_c_local_full(model, cal_X, device, cfg["num_bits"])
+    for r in c_local_full_results:
+        print(f"  Block {r['block']}: W2={r['W2_energy_frac']:.1%}, "
+              f"W1={r['W1_energy_frac']:.1%}, "
+              f"cross={r['cross_energy_frac']:.1%}")
+
     # ── Assemble results ─────────────────────────────────────────────────
     all_results = {
         "config": cfg,
@@ -959,11 +1159,13 @@ def main():
             "train_time_s": train_time,
         },
         "svd": svd_results,
+        "svd_activation_aware": svd_aware_results,
         "cross_block": cross_results,
         "cascade": cascade_results,
         "metric_topo": mt_results,
         "containment": contain_results,
         "c_local": c_local_results,
+        "c_local_full": c_local_full_results,
     }
 
     # Save JSON

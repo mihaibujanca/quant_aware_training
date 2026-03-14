@@ -1,0 +1,5 @@
+item_number=1
+outcome=confirmed
+key_metric=6 concrete implementable techniques identified (>=3 required); activation pattern census + affine map extraction directly actionable from MASO theory; SplineCam provides exact 2D enumeration algorithm; trained networks use dramatically fewer regions than theoretical max (1364 vs >>10^100 for Fashion-MNIST MLP)
+commit=092abc4
+paths=autoresearch/surveys/balestriero_spline_theory.md,autoresearch/results/cycle_001_summary.md,autoresearch/agenda.md

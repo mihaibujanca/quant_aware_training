@@ -1,0 +1,71 @@
+Device: cpu
+Output: experiments/geometric_compression
+Shapes: ['sphere', 'torus', 'capsule', 'box', 'cylinder']
+
+============================================================
+Shape: sphere
+============================================================
+  source_mse   = 0.000001
+  geom_kan_mse = 0.000006
+  chamfer      = 0.03874
+  hausdorff    = 0.09495
+  params       = 198,657 → 680 (292.1x)
+  watertight   = True
+  saved to     = experiments/geometric_compression/sphere
+
+============================================================
+Shape: torus
+============================================================
+  source_mse   = 0.000001
+  geom_kan_mse = 0.000005
+  chamfer      = 0.02060
+  hausdorff    = 0.05677
+  params       = 198,657 → 680 (292.1x)
+  watertight   = True
+  saved to     = experiments/geometric_compression/torus
+
+============================================================
+Shape: capsule
+============================================================
+  source_mse   = 0.000001
+  geom_kan_mse = 0.000006
+  chamfer      = 0.09169
+  hausdorff    = 0.55944
+  params       = 198,657 → 680 (292.1x)
+  watertight   = True
+  saved to     = experiments/geometric_compression/capsule
+
+============================================================
+Shape: box
+============================================================
+  source_mse   = 0.000004
+  geom_kan_mse = 0.000312
+  chamfer      = 0.42108
+  hausdorff    = 1.38637
+  params       = 198,657 → 680 (292.1x)
+  watertight   = True
+  saved to     = experiments/geometric_compression/box
+
+============================================================
+Shape: cylinder
+============================================================
+  source_mse   = 0.000012
+  geom_kan_mse = 0.000016
+  chamfer      = 0.23400
+  hausdorff    = 0.98101
+  params       = 198,657 → 680 (292.1x)
+  watertight   = True
+  saved to     = experiments/geometric_compression/cylinder
+
+
+====================================================================================================
+Shape                Status     Source MSE    KAN MSE    Chamfer    Ratio
+----------------------------------------------------------------------------------------------------
+sphere               ok           0.000001   0.000006    0.03874   292.1x
+torus                ok           0.000001   0.000005    0.02060   292.1x
+capsule              ok           0.000001   0.000006    0.09169   292.1x
+box                  ok           0.000004   0.000312    0.42108   292.1x
+cylinder             ok           0.000012   0.000016    0.23400   292.1x
+====================================================================================================
+
+Results saved under: experiments/geometric_compression
