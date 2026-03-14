@@ -365,6 +365,35 @@ Both formalised as orthogonal operators. Proves: within rank-distance 1, folding
 
 ---
 
+### The Computational Complexity of Counting Linear Regions in ReLU Networks (NeurIPS 2025)
+
+**arXiv:** 2505.16716
+
+**Main result:** Counting the number of linear regions in a ReLU network is:
+- **NP-hard and #P-hard** for networks with just one hidden layer
+- **Strongly hard to approximate** for networks with two or more hidden layers
+- **Polynomial-space solvable** for some common region definitions (PSPACE upper bound)
+
+**For agenda item 3 (region census):** This rules out exact counting as a practical baseline for deep networks. The approach to use instead: enumerate activation patterns on the training data (not globally). Since we only care about regions visited by data, not all 2^N possible regions, we can count observed patterns — which is trivially polynomial in dataset size.
+
+**Assessment:** USEFUL — directly resolves the algorithmic question for agenda item 3. Exact counting is intractable; pattern enumeration on data is the right approach.
+
+---
+
+### Global Minimizers of ℓp-Regularized Objectives Yield the Sparsest ReLU Neural Networks (2025)
+
+**arXiv:** 2505.21791
+
+**Main result:** For single-hidden-layer ReLU networks, a training objective based on minimizing ℓp quasinorms of weights (0 < p < 1) has **global minima that are exactly the sparsest interpolating networks** — i.e., networks with the fewest nonzero parameters/neurons. Recasts the combinatorial sparsest-network problem as a smooth optimization task (continuous, almost-everywhere differentiable).
+
+**For compression:** This is "compression-aware training" — not post-hoc. The result tells us: if you train with ℓp regularization, you get the sparsest network that fits the data. The compression is baked in at training time. For our use case (post-hoc, no retraining), this is mostly theoretical motivation: it proves that maximally sparse networks that fit the data *exist* and are achievable. The question of finding the sparse network that is equivalent to an already-trained non-sparse one remains open.
+
+**Limitation:** Proven for single-hidden-layer networks only. Extension to deep networks is future work.
+
+**Assessment:** USEFUL — existence proof that sparsest-equivalent networks exist. Motivates the search for post-hoc sparsification. The ℓp quasinorm connection also explains why L1 regularization in Serra 2021 and Kumar et al. 1905.11428 increases stable neurons.
+
+---
+
 ### The Geometric Structure of Fully-Connected ReLU Layers (Larsson, 2023)
 
 **arXiv:** 2310.03482
@@ -410,6 +439,20 @@ Both formalised as orthogonal operators. Proves: within rank-distance 1, folding
 **For our problem:** The low-rank layer requirement connects to the effective rank result from our prior experiments (rank₉₅ ≈ 2 at most layers). Networks trained with weight decay or gradient descent bias tend toward low-rank solutions. The "stable sub-network" concept (sub-network that doesn't change outputs under training point removal) is different from MASO stability (stable-0/1 neurons), but both point to identifying the "inert" part of the network.
 
 **Assessment:** USEFUL (marginal) — generalization stability framework, not compression framework. The low-rank+stable-subnetwork result is suggestive but doesn't give a compression algorithm.
+
+---
+
+### ReplaceMe: Network Simplification via Depth Pruning and Transformer Block Linearization (Shopkhoev et al., NeurIPS 2025)
+
+**OpenReview:** 334128876882158c871dd4bf17ccf8f6555a3cfd
+
+**Main idea:** Training-free depth pruning for Transformers. Identifies contiguous blocks that can be replaced by a single linear transformation estimated from a small calibration dataset. The linear map is fused into adjacent remaining weights (no extra parameters). 25% depth pruning with ~90% performance retention on LLMs.
+
+**Key technique:** Estimates a linear map L such that L @ x_in ≈ x_out for the removed blocks, using a small calibration set. This is the data-driven version of our always-active collapse: when a sequence of layers is "approximately linear" on the data distribution, replace it with a single affine map.
+
+**For our problem:** Directly analogous to our Phase 2 (always-active collapse), but extended to blocks that are approximately (not exactly) linear. Calibration dataset acts as the domain over which linearity is checked — equivalent to checking stability on training data. The key difference: Transformers don't have the MASO geometric structure, so this is purely data-driven (not weight-analytic). For ReLU MLPs we can do this analytically.
+
+**Assessment:** USEFUL — confirms that approximate linearization of network sub-blocks is practical and effective. The estimation approach (calibration + closed-form linear regression) is a practical fallback for Phase 2 when exact stability is hard to verify.
 
 ---
 
