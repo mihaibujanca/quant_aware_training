@@ -1,6 +1,6 @@
 # Geometric Compression — Literature Map
 
-**Last updated:** 2026-03-14 (batch 6)
+**Last updated:** 2026-03-14 (batch 9)
 **Problem:** Given a trained ReLU MLP, construct a smaller network computing the same function — analytically, not by distillation.
 
 ---
@@ -577,6 +577,45 @@ Both formalised as orthogonal operators. Proves: within rank-distance 1, folding
 1. Pruning dead neurons (within-layer)
 2. Merging neurons with nearly-identical activation patterns (within-layer)
 3. NOT trying to reduce depth — this risks exponential representation loss
+
+---
+
+### Deep Learning as a Convex Paradigm: Minimizing Circuit Size with ResNets (Jacot, 2024)
+
+**arXiv:** 2511.20888
+**Relevance:** USEFUL — circuit complexity ↔ compression duality; HTMC norm characterises what gradient descent implicitly minimises
+
+**Main idea:** Gradient descent on overparameterised ResNets minimises a functional norm (HTMC norm) that equals the **minimal binary circuit size** needed to ε-approximate the learned function. Three claims:
+1. **Computational Occam's razor:** DNNs trained by SGD implicitly find the function with smallest circuit representation (among those fitting the data).
+2. **Convexity in HTMC regime (γ > 2):** The set of functions ε-approximated by circuits of size ≤ c·ε^{-γ} is convex when γ > 2. This makes the optimisation landscape benign.
+3. **ResNet = almost-minimal circuit:** The skip connections in ResNets correspond directly to circuit "shortcuts" — the residual block implements the increment, the skip adds it. ResNet norm ≈ minimal circuit size.
+
+**Relevance to compression:**
+- The HTMC norm gives a **principled complexity measure** for the learned function — not parameter count, not VC dimension, but circuit complexity. This is exactly the quantity a compression algorithm should target.
+- If a trained network's function has HTMC complexity K (small circuit size), there exists a smaller network of roughly K neurons implementing the same function. The paper doesn't give the constructive algorithm but identifies the right objective.
+- For our 3-phase algorithm: Phase 3 (merging unstable neurons) corresponds to finding the minimal circuit for the piecewise affine function restricted to the observed regions. HTMC norm is an upper bound on this.
+- The convexity result (γ > 2) is relevant to whether compression-by-optimisation is tractable: if the target's HTMC complexity is in the convex regime, there's a polynomial-time algorithm to find it (in principle).
+
+**Honest assessment:** This is a theory paper; the HTMC norm is defined formally but not yet practical. The constructive link between "ResNet of width W trained by SGD" and "minimal circuit" is approximate. Still, the circuit-complexity framing is the cleanest theoretical basis we've seen for why compression is possible — it says gradient descent already finds something close to minimal.
+
+---
+
+### A Generalized Spectral Framework to Explain Neural Scaling and Compression Dynamics (Zhang et al., 2024)
+
+**arXiv:** 2511.07892
+**Relevance:** USEFUL — spectral characterisation of compression potential; invariant relation between learning speed and compressibility
+
+**Main idea:** Introduces a generalized spectral evolution function g(λ, t; β) that replaces the linear kernel form g(λt) = λt used in NTK/DMFT theory. The key contributions:
+1. **Spectral-temporal elasticity:** Defines α(λ, t) = (∂ log g / ∂ log λ) · (∂ log g / ∂ log t)⁻¹ — a local measure of how much the network's spectral amplification changes with frequency vs. time.
+2. **Invariant relation:** There is an invariant quantity relating the learning dynamics (how quickly a frequency component is learned) to its compressibility (how much it can be pruned post-training). Faster-learned components are less compressible; slower-learned components (high-frequency) are more compressible.
+3. **Unifies scaling and compression:** The same spectral function explains both (a) neural scaling laws (test loss vs. data/compute) and (b) compression dynamics (accuracy vs. parameter count).
+
+**Relevance to compression:**
+- The invariant relation is practically useful: it says that for a trained network, the singular vectors of each weight matrix learned first (low singular values early in training) will also be most robust to removal. This gives a **training-informed pruning criterion** beyond simple singular value magnitude.
+- For our setting (post-training, white-box access): after training a ReLU MLP, use the spectral dynamics to identify which activation directions are "late-learned" (high-frequency, slow convergence) and therefore most compressible.
+- The compression curve g(λ, t; β) evaluated at t=∞ gives the final singular value spectrum; the β parameter controls how fast later components are learned — if β is large, the spectrum drops off fast → network is highly compressible.
+
+**Honest assessment:** The framework is developed for smooth networks (kernel regime) and may not directly transfer to ReLU networks where the activation geometry changes the spectral structure fundamentally. The "invariant" holds under assumptions about the training trajectory that ReLU networks may not satisfy. Still, the empirical prediction — slower-learned singular vectors are more compressible — is testable on our networks and would be a useful additional compression criterion alongside the geometric Phase 1/2.
 
 ---
 
