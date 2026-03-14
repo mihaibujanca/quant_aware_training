@@ -1,6 +1,6 @@
 # Geometric Compression — Literature Map
 
-**Last updated:** 2026-03-14 (batch 10)
+**Last updated:** 2026-03-14 (batch 11)
 **Problem:** Given a trained ReLU MLP, construct a smaller network computing the same function — analytically, not by distillation.
 
 ---
@@ -711,6 +711,24 @@ Both formalised as orthogonal operators. Proves: within rank-distance 1, folding
 - The inverse algorithm is exactly what we need for region census: run it on our spiral/moons networks to extract the polytope structure the network has learned to implement.
 - "≤2 polytopes with few faces" for MNIST means the learned function is geometrically simple despite high-dimensional input — strong compression is possible.
 - For spirals/moons (2D, clear decision boundary): the polytope structure should be recoverable exactly, giving us the minimal width analytically.
+
+---
+
+### Getting Away with More Network Pruning: From Sparsity to Geometry and Linear Regions (2023)
+
+**arXiv:** 2301.07966
+**Relevance:** USEFUL — directly links pruning sparsity to linear region count; derives per-layer sparsity bounds from partition geometry
+
+**Main idea:** Studies how weight sparsification (pruning) affects the piecewise linear partition. Three contributions:
+1. **Empirical finding:** Accuracy degradation from pruning tracks degradation in the number of observed linear regions — region count is the right intermediate variable between sparsity and accuracy.
+2. **Theoretical bound:** Derives an upper bound on the maximum number of linear regions as a function of architecture *and* sparsity level. The bound decreases as sparsity increases (fewer nonzero weights → fewer activation combinations possible).
+3. **Per-layer sparsity optimization:** Uses the region-count bound to derive the optimal per-layer sparsity distribution that maximizes region count at fixed overall sparsity. Outperforms uniform pruning at matched sparsity.
+
+**Relevance to compression:**
+- Confirms the region count ↔ accuracy link empirically: we can use region count as the primary optimization target for compression.
+- The region-count bound as a function of architecture + sparsity can be inverted: given a target region count (sufficient for the task), what is the minimal weight count? This is a direct compression budget calculation.
+- Per-layer sparsity optimization is directly applicable to our Phase 1/2 pipeline: instead of uniform pruning, use the region-count bound to allocate "budget" (neurons) per layer optimally.
+- Connection to our existing results: the bound here is a coarser version of the geometry we're extracting (it uses architecture statistics, not activation patterns). Our approach is strictly better since we use the observed patterns, not worst-case counts.
 
 ---
 
