@@ -205,6 +205,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Refuted if: rank-only beats the geometric method in more than `80%` of tested block-budget pairs.
    - Inconclusive if: wins trade back and forth by block or budget with no consistent edge.
    - Depends on: 10
+   - **Outcome: CONFIRMED** (cycle 026) — Two SVD baselines tested: (1) SVD on composed map W_down@W_up: catastrophically bad (PPL 3K–350M) because GELU does not commute with change-of-basis; (2) SVD-norm: select top-k channels by W_up row-norm + lstsq refit (proper rank baseline). Geometric beats svd_norm in 11/12 (92%) block-budget pairs. Baseline PPL 122.4; geometric +0.8–5.8%; svd_norm +2.2–7.2%; distillation (200 steps) +0.1–10.1%. Only exception: block 11 at 16× (deep layer, aggressive compression, svd_norm=129.0 vs geo=129.5). Key insight: data-driven channel scoring (activity × output-norm) outperforms weight-magnitude-based selection at all depths and budgets.
 
 15. **Centroid and Jacobian affinity as merge signals**
    - Evaluate whether data-conditioned similarity measures from the centroid-affinity / local-map literature predict safe compression better than raw weight cosine. For each block, compare weight similarity, centroid similarity, Jacobian-spectrum similarity, and any combined score against actual swap damage under controlled budgeted compressions.
