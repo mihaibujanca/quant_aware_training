@@ -10,3 +10,5 @@ cycle	item	type	outcome	key_metric	description	commit	paths
 009	19	empirical	refuted	0/12 blocks L>=0.85; Spearman=-0.14 p=0.66	Jacobian variance atlas (proxy gpt2)	NONE	autoresearch/results/cycle_009_summary.md,autoresearch/results/cycle_009_jacobian_atlas.json,autoresearch/results/cycle_009_jacobian_atlas.png
 
 010	20	empirical	confirmed	3/4 layers r<0.15 (L2=0.050 L3=0.033 L4=0.024); r decreases with depth	Single-affine collapse quality toy ReLU	3d07fcd	autoresearch/results/cycle_010_summary.md,autoresearch/results/cycle_010_single_affine.json,experiments/single_affine_collapse_toy.py
+
+011	21	empirical	refuted	0/12 blocks r<0.15; best swap +33.7% ppl (>20% threshold)	Single-affine collapse quality GPT-2 FFN (proxy gpt2)	c4ea941	autoresearch/results/cycle_011_summary.md,autoresearch/results/cycle_011_single_affine_gpt2.json,experiments/single_affine_collapse_gpt2.py

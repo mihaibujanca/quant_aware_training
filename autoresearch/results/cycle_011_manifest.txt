@@ -1,0 +1,5 @@
+item_number=21
+outcome=refuted
+key_metric=best_r_held=0.178 (block 2); best_swap_ppl_increase=33.7% (block 2); 0/12 blocks below r=0.15 threshold
+commit=c4ea941
+paths=autoresearch/results/cycle_011_single_affine_gpt2.json,autoresearch/results/cycle_011_single_affine_gpt2.png,autoresearch/results/cycle_011_summary.md,experiments/single_affine_collapse_gpt2.py
