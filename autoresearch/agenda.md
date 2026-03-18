@@ -223,13 +223,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 027
    - Artifacts: `autoresearch/results/cycle_027_affinity_signals.json`, `autoresearch/results/cycle_027_affinity_signals.png`
 
-16. **Exact prune plus linear collapse baseline**
+16. **Exact prune plus linear collapse baseline** *(REFUTED — cycle 028)*
    - Implement the strongest exact baseline from the literature: stable-channel deletion and always-active / near-linear collapse before any heuristic merging. Compare exact-prune-only, exact-prune-plus-least-squares-refit, and the current geometric method on single-block swaps. This is the cleanest test of how much "free" no-SGD compression exists.
    - Type: implementation
    - Confirmed if: exact or near-exact pruning alone yields at least `1.1x` FFN parameter reduction with `<=1%` relative perplexity increase on the tested single-block swaps.
    - Refuted if: exact or near-exact pruning yields negligible savings or immediately breaks block behavior.
    - Inconclusive if: savings exist only under loose thresholding that is hard to justify.
    - Depends on: 11
+   - **Outcome: REFUTED** — GPT-2 FFN has effectively zero dead or near-linear channels at threshold 1e-5/5%. Mean dead=0.00%, mean saved (dead+near-linear collapse)=0.008% across 12 blocks. Only 3 blocks had any classifiable channels at all (blocks 8, 9, 11: 1 channel each at 0.033%). Param reduction=1.000x. Prune-only and prune+collapse PPL unchanged (+0.00%). Prune+collapse+lstsq refit improves PPL by 0.21% (127.44→127.18) but that is a full lstsq refit on all live channels (3072/block), not structural pruning. GELU activations in GPT-2 use all channels meaningfully — no free structural compression exists at any practical threshold.
+   - Cycle: 028
+   - Artifacts: `experiments/exact_prune_linear_collapse_gpt2.py`, `autoresearch/results/cycle_028_prune_collapse.json`, `autoresearch/results/cycle_028_prune_collapse.png`
 
 17. **Local-chart analytic compression inside one FFN block**
    - Replace the current global top-k analytic compression with a local-chart construction: cluster FFN inputs on the probe distribution, derive a small set of local charts, and fit the compressed block analytically or semi-analytically per chart. Test this on representative easy, medium, and hard blocks from item 10.
