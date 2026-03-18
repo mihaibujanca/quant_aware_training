@@ -234,14 +234,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 028
    - Artifacts: `experiments/exact_prune_linear_collapse_gpt2.py`, `autoresearch/results/cycle_028_prune_collapse.json`, `autoresearch/results/cycle_028_prune_collapse.png`
 
-17. **Local-chart analytic compression inside one FFN block**
-   - Replace the current global top-k analytic compression with a local-chart construction: cluster FFN inputs on the probe distribution, derive a small set of local charts, and fit the compressed block analytically or semi-analytically per chart. Test this on representative easy, medium, and hard blocks from item 10.
-   - Type: implementation
-   - Confirmed if: local-chart compression improves full-model single-block metrics by at least `20%` over the global analytic method at equal budget on at least `3` representative blocks.
-   - Refuted if: local-chart compression fails to improve over the global analytic baseline or is less stable.
-   - Inconclusive if: it helps one class of blocks but not the others.
-   - Depends on: 10, 13, 15
-
 18. **Learned compressor generalization on held-out blocks**
    - Train the descriptor-autoencoder / hypernetwork compressor on a subset of blocks and evaluate on held-out blocks from the same model family. If exact nanochat checkpoints at multiple depths are available, also test cross-checkpoint generalization. The point is to determine whether the learned track discovers reusable structure or merely memorizes block identities.
    - Type: empirical
@@ -251,6 +243,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 10
 
 ## PAST EXPERIMENTS
+
+### Cycle 029
+
+17. **Local-chart analytic compression inside one FFN block** — **REFUTED**: k-means clustering of FFN inputs into K local charts (K=4, K=8) at matched budget (384 total hidden channels) consistently hurts vs global geometric. Block MSE increases on all blocks (+41% for K=4 on block 2, +53% on block 11). Full-model PPL worse on all 3 blocks for both K values. Splitting the channel budget per chart causes each chart to be too thin; chart-local channel selection cannot overcome the loss from reduced per-chart capacity. The global top-k + lstsq refit remains the stronger approach because GELU FFN outputs are approximately a global low-dimensional function of the input, not a collection of locally separable functions.
+   - Artifacts: `experiments/local_chart_ffn_compression.py`, `autoresearch/results/cycle_029_local_chart.json`
 
 ### Cycle 025
 

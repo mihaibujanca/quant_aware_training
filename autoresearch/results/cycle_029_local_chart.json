@@ -1,0 +1,123 @@
+{
+  "baseline_ppl": 122.34978716998432,
+  "baseline_metrics": {
+    "eval_loss": 4.806884050369263,
+    "perplexity": 122.34978716998432,
+    "teacher_student_kl": 9.974939985113451e-05,
+    "top1_agreement": 1.0,
+    "full_params": 124439808.0
+  },
+  "k_global": 384,
+  "blocks": [
+    2,
+    5,
+    11
+  ],
+  "cells": [
+    {
+      "block_id": 2,
+      "method": "global_geometric",
+      "K": 1,
+      "k_per_chart": 384,
+      "block_mse": 0.1021922156214714,
+      "param_count": 590976,
+      "ppl": 123.8375936163423,
+      "delta_ppl": 1.487806446357979,
+      "delta_ppl_pct": 1.2160269999415068
+    },
+    {
+      "block_id": 2,
+      "method": "local_chart_K4",
+      "K": 4,
+      "k_per_chart": 96,
+      "block_mse": 0.1439555585384369,
+      "param_count": 590976,
+      "ppl": 126.47814575269113,
+      "delta_ppl": 4.128358582706809,
+      "delta_ppl_pct": 3.3742262068434608,
+      "improvement_vs_geo_pct": -2.1322702252511863
+    },
+    {
+      "block_id": 2,
+      "method": "local_chart_K8",
+      "K": 8,
+      "k_per_chart": 48,
+      "block_mse": 0.1374577134847641,
+      "param_count": 590976,
+      "ppl": 125.73551248683604,
+      "delta_ppl": 3.385725316851719,
+      "delta_ppl_pct": 2.767250679519227,
+      "improvement_vs_geo_pct": -1.5325870077656936
+    },
+    {
+      "block_id": 5,
+      "method": "global_geometric",
+      "K": 1,
+      "k_per_chart": 384,
+      "block_mse": 0.21736955642700195,
+      "param_count": 590976,
+      "ppl": 122.07177354533772,
+      "delta_ppl": -0.2780136246466043,
+      "delta_ppl_pct": -0.22722853147292477
+    },
+    {
+      "block_id": 5,
+      "method": "local_chart_K4",
+      "K": 4,
+      "k_per_chart": 96,
+      "block_mse": 0.26642706990242004,
+      "param_count": 590976,
+      "ppl": 124.6596783872477,
+      "delta_ppl": 2.3098912172633703,
+      "delta_ppl_pct": 1.8879405274764944,
+      "improvement_vs_geo_pct": -2.1199862726241308
+    },
+    {
+      "block_id": 5,
+      "method": "local_chart_K8",
+      "K": 8,
+      "k_per_chart": 48,
+      "block_mse": 0.2660941779613495,
+      "param_count": 590976,
+      "ppl": 125.79744663807699,
+      "delta_ppl": 3.4476594680926667,
+      "delta_ppl_pct": 2.81787124263872,
+      "improvement_vs_geo_pct": -3.0520348681225213
+    },
+    {
+      "block_id": 11,
+      "method": "global_geometric",
+      "K": 1,
+      "k_per_chart": 384,
+      "block_mse": 0.8918026089668274,
+      "param_count": 590976,
+      "ppl": 128.27350210996053,
+      "delta_ppl": 5.9237149399762075,
+      "delta_ppl_pct": 4.841622594525815
+    },
+    {
+      "block_id": 11,
+      "method": "local_chart_K4",
+      "K": 4,
+      "k_per_chart": 96,
+      "block_mse": 1.3618974685668945,
+      "param_count": 590976,
+      "ppl": 129.376799431321,
+      "delta_ppl": 7.027012261336665,
+      "delta_ppl_pct": 5.743379227602432,
+      "improvement_vs_geo_pct": -0.8601131981371123
+    },
+    {
+      "block_id": 11,
+      "method": "local_chart_K8",
+      "K": 8,
+      "k_per_chart": 48,
+      "block_mse": 1.5118635892868042,
+      "param_count": 590976,
+      "ppl": 129.32415630800998,
+      "delta_ppl": 6.974369138025651,
+      "delta_ppl_pct": 5.700352488832649,
+      "improvement_vs_geo_pct": -0.819073449128087
+    }
+  ]
+}
