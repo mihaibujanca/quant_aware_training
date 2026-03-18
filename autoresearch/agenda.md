@@ -73,13 +73,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: CKA plateaus exist but removing one layer from a plateau still causes > 20% relative perplexity increase, indicating that representational similarity does not imply functional redundancy.
    - Depends on: 9
 
-32. **GELU → 3-piece PWL approximation fidelity — toy GELU MLP**
-   - Train a GELU MLP on spirals (2D input → 100D embedding → 4 layers × 64 hidden → output) to convergence. Replace each GELU with a 3-piece piecewise-linear approximation: g̃(x) = 0 for x < −3, a linear ramp from 0 to 0 over [−3, 3] matching GELU at endpoints and midpoint, x for x > 3. No retraining. Re-evaluate accuracy. This tests whether the smooth transition zone of GELU carries any task-relevant information, or whether the network can be treated as approximately piecewise-affine (making MASO/SplineCam/RTG theory applicable). Also measure the accuracy drop as a function of the number of PWL pieces (1, 3, 5, 10) to find the minimum resolution at which ReLU theory kicks in.
-   - Type: empirical
-   - Confirmed if: 3-piece PWL substitution causes < 3% accuracy drop and 5-piece causes < 1%, indicating that GELU networks are approximately piecewise-affine at low piece count.
-   - Refuted if: even 10-piece PWL causes > 5% accuracy drop, indicating that smooth curvature is task-critical and the piecewise-affine approximation is fundamentally flawed.
-   - Inconclusive if: accuracy recovers only with a large number of pieces (> 10), suggesting GELU networks are piecewise-affine but at much finer granularity than ReLU.
-   - Depends on: none
+32. **GELU → 3-piece PWL approximation fidelity — toy GELU MLP** *(INCONCLUSIVE — cycle 016)*
 
 33. **GELU → 3-piece PWL approximation fidelity — GPT-2**
    - Apply the same PWL substitution from experiment 32 to GPT-2: replace all GELU activations with the 3-piece PWL function, no retraining, measure perplexity on the probe validation set. If perplexity degrades < 5% relative, then GPT-2's FFN blocks are approximately piecewise-affine and all the partition-based theory (activation patterns, RTG, SplineCam) applies as an approximation. This would justify using ReLU-derived compression signals on GELU networks. Also measure block-by-block contribution: which blocks' perplexity degrades most when only that block's GELU is replaced, to identify which blocks are most sensitive to smooth activation curvature.
@@ -231,6 +225,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 10
 
 ## PAST EXPERIMENTS
+
+### Cycle 016
+
+32. **GELU → 3-piece PWL approximation fidelity — toy GELU MLP**
+   - Outcome: **INCONCLUSIVE** — K=10 pieces recovers nearly float accuracy (drop=2.59pp, below 3% threshold), but K=3 and K=5 drop ~35–39pp (far above 3% confirmed threshold). GELU curvature is task-critical at low piece count; the model is piecewise-affine at fine enough granularity (≈10 pieces) but not at the coarse 3–5 piece scale where ReLU theory directly applies. 17% of activations fall outside the [-3, 3] domain. Float model test accuracy = 86.75% (spirals, noise=0.5, 3 turns).
+   - Cycle: 016
+   - Artifacts: `experiments/gelu_pwl_approximation.py`, `autoresearch/results/cycle_016_gelu_pwl_approximation.png`
 
 ### Cycle 015
 
