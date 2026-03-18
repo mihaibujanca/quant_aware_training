@@ -1,0 +1,599 @@
+{
+  "teacher_ppl": 122.34649095213433,
+  "results": [
+    {
+      "ordering": "easiest_first",
+      "k": 1,
+      "layers_compressed": [
+        7
+      ],
+      "perplexity": 119.79909519486378,
+      "relative_ppl_increase": -0.020821159131300046,
+      "teacher_student_kl": 9.541705250740051,
+      "top1_agreement": 0.82080078125
+    },
+    {
+      "ordering": "easiest_first",
+      "k": 2,
+      "layers_compressed": [
+        7,
+        5
+      ],
+      "perplexity": 123.13137965340648,
+      "relative_ppl_increase": 0.006415293934169508,
+      "teacher_student_kl": 23.368403673171997,
+      "top1_agreement": 0.73291015625
+    },
+    {
+      "ordering": "easiest_first",
+      "k": 3,
+      "layers_compressed": [
+        7,
+        5,
+        4
+      ],
+      "perplexity": 129.42682561835838,
+      "relative_ppl_increase": 0.05787117073095369,
+      "teacher_student_kl": 39.4595513343811,
+      "top1_agreement": 0.658935546875
+    },
+    {
+      "ordering": "easiest_first",
+      "k": 4,
+      "layers_compressed": [
+        7,
+        5,
+        4,
+        1
+      ],
+      "perplexity": 134.4456865183302,
+      "relative_ppl_increase": 0.0988928695219338,
+      "teacher_student_kl": 50.44528770446777,
+      "top1_agreement": 0.61572265625
+    },
+    {
+      "ordering": "easiest_first",
+      "k": 5,
+      "layers_compressed": [
+        7,
+        5,
+        4,
+        1,
+        3
+      ],
+      "perplexity": 148.97212461781785,
+      "relative_ppl_increase": 0.21762482485991594,
+      "teacher_student_kl": 73.93406677246094,
+      "top1_agreement": 0.547119140625
+    },
+    {
+      "ordering": "easiest_first",
+      "k": 6,
+      "layers_compressed": [
+        7,
+        5,
+        4,
+        1,
+        3,
+        6
+      ],
+      "perplexity": 166.66579489797718,
+      "relative_ppl_increase": 0.3622441771802177,
+      "teacher_student_kl": 92.45553874969482,
+      "top1_agreement": 0.4990234375
+    },
+    {
+      "ordering": "easiest_first",
+      "k": 7,
+      "layers_compressed": [
+        7,
+        5,
+        4,
+        1,
+        3,
+        6,
+        2
+      ],
+      "perplexity": 197.14832197918795,
+      "relative_ppl_increase": 0.6113933505156137,
+      "teacher_student_kl": 113.36082553863525,
+      "top1_agreement": 0.449462890625
+    },
+    {
+      "ordering": "easiest_first",
+      "k": 8,
+      "layers_compressed": [
+        7,
+        5,
+        4,
+        1,
+        3,
+        6,
+        2,
+        9
+      ],
+      "perplexity": 212.64162415266412,
+      "relative_ppl_increase": 0.7380279769188967,
+      "teacher_student_kl": 126.27824115753174,
+      "top1_agreement": 0.426025390625
+    },
+    {
+      "ordering": "easiest_first",
+      "k": 9,
+      "layers_compressed": [
+        7,
+        5,
+        4,
+        1,
+        3,
+        6,
+        2,
+        9,
+        10
+      ],
+      "perplexity": 222.23885884315808,
+      "relative_ppl_increase": 0.8164710496691293,
+      "teacher_student_kl": 135.1002902984619,
+      "top1_agreement": 0.41162109375
+    },
+    {
+      "ordering": "easiest_first",
+      "k": 10,
+      "layers_compressed": [
+        7,
+        5,
+        4,
+        1,
+        3,
+        6,
+        2,
+        9,
+        10,
+        8
+      ],
+      "perplexity": 246.35946540793714,
+      "relative_ppl_increase": 1.013621015941687,
+      "teacher_student_kl": 149.14662742614746,
+      "top1_agreement": 0.392333984375
+    },
+    {
+      "ordering": "easiest_first",
+      "k": 11,
+      "layers_compressed": [
+        7,
+        5,
+        4,
+        1,
+        3,
+        6,
+        2,
+        9,
+        10,
+        8,
+        11
+      ],
+      "perplexity": 270.40805533129196,
+      "relative_ppl_increase": 1.2101823536327152,
+      "teacher_student_kl": 160.14961433410645,
+      "top1_agreement": 0.37158203125
+    },
+    {
+      "ordering": "easiest_first",
+      "k": 12,
+      "layers_compressed": [
+        7,
+        5,
+        4,
+        1,
+        3,
+        6,
+        2,
+        9,
+        10,
+        8,
+        11,
+        0
+      ],
+      "perplexity": 403.45474020917976,
+      "relative_ppl_increase": 2.297640472312553,
+      "teacher_student_kl": 216.71218490600586,
+      "top1_agreement": 0.31201171875
+    },
+    {
+      "ordering": "hardest_first",
+      "k": 1,
+      "layers_compressed": [
+        0
+      ],
+      "perplexity": 150.9562328862559,
+      "relative_ppl_increase": 0.23384194929885288,
+      "teacher_student_kl": 63.744741439819336,
+      "top1_agreement": 0.593017578125
+    },
+    {
+      "ordering": "hardest_first",
+      "k": 2,
+      "layers_compressed": [
+        0,
+        11
+      ],
+      "perplexity": 157.9446403497418,
+      "relative_ppl_increase": 0.29096175231976656,
+      "teacher_student_kl": 72.57054948806763,
+      "top1_agreement": 0.555419921875
+    },
+    {
+      "ordering": "hardest_first",
+      "k": 3,
+      "layers_compressed": [
+        0,
+        11,
+        8
+      ],
+      "perplexity": 165.95365812290282,
+      "relative_ppl_increase": 0.35642352168342073,
+      "teacher_student_kl": 84.3145809173584,
+      "top1_agreement": 0.528564453125
+    },
+    {
+      "ordering": "hardest_first",
+      "k": 4,
+      "layers_compressed": [
+        0,
+        11,
+        8,
+        10
+      ],
+      "perplexity": 180.12660436321283,
+      "relative_ppl_increase": 0.4722662085476881,
+      "teacher_student_kl": 97.52189064025879,
+      "top1_agreement": 0.488525390625
+    },
+    {
+      "ordering": "hardest_first",
+      "k": 5,
+      "layers_compressed": [
+        0,
+        11,
+        8,
+        10,
+        9
+      ],
+      "perplexity": 192.06764105281172,
+      "relative_ppl_increase": 0.5698663652556609,
+      "teacher_student_kl": 111.50100040435791,
+      "top1_agreement": 0.45166015625
+    },
+    {
+      "ordering": "hardest_first",
+      "k": 6,
+      "layers_compressed": [
+        0,
+        11,
+        8,
+        10,
+        9,
+        2
+      ],
+      "perplexity": 229.67476056702168,
+      "relative_ppl_increase": 0.8772484505246451,
+      "teacher_student_kl": 143.5305347442627,
+      "top1_agreement": 0.40673828125
+    },
+    {
+      "ordering": "hardest_first",
+      "k": 7,
+      "layers_compressed": [
+        0,
+        11,
+        8,
+        10,
+        9,
+        2,
+        6
+      ],
+      "perplexity": 242.71333910726023,
+      "relative_ppl_increase": 0.9838193741266928,
+      "teacher_student_kl": 154.46299743652344,
+      "top1_agreement": 0.389892578125
+    },
+    {
+      "ordering": "hardest_first",
+      "k": 8,
+      "layers_compressed": [
+        0,
+        11,
+        8,
+        10,
+        9,
+        2,
+        6,
+        3
+      ],
+      "perplexity": 281.98195527962037,
+      "relative_ppl_increase": 1.3047817153165453,
+      "teacher_student_kl": 171.0161247253418,
+      "top1_agreement": 0.369873046875
+    },
+    {
+      "ordering": "hardest_first",
+      "k": 9,
+      "layers_compressed": [
+        0,
+        11,
+        8,
+        10,
+        9,
+        2,
+        6,
+        3,
+        1
+      ],
+      "perplexity": 348.09642247022975,
+      "relative_ppl_increase": 1.8451688296186253,
+      "teacher_student_kl": 200.48491096496582,
+      "top1_agreement": 0.3330078125
+    },
+    {
+      "ordering": "hardest_first",
+      "k": 10,
+      "layers_compressed": [
+        0,
+        11,
+        8,
+        10,
+        9,
+        2,
+        6,
+        3,
+        1,
+        4
+      ],
+      "perplexity": 373.22774825803737,
+      "relative_ppl_increase": 2.0505799173599137,
+      "teacher_student_kl": 206.28162002563477,
+      "top1_agreement": 0.32421875
+    },
+    {
+      "ordering": "hardest_first",
+      "k": 11,
+      "layers_compressed": [
+        0,
+        11,
+        8,
+        10,
+        9,
+        2,
+        6,
+        3,
+        1,
+        4,
+        5
+      ],
+      "perplexity": 395.2722153496734,
+      "relative_ppl_increase": 2.230760541422605,
+      "teacher_student_kl": 209.4799404144287,
+      "top1_agreement": 0.32177734375
+    },
+    {
+      "ordering": "hardest_first",
+      "k": 12,
+      "layers_compressed": [
+        0,
+        11,
+        8,
+        10,
+        9,
+        2,
+        6,
+        3,
+        1,
+        4,
+        5,
+        7
+      ],
+      "perplexity": 403.45474020917976,
+      "relative_ppl_increase": 2.297640472312553,
+      "teacher_student_kl": 216.71218490600586,
+      "top1_agreement": 0.31201171875
+    },
+    {
+      "ordering": "random",
+      "k": 1,
+      "layers_compressed": [
+        7
+      ],
+      "perplexity": 119.79909519486378,
+      "relative_ppl_increase": -0.020821159131300046,
+      "teacher_student_kl": 9.541705250740051,
+      "top1_agreement": 0.82080078125
+    },
+    {
+      "ordering": "random",
+      "k": 2,
+      "layers_compressed": [
+        7,
+        5
+      ],
+      "perplexity": 123.13137965340648,
+      "relative_ppl_increase": 0.006415293934169508,
+      "teacher_student_kl": 23.368403673171997,
+      "top1_agreement": 0.73291015625
+    },
+    {
+      "ordering": "random",
+      "k": 3,
+      "layers_compressed": [
+        7,
+        5,
+        2
+      ],
+      "perplexity": 127.71892343950334,
+      "relative_ppl_increase": 0.0439116189239205,
+      "teacher_student_kl": 36.959815979003906,
+      "top1_agreement": 0.667236328125
+    },
+    {
+      "ordering": "random",
+      "k": 4,
+      "layers_compressed": [
+        7,
+        5,
+        2,
+        8
+      ],
+      "perplexity": 139.5159784165495,
+      "relative_ppl_increase": 0.1403349399790501,
+      "teacher_student_kl": 54.8121075630188,
+      "top1_agreement": 0.5986328125
+    },
+    {
+      "ordering": "random",
+      "k": 5,
+      "layers_compressed": [
+        7,
+        5,
+        2,
+        8,
+        9
+      ],
+      "perplexity": 152.86918567124076,
+      "relative_ppl_increase": 0.2494774838376675,
+      "teacher_student_kl": 71.56351375579834,
+      "top1_agreement": 0.541748046875
+    },
+    {
+      "ordering": "random",
+      "k": 6,
+      "layers_compressed": [
+        7,
+        5,
+        2,
+        8,
+        9,
+        6
+      ],
+      "perplexity": 168.9080085320777,
+      "relative_ppl_increase": 0.3805709278426273,
+      "teacher_student_kl": 89.45032215118408,
+      "top1_agreement": 0.492919921875
+    },
+    {
+      "ordering": "random",
+      "k": 7,
+      "layers_compressed": [
+        7,
+        5,
+        2,
+        8,
+        9,
+        6,
+        11
+      ],
+      "perplexity": 184.18717861228492,
+      "relative_ppl_increase": 0.5054553439080206,
+      "teacher_student_kl": 102.1105489730835,
+      "top1_agreement": 0.457275390625
+    },
+    {
+      "ordering": "random",
+      "k": 8,
+      "layers_compressed": [
+        7,
+        5,
+        2,
+        8,
+        9,
+        6,
+        11,
+        3
+      ],
+      "perplexity": 202.645758384778,
+      "relative_ppl_increase": 0.6563266899420857,
+      "teacher_student_kl": 119.2949447631836,
+      "top1_agreement": 0.43115234375
+    },
+    {
+      "ordering": "random",
+      "k": 9,
+      "layers_compressed": [
+        7,
+        5,
+        2,
+        8,
+        9,
+        6,
+        11,
+        3,
+        4
+      ],
+      "perplexity": 226.952645904004,
+      "relative_ppl_increase": 0.8549992250516998,
+      "teacher_student_kl": 135.29188442230225,
+      "top1_agreement": 0.407470703125
+    },
+    {
+      "ordering": "random",
+      "k": 10,
+      "layers_compressed": [
+        7,
+        5,
+        2,
+        8,
+        9,
+        6,
+        11,
+        3,
+        4,
+        0
+      ],
+      "perplexity": 332.17984360966136,
+      "relative_ppl_increase": 1.715074547905262,
+      "teacher_student_kl": 198.72498893737793,
+      "top1_agreement": 0.331787109375
+    },
+    {
+      "ordering": "random",
+      "k": 11,
+      "layers_compressed": [
+        7,
+        5,
+        2,
+        8,
+        9,
+        6,
+        11,
+        3,
+        4,
+        0,
+        1
+      ],
+      "perplexity": 380.91156269452733,
+      "relative_ppl_increase": 2.1133836347096504,
+      "teacher_student_kl": 210.93140029907227,
+      "top1_agreement": 0.318115234375
+    },
+    {
+      "ordering": "random",
+      "k": 12,
+      "layers_compressed": [
+        7,
+        5,
+        2,
+        8,
+        9,
+        6,
+        11,
+        3,
+        4,
+        0,
+        1,
+        10
+      ],
+      "perplexity": 403.45474020917976,
+      "relative_ppl_increase": 2.297640472312553,
+      "teacher_student_kl": 216.71218490600586,
+      "top1_agreement": 0.31201171875
+    }
+  ]
+}
