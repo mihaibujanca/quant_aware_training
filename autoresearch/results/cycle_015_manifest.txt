@@ -1,0 +1,29 @@
+cycle_015_manifest
+==================
+Item: 26 — Intrinsic dimension trajectory through depth (GPT-2)
+Verdict: INCONCLUSIVE
+Date: 2026-03-18
+
+Key findings:
+- TwoNN ID rises monotonically from 1.64 (embedding) to 7.46 (block 11)
+- Final-third mean ID: 7.32 vs initial-third mean: 4.52 (rise of +62%, not a drop)
+- Spearman rho(|delta_ID|, cycle-005 damage) = -0.16, p = 0.62 (no correlation)
+- N_tokens = 4128 (32 seqs × 128 + 32 BOS), D = 768
+
+Criterion assessment:
+- Confirmed criterion (≥30% drop + ρ≥0.4): NOT MET — ID rises, not falls
+- Refuted criterion (<10% variation): NOT MET — ID varies by 6× (1.64→7.46)
+- Inconclusive: ID varies substantially but non-monotonically relative to hypothesis,
+  no correlation with compression difficulty
+
+Interpretation:
+GPT-2 builds structure through depth rather than compressing it. The residual stream
+becomes higher-dimensional (richer, more differentiated) as processing proceeds.
+This is consistent with the "residual stream as communication bus" view: each block
+adds a new direction rather than collapsing existing ones. TwoNN ID is not a useful
+compression predictor for GPT-2 FFN blocks.
+
+Artifacts:
+  experiments/intrinsic_dim_trajectory.py
+  autoresearch/results/cycle_015_intrinsic_dim.json
+  autoresearch/results/cycle_015_intrinsic_dim.png

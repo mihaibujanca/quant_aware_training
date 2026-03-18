@@ -18,3 +18,5 @@ cycle	item	type	outcome	key_metric	description	commit	paths
 013	24	empirical	inconclusive	Spectral beats random by 9.4pp but max acc=60% vs float 95.5%; RTG too fragmented (79 components)	RTG spectral coarsening toy ReLU	202daf9	autoresearch/results/cycle_013_rtg_spectral.json,autoresearch/results/cycle_013_rtg_spectral.png,experiments/rtg_spectral_toy.py
 
 014	25	empirical	refuted	Spectral at parity with k-means; max improvement 1.3% (threshold 15%)	RTG spectral coarsening GPT-2 FFN (proxy)	d8838b7	autoresearch/results/cycle_014_summary.md,autoresearch/results/cycle_014_rtg_spectral_gpt2.json,experiments/rtg_spectral_gpt2.py
+
+015	26	empirical	inconclusive	TwoNN ID rises 1.64->7.46 through depth; Spearman rho=-0.16 p=0.62	Intrinsic dimension trajectory through GPT-2 depth (proxy)	7bc9d23	autoresearch/results/cycle_015_intrinsic_dim.json,autoresearch/results/cycle_015_intrinsic_dim.png,experiments/intrinsic_dim_trajectory.py
