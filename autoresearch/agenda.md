@@ -10,13 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0 — New geometric directions (cycle 006+, added 2026-03-18)
 
-19. **Jacobian variance atlas: which FFN blocks are near-linear on probe data?**
-   - The existing `FfnLayerGeometry.jacobian_spectrum` stores the *mean* singular value spectrum across probe points. This experiment extends that by computing the *variance* of singular values across probe tokens — the coefficient of variation (std/mean) per singular value and per block. A block where J(x) barely changes across inputs has a near-constant Jacobian: it behaves as a single linear operator on the data distribution, which means it can be collapsed to one affine map without needing to model multiple linear regions. This is cheaper than any region-merging approach and can be evaluated analytically. Compute linearity index L = 1 − mean_x(||J(x) − J̄||_F / ||J̄||_F) per block. Correlate L with the single-block swap damage from cycle 005 to test whether near-linear blocks are also the easy-to-compress ones.
-   - Type: empirical
-   - Confirmed if: at least 4 of 24 GPT-2 blocks have L ≥ 0.85 AND Spearman correlation between L and (1 − relative perplexity increase from cycle 005) is ≥ 0.4.
-   - Refuted if: all blocks have L < 0.6, indicating that every block exhibits substantial Jacobian variation and single-affine collapse is not viable for any block.
-   - Inconclusive if: linearity index correlates with depth but not with compression damage, suggesting L measures something other than compressibility.
-   - Depends on: 9
 
 20. **Single-affine collapse quality — toy ReLU**
    - For a trained ReLU MLP on spirals (2D input, 4 layers, 64 hidden), fit a single affine map (A, b) to each hidden layer via least squares on probe data: A, b = argmin_A ||h_ℓ(x) − A·h_{ℓ−1}(x) − b||_F. Measure the normalized residual r = ||h_ℓ − Ah_{ℓ−1} − b||_F / ||h_ℓ − mean(h_ℓ)||_F on held-out data. This tells us how well a single affine map approximates what each layer computes on the training distribution. If r is small for some layers, those layers are functionally linear on the data and can be collapsed analytically. This is the simplest possible compression move: replace a nonlinear layer with a matrix multiplication.
@@ -356,3 +349,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Commit: 63fb41d
    - Artifact: `autoresearch/results/cycle_008_summary.md`, `autoresearch/results/cycle_008_robustness.json`
    - Key finding: Compression geometry signals are highly robust to probe-corpus splits. Channel rankings, Jacobian spectra, and selected hidden-unit sets are nearly identical across disjoint probe halves. This validates the single-probe approach used in all prior cycles.
+
+### Cycle 009
+
+19. **Jacobian variance atlas: which FFN blocks are near-linear on probe data?**
+   - Type: empirical
+   - Outcome: **refuted (proxy)** — 0/12 blocks have L ≥ 0.85; all blocks have L < 0.6 (max L = 0.38). Spearman ρ = −0.14, p = 0.66.
+   - Cycle: 009
+   - Commit: NONE
+   - Artifact: `autoresearch/results/cycle_009_summary.md`, `autoresearch/results/cycle_009_jacobian_atlas.json`
+   - Key finding: No GPT-2 FFN block is near-linear on the probe distribution. Most blocks have negative L (mean Jacobian deviation exceeds mean norm), indicating substantial per-token functional diversity. Single-affine collapse is not viable for any block. Multi-region approaches (items 22–25) are the necessary path.

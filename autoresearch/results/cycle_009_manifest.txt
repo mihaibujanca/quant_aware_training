@@ -1,0 +1,5 @@
+item_number: 19
+outcome: refuted
+key_metric: 0/12 blocks have L>=0.85; Spearman rho=-0.14 p=0.66
+commit: NONE
+paths: experiments/jacobian_variance_atlas.py,autoresearch/results/cycle_009_jacobian_atlas.json,autoresearch/results/cycle_009_jacobian_atlas.png,autoresearch/results/cycle_009_summary.md
