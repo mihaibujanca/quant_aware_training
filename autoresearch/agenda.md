@@ -56,6 +56,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Refuted if: local complexity shows no correlation with r and no consistent trend across training.
    - Inconclusive if: the correlation with r holds but the training-dynamics prediction fails, or vice versa.
    - Depends on: 20
+   - **Outcome: INCONCLUSIVE** — Spearman ρ=0.80 (p=0.20, n=4) between local complexity and r_held PASSES the ≥0.5 threshold. Layer ordering by LC matches compression difficulty (L2 highest LC, L1 next, consistent with large r drop from L1→L2 in cycle 010). However, local complexity does NOT decrease during training: early=15.08, mid=14.32, late=15.91 (−5.5% change vs required −30%). The Humayun/Patel grokking prediction fails — spirals may not exhibit the same training-phase collapse as reported. Note: ε=0.39 yielded avg 72 neighbors (2× intended ~30); this doesn't change the qualitative finding. Experiment 30 (GPT-2 proxy) can proceed since the correlation signal holds.
+   - Cycle: 023
+   - Artifacts: `autoresearch/results/cycle_023_local_complexity.json`, `autoresearch/results/cycle_023_local_complexity.png`
 
 30. **Local complexity proxy as a compression difficulty predictor — GPT-2**
    - Apply the local complexity idea from experiment 29 to GPT-2 FFN blocks. Since GELU makes exact activation-pattern counting undefined, use a proxy: for each probe token x, compute the standard deviation of block Jacobians J(x') for x' in the k nearest neighbors of x in the input representation space. High std → the block is highly nonlinear near x → high local complexity. Low std → the block is locally smooth → easy to approximate. Aggregate this proxy over the full probe set per block and correlate with single-block swap damage from cycle 005.

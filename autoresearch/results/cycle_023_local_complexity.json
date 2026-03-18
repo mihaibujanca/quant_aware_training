@@ -1,0 +1,53 @@
+{
+  "experiment": "local_complexity_toy_relu",
+  "cycle": 23,
+  "item": 29,
+  "config": {
+    "n_samples": 2000,
+    "n_turns": 3,
+    "scale": 2.0,
+    "architecture": "2->64x4->1",
+    "lr": 0.001,
+    "n_probe": 1000,
+    "epsilon": 0.39,
+    "avg_neighbors": 71.916
+  },
+  "checkpoints": {
+    "100": [
+      15.402,
+      18.283,
+      15.83,
+      10.816
+    ],
+    "500": [
+      16.468,
+      19.953,
+      14.96,
+      5.883
+    ],
+    "2000": [
+      17.14,
+      20.493,
+      14.23,
+      11.784
+    ]
+  },
+  "spearman_rho": 0.7999999999999999,
+  "spearman_pval": 0.2000000000000001,
+  "r_held_cycle010": [
+    0.42967966198921204,
+    0.05038551986217499,
+    0.03330715000629425,
+    0.02373376302421093
+  ],
+  "lc_late": [
+    17.14,
+    20.493,
+    14.23,
+    11.784
+  ],
+  "drop_pct_early_to_late": -5.49634516252009,
+  "corr_confirmed": true,
+  "dynamics_confirmed": false,
+  "outcome": "INCONCLUSIVE"
+}
