@@ -1,0 +1,22 @@
+cycle_017_manifest
+==================
+Item: 34 — Region volume Pareto: do large regions carry most task accuracy? — toy ReLU
+Verdict: INCONCLUSIVE
+Date: 2026-03-18
+
+Key metrics:
+  float test accuracy:          98.3%
+  N unique patterns (test set): 375
+  Gini coefficient:             0.408
+  Top-20% regions (75/375):
+    coverage of test set:       47.7%
+    coverage of float-correct:  48.2%   [threshold was ≥70%]
+    accuracy with fallback:     86.7%
+
+Artifacts:
+  experiments/region_volume_pareto.py        — experiment script
+  autoresearch/briefs/cycle_017.md           — brief
+  autoresearch/plans/cycle_017.md            — plan
+  autoresearch/results/cycle_017_pareto.json — full metrics + curves
+  autoresearch/results/cycle_017_pareto.png  — 3-panel figure
+  autoresearch/results/cycle_017_manifest.txt — this file
