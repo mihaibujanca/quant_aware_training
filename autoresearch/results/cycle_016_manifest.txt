@@ -1,0 +1,24 @@
+cycle: 016
+item: 32
+outcome: INCONCLUSIVE
+commit: 0b5c9af
+
+Key metrics:
+  float GELU (2D model, 4×64 GELU layers, spirals 2000pts/3turns/noise=0.5): 86.75% test acc
+  K=1  pieces: 53.00% (drop 33.75pp, 38.90% rel)
+  K=3  pieces: 52.50% (drop 34.25pp, 39.48% rel)
+  K=5  pieces: 56.00% (drop 30.75pp, 35.45% rel)
+  K=10 pieces: 84.50% (drop  2.25pp,  2.59% rel)
+  Activations outside [-3,3]: 17.18%
+  100D embedding model: same float acc 86.75%, similar PWL drops
+
+Outcome interpretation:
+  K=10 satisfies "< 3% drop" (2.59pp) but K=3 and K=5 far exceed 3% threshold (~35pp).
+  Criteria: not CONFIRMED (3-piece fails), not REFUTED (K=10 < 5%).
+  INCONCLUSIVE: GELU is approximately piecewise-affine at ~10 pieces, much finer than ReLU.
+  Item 33 (GPT-2 PWL) is not skipped (refutation criterion not triggered).
+
+Artifacts:
+  experiments/gelu_pwl_approximation.py
+  autoresearch/results/cycle_016_gelu_pwl_approximation.png
+  autoresearch/agenda.md (item 32 moved to PAST under Cycle 016)
