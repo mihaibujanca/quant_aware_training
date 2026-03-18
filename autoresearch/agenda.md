@@ -128,13 +128,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 020
    - Artifacts: `autoresearch/results/cycle_020_curvature.json`, `autoresearch/results/cycle_020_curvature_trajectory.png`, `autoresearch/results/cycle_020_curvature_vs_damage.png`
 
-39. **Grokking as compression catalyst — toy ReLU**
+39. **Grokking as compression catalyst — toy ReLU** *(REFUTED — cycle 021)*
    - Train spirals network for 10× normal epochs (well past convergence into overfitting/grokking regime). At regular checkpoints: (a) count distinct activation patterns on held-out data, (b) compute pattern entropy (item 37), (c) measure single-affine residual per layer (item 20 method). Look for a phase transition where partition complexity drops sharply — this is grokking manifesting as geometric simplification. If found: run the geometric compression pipeline (from `relu_geometric_compression.py`) AT the grokking point vs BEFORE — quantify how much easier compression becomes post-grokking. This bridges "Deep Grokking" theory (already in lit map) with actionable compression timing.
    - Type: empirical
-   - Confirmed if: pattern count drops ≥40% between pre-grokking and post-grokking checkpoints AND post-grokking compression achieves ≥10% better accuracy at matched parameter budget.
-   - Refuted if: pattern count is stable throughout training or compression quality doesn't change with training duration.
-   - Inconclusive if: pattern count drops but compression quality does not improve, suggesting simplification is not in the dimensions that matter for compression.
-   - Depends on: none (but benefits from item 37 methodology)
+   - **Outcome: REFUTED** — Classic grokking (late test accuracy rise) IS detected on spirals: train saturates at 92% by epoch 2000, test accuracy jumps from 0.747 → 0.805+ around epoch 17000. However, the geometry signal is opposite to the hypothesis: pattern count INCREASES through grokking (369 → 564+, rising to 723 at epoch 29000 with no drop). Pattern complexity is NOT reduced by grokking on spirals — instead the network develops a richer partition. Compression quality improves slightly (+5.7% accuracy at 4× compression) but this tracks the teacher's improved accuracy, not geometric simplification. Pattern drop from peak = 4.3% (need 40%), compression gain = 5.7% (need 10%). Verdict: REFUTED on both criteria. The "partition collapses during grokking" hypothesis is wrong for continuous 2D tasks; it may only apply to discrete/algebraic tasks (modular arithmetic) where grokking enables compact algorithmic solutions.
+   - Cycle: 021
+   - Artifacts: `experiments/grokking_compression_catalyst.py`, `autoresearch/results/cycle_021_grokking.json`, `autoresearch/results/cycle_021_grokking_trajectory.png`
 
 40. **Attention head geometry census — GPT-2**
    - Extend beyond FFN-only analysis. For each attention head in GPT-2 (12 layers × 12 heads = 144 heads): (a) effective rank of attention matrix mean over probe sequences (nuclear norm / operator norm), (b) head output Jacobian variation (std of head output norms across tokens), (c) pairwise CKA between heads within the same layer to measure redundancy. Rank heads by a combined "prunability score" = low_rank × low_variation × high_redundancy. Test: zero-out the top-K most prunable heads, measure perplexity cost. This answers: is there geometric compression opportunity in attention, not just FFN?
@@ -227,6 +226,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 10
 
 ## PAST EXPERIMENTS
+
+### Cycle 021
+
+39. **Grokking as compression catalyst — toy ReLU** — see item 39 above (moved inline above for full context). **REFUTED**: pattern count increases during grokking on spirals; compression gain 5.7% < 10% threshold.
+   - Artifacts: `experiments/grokking_compression_catalyst.py`, `autoresearch/results/cycle_021_grokking.json`, `autoresearch/results/cycle_021_grokking_trajectory.png`
 
 ### Cycle 018
 
