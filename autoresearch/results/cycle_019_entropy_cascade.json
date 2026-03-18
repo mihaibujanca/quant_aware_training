@@ -1,0 +1,55 @@
+{
+  "experiment": "activation_pattern_entropy_cascade",
+  "cycle": 19,
+  "item": 37,
+  "config": {
+    "architecture": "2->32x4->1",
+    "hidden": 32,
+    "n_layers": 4,
+    "n_train": 2000,
+    "n_test": 500,
+    "n_turns": 3,
+    "scale": 2.0,
+    "lr": 0.001,
+    "epochs": 3000
+  },
+  "test_accuracy": 0.9919999837875366,
+  "marginal_entropy_bits": [
+    6.3338973665095875,
+    7.0846467068934595,
+    5.4666963585314265,
+    4.415688601795808
+  ],
+  "joint_entropy_bits": [
+    6.3338973665095875,
+    7.973375079779231,
+    8.228472829822486,
+    8.499770310805964
+  ],
+  "conditional_entropy_bits": [
+    6.3338973665095875,
+    1.6394777132696436,
+    0.2550977500432552,
+    0.2712974809834776
+  ],
+  "conditional_drop_ratio": [
+    1.0,
+    0.25884185019137884,
+    0.040275005305908766,
+    0.04283262978304007
+  ],
+  "single_affine_residuals": [
+    0.1677620005068392,
+    0.010442271213452623,
+    0.012683494927685102,
+    0.007583418633162036
+  ],
+  "spearman_rho": 0.39999999999999997,
+  "spearman_pval": 0.6,
+  "min_drop_ratio": 0.040275005305908766,
+  "min_drop_layer": 3,
+  "min_drop_r": 0.012683494927685102,
+  "median_r": 0.011562883070568863,
+  "verdict": "confirmed",
+  "verdict_reason": "Layer 3 conditional H ratio=0.040 \u2264 0.5 AND 3 low-cH layer(s) have r < 0.5\u00d7r_L1 (r_L1=0.1678); low-r layers: [2, 3, 4]"
+}
