@@ -105,13 +105,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0 — Novel directions: structured probing + topology (items 36–45, added 2026-03-18)
 
-36. **Procrustes linearity profile + identity-layer pruning — GPT-2**
-   - Replicate the core finding from "Your Transformer is Secretly Linear" (2405.12250) on our GPT-2 proxy. For each pair of consecutive layers (i, i+1), compute generalized Procrustes similarity: linearity_score = 1 − min_A ||X̃A − Ỹ||²₂ where X̃, Ỹ are normalized residual stream embeddings. Rank layers by linearity. Then **ACT**: replace the most linear layer(s) with identity (pure skip connection) — measure perplexity cost. Compare this layer ranking with Jacobian variance ranking (item 19) and single-block swap damage (cycle 005). This is a DIFFERENT signal from item 19: Procrustes measures whole-layer input→output linearity including attention+FFN+residual, not within-FFN Jacobian variation.
-   - Type: empirical + intervention
-   - Confirmed if: ≥4 layers have linearity ≥ 0.98 AND identity replacement of the top-2 most linear layers causes ≤10% perplexity increase AND layer ranking correlates with cycle 005 damage (Spearman ≥ 0.4).
-   - Refuted if: all layers have linearity < 0.90, contradicting the paper's findings on GPT-2.
-   - Inconclusive if: linearity scores are high but identity replacement causes large perplexity increase, suggesting linearity ≠ removability due to cumulative effects.
-   - Depends on: 9
 
 37. **Activation pattern entropy cascade — toy ReLU**
    - For each layer in a trained spirals network, compute Shannon entropy H(layer) of the activation pattern distribution over data. High H = many equally-used patterns = complex = hard to compress. Low H = few dominant patterns = compressible. Also compute conditional entropy H(pattern_L | pattern_{L-1}) — how much NEW partition information each layer adds. If conditional entropy is near zero for some layer, that layer is partitioning redundantly relative to the previous layer → safe to remove. Plot the entropy cascade: H(L1), H(L2|L1), H(L3|L1,L2), ... This is an information-theoretic characterization of partition redundancy, different from affine-map clustering (item 22) or volume analysis (item 34).
@@ -228,6 +221,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 10
 
 ## PAST EXPERIMENTS
+
+### Cycle 018
+
+36. **Procrustes linearity profile + identity-layer pruning — GPT-2**
+   - Outcome: **INCONCLUSIVE** — Linearity scores confirmed (7/12 layers ≥0.98, layers 3–10 all highly linear, consistent with "Secretly Linear" paper). Spearman correlation with cycle 005 damage = 0.557 (PASS). But identity replacement of top-2 most linear blocks (3, 4) causes 33.6% PPL increase (FAIL; criterion ≤10%). Individually: block 3 alone = 10.2%, block 4 = 8.5%, block 6 cheapest at 3.9%. Compounding makes simultaneous removal far worse than either alone. Linearity ≠ removability for joint removal — though single blocks near threshold. Block 0 catastrophic (2314%); block 11 severe (595%). Layers 1–2 have lower linearity (0.846, 0.852) consistent with their early representational role.
+   - Cycle: 018
+   - Artifacts: `experiments/procrustes_linearity_gpt2.py`, `autoresearch/results/cycle_018_linearity.json`, `autoresearch/results/cycle_018_linearity.png`
 
 ### Cycle 017
 
