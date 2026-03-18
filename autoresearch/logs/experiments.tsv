@@ -32,3 +32,5 @@ cycle	item	type	outcome	key_metric	description	commit	paths
 020	38	empirical	refuted	Curvature flat 0.045-0.047 across all layers; Spearman rho=-0.42 anti-corr	Manifold curvature trajectory GPT-2 (proxy)	b49d981	autoresearch/results/cycle_020_curvature.json,experiments/manifold_curvature_gpt2.py
 
 021	39	empirical	refuted	Pattern count INCREASES through grokking (369->723); no compression gain	Grokking as compression catalyst toy ReLU	02902d2	autoresearch/results/cycle_021_grokking.json,autoresearch/results/cycle_021_grokking_trajectory.png,experiments/grokking_compression_catalyst.py
+
+022	40	empirical	inconclusive	89.6% heads low-rank; K=5 +2.7% ppl; K=10 +14.6% ppl; compounding	Attention head geometry census GPT-2 (proxy)	631b234	autoresearch/results/cycle_022_head_census.json,autoresearch/results/cycle_022_summary.md,experiments/attn_head_census.py

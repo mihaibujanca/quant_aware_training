@@ -1,0 +1,15 @@
+cycle_022_manifest.txt
+======================
+Cycle: 022
+Item: 40 — Attention head geometry census (GPT-2)
+Verdict: INCONCLUSIVE
+Commit: 631b234
+
+Files:
+  autoresearch/briefs/cycle_022.md
+  autoresearch/plans/cycle_022.md
+  experiments/attn_head_census.py
+  autoresearch/results/cycle_022_head_census.json
+  autoresearch/results/cycle_022_head_census.png
+  autoresearch/results/cycle_022_summary.md
+  autoresearch/agenda.md (item 40 moved to PAST)
