@@ -8,3 +8,5 @@ cycle	item	type	outcome	key_metric	description	commit	paths
 008	13	empirical	confirmed	12/12 blocks pass both criteria: Spearman>=0.95 Jaccard>=0.82 Jacobian cosine>=0.997	Probe-corpus robustness of geometry signals (proxy gpt2)	63fb41d	autoresearch/results/cycle_008_summary.md,autoresearch/results/cycle_008_robustness.json
 
 009	19	empirical	refuted	0/12 blocks L>=0.85; Spearman=-0.14 p=0.66	Jacobian variance atlas (proxy gpt2)	NONE	autoresearch/results/cycle_009_summary.md,autoresearch/results/cycle_009_jacobian_atlas.json,autoresearch/results/cycle_009_jacobian_atlas.png
+
+010	20	empirical	confirmed	3/4 layers r<0.15 (L2=0.050 L3=0.033 L4=0.024); r decreases with depth	Single-affine collapse quality toy ReLU	3d07fcd	autoresearch/results/cycle_010_summary.md,autoresearch/results/cycle_010_single_affine.json,experiments/single_affine_collapse_toy.py

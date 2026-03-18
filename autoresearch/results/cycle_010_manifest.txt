@@ -1,0 +1,5 @@
+item_number=20
+outcome=confirmed
+key_metric=3/4 hidden layers have r_held < 0.15; L1=0.430, L2=0.050, L3=0.033, L4=0.024; r decreases monotonically with depth
+commit=3d07fcd
+paths=autoresearch/results/cycle_010_single_affine.json,autoresearch/results/cycle_010_summary.md,experiments/single_affine_collapse_toy.py
