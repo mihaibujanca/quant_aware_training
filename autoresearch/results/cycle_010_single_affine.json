@@ -1,0 +1,49 @@
+{
+  "experiment": "single_affine_collapse_toy",
+  "cycle": 10,
+  "item": 20,
+  "config": {
+    "dataset": "spirals",
+    "n_samples": 2000,
+    "n_turns": 3,
+    "scale": 2.0,
+    "architecture": "2->64->64->64->64->1",
+    "n_hidden_layers": 4,
+    "lr": 0.001
+  },
+  "train_accuracy": 0.9944999814033508,
+  "per_layer": [
+    {
+      "layer": 1,
+      "r_fit": 0.4240764379501343,
+      "r_held": 0.42967966198921204,
+      "frac_dead": 0.03125,
+      "frac_always_active": 0.0625
+    },
+    {
+      "layer": 2,
+      "r_fit": 0.0473206490278244,
+      "r_held": 0.05038551986217499,
+      "frac_dead": 0.140625,
+      "frac_always_active": 0.03125
+    },
+    {
+      "layer": 3,
+      "r_fit": 0.031484633684158325,
+      "r_held": 0.03330715000629425,
+      "frac_dead": 0.125,
+      "frac_always_active": 0.296875
+    },
+    {
+      "layer": 4,
+      "r_fit": 0.022125786170363426,
+      "r_held": 0.02373376302421093,
+      "frac_dead": 0.171875,
+      "frac_always_active": 0.265625
+    }
+  ],
+  "min_r_held": 0.02373376302421093,
+  "max_r_held": 0.42967966198921204,
+  "verdict": "confirmed",
+  "verdict_reason": "Layer 2 has r=0.0237 < 0.15 on held-out data."
+}

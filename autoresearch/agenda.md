@@ -11,14 +11,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ### P0 — New geometric directions (cycle 006+, added 2026-03-18)
 
 
-20. **Single-affine collapse quality — toy ReLU**
-   - For a trained ReLU MLP on spirals (2D input, 4 layers, 64 hidden), fit a single affine map (A, b) to each hidden layer via least squares on probe data: A, b = argmin_A ||h_ℓ(x) − A·h_{ℓ−1}(x) − b||_F. Measure the normalized residual r = ||h_ℓ − Ah_{ℓ−1} − b||_F / ||h_ℓ − mean(h_ℓ)||_F on held-out data. This tells us how well a single affine map approximates what each layer computes on the training distribution. If r is small for some layers, those layers are functionally linear on the data and can be collapsed analytically. This is the simplest possible compression move: replace a nonlinear layer with a matrix multiplication.
-   - Type: empirical
-   - Confirmed if: at least one hidden layer achieves r < 0.15 on held-out probe data, indicating near-linear behavior.
-   - Refuted if: all layers have r > 0.5, indicating that single-affine collapse is uniformly poor and the function uses its nonlinearity everywhere.
-   - Inconclusive if: r is moderate (0.15–0.5) and does not correlate with layer depth or neuron stability statistics.
-   - Depends on: none
-
 21. **Single-affine collapse quality — GPT-2 FFN blocks**
    - Apply the same single-affine fit from experiment 20 to each GPT-2 FFN block: fit A, b from probe tokens, measure normalized residual r on held-out tokens. The question is whether any FFN block is functionally linear on the GPT-2 probe corpus (Shakespeare text), which would mean it can be replaced by a single matrix multiplication with negligible perplexity cost. If yes, this provides a zero-shot depth-compression baseline that does not require distillation or retraining. Additionally test the action: for blocks with the lowest r, actually swap in the affine approximation and measure resulting perplexity.
    - Type: empirical
@@ -359,3 +351,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Commit: NONE
    - Artifact: `autoresearch/results/cycle_009_summary.md`, `autoresearch/results/cycle_009_jacobian_atlas.json`
    - Key finding: No GPT-2 FFN block is near-linear on the probe distribution. Most blocks have negative L (mean Jacobian deviation exceeds mean norm), indicating substantial per-token functional diversity. Single-affine collapse is not viable for any block. Multi-region approaches (items 22–25) are the necessary path.
+
+### Cycle 010
+
+20. **Single-affine collapse quality — toy ReLU**
+   - Type: empirical
+   - Outcome: **confirmed** — 3/4 hidden layers have r < 0.15 on held-out data. r values: L1=0.430, L2=0.050, L3=0.033, L4=0.024. r decreases monotonically with depth.
+   - Cycle: 010
+   - Commit: TBD
+   - Artifact: `autoresearch/results/cycle_010_summary.md`, `autoresearch/results/cycle_010_single_affine.json`
+   - Key finding: Deep layers of a trained ReLU MLP (layers 2–4) are near-linear on the data distribution (r < 0.06). Only the first hidden layer performs genuinely nonlinear computation (r=0.43). Dead/always-active neuron fraction correlates negatively with r: layers with more stable neurons are more affinely collapsible. Train accuracy was 99.45%. The single-affine collapse is viable for compression of deep layers.
