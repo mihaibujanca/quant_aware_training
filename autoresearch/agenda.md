@@ -12,13 +12,17 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 
 
-22. **Effective number of affine behaviors via Jacobian k-means — toy ReLU**
+22. **Effective number of affine behaviors via Jacobian k-means — toy ReLU** *(REFUTED — cycle 012)*
    - A ReLU network with K observed activation patterns has exactly K distinct affine maps A_ω. In practice, many A_ω are similar and can be served by a single representative. For a trained spirals ReLU network, extract all distinct activation patterns on probe data, compute their A_ω matrices using the MASO formula A_ω = W_L·diag(q^L)·…·W_1·diag(q^1), then run k-means on the flattened A_ω vectors. Find the minimum K* such that cluster-centroid A_ω matrices reproduce network outputs with ≤ 1% accuracy drop. K* / N_patterns is the functional redundancy ratio: how much of the activation-pattern diversity is semantically irrelevant. Plot K* vs. accuracy for a range of K to get a compression-accuracy curve.
    - Type: empirical
    - Confirmed if: K* / N_patterns ≤ 0.2 for the spirals network (i.e., fewer than 20% of observed patterns are functionally distinct), indicating high redundancy exploitable for compression.
    - Refuted if: K* / N_patterns > 0.7, indicating that most activation patterns compute meaningfully different functions.
    - Inconclusive if: accuracy drops sharply as soon as any merging is applied (K* ≈ N_patterns) even though many A_ω look geometrically similar, suggesting that functional similarity does not survive k-means clustering.
    - Depends on: none
+   - **Outcome: REFUTED** — K*/N_patterns = 1.00 (375/375). Accuracy at K=64 (17% of patterns) = 74.9%, never recovers to within 1% of float (98.3%) until K=N_patterns. Affine maps are genuinely diverse (std 42–83 per component); k-means clustering cannot find redundancy. Implies experiment 23 (GPT-2 Jacobian k-means) is unmotivated per agenda dependency note. RTG spectral coarsening (exp 24) may still work as it respects local adjacency structure.
+   - Cycle: 012
+   - Commit: see below
+   - Artifacts: `autoresearch/results/cycle_012_kmeans_toy.json`, `autoresearch/results/cycle_012_kmeans_curve.png`, `autoresearch/results/cycle_012_summary.md`
 
 23. **Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**
    - Apply the same clustering idea from experiment 22 to GPT-2 FFN blocks. Instead of MASO affine maps (unavailable for GELU networks), use per-token Jacobians J(x) ∈ ℝ^{768×768} computed via `torch.func.jacrev`. Run k-means on the flattened Jacobians for each block. Measure the reconstruction error of block outputs when each token's output is replaced by J̄_cluster(x − x̄_cluster) + f(x̄_cluster) (first-order Taylor approximation using the cluster centroid Jacobian). Find minimum K* such that reconstruction error < 5% of block output norm. Compare K* across blocks and correlate with single-block swap damage from cycle 005.
@@ -251,6 +255,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## PAST EXPERIMENTS
 
+### Cycle 012
+
+22. **Effective number of affine behaviors via Jacobian k-means — toy ReLU**
+   - Outcome: **REFUTED** — K*/N_patterns = 1.00 (375/375). Even at K=64 (17% of patterns), accuracy = 74.9% vs float 98.3%. MASO affine maps are genuinely diverse (component ranges spanning ±175 to ±575); k-means cannot find functional redundancy. Experiment 23 (GPT-2 Jacobian k-means) is skipped per dependency rule. RTG spectral coarsening (exp 24) remains open.
+   - Cycle: 012
+   - Artifacts: `autoresearch/results/cycle_012_kmeans_toy.json`, `autoresearch/results/cycle_012_kmeans_curve.png`, `autoresearch/results/cycle_012_summary.md`
+
 ### Cycle 005
 
 10. **Single-block swap localization curve**
@@ -351,7 +362,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Type: empirical
    - Outcome: **refuted (proxy)** — 0/12 blocks have r_held < 0.15 (best: block 2 r_held=0.178). Swap of best block causes +33.7% PPL increase (> 20% threshold). Best-two simultaneous swap causes +344% PPL increase.
    - Cycle: 011
-   - Commit: TBD
+   - Commit: c4ea941
    - Artifact: `autoresearch/results/cycle_011_summary.md`, `autoresearch/results/cycle_011_single_affine_gpt2.json`, `autoresearch/results/cycle_011_single_affine_gpt2.png`
    - Key finding: No GPT-2 FFN block is approximable by a single global affine map on held-out tokens. Block 2 comes closest (r_fit=0.018) but fails to generalize (r_held=0.178), indicating the affine fit memorizes rather than captures structure. Even the best block causes 33.7% PPL increase when swapped, confirming that GELU nonlinearity is functionally critical. This is consistent with cycle 009 (Jacobian variance too high for single-affine). Multi-region approaches (items 22–25) are required.
 
