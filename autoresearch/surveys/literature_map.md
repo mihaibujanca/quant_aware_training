@@ -1,6 +1,6 @@
 # Geometric Compression — Literature Map
 
-**Last updated:** 2026-03-14 (batch 11)
+**Last updated:** 2026-03-18 (batch 12)
 **Problem:** Given a trained ReLU MLP, construct a smaller network computing the same function — analytically, not by distillation.
 
 ---
@@ -307,7 +307,107 @@ A well-trained, grokked network has the sparsest possible partition structure ne
 
 ---
 
+### Your Transformer is Secretly Linear (Razzhigaev et al., 2024)
+
+**arXiv:** 2405.12250
+
+**Main result:** Consecutive transformer layers produce representations that are almost perfectly related by a linear map: Procrustes linearity score ~0.99 for GPT-2, OPT, LLaMA. This means `X_{L+1} ≈ A·X_L` — the residual stream changes are near-linear between adjacent layers. Up to 25% of layers can be removed (replaced with identity) with distillation-based recovery, minimal degradation. Fine-tuning *increases* linearity (task-specific simplification).
+
+**What it gives us:**
+1. A cheap, per-layer linearity signal (Procrustes similarity) that directly predicts which layers are identity-like → compression candidates
+2. Empirical evidence that the residual stream is doing less nonlinear work than the architecture allows, especially in fine-tuned models
+3. A principled layer ranking for depth pruning that's complementary to our Jacobian variance approach (item 19): Procrustes measures whole-layer linearity (attention+FFN+residual), not within-FFN variation
+
+**Gap:** Only tested identity removal and linear replacement (replace layer with skip connection or fitted linear map). Did not test affine cascade replacement (our compression move). The interplay between per-layer linearity and the layer's contribution to the overall function is not analyzed — a layer can be linear but still essential if it's a large-magnitude linear transformation.
+
+**Assessment:** CORE — directly informs items 36 (Procrustes profiling), 38 (curvature trajectory), and the broader question of how much of transformer depth is functionally nonlinear.
+
+---
+
+### Emergence of a High-Dimensional Abstraction Phase in Neural Networks (Cheng et al., ICLR 2025)
+
+**arXiv:** 2405.15471
+
+**Main result:** Intrinsic dimension (ID) of representations peaks in middle layers across all tested LMs (OPT, LLaMA-3, Pythia, OLMo, Mistral). The peak layer is the locus of abstract linguistic processing: semantic probing accuracy also peaks there. Post-peak layers progressively reduce dimensionality — the representation stabilizes. Earlier/higher peak correlates with better model quality.
+
+**What it gives us:**
+1. The ID peak as a geometric marker dividing the network into "building" (pre-peak) and "refining" (post-peak) phases
+2. Post-peak layers are compression candidates: the representation is already abstract, and later layers are doing progressively less new work
+3. Methodology for our item 26 (ID trajectory): TwoNN estimator used here, consistent with our planned approach
+4. Connection to items 36/43: if linearity increases and Betti numbers stabilize post-peak, we have three independent signals all pointing at the same compression boundary
+
+**Gap:** Only measured ID, did not test whether post-peak layers can actually be removed. The "stabilization" claim is based on ID trajectory, not functional redundancy. A layer could maintain the same ID while performing a critical rotation/projection.
+
+**Assessment:** CORE — provides the geometric framing for depth compression: identify the abstraction peak, compress post-peak layers. Directly informs items 26 (ID trajectory), 36 (linearity profiling), and 43 (topological truncation).
+
+---
+
 ## USEFUL
+
+### Shape of Learning: Anisotropy and Intrinsic Dimensions in Transformer Representations (Razzhigaev et al., EACL 2024)
+
+**arXiv:** 2311.05928
+
+**Main result:** Two-phase dynamics of intrinsic dimension (ID) during training: early training *expands* ID (model learns to use more dimensions), late training *compresses* ID (model finds lower-dimensional solutions). Bell-shaped anisotropy profile in decoder layers (highest in middle). Encoder and decoder have qualitatively different geometric profiles.
+
+**What it gives us:**
+1. Baseline methodology for our ID/anisotropy measurements (items 26, 38): their TwoNN + anisotropy pipeline is well-validated across model families
+2. The expansion→compression training dynamics predict that longer training produces more compressible networks (lower ID at convergence) — connects to item 39 (grokking as compression catalyst)
+3. The bell-shaped anisotropy profile gives a second geometric signal (alongside ID) for identifying compression-ready layers: high anisotropy = representation is concentrated in few directions = low effective rank = compressible
+
+**Limitation:** Analysis only, no compression intervention. The connection between measured geometry and actual compressibility is hypothesized but not tested.
+
+**Assessment:** USEFUL — provides methodology and training-dynamics context for our geometric profiling experiments.
+
+---
+
+### A Green AI Methodology: Persistent Homology for BERT Compression (PBCE, Applied Sciences 2025)
+
+**Main result:** 47% parameter reduction for BERT Base using persistent homology (PH) to score neuron importance. Method: compute PH of per-neuron output distributions across a calibration set, use topological features (persistence, Betti numbers) as importance scores, prune neurons with lowest topological importance.
+
+**What it gives us:**
+1. Practical evidence that topology-based pruning works at transformer scale — validates the direction of items 42-45
+2. A concrete neuron importance metric: PH-derived features outperform magnitude-based pruning at matched sparsity
+3. The observation that topologically "boring" neurons (low persistence) are the prunable ones — aligns with our hypothesis that topological triviality indicates redundancy (item 43)
+
+**Limitation:** Neuron-level pruning only, no partition-level or layer-level analysis. The PH is computed on individual neuron output distributions, not on the representation manifold. This is a much simpler use of topology than what items 42-45 propose.
+
+**Assessment:** USEFUL — validates topology as a pruning signal at scale. The neuron-level PH importance scoring could be a quick baseline for our more ambitious topological compression experiments.
+
+---
+
+### Dimensional Collapse in Transformer Attention Outputs (2025)
+
+**arXiv:** 2508.16929
+
+**Main result:** Attention output matrices have intrinsic low-rank structure across models. Source: anisotropy of the output projection matrix W_O, not the attention patterns themselves. Robust across layers, datasets, and model families. The effective rank of attention outputs is substantially below head_dim.
+
+**What it gives us:**
+1. Extends our FFN-focused compression story to attention: if attention outputs are intrinsically low-rank, there's compression opportunity in W_O (item 40)
+2. The source being W_O anisotropy (not attention patterns) means it's a weight-space property, not data-dependent — potentially exploitable analytically
+3. Quantifies the gap between the nominal rank (head_dim) and effective rank across layers, providing a per-head compression budget
+
+**Limitation:** Observational only, no compression algorithm or intervention tested. The low-rank structure might be compensated elsewhere in the residual stream.
+
+**Assessment:** USEFUL — directly motivates item 40 (attention head geometry census) and quantifies the compression headroom in attention that we've been ignoring by focusing on FFN.
+
+---
+
+### Linear-Size Neural Network Representation of Piecewise Affine Functions in ℝ² (2025)
+
+**arXiv:** 2503.13001
+**Relevance:** USEFUL — constructive sanity aid for the native-2D reference lane, not the main high-D program
+
+**Main idea:** In `R^2`, a continuous piecewise-affine function with `n` connected pieces can be represented by a sparse two-hidden-layer ReLU network whose size scales linearly with the number of connected pieces, even when the pieces are non-convex.
+
+**Why it matters for us:**
+- Gives a concrete synthesis endpoint for the `2D` diagnostic lane once we have extracted/coarsened a CPA atlas.
+- Sharpens the distinction between `2D` constructive possibility and the real project target, which is high-dimensional observed input.
+- Useful as a reference check for whether our extracted/coarsened 2D region structure is even in the right regime for compact ReLU resynthesis.
+
+**Limitation:** This is explicitly a `2D` result. It should guide sanity checks and native-2D reconstruction experiments, but it does not change the main rule that a compression idea only counts as promising if it still works on high-dimensional embeddings such as `2->100` and `2->1000`.
+
+---
 
 ### Auto-Compressing Networks (Dorovatas, Paraskevopoulos, Potamianos, NeurIPS 2025 oral)
 
