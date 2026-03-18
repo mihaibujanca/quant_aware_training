@@ -1,0 +1,38 @@
+Cycle 021 — Grokking as Compression Catalyst: Toy ReLU
+======================================================
+
+Item: 39
+Verdict: REFUTED
+
+Key findings:
+- Classic grokking IS present on spirals with n_train=200, WD=0.001:
+  train accuracy saturates at 92% by epoch 2000, test accuracy jumps
+  from 0.747 → 0.805+ around epoch 17000 (a 5.8 pp rise = 58% of the
+  train→test gap closed).
+- The "partition collapses during grokking" hypothesis is WRONG for spirals:
+  pattern count INCREASES through grokking (369 → 564 at grokking epoch,
+  then up to 723 peak). No downward phase transition observed.
+- Pattern drop from peak-to-post: 4.3% (criterion: ≥40% — not met).
+- Compression accuracy improvement (pre vs post grokking, 4× distillation):
+  +5.7% (0.602 → 0.659, criterion: ≥10% — not met).
+- The compression gain tracks teacher accuracy improvement (+5.8 pp test acc),
+  not geometric simplification.
+- Weight norms are stable (28.7 → 34.0 → 32.5) — the large-norm spike
+  associated with grokking in modular arithmetic is mild here.
+- Single-affine residual is consistently ~0.94-0.97 throughout training,
+  confirming the function remains highly nonlinear before and after grokking.
+
+Mechanistic explanation:
+  On continuous 2D tasks, grokking = the network finds a better-fitting
+  nonlinear solution (more linear regions, not fewer). On discrete algebraic
+  tasks (modular arithmetic), grokking = the network finds a compact
+  algorithmic solution (fewer regions). The compression catalyst hypothesis
+  is domain-specific to discrete tasks.
+
+Files:
+  experiments/grokking_compression_catalyst.py
+  autoresearch/results/cycle_021_grokking.json
+  autoresearch/results/cycle_021_grokking_trajectory.png
+  autoresearch/briefs/cycle_021.md
+  autoresearch/plans/cycle_021.md
+  autoresearch/results/cycle_021_manifest.txt

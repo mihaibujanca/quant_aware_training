@@ -30,3 +30,5 @@ cycle	item	type	outcome	key_metric	description	commit	paths
 019	37	empirical	confirmed	cH drops 96% L1->L3/L4; low cH correlates with low r_affine	Activation pattern entropy cascade toy ReLU	2fd3e8d	autoresearch/results/cycle_019_entropy_cascade.json,autoresearch/results/cycle_019_entropy_cascade.png,experiments/entropy_cascade_toy.py
 
 020	38	empirical	refuted	Curvature flat 0.045-0.047 across all layers; Spearman rho=-0.42 anti-corr	Manifold curvature trajectory GPT-2 (proxy)	b49d981	autoresearch/results/cycle_020_curvature.json,experiments/manifold_curvature_gpt2.py
+
+021	39	empirical	refuted	Pattern count INCREASES through grokking (369->723); no compression gain	Grokking as compression catalyst toy ReLU	02902d2	autoresearch/results/cycle_021_grokking.json,autoresearch/results/cycle_021_grokking_trajectory.png,experiments/grokking_compression_catalyst.py
