@@ -1,0 +1,12 @@
+cycle: 028
+item: 16
+title: Exact prune plus linear collapse baseline
+outcome: REFUTED
+commit: bd5fabb
+
+artifacts:
+  experiments/exact_prune_linear_collapse_gpt2.py
+  autoresearch/briefs/cycle_028.md
+  autoresearch/plans/cycle_028.md
+  autoresearch/results/cycle_028_prune_collapse.json
+  autoresearch/results/cycle_028_prune_collapse.png

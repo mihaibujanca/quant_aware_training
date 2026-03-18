@@ -44,3 +44,5 @@ cycle	item	type	outcome	key_metric	description	commit	paths
 026	14	empirical	confirmed	Geometric beats SVD in 11/12 (92%) block-budget pairs; SVD-composed catastrophically broken	Rank baseline vs geometry vs distillation (proxy gpt2)	625e068	autoresearch/results/cycle_026_results.json,autoresearch/results/cycle_026_summary.md,experiments/rank_baseline_vs_geometry_vs_distillation.py
 
 027	15	empirical	confirmed	Centroid similarity rho=0.853 vs weight cosine rho=0.041; +0.812 improvement in 12/12 blocks	Centroid and Jacobian affinity as merge signals (proxy gpt2)	e4ac95a	autoresearch/results/cycle_027_affinity_signals.json,experiments/centroid_jacobian_affinity_gpt2.py
+
+028	16	implementation	refuted	0% dead channels; 0.008% near-linear; 1.000x compression (need 1.1x)	Exact prune plus linear collapse baseline (proxy gpt2)	bd5fabb	autoresearch/results/cycle_028_prune_collapse.json,experiments/exact_prune_linear_collapse_gpt2.py
