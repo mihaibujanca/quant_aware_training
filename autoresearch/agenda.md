@@ -6,15 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-47. **Dead channel census — GPT-2 FFN with GELU-correct definitions (v2, supersedes item 16)**
-   - Item 16 used DEAD_THRESHOLD=1e-5 on post-GELU activations, which catches nothing for GELU (gelu(-3)≈-0.004, well above 1e-5). This redesign uses three correct definitions: (1) pre-GELU saturated: max(h_j) < T for T∈{-2,-3,-4,-5} (channel always in GELU's near-zero tail), (2) output-contribution dead: ||W_down[:,j]|| × rms(act_j) as fraction of total block output (catches low-impact channels regardless of activation magnitude), (3) near-linear: min(h_j) > T for T∈{2,3,4} (channel always in GELU≈identity regime). Also includes smooth pruning curve: sort channels by contribution, remove bottom K% for K∈{1,2,5,10,15,20,25,30}%, measure PPL.
-   - Type: empirical
-   - Confirmed if: ≥5% of channels dead/removable (pre-GELU T=-3 + near-linear T=+3) AND smooth pruning at 5% causes ≤1% PPL increase.
-   - Refuted if: <1% removable at any reasonable threshold AND pruning >2% always causes >1% PPL increase.
-   - Inconclusive if: channels identified as dead but pruning them still hurts PPL (dead by definition but load-bearing in practice).
-   - Depends on: none (supersedes 16)
-   - Script: `experiments/exact_prune_linear_collapse_gpt2_v2.py`
-
 ### P1
 
 23. **Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**
@@ -108,6 +99,14 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 
 ## PAST EXPERIMENTS
+
+### Cycle 032
+
+47. **Dead channel census — GPT-2 FFN v2 (GELU-correct)** *(REFUTED — cycle 032)*
+   - Pre-GELU dead (T=-3): 0.00%. Near-linear (T=+3): 0.00%. Pruning 1% (by contribution): +1.14% PPL > 1% threshold. Max safe prune = 0%. Contribution-based metric: 93% of channels below 0.05% threshold — but this is an artifact of near-uniform distribution (equal share = 0.033%); not meaningful "dead" channels. Confirms and closes cycle 028 finding with correct GELU-aware definitions.
+   - Outcome: REFUTED
+   - Commit: b83ddd0
+   - Artifacts: autoresearch/results/cycle_032_prune_collapse.json, autoresearch/results/cycle_032_prune_collapse.png
 
 ### Cycle 031
 

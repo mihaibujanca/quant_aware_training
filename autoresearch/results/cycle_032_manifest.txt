@@ -1,0 +1,5 @@
+item_number=47
+outcome=refuted
+key_metric=dead(T=-3)=0.00%; near-linear(T=+3)=0.00%; prune_1pct_PPL=+1.14% (>1% threshold); max_safe_prune=0%
+commit=b83ddd0
+paths=autoresearch/results/cycle_032_prune_collapse.json,autoresearch/results/cycle_032_prune_collapse.png,experiments/exact_prune_linear_collapse_gpt2_v2.py
