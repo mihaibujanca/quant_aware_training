@@ -1,0 +1,29 @@
+cycle_020_manifest
+==================
+Experiment: Manifold curvature trajectory — GPT-2
+Cycle: 020
+Date: 2026-03-18
+Verdict: REFUTED
+
+Artifacts:
+  autoresearch/results/cycle_020_curvature.json
+  autoresearch/results/cycle_020_curvature_trajectory.png
+  autoresearch/results/cycle_020_curvature_vs_damage.png
+
+Supporting:
+  autoresearch/briefs/cycle_020.md
+  autoresearch/plans/cycle_020.md
+  experiments/manifold_curvature_gpt2.py
+
+Key metrics:
+  curvature range:   0.0451 – 0.0471 (all layers)
+  spearman_rho:      -0.420
+  spearman_p:        0.175
+  monotone_final_third: False
+  k_neighbors:       50
+  variance_threshold: 0.95
+
+Notes:
+  LayerNorm normalises residual-stream representations at each block boundary,
+  homogenising curvature across layers. The local PCA proxy cannot distinguish
+  early vs late layers under these normalisation conditions.
