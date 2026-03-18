@@ -26,3 +26,5 @@ cycle	item	type	outcome	key_metric	description	commit	paths
 017	34	empirical	inconclusive	Gini=0.408; top 20% covers 48.2% of correct points (need 70%)	Region volume Pareto toy ReLU	d0eb775	autoresearch/results/cycle_017_pareto.json,autoresearch/results/cycle_017_pareto.png,experiments/region_volume_pareto.py
 
 018	36	empirical	inconclusive	7/12 layers linearity>=0.98; block 6 identity +3.9% ppl; joint top-2 +33.6%	Procrustes linearity profile GPT-2 (proxy)	6d83702	autoresearch/results/cycle_018_linearity.json,autoresearch/results/cycle_018_linearity.png,experiments/procrustes_linearity_gpt2.py
+
+019	37	empirical	confirmed	cH drops 96% L1->L3/L4; low cH correlates with low r_affine	Activation pattern entropy cascade toy ReLU	2fd3e8d	autoresearch/results/cycle_019_entropy_cascade.json,autoresearch/results/cycle_019_entropy_cascade.png,experiments/entropy_cascade_toy.py

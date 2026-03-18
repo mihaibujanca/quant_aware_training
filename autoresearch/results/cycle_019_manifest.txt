@@ -1,0 +1,8 @@
+cycle_019 artifacts
+===================
+autoresearch/briefs/cycle_019.md
+autoresearch/plans/cycle_019.md
+autoresearch/results/cycle_019_entropy_cascade.json
+autoresearch/results/cycle_019_entropy_cascade.png
+autoresearch/results/cycle_019_summary.md
+experiments/entropy_cascade_toy.py
