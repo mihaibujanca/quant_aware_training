@@ -33,14 +33,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 9, 22. Skip if experiment 22 is refuted (functional redundancy does not exist in toy networks, making the LLM analog unmotivated).
 
 
-25. **RTG spectral coarsening — GPT-2 FFN analog**
-   - Build a k-NN graph on per-token Jacobians for each GPT-2 FFN block (k=10, distance = Frobenius norm between J(x_i) and J(x_j)). This is the smooth-activation analog of the Hamming graph from experiment 24: instead of Hamming-1 adjacency between binary patterns, we use geometric proximity in Jacobian space. Compute the Laplacian of this graph, extract K eigenvectors, cluster tokens into K groups. For each cluster, fit a per-cluster affine approximation and measure the output reconstruction error relative to the full block output. Compare this to k-means on raw Jacobians (experiment 23) — the hypothesis is that the graph-Laplacian clustering is a better merging criterion because it respects local neighborhood structure.
-   - Type: empirical
-   - Confirmed if: spectral coarsening reduces reconstruction error by ≥ 15% relative to k-means at matched K for a majority of blocks.
-   - Refuted if: spectral coarsening performs at parity with or worse than k-means on raw Jacobians.
-   - Inconclusive if: the benefit appears only at small K (K ≤ 4) and vanishes as K grows.
-   - Depends on: 9, 24. Skip if experiment 24 is refuted (RTG spectral merging does not outperform random merging even on toy networks).
-
 26. **Intrinsic dimension trajectory through depth (GPT-2)**
    - At each of GPT-2's 13 block output checkpoints, collect token representation vectors from the probe corpus and compute their intrinsic dimensionality using the TwoNN estimator (Facco et al. 2017). TwoNN estimates the manifold dimension from the ratio of 1st- and 2nd-nearest-neighbor distances and requires no hyperparameters. A decreasing intrinsic dimension trajectory means later blocks are projecting the data onto a simpler manifold — those blocks are doing less work and are candidates for compression. Compare the intrinsic dimension profile to the single-block swap damage curve from cycle 005: if high-damage blocks coincide with layers where intrinsic dimension is still changing rapidly, that confirms the manifold contraction is task-relevant.
    - Type: empirical
@@ -247,6 +239,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 10
 
 ## PAST EXPERIMENTS
+
+### Cycle 014
+
+25. **RTG spectral coarsening — GPT-2 FFN analog**
+   - Outcome: **REFUTED** — Spectral clustering of k-NN Jacobian graph provides no advantage over k-means on raw Jacobians. Maximum relative improvement across all blocks and K values was 1.3% (block 2, K=2), far below the 15% threshold. Both methods show monotonically decreasing error with K, but at parity. Graphs were connected (1 component) in all 4 blocks tested. Result aligns with cycle 013 toy result — spectral coarsening adds no value when the Jacobian space is genuinely high-dimensional and non-clustered.
+   - Cycle: 014
+   - Artifacts: `experiments/rtg_spectral_gpt2.py`, `autoresearch/results/cycle_014_rtg_spectral_gpt2.json`, `autoresearch/results/cycle_014_rtg_spectral_gpt2.png`, `autoresearch/results/cycle_014_summary.md`
 
 ### Cycle 012
 
