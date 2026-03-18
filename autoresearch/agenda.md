@@ -207,13 +207,21 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 10
    - **Outcome: CONFIRMED** (cycle 026) — Two SVD baselines tested: (1) SVD on composed map W_down@W_up: catastrophically bad (PPL 3K–350M) because GELU does not commute with change-of-basis; (2) SVD-norm: select top-k channels by W_up row-norm + lstsq refit (proper rank baseline). Geometric beats svd_norm in 11/12 (92%) block-budget pairs. Baseline PPL 122.4; geometric +0.8–5.8%; svd_norm +2.2–7.2%; distillation (200 steps) +0.1–10.1%. Only exception: block 11 at 16× (deep layer, aggressive compression, svd_norm=129.0 vs geo=129.5). Key insight: data-driven channel scoring (activity × output-norm) outperforms weight-magnitude-based selection at all depths and budgets.
 
-15. **Centroid and Jacobian affinity as merge signals**
+15. **Centroid and Jacobian affinity as merge signals** *(CONFIRMED — centroid; REFUTED — Jacobian; cycle 027)*
    - Evaluate whether data-conditioned similarity measures from the centroid-affinity / local-map literature predict safe compression better than raw weight cosine. For each block, compare weight similarity, centroid similarity, Jacobian-spectrum similarity, and any combined score against actual swap damage under controlled budgeted compressions.
    - Type: empirical
    - Confirmed if: a centroid/Jacobian-based score improves Spearman correlation with swap error by at least `0.15` over raw weight cosine on a majority of tested blocks.
    - Refuted if: raw weight cosine is just as good or better across the board.
    - Inconclusive if: the better signal changes by block depth or corpus.
    - Depends on: 10, 11
+   - **Outcome: CONFIRMED (centroid) / REFUTED (Jacobian)**
+     - Weight cosine: mean ρ = +0.041 (effectively zero — no predictive power)
+     - Centroid similarity: mean ρ = +0.853, Δ = +0.812 vs weight cosine, criterion met in 12/12 blocks
+     - Jacobian-channel similarity: mean ρ = −0.037, Δ = −0.078 — slightly anti-predictive
+     - Centroid (activation time-series cosine) is a dominant merge predictor across all depths
+     - Jacobian signal (mean weighted projection) fails — likely because it collapses the token-level variation that centroid preserves
+   - Cycle: 027
+   - Artifacts: `autoresearch/results/cycle_027_affinity_signals.json`, `autoresearch/results/cycle_027_affinity_signals.png`
 
 16. **Exact prune plus linear collapse baseline**
    - Implement the strongest exact baseline from the literature: stable-channel deletion and always-active / near-linear collapse before any heuristic merging. Compare exact-prune-only, exact-prune-plus-least-squares-refit, and the current geometric method on single-block swaps. This is the cleanest test of how much "free" no-SGD compression exists.
