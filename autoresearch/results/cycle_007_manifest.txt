@@ -1,0 +1,5 @@
+item_number=12
+outcome=confirmed
+key_metric=easiest-first outperforms hardest-first by 27.4% at k=6 and 36.2% at k=9 (>=25% threshold met)
+commit=980dec5
+paths=autoresearch/results/cycle_007_summary.md,autoresearch/results/cycle_007_accumulation.json,autoresearch/results/cycle_007_accumulation.png,experiments/progressive_multiblock_accumulation.py

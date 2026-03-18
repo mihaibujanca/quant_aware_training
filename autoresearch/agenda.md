@@ -5,13 +5,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ## NEXT EXPERIMENTS
 
 ### P0
-11. **Stable and near-linear channel census in pretrained FFNs**
-   - Implement the exact or near-exact pruning census implied by Kumar/Serra/Berzins for transformer FFNs: dead channels, always-positive channels, always-negative channels, and near-linear channels under the actual probe distribution. Report fractions per block and test whether these fractions are robust enough to justify an exact-pruning baseline.
-   - Type: empirical
-   - Confirmed if: stable or near-linear channels account for at least `5%` of hidden width in a majority of tested FFN blocks.
-   - Refuted if: stable or near-linear channels stay below `1%` in more than `80%` of tested blocks.
-   - Inconclusive if: the fraction is nontrivial but highly dependent on the chosen probe corpus.
-   - Depends on: 9
 
 
 13. **Probe-corpus robustness of geometry signals**
@@ -259,12 +252,22 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Artifact: `autoresearch/results/cycle_004_summary.md`
    - Key finding: the exact-open target is `karpathy/nanochat` base checkpoints plus `climbmix-400b-shuffle`, but those assets are not present locally; the only benchmark runnable immediately on this machine is the cached `gpt2` proxy path, which must remain clearly labeled proxy-only.
 
+### Cycle 006
+
+11. **Stable and near-linear channel census in pretrained FFNs**
+   - Type: empirical
+   - Outcome: **refuted (proxy)** — 0/12 proxy gpt2 FFN blocks reached ≥5% stable-or-near-linear channels; 10/12 stayed below 1%
+   - Cycle: 006
+   - Commit: NONE (recovered from hidden runtime artifacts)
+   - Artifact: `autoresearch/results/cycle_006_summary.md`
+   - Key finding: Exact stable-channel pruning (dead + always-active) is insufficient for GELU transformer FFNs — stable channels account for < 1% of hidden width in most blocks on the proxy benchmark.
+
 ### Cycle 007
 
 12. **Progressive multi-block accumulation curve**
    - Type: empirical
    - Outcome: **confirmed (proxy)** — easiest-first outperforms hardest-first by 27.4% at k=6 and 36.2% at k=9, exceeding the ≥25% threshold. Advantage grows with block count.
    - Cycle: 007
-   - Commit: TBD
+   - Commit: 980dec5
    - Artifact: `autoresearch/results/cycle_007_summary.md`, `autoresearch/results/cycle_007_accumulation.json`
    - Key finding: Ordering matters enormously for multi-block accumulation. Hardest-first is catastrophically worse. Single-block damage ranking from cycle 005 correctly predicts safe accumulation order. Sweet spot is k=4-5 easiest blocks (ppl < 150, < 25% degradation). All-block 16x compression fails regardless of ordering (ppl=403).
