@@ -1,0 +1,5 @@
+item_number=13
+outcome=confirmed
+key_metric=12/12 blocks pass both criteria: Spearman>=0.95, Jaccard>=0.82, Jacobian cosine>=0.997
+commit=63fb41d
+paths=autoresearch/results/cycle_008_summary.md,autoresearch/results/cycle_008_robustness.json,experiments/probe_corpus_robustness.py
