@@ -1,20 +1,19 @@
 # Research Status
 
-## Completed (last 5)
-| Cycle | Item | Type | Outcome | Key Finding |
-|-------|------|------|---------|-------------|
-| 022 | Attention head census — GPT-2 | empirical | inconclusive | 89.6% heads low-rank; K=5 +2.7% ppl; compounding at K=10 |
-| 021 | Grokking — toy | empirical | refuted | Patterns INCREASE during grokking on continuous tasks |
-| 020 | Manifold curvature — GPT-2 | empirical | refuted (proxy) | Curvature flat; LayerNorm confound |
-| 019 | Entropy cascade — toy | empirical | confirmed | cH drops 96% L1→L3/L4 |
-| 018 | Procrustes linearity — GPT-2 | empirical | inconclusive | 7/12 layers lin≥0.98; block 6 identity +3.9% ppl |
+## Completed Cycles: 009-023 (15 cycles)
+| Outcome | Count | Key Cycles |
+|---------|-------|------------|
+| Confirmed | 2 | 010 (toy single-affine), 019 (toy entropy cascade) |
+| Refuted | 6 | 009, 011, 012, 014, 020, 021 |
+| Inconclusive | 7 | 013, 015, 016, 017, 018, 022, 023 |
 
-## Meta-Finding: Compounding
-The most consistent finding across ALL experiments (cycles 007, 018, 022): individual components (FFN blocks, attention heads) are geometrically redundant, but removing multiple simultaneously causes superadditive degradation. No-SGD compression has a hard ceiling imposed by this compounding effect.
+## Strongest Signals
+1. **Procrustes linearity** (cycle 018): 7/12 GPT-2 layers near-identity. Block 6 removable at +3.9% ppl.
+2. **Attention head low-rank** (cycle 022): 89.6% heads low-rank. K=5 prunable at +2.7% ppl.
+3. **Entropy cascade** (cycle 019): Deep toy layers add zero new partition information.
+4. **Compounding is the hard problem**: Individual removal is cheap, but collective removal is superadditive.
 
 ## Next
-Eligible P0 (ripser unavailable → topology items blocked): 29 (local complexity toy), 31 (CKA GPT-2), 33 (GELU PWL GPT-2).
-P1: 14 (rank baseline), 15 (centroid affinity), 16 (exact prune), 17 (local-chart), 18 (learned compressor).
-
-## Dead Ends (14 items)
-- Tropical, stable-channel, single-affine (GPT-2), k-means/spectral on maps, intrinsic dim, coarse PWL, volume pruning, curvature (LayerNorm), grokking simplification
+Eligible P0: 31 (CKA GPT-2), 33 (GELU PWL GPT-2).
+Eligible P1: 14, 15, 16, 17, 18 (core compression experiments).
+Topology items blocked (ripser unavailable): 27, 28, 42, 43, 45.

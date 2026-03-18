@@ -1,0 +1,27 @@
+cycle_023_manifest.txt
+Cycle: 023
+Item: 29
+Title: Local complexity as a compression difficulty predictor — toy ReLU
+Date: 2026-03-18
+Outcome: INCONCLUSIVE
+
+Files:
+  autoresearch/briefs/cycle_023.md
+  autoresearch/plans/cycle_023.md
+  experiments/local_complexity_toy.py
+  autoresearch/results/cycle_023_local_complexity.json
+  autoresearch/results/cycle_023_local_complexity.png
+  autoresearch/results/cycle_023_manifest.txt
+
+Key metrics:
+  Spearman rho (LC vs r_held, late checkpoint): 0.800
+  Spearman p-value: 0.200 (n=4, underpowered)
+  Local complexity early (ep 100): 15.08
+  Local complexity mid  (ep 500): 14.32
+  Local complexity late (ep 2000): 15.91
+  Drop early->late: -5.5% (required -30% for confirmation)
+  Average neighbors per epsilon ball: 71.9 (target was ~30)
+
+Criteria:
+  Correlation (rho>=0.5): PASS
+  Dynamics (drop>=30%): FAIL

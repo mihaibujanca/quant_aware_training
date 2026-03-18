@@ -34,3 +34,5 @@ cycle	item	type	outcome	key_metric	description	commit	paths
 021	39	empirical	refuted	Pattern count INCREASES through grokking (369->723); no compression gain	Grokking as compression catalyst toy ReLU	02902d2	autoresearch/results/cycle_021_grokking.json,autoresearch/results/cycle_021_grokking_trajectory.png,experiments/grokking_compression_catalyst.py
 
 022	40	empirical	inconclusive	89.6% heads low-rank; K=5 +2.7% ppl; K=10 +14.6% ppl; compounding	Attention head geometry census GPT-2 (proxy)	631b234	autoresearch/results/cycle_022_head_census.json,autoresearch/results/cycle_022_summary.md,experiments/attn_head_census.py
+
+023	29	empirical	inconclusive	Spearman(LC,r)=0.80; LC drops only 5.5% early->late (need 30%)	Local complexity compression predictor toy ReLU	847b822	autoresearch/results/cycle_023_local_complexity.json,experiments/local_complexity_toy.py
