@@ -33,14 +33,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 9, 22. Skip if experiment 22 is refuted (functional redundancy does not exist in toy networks, making the LLM analog unmotivated).
 
 
-26. **Intrinsic dimension trajectory through depth (GPT-2)**
-   - At each of GPT-2's 13 block output checkpoints, collect token representation vectors from the probe corpus and compute their intrinsic dimensionality using the TwoNN estimator (Facco et al. 2017). TwoNN estimates the manifold dimension from the ratio of 1st- and 2nd-nearest-neighbor distances and requires no hyperparameters. A decreasing intrinsic dimension trajectory means later blocks are projecting the data onto a simpler manifold — those blocks are doing less work and are candidates for compression. Compare the intrinsic dimension profile to the single-block swap damage curve from cycle 005: if high-damage blocks coincide with layers where intrinsic dimension is still changing rapidly, that confirms the manifold contraction is task-relevant.
-   - Type: empirical
-   - Confirmed if: intrinsic dimension decreases by ≥ 30% over the final third of layers AND Spearman correlation between (per-block intrinsic dimension change) and (compression difficulty from cycle 005) is ≥ 0.4.
-   - Refuted if: intrinsic dimension is approximately constant across all layers (< 10% variation), indicating that all layers operate on the same-complexity manifold.
-   - Inconclusive if: intrinsic dimension varies but the trend is non-monotonic with no correlation to compression difficulty.
-   - Depends on: 9
-
 27. **Persistent homology of activation manifold through depth — toy ReLU**
    - For a trained spirals ReLU network (2D input, embedded into 100D), collect the hidden-layer representations at each layer. Apply the ripser persistent homology algorithm to the resulting point clouds, computing Betti numbers β_0 (connected components) and β_1 (loops/holes) at each layer. A well-trained classifier should progressively "untangle" the two spiral classes through depth: early layers should show high topological complexity (many β_1 loops = classes still entangled), while late layers should approach trivial topology (β_0 = 2 isolated clusters, β_1 = 0 = classes cleanly separated). Measure whether topological simplification (decrease in total Betti complexity) correlates with layer-wise compression ease from experiment 20.
    - Type: empirical
@@ -239,6 +231,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 10
 
 ## PAST EXPERIMENTS
+
+### Cycle 015
+
+26. **Intrinsic dimension trajectory through depth (GPT-2)**
+   - Outcome: **INCONCLUSIVE** — ID increases monotonically (1.6 → 7.5, not decreases) through depth. Final-third mean ID (7.32) is 62% higher than first-third (4.52), opposite of the ≥30% decrease criterion. Spearman correlation between |ΔID| and cycle-005 damage = -0.16 (p=0.62), well below the ρ≥0.4 threshold. The token-representation manifold becomes progressively higher-dimensional through GPT-2 depth; later layers do not simplify structure — they elaborate it.
+   - Cycle: 015
+   - Artifacts: `experiments/intrinsic_dim_trajectory.py`, `autoresearch/results/cycle_015_intrinsic_dim.json`, `autoresearch/results/cycle_015_intrinsic_dim.png`
 
 ### Cycle 014
 
