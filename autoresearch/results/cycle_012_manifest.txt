@@ -1,0 +1,23 @@
+cycle_012_manifest
+==================
+Item: 22 — Effective number of affine behaviors via Jacobian k-means — toy ReLU
+Verdict: REFUTED
+Commit: 66273d3
+
+Files produced:
+  experiments/jacobian_kmeans_toy.py
+  autoresearch/results/cycle_012_kmeans_toy.json
+  autoresearch/results/cycle_012_kmeans_curve.png
+  autoresearch/results/cycle_012_summary.md
+  autoresearch/agenda.md (updated: item 22 moved to PAST)
+
+Key metrics:
+  N_patterns = 375
+  K* = 375
+  ratio K*/N_patterns = 1.00
+  float_acc = 0.983
+  acc at K=64 (17% of patterns) = 0.749
+  acc never recovers within 1% of float until K=N_patterns
+
+Downstream: Experiment 23 (GPT-2 Jacobian k-means) is skipped per dependency rule
+  ("Skip if experiment 22 is refuted"). Experiment 24 (RTG spectral coarsening) remains open.
