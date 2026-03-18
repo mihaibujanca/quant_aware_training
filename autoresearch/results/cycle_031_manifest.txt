@@ -1,0 +1,5 @@
+item_number=46
+outcome=refuted
+key_metric=grokking_detected=True; delay=16500 epochs; compression_gain=+0.001 (<2% threshold); student_acc_pre=0.000, student_acc_post=0.002
+commit=c0cb0dd
+paths=autoresearch/results/cycle_031_grokking.json,autoresearch/results/cycle_031_grokking_trajectory.png,experiments/grokking_compression_catalyst_v2.py

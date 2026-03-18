@@ -6,32 +6,25 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-
-
-### P0 — New geometric directions (cycle 006+, added 2026-03-18)
-
-
-
-22. **Effective number of affine behaviors via Jacobian k-means — toy ReLU** *(REFUTED — cycle 012)*
-   - A ReLU network with K observed activation patterns has exactly K distinct affine maps A_ω. In practice, many A_ω are similar and can be served by a single representative. For a trained spirals ReLU network, extract all distinct activation patterns on probe data, compute their A_ω matrices using the MASO formula A_ω = W_L·diag(q^L)·…·W_1·diag(q^1), then run k-means on the flattened A_ω vectors. Find the minimum K* such that cluster-centroid A_ω matrices reproduce network outputs with ≤ 1% accuracy drop. K* / N_patterns is the functional redundancy ratio: how much of the activation-pattern diversity is semantically irrelevant. Plot K* vs. accuracy for a range of K to get a compression-accuracy curve.
+47. **Dead channel census — GPT-2 FFN with GELU-correct definitions (v2, supersedes item 16)**
+   - Item 16 used DEAD_THRESHOLD=1e-5 on post-GELU activations, which catches nothing for GELU (gelu(-3)≈-0.004, well above 1e-5). This redesign uses three correct definitions: (1) pre-GELU saturated: max(h_j) < T for T∈{-2,-3,-4,-5} (channel always in GELU's near-zero tail), (2) output-contribution dead: ||W_down[:,j]|| × rms(act_j) as fraction of total block output (catches low-impact channels regardless of activation magnitude), (3) near-linear: min(h_j) > T for T∈{2,3,4} (channel always in GELU≈identity regime). Also includes smooth pruning curve: sort channels by contribution, remove bottom K% for K∈{1,2,5,10,15,20,25,30}%, measure PPL.
    - Type: empirical
-   - Confirmed if: K* / N_patterns ≤ 0.2 for the spirals network (i.e., fewer than 20% of observed patterns are functionally distinct), indicating high redundancy exploitable for compression.
-   - Refuted if: K* / N_patterns > 0.7, indicating that most activation patterns compute meaningfully different functions.
-   - Inconclusive if: accuracy drops sharply as soon as any merging is applied (K* ≈ N_patterns) even though many A_ω look geometrically similar, suggesting that functional similarity does not survive k-means clustering.
-   - Depends on: none
-   - **Outcome: REFUTED** — K*/N_patterns = 1.00 (375/375). Accuracy at K=64 (17% of patterns) = 74.9%, never recovers to within 1% of float (98.3%) until K=N_patterns. Affine maps are genuinely diverse (std 42–83 per component); k-means clustering cannot find redundancy. Implies experiment 23 (GPT-2 Jacobian k-means) is unmotivated per agenda dependency note. RTG spectral coarsening (exp 24) may still work as it respects local adjacency structure.
-   - Cycle: 012
-   - Commit: see below
-   - Artifacts: `autoresearch/results/cycle_012_kmeans_toy.json`, `autoresearch/results/cycle_012_kmeans_curve.png`, `autoresearch/results/cycle_012_summary.md`
+   - Confirmed if: ≥5% of channels dead/removable (pre-GELU T=-3 + near-linear T=+3) AND smooth pruning at 5% causes ≤1% PPL increase.
+   - Refuted if: <1% removable at any reasonable threshold AND pruning >2% always causes >1% PPL increase.
+   - Inconclusive if: channels identified as dead but pruning them still hurts PPL (dead by definition but load-bearing in practice).
+   - Depends on: none (supersedes 16)
+   - Script: `experiments/exact_prune_linear_collapse_gpt2_v2.py`
+
+### P1
 
 23. **Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**
+   - ⚠ **BLOCKED**: Depends on item 22 (REFUTED). Item 22 found no functional redundancy in toy networks, making the GPT-2 Jacobian k-means analog unmotivated per agenda dependency rule.
    - Apply the same clustering idea from experiment 22 to GPT-2 FFN blocks. Instead of MASO affine maps (unavailable for GELU networks), use per-token Jacobians J(x) ∈ ℝ^{768×768} computed via `torch.func.jacrev`. Run k-means on the flattened Jacobians for each block. Measure the reconstruction error of block outputs when each token's output is replaced by J̄_cluster(x − x̄_cluster) + f(x̄_cluster) (first-order Taylor approximation using the cluster centroid Jacobian). Find minimum K* such that reconstruction error < 5% of block output norm. Compare K* across blocks and correlate with single-block swap damage from cycle 005.
    - Type: empirical
    - Confirmed if: for a majority of GPT-2 blocks, K* < 0.1 × N_probe AND K* correlates with compression difficulty (Spearman ≥ 0.4).
    - Refuted if: K* > 0.5 × N_probe for most blocks, indicating that every probe token activates a genuinely distinct functional regime.
    - Inconclusive if: K* is low but reconstruction error does not translate to perplexity improvement when the approximation is used for inference.
    - Depends on: 9, 22. Skip if experiment 22 is refuted (functional redundancy does not exist in toy networks, making the LLM analog unmotivated).
-
 
 27. **Persistent homology of activation manifold through depth — toy ReLU**
    - For a trained spirals ReLU network (2D input, embedded into 100D), collect the hidden-layer representations at each layer. Apply the ripser persistent homology algorithm to the resulting point clouds, computing Betti numbers β_0 (connected components) and β_1 (loops/holes) at each layer. A well-trained classifier should progressively "untangle" the two spiral classes through depth: early layers should show high topological complexity (many β_1 loops = classes still entangled), while late layers should approach trivial topology (β_0 = 2 isolated clusters, β_1 = 0 = classes cleanly separated). Measure whether topological simplification (decrease in total Betti complexity) correlates with layer-wise compression ease from experiment 20.
@@ -49,17 +42,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: topology simplifies in toy but GPT-2 shows noise or no trend, suggesting the signal does not survive the transformer architecture's residual connections.
    - Depends on: 9, 27. Skip if experiment 27 is refuted (topology does not simplify through depth even in toy networks).
 
-29. **Local complexity as a compression difficulty predictor — toy ReLU**
-   - Implement the local complexity measure from Patel & Montúfar 2025: for each probe input x, count the number of distinct activation patterns observed in a ball of radius ε around x (using probe samples). Average over x. This is the empirical local complexity. A network with high local complexity has many linear regions packed near the data — it is using its nonlinearity heavily and will be hard to compress. For the spirals toy network, compute local complexity at each layer and correlate it with the layer-wise single-affine residual r from experiment 20. Also compare local complexity across training checkpoints (early, mid, late training) to test the Humayun/Patel prediction that local complexity decreases during grokking.
-   - Type: empirical
-   - Confirmed if: local complexity correlates with single-affine residual r (Spearman ≥ 0.5) AND local complexity decreases by ≥ 30% between early and late training checkpoints.
-   - Refuted if: local complexity shows no correlation with r and no consistent trend across training.
-   - Inconclusive if: the correlation with r holds but the training-dynamics prediction fails, or vice versa.
-   - Depends on: 20
-   - **Outcome: INCONCLUSIVE** — Spearman ρ=0.80 (p=0.20, n=4) between local complexity and r_held PASSES the ≥0.5 threshold. Layer ordering by LC matches compression difficulty (L2 highest LC, L1 next, consistent with large r drop from L1→L2 in cycle 010). However, local complexity does NOT decrease during training: early=15.08, mid=14.32, late=15.91 (−5.5% change vs required −30%). The Humayun/Patel grokking prediction fails — spirals may not exhibit the same training-phase collapse as reported. Note: ε=0.39 yielded avg 72 neighbors (2× intended ~30); this doesn't change the qualitative finding. Experiment 30 (GPT-2 proxy) can proceed since the correlation signal holds.
-   - Cycle: 023
-   - Artifacts: `autoresearch/results/cycle_023_local_complexity.json`, `autoresearch/results/cycle_023_local_complexity.png`
-
 30. **Local complexity proxy as a compression difficulty predictor — GPT-2**
    - Apply the local complexity idea from experiment 29 to GPT-2 FFN blocks. Since GELU makes exact activation-pattern counting undefined, use a proxy: for each probe token x, compute the standard deviation of block Jacobians J(x') for x' in the k nearest neighbors of x in the input representation space. High std → the block is highly nonlinear near x → high local complexity. Low std → the block is locally smooth → easy to approximate. Aggregate this proxy over the full probe set per block and correlate with single-block swap damage from cycle 005.
    - Type: empirical
@@ -67,42 +49,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Refuted if: correlation < 0.2, indicating that local nonlinearity does not predict block-level compression difficulty.
    - Inconclusive if: the toy result from experiment 29 is strong but the GPT-2 proxy gives weak correlation, suggesting the Jacobian-variation proxy is too indirect.
    - Depends on: 9, 29. Skip if experiment 29 is refuted (local complexity is not a useful signal even in toy networks).
-
-31. **CKA representational similarity matrix across layers (GPT-2)** *(INCONCLUSIVE — cycle 024)*
-   - Compute centered kernel alignment (CKA) between the token representation matrices at all pairs of (layer_i, layer_j) in GPT-2. CKA is a scale-invariant similarity measure between two sets of representations: CKA ≈ 1 means the two layers are computing essentially the same geometry (up to rotation/scale), CKA ≈ 0 means they are unrelated. Plot the full 13×13 CKA heatmap. Identify "representational plateaus" — groups of consecutive layers with high mutual CKA (≥ 0.8) — as candidates for block-level depth pruning. Correlate the CKA drop between layer i and layer i+1 with the single-block swap damage for block i from cycle 005: blocks that contribute large CKA drops are doing new work and should be harder to remove.
-   - Type: empirical
-   - Confirmed if: at least one contiguous group of ≥ 3 GPT-2 layers has pairwise CKA ≥ 0.80 AND the (CKA drop to next layer) × (compression difficulty) Spearman correlation is ≥ 0.4.
-   - Refuted if: CKA is uniformly low (< 0.5) for all non-adjacent layer pairs, indicating every layer computes a distinct representation.
-   - Inconclusive if: CKA plateaus exist but removing one layer from a plateau still causes > 20% relative perplexity increase, indicating that representational similarity does not imply functional redundancy.
-   - Depends on: 9
-   - **Outcome: INCONCLUSIVE** — Massive 10-block plateau found (blocks 1–10, pairwise CKA ≥ 0.991), satisfying plateau criterion. But Spearman(CKA_drop, damage) = 0.32 (p=0.31), below ρ≥0.40 threshold. Root cause: CKA drops within the plateau are near-zero (0.0002–0.004) for all middle transitions, even though damage varies (0.12%–3.07%). Residual connections make the Gram matrix geometry nearly constant despite meaningful functional differences per block. CKA is a poor per-block compression predictor in GPT-2: representational similarity does not imply functional redundancy. The plateau exists but cannot identify which blocks are safe to remove.
-   - Cycle: 024
-   - Artifacts: `autoresearch/results/cycle_024_cka_matrix.json`, `autoresearch/results/cycle_024_cka_heatmap.png`, `autoresearch/results/cycle_024_summary.md`
-
-32. **GELU → 3-piece PWL approximation fidelity — toy GELU MLP** *(INCONCLUSIVE — cycle 016)*
-
-33. **GELU → 3-piece PWL approximation fidelity — GPT-2** *(REFUTED — cycle 025)*
-   - Apply the same PWL substitution from experiment 32 to GPT-2: replace all GELU activations with the 3-piece PWL function, no retraining, measure perplexity on the probe validation set. If perplexity degrades < 5% relative, then GPT-2's FFN blocks are approximately piecewise-affine and all the partition-based theory (activation patterns, RTG, SplineCam) applies as an approximation. This would justify using ReLU-derived compression signals on GELU networks. Also measure block-by-block contribution: which blocks' perplexity degrades most when only that block's GELU is replaced, to identify which blocks are most sensitive to smooth activation curvature.
-   - Type: empirical
-   - Confirmed if: full GELU → 3-piece PWL substitution causes < 5% relative perplexity increase on the validation set.
-   - Refuted if: perplexity increases > 20%, indicating that GELU's smooth transition zone is functionally critical at the LLM scale.
-   - Inconclusive if: perplexity increase is moderate (5–20%) and is concentrated in specific blocks rather than spread evenly.
-   - Depends on: 32. Skip if experiment 32 is refuted (the PWL approximation is fundamentally inadequate even for toy GELU networks).
-   - **Outcome: REFUTED** — Baseline PPL=125.7. 3-piece: 6997 (+5466%), 5-piece: 3221 (+2462%), 10-piece: 198 (+57.8%), 20-piece: 127 (+1.1%). Even single-block 3-piece replacement causes catastrophic damage (block 0: +1239%; best block 9: +135%). GELU curvature is functionally critical at every granularity in GPT-2; 3-piece PWL is completely inadequate. Partition-based theory (SplineCam, RTG, MASO) does NOT apply to GELU networks even as a first-order approximation at this scale. 20-piece PWL is the minimum for near-lossless approximation.
-   - Cycle: 025
-   - Artifacts: `experiments/gelu_pwl_gpt2.py`, `autoresearch/results/cycle_025_gelu_pwl_gpt2.json`, `autoresearch/results/cycle_025_gelu_pwl_gpt2.png`
-
-
-34. **Region volume Pareto: do large regions carry most task accuracy? — toy ReLU** *(INCONCLUSIVE — cycle 017)*
-   - For a trained spirals ReLU network (2D input → 100D embedding → 4 layers × 64 hidden), enumerate all observed activation patterns on the full probe set. Define region "volume" as the fraction of probe inputs that fall in each region. Sort regions by volume in descending order. Compute the cumulative accuracy recovery as a function of regions kept (the "Pareto compression curve"): start with only the largest region, classify all test points using that region's A_ω, add the next largest region and allow each test point to use its own region's A_ω if it falls there, otherwise fall back to the nearest large region. If the Pareto curve is steep (top 20% of regions by volume covers ≥ 80% of correctly classified points), compression can be achieved by keeping only large regions and routing small-region inputs to the nearest large region.
-   - Type: empirical
-   - Confirmed if: the top 20% of regions by volume covers ≥ 70% of correctly classified test points.
-   - Refuted if: regions have an approximately uniform volume distribution (Gini coefficient < 0.3), indicating no Pareto structure.
-   - Inconclusive if: Pareto holds in 2D but disappears when the same analysis is run in the 100D embedding, suggesting the structure is input-space-specific.
-   - Depends on: none
-   - **Outcome: INCONCLUSIVE** — Gini=0.408 confirms a skewed (non-uniform) volume distribution, but the top 20% of regions (75 of 375) covers only 48.2% of correctly-classified test points, falling short of the 70% threshold. The region-count distribution is Pareto-skewed, but coverage is spread across many medium-sized regions rather than concentrated in the top 20%. Accuracy with A_ω fallback at 20% kept = 86.7% vs float 98.3%. Item 35 (GPT-2 analog) depends on 34 not being refuted — it can proceed since Pareto structure is present, just weaker than expected.
-   - Cycle: 017
-   - Artifacts: `autoresearch/results/cycle_017_pareto.json`, `autoresearch/results/cycle_017_pareto.png`
 
 35. **Region volume Pareto — GPT-2 FFN analog**
    - Apply the Pareto analysis from experiment 34 to GPT-2 FFN blocks. Since exact activation patterns are unavailable for GELU, use k-means clusters on probe-token Jacobians as a proxy for "regions." Sort clusters by token count (proxy for volume). For each block, compute the cumulative reconstruction error of block outputs as clusters are added in descending size order. If a Pareto structure exists (top 20% of clusters covers 80% of total output variance), it suggests that a few dominant "computational modes" drive most of the block's behavior — and keeping only those modes gives a strong compression baseline. Compare the Pareto coefficient to compression damage from cycle 005 to test whether Pareto-skewed blocks are the easy ones.
@@ -116,45 +62,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ### P0 — Novel directions: structured probing + topology (items 36–45, added 2026-03-18)
 
 
-37. **Activation pattern entropy cascade — toy ReLU** *(CONFIRMED — cycle 019)*
-   - For each layer in a trained spirals network, compute Shannon entropy H(layer) of the activation pattern distribution over data. High H = many equally-used patterns = complex = hard to compress. Low H = few dominant patterns = compressible. Also compute conditional entropy H(pattern_L | pattern_{L-1}) — how much NEW partition information each layer adds. If conditional entropy is near zero for some layer, that layer is partitioning redundantly relative to the previous layer → safe to remove. Plot the entropy cascade: H(L1), H(L2|L1), H(L3|L1,L2), ... This is an information-theoretic characterization of partition redundancy, different from affine-map clustering (item 22) or volume analysis (item 34).
-   - Type: empirical
-   - Confirmed if: conditional entropy drops ≥50% for at least one layer AND low-conditional-entropy layers also have low single-affine residual (item 20 correlation).
-   - Refuted if: conditional entropy is uniformly high across all layers (each layer adds substantial new partition structure).
-   - Inconclusive if: conditional entropy varies but does not correlate with any compression signal from items 20/22.
-   - Depends on: none
-   - **Outcome: CONFIRMED** — Conditional entropy drops sharply after layer 1: cH(L2|L1)=1.64 bits (ratio 0.26), cH(L3|L1,L2)=0.26 bits (ratio 0.040), cH(L4|L1-3)=0.27 bits (ratio 0.043). Layers 2-4 all have single-affine residual r < 0.013, far below layer 1's r=0.168. The entropy cascade reveals that layer 1 establishes the bulk of the partition structure; later layers refine minimally. Spearman(cH_ratio, r)=0.40 (underpowered at n=4 but direction consistent).
-   - Cycle: 019
-   - Artifacts: `autoresearch/results/cycle_019_entropy_cascade.json`, `autoresearch/results/cycle_019_entropy_cascade.png`, `autoresearch/results/cycle_019_summary.md`
-
-38. **Manifold curvature trajectory — GPT-2** *(REFUTED — cycle 020)*
-   - At each layer, estimate local manifold curvature of the representation space. Method: for each probe token, fit local PCA in its k-NN neighborhood (k=50 in activation space). Curvature proxy = fraction of variance NOT explained by top-d principal components (d = estimated local intrinsic dimension). Average over tokens to get per-layer curvature. The curvature trajectory should reveal: (a) where the model builds curvature (early layers creating nonlinear features), (b) where it flattens (late layers approaching linearity). This is the geometric dual of the Procrustes test (item 36): Procrustes measures global linearity, curvature measures local manifold geometry. Correlate curvature with single-block swap damage (cycle 005).
-   - Type: empirical
-   - Confirmed if: curvature decreases monotonically in the final third of layers AND Spearman correlation between curvature and compression difficulty ≥ 0.4.
-   - Refuted if: curvature has no clear trend or anti-correlates with compression difficulty.
-   - Inconclusive if: curvature decreases but correlation with compression difficulty is weak (0.2–0.4).
-   - Depends on: 9
-   - **Outcome: REFUTED** — Curvature is nearly uniform across all 13 layers (range 0.0451–0.0471, <5% unexplained variance everywhere), with no monotone trend in the final third. Spearman rho = −0.42 (p=0.17, non-significant), indicating if anything a slight anti-correlation. The k-NN local PCA curvature proxy is insensitive to GPT-2 residual-stream geometry: LayerNorm at each block normalises representations before they are read by subsequent layers, collapsing curvature differences that would otherwise be visible. The signal is too compressed and homogeneous to serve as a compression predictor.
-   - Cycle: 020
-   - Artifacts: `autoresearch/results/cycle_020_curvature.json`, `autoresearch/results/cycle_020_curvature_trajectory.png`, `autoresearch/results/cycle_020_curvature_vs_damage.png`
-
-39. **Grokking as compression catalyst — toy ReLU** *(REFUTED — cycle 021)*
-   - Train spirals network for 10× normal epochs (well past convergence into overfitting/grokking regime). At regular checkpoints: (a) count distinct activation patterns on held-out data, (b) compute pattern entropy (item 37), (c) measure single-affine residual per layer (item 20 method). Look for a phase transition where partition complexity drops sharply — this is grokking manifesting as geometric simplification. If found: run the geometric compression pipeline (from `relu_geometric_compression.py`) AT the grokking point vs BEFORE — quantify how much easier compression becomes post-grokking. This bridges "Deep Grokking" theory (already in lit map) with actionable compression timing.
-   - Type: empirical
-   - **Outcome: REFUTED** — Classic grokking (late test accuracy rise) IS detected on spirals: train saturates at 92% by epoch 2000, test accuracy jumps from 0.747 → 0.805+ around epoch 17000. However, the geometry signal is opposite to the hypothesis: pattern count INCREASES through grokking (369 → 564+, rising to 723 at epoch 29000 with no drop). Pattern complexity is NOT reduced by grokking on spirals — instead the network develops a richer partition. Compression quality improves slightly (+5.7% accuracy at 4× compression) but this tracks the teacher's improved accuracy, not geometric simplification. Pattern drop from peak = 4.3% (need 40%), compression gain = 5.7% (need 10%). Verdict: REFUTED on both criteria. The "partition collapses during grokking" hypothesis is wrong for continuous 2D tasks; it may only apply to discrete/algebraic tasks (modular arithmetic) where grokking enables compact algorithmic solutions.
-   - Cycle: 021
-   - Artifacts: `experiments/grokking_compression_catalyst.py`, `autoresearch/results/cycle_021_grokking.json`, `autoresearch/results/cycle_021_grokking_trajectory.png`
-
-40. **Attention head geometry census — GPT-2** *(INCONCLUSIVE — cycle 022)*
-   - Extend beyond FFN-only analysis. For each attention head in GPT-2 (12 layers × 12 heads = 144 heads): (a) effective rank of attention matrix mean over probe sequences (nuclear norm / operator norm), (b) head output Jacobian variation (std of head output norms across tokens), (c) pairwise CKA between heads within the same layer to measure redundancy. Rank heads by a combined "prunability score" = low_rank × low_variation × high_redundancy. Test: zero-out the top-K most prunable heads, measure perplexity cost. This answers: is there geometric compression opportunity in attention, not just FFN?
-   - Type: empirical + intervention
-   - Confirmed if: ≥20% of heads have effective rank < 0.3 × head_dim AND zeroing the 10 most prunable heads causes ≤5% perplexity increase.
-   - Refuted if: all heads have high effective rank and zeroing any 5 heads causes >15% perplexity increase.
-   - Inconclusive if: effective rank is low but zeroing heads causes high perplexity increase, indicating low-rank heads are still functionally critical.
-   - Depends on: 9
-   - **Outcome: INCONCLUSIVE** — 89.6% of heads (129/144) have effective rank < 19.2 (0.3×64) — strong geometric low-rank signal across all layers. Eff_rank concentrates 1–7 in deeper layers (5–11), up to 104 in early layers. But zeroing top-10 most prunable heads causes +14.6% PPL increase (criterion: ≤5%). Only K=5 is tolerable at +2.7%. Low-rank geometry does not imply prunability: heads are individually redundant but collectively load-bearing.
-   - Cycle: 022
-   - Artifacts: `experiments/attn_head_census.py`, `autoresearch/results/cycle_022_head_census.json`, `autoresearch/results/cycle_022_head_census.png`
+### P2 — Moonshots
 
 41. **Constructive partition synthesis — toy ReLU (2D input) [MOONSHOT]**
    - THE open problem in the literature. Given a trained spirals network (2→32→32→1): (a) Extract all observed activation patterns + affine maps via MASO formula (A_ω = ∏ diag(q_ω^i) W^i). (b) Cluster into K macro-regions via k-means on affine maps (leverage item 22). (c) For each macro-region, compute target affine map (support-weighted average of constituent maps). (d) **SYNTHESIS**: solve for weights W'_1, ..., W'_L of a smaller network (2→K'→1 or 2→K'→K'→1) such that for each macro-region k with pattern q_k, the product ∏ diag(q'_k^i) W'^i ≈ target A_k. This is a system of linear equations in the unknown weights, one set per macro-region. Boundary continuity adds constraints: if macro-regions k1, k2 are adjacent, their affine maps must agree on the shared boundary hyperplane. Method: Solve via least-squares with boundary penalty. Start with K=8 macro-regions, target architecture 2→8→1.
@@ -198,14 +106,32 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-14. **Rank-only baseline versus geometry versus distillation**
-   - Add a matched-budget SVD / low-rank FFN baseline and compare it directly to the current geometric method and distillation on the same single-block swaps and budgets. This asks whether the current "geometric" method is actually better than a plain matrix-factorization baseline.
-   - Type: empirical
-   - Confirmed if: the geometric method beats the rank-only baseline on full-model metrics in more than `50%` of tested block-budget pairs at equal FFN parameter count.
-   - Refuted if: rank-only beats the geometric method in more than `80%` of tested block-budget pairs.
-   - Inconclusive if: wins trade back and forth by block or budget with no consistent edge.
-   - Depends on: 10
-   - **Outcome: CONFIRMED** (cycle 026) — Two SVD baselines tested: (1) SVD on composed map W_down@W_up: catastrophically bad (PPL 3K–350M) because GELU does not commute with change-of-basis; (2) SVD-norm: select top-k channels by W_up row-norm + lstsq refit (proper rank baseline). Geometric beats svd_norm in 11/12 (92%) block-budget pairs. Baseline PPL 122.4; geometric +0.8–5.8%; svd_norm +2.2–7.2%; distillation (200 steps) +0.1–10.1%. Only exception: block 11 at 16× (deep layer, aggressive compression, svd_norm=129.0 vs geo=129.5). Key insight: data-driven channel scoring (activity × output-norm) outperforms weight-magnitude-based selection at all depths and budgets.
+
+## PAST EXPERIMENTS
+
+### Cycle 031
+
+46. **Grokking as compression catalyst — modular arithmetic (v2)** *(REFUTED — cycle 031)*
+   - Task: (a+b) mod 97. Grokking detected (memorized epoch 1000, grokked epoch 17500, delay 16500 epochs). BUT: distilled student acc = 0.002 both pre and post grokking (essentially chance). Compression gain = +0.001, below 2% threshold. Pattern count stays at 9409 (= P², all examples unique) throughout — no geometric compaction signal. Post-grokking algebraic structure cannot be distilled from training data alone into a 4× smaller network.
+   - Outcome: REFUTED — grokking occurred but compression gain <2% (0.001 actual)
+   - Commit: c0cb0dd
+   - Artifacts: autoresearch/results/cycle_031_grokking.json, autoresearch/results/cycle_031_grokking_trajectory.png
+
+### Cycle 028
+
+16. **Exact prune plus linear collapse baseline** *(REFUTED — cycle 028)* ⚠ **FLAWED METHODOLOGY**
+   - Implement the strongest exact baseline from the literature: stable-channel deletion and always-active / near-linear collapse before any heuristic merging. Compare exact-prune-only, exact-prune-plus-least-squares-refit, and the current geometric method on single-block swaps. This is the cleanest test of how much "free" no-SGD compression exists.
+   - Type: implementation
+   - Confirmed if: exact or near-exact pruning alone yields at least `1.1x` FFN parameter reduction with `<=1%` relative perplexity increase on the tested single-block swaps.
+   - Refuted if: exact or near-exact pruning yields negligible savings or immediately breaks block behavior.
+   - Inconclusive if: savings exist only under loose thresholding that is hard to justify.
+   - Depends on: 11
+   - **Outcome: REFUTED** — GPT-2 FFN has effectively zero dead or near-linear channels at threshold 1e-5/5%. Mean dead=0.00%, mean saved (dead+near-linear collapse)=0.008% across 12 blocks. Only 3 blocks had any classifiable channels at all (blocks 8, 9, 11: 1 channel each at 0.033%). Param reduction=1.000x. Prune-only and prune+collapse PPL unchanged (+0.00%). Prune+collapse+lstsq refit improves PPL by 0.21% (127.44→127.18) but that is a full lstsq refit on all live channels (3072/block), not structural pruning. GELU activations in GPT-2 use all channels meaningfully — no free structural compression exists at any practical threshold.
+   - ⚠ **Post-hoc review: flawed experiment.** Dead channel definition used `max|post-GELU act| < 1e-5`, but GELU is never truly zero: gelu(-3)≈-0.004, gelu(-5)≈-0.00002 — both well above 1e-5. Threshold is calibrated for ReLU, not GELU. Correct definition: check *pre*-GELU values (max(h_j) < -T for T∈{2,3,4}) to find channels stuck in GELU's saturated tail. Also missing: output-contribution-based metric (||W_down[:,j]|| × rms(act_j)) and smooth pruning curve. **Superseded by item 47.**
+   - Cycle: 028
+   - Artifacts: `experiments/exact_prune_linear_collapse_gpt2.py`, `autoresearch/results/cycle_028_prune_collapse.json`, `autoresearch/results/cycle_028_prune_collapse.png`
+
+### Cycle 027
 
 15. **Centroid and Jacobian affinity as merge signals** *(CONFIRMED — centroid; REFUTED — Jacobian; cycle 027)*
    - Evaluate whether data-conditioned similarity measures from the centroid-affinity / local-map literature predict safe compression better than raw weight cosine. For each block, compare weight similarity, centroid similarity, Jacobian-spectrum similarity, and any combined score against actual swap damage under controlled budgeted compressions.
@@ -223,18 +149,136 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 027
    - Artifacts: `autoresearch/results/cycle_027_affinity_signals.json`, `autoresearch/results/cycle_027_affinity_signals.png`
 
-16. **Exact prune plus linear collapse baseline** *(REFUTED — cycle 028)*
-   - Implement the strongest exact baseline from the literature: stable-channel deletion and always-active / near-linear collapse before any heuristic merging. Compare exact-prune-only, exact-prune-plus-least-squares-refit, and the current geometric method on single-block swaps. This is the cleanest test of how much "free" no-SGD compression exists.
-   - Type: implementation
-   - Confirmed if: exact or near-exact pruning alone yields at least `1.1x` FFN parameter reduction with `<=1%` relative perplexity increase on the tested single-block swaps.
-   - Refuted if: exact or near-exact pruning yields negligible savings or immediately breaks block behavior.
-   - Inconclusive if: savings exist only under loose thresholding that is hard to justify.
-   - Depends on: 11
-   - **Outcome: REFUTED** — GPT-2 FFN has effectively zero dead or near-linear channels at threshold 1e-5/5%. Mean dead=0.00%, mean saved (dead+near-linear collapse)=0.008% across 12 blocks. Only 3 blocks had any classifiable channels at all (blocks 8, 9, 11: 1 channel each at 0.033%). Param reduction=1.000x. Prune-only and prune+collapse PPL unchanged (+0.00%). Prune+collapse+lstsq refit improves PPL by 0.21% (127.44→127.18) but that is a full lstsq refit on all live channels (3072/block), not structural pruning. GELU activations in GPT-2 use all channels meaningfully — no free structural compression exists at any practical threshold.
-   - Cycle: 028
-   - Artifacts: `experiments/exact_prune_linear_collapse_gpt2.py`, `autoresearch/results/cycle_028_prune_collapse.json`, `autoresearch/results/cycle_028_prune_collapse.png`
+### Cycle 026
 
-## PAST EXPERIMENTS
+14. **Rank-only baseline versus geometry versus distillation**
+   - Add a matched-budget SVD / low-rank FFN baseline and compare it directly to the current geometric method and distillation on the same single-block swaps and budgets. This asks whether the current "geometric" method is actually better than a plain matrix-factorization baseline.
+   - Type: empirical
+   - Confirmed if: the geometric method beats the rank-only baseline on full-model metrics in more than `50%` of tested block-budget pairs at equal FFN parameter count.
+   - Refuted if: rank-only beats the geometric method in more than `80%` of tested block-budget pairs.
+   - Inconclusive if: wins trade back and forth by block or budget with no consistent edge.
+   - Depends on: 10
+   - **Outcome: CONFIRMED** (cycle 026) — Two SVD baselines tested: (1) SVD on composed map W_down@W_up: catastrophically bad (PPL 3K–350M) because GELU does not commute with change-of-basis; (2) SVD-norm: select top-k channels by W_up row-norm + lstsq refit (proper rank baseline). Geometric beats svd_norm in 11/12 (92%) block-budget pairs. Baseline PPL 122.4; geometric +0.8–5.8%; svd_norm +2.2–7.2%; distillation (200 steps) +0.1–10.1%. Only exception: block 11 at 16× (deep layer, aggressive compression, svd_norm=129.0 vs geo=129.5). Key insight: data-driven channel scoring (activity × output-norm) outperforms weight-magnitude-based selection at all depths and budgets.
+
+### Cycle 025
+
+33. **GELU → 3-piece PWL approximation fidelity — GPT-2** *(REFUTED — cycle 025)*
+   - Apply the same PWL substitution from experiment 32 to GPT-2: replace all GELU activations with the 3-piece PWL function, no retraining, measure perplexity on the probe validation set. If perplexity degrades < 5% relative, then GPT-2's FFN blocks are approximately piecewise-affine and all the partition-based theory (activation patterns, RTG, SplineCam) applies as an approximation. This would justify using ReLU-derived compression signals on GELU networks. Also measure block-by-block contribution: which blocks' perplexity degrades most when only that block's GELU is replaced, to identify which blocks are most sensitive to smooth activation curvature.
+   - Type: empirical
+   - Confirmed if: full GELU → 3-piece PWL substitution causes < 5% relative perplexity increase on the validation set.
+   - Refuted if: perplexity increases > 20%, indicating that GELU's smooth transition zone is functionally critical at the LLM scale.
+   - Inconclusive if: perplexity increase is moderate (5–20%) and is concentrated in specific blocks rather than spread evenly.
+   - Depends on: 32. Skip if experiment 32 is refuted (the PWL approximation is fundamentally inadequate even for toy GELU networks).
+   - **Outcome: REFUTED** — Baseline PPL=125.7. 3-piece: 6997 (+5466%), 5-piece: 3221 (+2462%), 10-piece: 198 (+57.8%), 20-piece: 127 (+1.1%). Even single-block 3-piece replacement causes catastrophic damage (block 0: +1239%; best block 9: +135%). GELU curvature is functionally critical at every granularity in GPT-2; 3-piece PWL is completely inadequate. Partition-based theory (SplineCam, RTG, MASO) does NOT apply to GELU networks even as a first-order approximation at this scale. 20-piece PWL is the minimum for near-lossless approximation.
+   - Cycle: 025
+   - Artifacts: `experiments/gelu_pwl_gpt2.py`, `autoresearch/results/cycle_025_gelu_pwl_gpt2.json`, `autoresearch/results/cycle_025_gelu_pwl_gpt2.png`
+
+### Cycle 024
+
+31. **CKA representational similarity matrix across layers (GPT-2)** *(INCONCLUSIVE — cycle 024)*
+   - Compute centered kernel alignment (CKA) between the token representation matrices at all pairs of (layer_i, layer_j) in GPT-2. CKA is a scale-invariant similarity measure between two sets of representations: CKA ≈ 1 means the two layers are computing essentially the same geometry (up to rotation/scale), CKA ≈ 0 means they are unrelated. Plot the full 13×13 CKA heatmap. Identify "representational plateaus" — groups of consecutive layers with high mutual CKA (≥ 0.8) — as candidates for block-level depth pruning. Correlate the CKA drop between layer i and layer i+1 with the single-block swap damage for block i from cycle 005: blocks that contribute large CKA drops are doing new work and should be harder to remove.
+   - Type: empirical
+   - Confirmed if: at least one contiguous group of ≥ 3 GPT-2 layers has pairwise CKA ≥ 0.80 AND the (CKA drop to next layer) × (compression difficulty) Spearman correlation is ≥ 0.4.
+   - Refuted if: CKA is uniformly low (< 0.5) for all non-adjacent layer pairs, indicating every layer computes a distinct representation.
+   - Inconclusive if: CKA plateaus exist but removing one layer from a plateau still causes > 20% relative perplexity increase, indicating that representational similarity does not imply functional redundancy.
+   - Depends on: 9
+   - **Outcome: INCONCLUSIVE** — Massive 10-block plateau found (blocks 1–10, pairwise CKA ≥ 0.991), satisfying plateau criterion. But Spearman(CKA_drop, damage) = 0.32 (p=0.31), below ρ≥0.40 threshold. Root cause: CKA drops within the plateau are near-zero (0.0002–0.004) for all middle transitions, even though damage varies (0.12%–3.07%). Residual connections make the Gram matrix geometry nearly constant despite meaningful functional differences per block. CKA is a poor per-block compression predictor in GPT-2: representational similarity does not imply functional redundancy. The plateau exists but cannot identify which blocks are safe to remove.
+   - Cycle: 024
+   - Artifacts: `autoresearch/results/cycle_024_cka_matrix.json`, `autoresearch/results/cycle_024_cka_heatmap.png`, `autoresearch/results/cycle_024_summary.md`
+
+### Cycle 023
+
+29. **Local complexity as a compression difficulty predictor — toy ReLU**
+   - Implement the local complexity measure from Patel & Montúfar 2025: for each probe input x, count the number of distinct activation patterns observed in a ball of radius ε around x (using probe samples). Average over x. This is the empirical local complexity. A network with high local complexity has many linear regions packed near the data — it is using its nonlinearity heavily and will be hard to compress. For the spirals toy network, compute local complexity at each layer and correlate it with the layer-wise single-affine residual r from experiment 20. Also compare local complexity across training checkpoints (early, mid, late training) to test the Humayun/Patel prediction that local complexity decreases during grokking.
+   - Type: empirical
+   - Confirmed if: local complexity correlates with single-affine residual r (Spearman ≥ 0.5) AND local complexity decreases by ≥ 30% between early and late training checkpoints.
+   - Refuted if: local complexity shows no correlation with r and no consistent trend across training.
+   - Inconclusive if: the correlation with r holds but the training-dynamics prediction fails, or vice versa.
+   - Depends on: 20
+   - **Outcome: INCONCLUSIVE** — Spearman ρ=0.80 (p=0.20, n=4) between local complexity and r_held PASSES the ≥0.5 threshold. Layer ordering by LC matches compression difficulty (L2 highest LC, L1 next, consistent with large r drop from L1→L2 in cycle 010). However, local complexity does NOT decrease during training: early=15.08, mid=14.32, late=15.91 (−5.5% change vs required −30%). The Humayun/Patel grokking prediction fails — spirals may not exhibit the same training-phase collapse as reported. Note: ε=0.39 yielded avg 72 neighbors (2× intended ~30); this doesn't change the qualitative finding. Experiment 30 (GPT-2 proxy) can proceed since the correlation signal holds.
+   - Cycle: 023
+   - Artifacts: `autoresearch/results/cycle_023_local_complexity.json`, `autoresearch/results/cycle_023_local_complexity.png`
+
+### Cycle 022
+
+40. **Attention head geometry census — GPT-2** *(INCONCLUSIVE — cycle 022)*
+   - Extend beyond FFN-only analysis. For each attention head in GPT-2 (12 layers × 12 heads = 144 heads): (a) effective rank of attention matrix mean over probe sequences (nuclear norm / operator norm), (b) head output Jacobian variation (std of head output norms across tokens), (c) pairwise CKA between heads within the same layer to measure redundancy. Rank heads by a combined "prunability score" = low_rank × low_variation × high_redundancy. Test: zero-out the top-K most prunable heads, measure perplexity cost. This answers: is there geometric compression opportunity in attention, not just FFN?
+   - Type: empirical + intervention
+   - Confirmed if: ≥20% of heads have effective rank < 0.3 × head_dim AND zeroing the 10 most prunable heads causes ≤5% perplexity increase.
+   - Refuted if: all heads have high effective rank and zeroing any 5 heads causes >15% perplexity increase.
+   - Inconclusive if: effective rank is low but zeroing heads causes high perplexity increase, indicating low-rank heads are still functionally critical.
+   - Depends on: 9
+   - **Outcome: INCONCLUSIVE** — 89.6% of heads (129/144) have effective rank < 19.2 (0.3×64) — strong geometric low-rank signal across all layers. Eff_rank concentrates 1–7 in deeper layers (5–11), up to 104 in early layers. But zeroing top-10 most prunable heads causes +14.6% PPL increase (criterion: ≤5%). Only K=5 is tolerable at +2.7%. Low-rank geometry does not imply prunability: heads are individually redundant but collectively load-bearing.
+   - Cycle: 022
+   - Artifacts: `experiments/attn_head_census.py`, `autoresearch/results/cycle_022_head_census.json`, `autoresearch/results/cycle_022_head_census.png`
+
+### Cycle 021
+
+39. **Grokking as compression catalyst — toy ReLU** *(REFUTED — cycle 021)* ⚠ **FLAWED METHODOLOGY**
+   - Train spirals network for 10× normal epochs (well past convergence into overfitting/grokking regime). At regular checkpoints: (a) count distinct activation patterns on held-out data, (b) compute pattern entropy (item 37), (c) measure single-affine residual per layer (item 20 method). Look for a phase transition where partition complexity drops sharply — this is grokking manifesting as geometric simplification. If found: run the geometric compression pipeline (from `relu_geometric_compression.py`) AT the grokking point vs BEFORE — quantify how much easier compression becomes post-grokking. This bridges "Deep Grokking" theory (already in lit map) with actionable compression timing.
+   - Type: empirical
+   - **Outcome: REFUTED** — Classic grokking (late test accuracy rise) IS detected on spirals: train saturates at 92% by epoch 2000, test accuracy jumps from 0.747 → 0.805+ around epoch 17000. However, the geometry signal is opposite to the hypothesis: pattern count INCREASES through grokking (369 → 564+, rising to 723 at epoch 29000 with no drop). Pattern complexity is NOT reduced by grokking on spirals — instead the network develops a richer partition. Compression quality improves slightly (+5.7% accuracy at 4× compression) but this tracks the teacher's improved accuracy, not geometric simplification. Pattern drop from peak = 4.3% (need 40%), compression gain = 5.7% (need 10%). Verdict: REFUTED on both criteria. The "partition collapses during grokking" hypothesis is wrong for continuous 2D tasks; it may only apply to discrete/algebraic tasks (modular arithmetic) where grokking enables compact algorithmic solutions.
+   - ⚠ **Post-hoc review: flawed experiment.** (1) Spirals don't grok — continuous classification tasks lack the memorization→generalization phase transition. The "grokking" detected is just gradual fitting. (2) Raw pattern count is the wrong metric — grokking is about partition *rearrangement* (regions align with task structure), not pattern count *reduction*. Should track region-label purity. (3) Pattern increase is expected and correct for a network refining spiral boundaries on 2000 test points. **Superseded by item 46.**
+   - Cycle: 021
+   - Artifacts: `experiments/grokking_compression_catalyst.py`, `autoresearch/results/cycle_021_grokking.json`, `autoresearch/results/cycle_021_grokking_trajectory.png`
+
+### Cycle 020
+
+38. **Manifold curvature trajectory — GPT-2** *(REFUTED — cycle 020)*
+   - At each layer, estimate local manifold curvature of the representation space. Method: for each probe token, fit local PCA in its k-NN neighborhood (k=50 in activation space). Curvature proxy = fraction of variance NOT explained by top-d principal components (d = estimated local intrinsic dimension). Average over tokens to get per-layer curvature. The curvature trajectory should reveal: (a) where the model builds curvature (early layers creating nonlinear features), (b) where it flattens (late layers approaching linearity). This is the geometric dual of the Procrustes test (item 36): Procrustes measures global linearity, curvature measures local manifold geometry. Correlate curvature with single-block swap damage (cycle 005).
+   - Type: empirical
+   - Confirmed if: curvature decreases monotonically in the final third of layers AND Spearman correlation between curvature and compression difficulty ≥ 0.4.
+   - Refuted if: curvature has no clear trend or anti-correlates with compression difficulty.
+   - Inconclusive if: curvature decreases but correlation with compression difficulty is weak (0.2–0.4).
+   - Depends on: 9
+   - **Outcome: REFUTED** — Curvature is nearly uniform across all 13 layers (range 0.0451–0.0471, <5% unexplained variance everywhere), with no monotone trend in the final third. Spearman rho = −0.42 (p=0.17, non-significant), indicating if anything a slight anti-correlation. The k-NN local PCA curvature proxy is insensitive to GPT-2 residual-stream geometry: LayerNorm at each block normalises representations before they are read by subsequent layers, collapsing curvature differences that would otherwise be visible. The signal is too compressed and homogeneous to serve as a compression predictor.
+   - Cycle: 020
+   - Artifacts: `autoresearch/results/cycle_020_curvature.json`, `autoresearch/results/cycle_020_curvature_trajectory.png`, `autoresearch/results/cycle_020_curvature_vs_damage.png`
+
+### Cycle 019
+
+37. **Activation pattern entropy cascade — toy ReLU** *(CONFIRMED — cycle 019)*
+   - For each layer in a trained spirals network, compute Shannon entropy H(layer) of the activation pattern distribution over data. High H = many equally-used patterns = complex = hard to compress. Low H = few dominant patterns = compressible. Also compute conditional entropy H(pattern_L | pattern_{L-1}) — how much NEW partition information each layer adds. If conditional entropy is near zero for some layer, that layer is partitioning redundantly relative to the previous layer → safe to remove. Plot the entropy cascade: H(L1), H(L2|L1), H(L3|L1,L2), ... This is an information-theoretic characterization of partition redundancy, different from affine-map clustering (item 22) or volume analysis (item 34).
+   - Type: empirical
+   - Confirmed if: conditional entropy drops ≥50% for at least one layer AND low-conditional-entropy layers also have low single-affine residual (item 20 correlation).
+   - Refuted if: conditional entropy is uniformly high across all layers (each layer adds substantial new partition structure).
+   - Inconclusive if: conditional entropy varies but does not correlate with any compression signal from items 20/22.
+   - Depends on: none
+   - **Outcome: CONFIRMED** — Conditional entropy drops sharply after layer 1: cH(L2|L1)=1.64 bits (ratio 0.26), cH(L3|L1,L2)=0.26 bits (ratio 0.040), cH(L4|L1-3)=0.27 bits (ratio 0.043). Layers 2-4 all have single-affine residual r < 0.013, far below layer 1's r=0.168. The entropy cascade reveals that layer 1 establishes the bulk of the partition structure; later layers refine minimally. Spearman(cH_ratio, r)=0.40 (underpowered at n=4 but direction consistent).
+   - Cycle: 019
+   - Artifacts: `autoresearch/results/cycle_019_entropy_cascade.json`, `autoresearch/results/cycle_019_entropy_cascade.png`, `autoresearch/results/cycle_019_summary.md`
+
+### Cycle 017
+
+34. **Region volume Pareto: do large regions carry most task accuracy? — toy ReLU** *(INCONCLUSIVE — cycle 017)*
+   - For a trained spirals ReLU network (2D input → 100D embedding → 4 layers × 64 hidden), enumerate all observed activation patterns on the full probe set. Define region "volume" as the fraction of probe inputs that fall in each region. Sort regions by volume in descending order. Compute the cumulative accuracy recovery as a function of regions kept (the "Pareto compression curve"): start with only the largest region, classify all test points using that region's A_ω, add the next largest region and allow each test point to use its own region's A_ω if it falls there, otherwise fall back to the nearest large region. If the Pareto curve is steep (top 20% of regions by volume covers ≥ 80% of correctly classified points), compression can be achieved by keeping only large regions and routing small-region inputs to the nearest large region.
+   - Type: empirical
+   - Confirmed if: the top 20% of regions by volume covers ≥ 70% of correctly classified test points.
+   - Refuted if: regions have an approximately uniform volume distribution (Gini coefficient < 0.3), indicating no Pareto structure.
+   - Inconclusive if: Pareto holds in 2D but disappears when the same analysis is run in the 100D embedding, suggesting the structure is input-space-specific.
+   - Depends on: none
+   - **Outcome: INCONCLUSIVE** — Gini=0.408 confirms a skewed (non-uniform) volume distribution, but the top 20% of regions (75 of 375) covers only 48.2% of correctly-classified test points, falling short of the 70% threshold. The region-count distribution is Pareto-skewed, but coverage is spread across many medium-sized regions rather than concentrated in the top 20%. Accuracy with A_ω fallback at 20% kept = 86.7% vs float 98.3%. Item 35 (GPT-2 analog) depends on 34 not being refuted — it can proceed since Pareto structure is present, just weaker than expected.
+   - Cycle: 017
+   - Artifacts: `autoresearch/results/cycle_017_pareto.json`, `autoresearch/results/cycle_017_pareto.png`
+
+### Cycle 016
+
+32. **GELU → 3-piece PWL approximation fidelity — toy GELU MLP** *(INCONCLUSIVE — cycle 016)*
+
+### Cycle 012
+
+22. **Effective number of affine behaviors via Jacobian k-means — toy ReLU** *(REFUTED — cycle 012)*
+   - A ReLU network with K observed activation patterns has exactly K distinct affine maps A_ω. In practice, many A_ω are similar and can be served by a single representative. For a trained spirals ReLU network, extract all distinct activation patterns on probe data, compute their A_ω matrices using the MASO formula A_ω = W_L·diag(q^L)·…·W_1·diag(q^1), then run k-means on the flattened A_ω vectors. Find the minimum K* such that cluster-centroid A_ω matrices reproduce network outputs with ≤ 1% accuracy drop. K* / N_patterns is the functional redundancy ratio: how much of the activation-pattern diversity is semantically irrelevant. Plot K* vs. accuracy for a range of K to get a compression-accuracy curve.
+   - Type: empirical
+   - Confirmed if: K* / N_patterns ≤ 0.2 for the spirals network (i.e., fewer than 20% of observed patterns are functionally distinct), indicating high redundancy exploitable for compression.
+   - Refuted if: K* / N_patterns > 0.7, indicating that most activation patterns compute meaningfully different functions.
+   - Inconclusive if: accuracy drops sharply as soon as any merging is applied (K* ≈ N_patterns) even though many A_ω look geometrically similar, suggesting that functional similarity does not survive k-means clustering.
+   - Depends on: none
+   - **Outcome: REFUTED** — K*/N_patterns = 1.00 (375/375). Accuracy at K=64 (17% of patterns) = 74.9%, never recovers to within 1% of float (98.3%) until K=N_patterns. Affine maps are genuinely diverse (std 42–83 per component); k-means clustering cannot find redundancy. Implies experiment 23 (GPT-2 Jacobian k-means) is unmotivated per agenda dependency note. RTG spectral coarsening (exp 24) may still work as it respects local adjacency structure.
+   - Cycle: 012
+   - Commit: see below
+   - Artifacts: `autoresearch/results/cycle_012_kmeans_toy.json`, `autoresearch/results/cycle_012_kmeans_curve.png`, `autoresearch/results/cycle_012_summary.md`
+
 
 ### Cycle 030
 
@@ -249,18 +293,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 025
 
-33. **GELU → 3-piece PWL approximation fidelity — GPT-2** — **REFUTED**: Baseline PPL=125.7; 3-piece PPL=6997 (+5466%); 5-piece=3221 (+2462%); 10-piece=198 (+57.8%); 20-piece=127 (+1.1%). Single-block 3-piece already catastrophic (best block +135%). GELU smoothness is functionally critical at LLM scale. Partition-based theory (ReLU/MASO) does not apply to GELU networks without ~20 pieces.
-   - Artifacts: `experiments/gelu_pwl_gpt2.py`, `autoresearch/results/cycle_025_gelu_pwl_gpt2.json`, `autoresearch/results/cycle_025_gelu_pwl_gpt2.png`
-
 ### Cycle 022
 
-40. **Attention head geometry census — GPT-2** — see item 40 above (moved inline for full context). **INCONCLUSIVE**: 89.6% heads low-rank (eff_rank < 19.2), K=5 tolerable (+2.7% PPL), K=10 fails (+14.6% PPL). Geometric low-rank ≠ functional prunability at scale.
-   - Artifacts: `experiments/attn_head_census.py`, `autoresearch/results/cycle_022_head_census.json`, `autoresearch/results/cycle_022_head_census.png`
-
 ### Cycle 021
-
-39. **Grokking as compression catalyst — toy ReLU** — see item 39 above (moved inline above for full context). **REFUTED**: pattern count increases during grokking on spirals; compression gain 5.7% < 10% threshold.
-   - Artifacts: `experiments/grokking_compression_catalyst.py`, `autoresearch/results/cycle_021_grokking.json`, `autoresearch/results/cycle_021_grokking_trajectory.png`
 
 ### Cycle 018
 
@@ -271,17 +306,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 017
 
-34. **Region volume Pareto: do large regions carry most task accuracy? — toy ReLU**
-   - Outcome: **INCONCLUSIVE** — Gini=0.408 (Pareto structure present, not refuted), but top 20% of regions (75/375) covers only 48.2% of float-correct test points, below the 70% confirmation threshold. Volume is skewed but spread across many medium regions. Accuracy at 20% kept (with Hamming fallback) = 86.7% vs float 98.3%. Item 35 (GPT-2 analog) may still proceed since Pareto structure is present (dependency condition is "not refuted").
-   - Cycle: 017
-   - Artifacts: `experiments/region_volume_pareto.py`, `autoresearch/results/cycle_017_pareto.json`, `autoresearch/results/cycle_017_pareto.png`
-
 ### Cycle 016
-
-32. **GELU → 3-piece PWL approximation fidelity — toy GELU MLP**
-   - Outcome: **INCONCLUSIVE** — K=10 pieces recovers nearly float accuracy (drop=2.59pp, below 3% threshold), but K=3 and K=5 drop ~35–39pp (far above 3% confirmed threshold). GELU curvature is task-critical at low piece count; the model is piecewise-affine at fine enough granularity (≈10 pieces) but not at the coarse 3–5 piece scale where ReLU theory directly applies. 17% of activations fall outside the [-3, 3] domain. Float model test accuracy = 86.75% (spirals, noise=0.5, 3 turns).
-   - Cycle: 016
-   - Artifacts: `experiments/gelu_pwl_approximation.py`, `autoresearch/results/cycle_016_gelu_pwl_approximation.png`
 
 ### Cycle 015
 
@@ -298,11 +323,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Artifacts: `experiments/rtg_spectral_gpt2.py`, `autoresearch/results/cycle_014_rtg_spectral_gpt2.json`, `autoresearch/results/cycle_014_rtg_spectral_gpt2.png`, `autoresearch/results/cycle_014_summary.md`
 
 ### Cycle 012
-
-22. **Effective number of affine behaviors via Jacobian k-means — toy ReLU**
-   - Outcome: **REFUTED** — K*/N_patterns = 1.00 (375/375). Even at K=64 (17% of patterns), accuracy = 74.9% vs float 98.3%. MASO affine maps are genuinely diverse (component ranges spanning ±175 to ±575); k-means cannot find functional redundancy. Experiment 23 (GPT-2 Jacobian k-means) is skipped per dependency rule. RTG spectral coarsening (exp 24) remains open.
-   - Cycle: 012
-   - Artifacts: `autoresearch/results/cycle_012_kmeans_toy.json`, `autoresearch/results/cycle_012_kmeans_curve.png`, `autoresearch/results/cycle_012_summary.md`
 
 ### Cycle 005
 
@@ -419,14 +439,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Key finding: Deep layers of a trained ReLU MLP (layers 2–4) are near-linear on the data distribution (r < 0.06). Only the first hidden layer performs genuinely nonlinear computation (r=0.43). Dead/always-active neuron fraction correlates negatively with r: layers with more stable neurons are more affinely collapsible. Train accuracy was 99.45%. The single-affine collapse is viable for compression of deep layers.
 
 ### Cycle 012
-
-22. **Effective number of affine behaviors via Jacobian k-means — toy ReLU**
-   - Type: empirical
-   - Outcome: **refuted** — K*/N_patterns = 1.0 (> 0.7 threshold). 375 patterns, accuracy flat at ~75% for K≤64. k-means on raw MASO affine maps finds no functional redundancy.
-   - Cycle: 012
-   - Commit: 66273d3
-   - Artifact: `autoresearch/results/cycle_012_summary.md`, `autoresearch/results/cycle_012_kmeans_toy.json`
-   - Key finding: k-means clustering on raw MASO affine maps cannot find functional redundancy. 375 observed activation patterns all compute meaningfully different linear functions under Euclidean distance. Accuracy never recovers within 1pp of float until K=N_patterns. Items 23, 35, 41 blocked (depend on 22 confirmed).
 
 ### Cycle 013
 

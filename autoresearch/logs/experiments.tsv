@@ -50,3 +50,4 @@ cycle	item	type	outcome	key_metric	description	commit	paths
 029	17	implementation	refuted	Local-chart worse than global in all 3 blocks at K=4,8; per-chart budget too thin	Local-chart analytic compression inside one FFN block (proxy gpt2)	dea555e	autoresearch/results/cycle_029_local_chart.json,experiments/local_chart_ffn_compression.py
 
 030	18	empirical	inconclusive	Shared compressor wins 1/4 held-out blocks; underfits (blocks compute different functions)	Learned compressor generalization (proxy gpt2)	3ff8dac	autoresearch/results/cycle_030_generalization.json,experiments/learned_compressor_generalization.py
+031	46	empirical	refuted	grokking_detected=True delay=16500epochs compression_gain=+0.001 (<2%); student_acc pre=0.000 post=0.002	Grokking as compression catalyst modular arithmetic v2	c0cb0dd	autoresearch/results/cycle_031_grokking.json,autoresearch/results/cycle_031_grokking_trajectory.png
