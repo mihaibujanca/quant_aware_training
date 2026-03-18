@@ -234,15 +234,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 028
    - Artifacts: `experiments/exact_prune_linear_collapse_gpt2.py`, `autoresearch/results/cycle_028_prune_collapse.json`, `autoresearch/results/cycle_028_prune_collapse.png`
 
-18. **Learned compressor generalization on held-out blocks**
-   - Train the descriptor-autoencoder / hypernetwork compressor on a subset of blocks and evaluate on held-out blocks from the same model family. If exact nanochat checkpoints at multiple depths are available, also test cross-checkpoint generalization. The point is to determine whether the learned track discovers reusable structure or merely memorizes block identities.
-   - Type: empirical
-   - Confirmed if: on held-out blocks, the learned compressor beats the current geometric baseline in a majority of cases and stays within `25%` of its in-distribution performance.
-   - Refuted if: held-out performance collapses relative to both the geometric baseline and in-distribution performance.
-   - Inconclusive if: generalization works only within narrow depth bands or only within one checkpoint.
-   - Depends on: 10
-
 ## PAST EXPERIMENTS
+
+### Cycle 030
+
+18. **Learned compressor generalization on held-out blocks** — **INCONCLUSIVE** *(cycle 030)*
+   - Shared low-rank bottleneck (768→384→768) trained on blocks 0-7, evaluated on blocks 8-11 with bias-only adaptation (mean-shift). Beats geometric on only 1/4 held-out blocks (block 10 only, where shared PPL=117.4 vs geometric=122.1). Generalization ratio = 0.76 (held-out PPL / in-distribution train PPL), within the 1.25 threshold. But the train-block PPL itself is poor (mean=163.4 vs baseline=122.4): the shared U,V underfit because each block computes a qualitatively different function. The compressor memorizes a rough average rather than reusable structure. Per-block distillation achieves 122-132 PPL (near baseline) with the same parameter budget, confirming the bottleneck is task-specific. Geometric baseline wins on 3/4 blocks without any training.
+   - Artifacts: `experiments/learned_compressor_generalization.py`, `autoresearch/results/cycle_030_generalization.json`
 
 ### Cycle 029
 
