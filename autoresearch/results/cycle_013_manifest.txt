@@ -1,0 +1,34 @@
+cycle_013_manifest
+==================
+Item: 24 — RTG spectral coarsening: Fiedler-based region merging — toy ReLU
+Verdict: INCONCLUSIVE
+Date: 2026-03-18
+
+Artifacts produced:
+  experiments/rtg_spectral_toy.py
+  autoresearch/results/cycle_013_rtg_spectral.json
+  autoresearch/results/cycle_013_rtg_spectral.png
+
+Key metrics:
+  Float accuracy: 0.9550
+  N_patterns: 330
+  RTG edges: 282
+  Connected components: 79 (highly fragmented)
+  Isolated nodes: 35 (10.6%)
+  Mean degree: 1.71
+  Hamming threshold used: 1
+
+  K=2:  spectral=0.546  random=0.524±0.018  delta=+0.022
+  K=4:  spectral=0.553  random=0.512±0.022  delta=+0.042
+  K=8:  spectral=0.596  random=0.502±0.020  delta=+0.094
+  K=16: spectral=0.600  random=0.508±0.030  delta=+0.093
+
+Summary:
+  Spectral clustering does carry a merging signal (up to +9pp over random),
+  but the RTG is too fragmented (79 components) for the spectral embedding
+  to find globally good coarsenings. At K=2..16, all accuracies plateau at
+  55-60%, far from the <5% drop criterion relative to float (95.5%).
+  The 5pp threshold over random IS met at K=8,16, but the accuracy drop is
+  ~35-40pp so the joint confirmed criterion is not met.
+
+Agenda: item 24 moved to PAST (INCONCLUSIVE)

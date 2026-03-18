@@ -32,16 +32,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: K* is low but reconstruction error does not translate to perplexity improvement when the approximation is used for inference.
    - Depends on: 9, 22. Skip if experiment 22 is refuted (functional redundancy does not exist in toy networks, making the LLM analog unmotivated).
 
-24. **RTG spectral coarsening: Fiedler-based region merging — toy ReLU** *(INCONCLUSIVE — cycle 013)*
-   - For a trained spirals ReLU network (2D input), enumerate all observed activation patterns on probe data and build the Hamming-1 adjacency graph (RTG): nodes = unique binary activation vectors, edges = pairs differing by one neuron flip. Compute the weighted graph Laplacian, its Fiedler vector (second eigenvector), and a K-way spectral clustering for K = 2, 4, 8, 16. For each K, merge all activation patterns in the same spectral cluster: compute the cluster's affine map as the weighted average A_ω of its members (weighted by region support size), then evaluate network output accuracy using these K affine maps. This is the first empirical test of whether the RTG spectral structure (Bosca 2025, Dhayalkar 2025) gives a principled merging criterion, and whether it outperforms random or size-based merging at the same K.
-   - Type: implementation + empirical
-   - Confirmed if: RTG spectral coarsening achieves ≥ 3× region reduction with < 5% accuracy drop AND outperforms random region merging by ≥ 5 percentage points in accuracy at the same K.
-   - Refuted if: spectral coarsening does not outperform random merging, suggesting the RTG eigenvectors carry no useful merging signal.
-   - Inconclusive if: spectral coarsening outperforms random on spirals but the benefit disappears for the 100D embedded version, indicating the advantage is geometry-dependent.
-   - Depends on: none
-   - **Outcome: INCONCLUSIVE** — 330 patterns, 282 edges, 79 connected components (highly fragmented RTG). Spectral beats random by up to +9pp at K=8,16 (signal exists), but accuracy at all K plateaus around 55-60% (float=95.5%), never within 5% drop. The fragmentation means spectral clustering cannot find good global coarsening: merging across disconnected components forces unrelated affine maps to be averaged. The RTG spectral signal is real but the Hamming-1 graph is too sparse to enable meaningful compression at these K values.
-   - Cycle: 013
-   - Artifacts: `experiments/rtg_spectral_toy.py`, `autoresearch/results/cycle_013_rtg_spectral.json`, `autoresearch/results/cycle_013_rtg_spectral.png`
 
 25. **RTG spectral coarsening — GPT-2 FFN analog**
    - Build a k-NN graph on per-token Jacobians for each GPT-2 FFN block (k=10, distance = Frobenius norm between J(x_i) and J(x_j)). This is the smooth-activation analog of the Hamming graph from experiment 24: instead of Hamming-1 adjacency between binary patterns, we use geometric proximity in Jacobian space. Compute the Laplacian of this graph, extract K eigenvectors, cluster tokens into K groups. For each cluster, fit a per-cluster affine approximation and measure the output reconstruction error relative to the full block output. Compare this to k-means on raw Jacobians (experiment 23) — the hypothesis is that the graph-Laplacian clustering is a better merging criterion because it respects local neighborhood structure.
@@ -378,3 +368,23 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Commit: 3d07fcd
    - Artifact: `autoresearch/results/cycle_010_summary.md`, `autoresearch/results/cycle_010_single_affine.json`
    - Key finding: Deep layers of a trained ReLU MLP (layers 2–4) are near-linear on the data distribution (r < 0.06). Only the first hidden layer performs genuinely nonlinear computation (r=0.43). Dead/always-active neuron fraction correlates negatively with r: layers with more stable neurons are more affinely collapsible. Train accuracy was 99.45%. The single-affine collapse is viable for compression of deep layers.
+
+### Cycle 012
+
+22. **Effective number of affine behaviors via Jacobian k-means — toy ReLU**
+   - Type: empirical
+   - Outcome: **refuted** — K*/N_patterns = 1.0 (> 0.7 threshold). 375 patterns, accuracy flat at ~75% for K≤64. k-means on raw MASO affine maps finds no functional redundancy.
+   - Cycle: 012
+   - Commit: 66273d3
+   - Artifact: `autoresearch/results/cycle_012_summary.md`, `autoresearch/results/cycle_012_kmeans_toy.json`
+   - Key finding: k-means clustering on raw MASO affine maps cannot find functional redundancy. 375 observed activation patterns all compute meaningfully different linear functions under Euclidean distance. Accuracy never recovers within 1pp of float until K=N_patterns. Items 23, 35, 41 blocked (depend on 22 confirmed).
+
+### Cycle 013
+
+24. **RTG spectral coarsening: Fiedler-based region merging — toy ReLU**
+   - Type: implementation + empirical
+   - Outcome: **inconclusive** — spectral beats random by up to +9.4pp at K=8,16 (signal exists), but accuracy plateaus at 55-60% vs float 95.5%. Hamming-1 RTG is highly fragmented (79 components, 330 nodes).
+   - Cycle: 013
+   - Commit: 202daf9
+   - Artifact: `autoresearch/results/cycle_013_rtg_spectral.json`, `experiments/rtg_spectral_toy.py`
+   - Key finding: RTG spectral signal is real (beats random significantly) but Hamming-1 graph is too sparse for useful compression — 79 disconnected components means spectral clustering must average across unrelated regions. Item 25 (GPT-2 analog with k-NN Jacobian graph) avoids this sparsity issue and remains eligible.

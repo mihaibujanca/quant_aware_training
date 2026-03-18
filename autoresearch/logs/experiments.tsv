@@ -14,3 +14,5 @@ cycle	item	type	outcome	key_metric	description	commit	paths
 011	21	empirical	refuted	0/12 blocks r<0.15; best swap +33.7% ppl (>20% threshold)	Single-affine collapse quality GPT-2 FFN (proxy gpt2)	c4ea941	autoresearch/results/cycle_011_summary.md,autoresearch/results/cycle_011_single_affine_gpt2.json,experiments/single_affine_collapse_gpt2.py
 
 012	22	empirical	refuted	K*/N_patterns=1.0 (>0.7); 375 patterns, acc flat at 75% for K<=64	Effective number of affine behaviors via Jacobian k-means toy ReLU	66273d3	autoresearch/results/cycle_012_summary.md,autoresearch/results/cycle_012_kmeans_toy.json,experiments/jacobian_kmeans_toy.py
+
+013	24	empirical	inconclusive	Spectral beats random by 9.4pp but max acc=60% vs float 95.5%; RTG too fragmented (79 components)	RTG spectral coarsening toy ReLU	202daf9	autoresearch/results/cycle_013_rtg_spectral.json,autoresearch/results/cycle_013_rtg_spectral.png,experiments/rtg_spectral_toy.py
