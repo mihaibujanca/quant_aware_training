@@ -32,13 +32,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: K* is low but reconstruction error does not translate to perplexity improvement when the approximation is used for inference.
    - Depends on: 9, 22. Skip if experiment 22 is refuted (functional redundancy does not exist in toy networks, making the LLM analog unmotivated).
 
-24. **RTG spectral coarsening: Fiedler-based region merging — toy ReLU**
+24. **RTG spectral coarsening: Fiedler-based region merging — toy ReLU** *(INCONCLUSIVE — cycle 013)*
    - For a trained spirals ReLU network (2D input), enumerate all observed activation patterns on probe data and build the Hamming-1 adjacency graph (RTG): nodes = unique binary activation vectors, edges = pairs differing by one neuron flip. Compute the weighted graph Laplacian, its Fiedler vector (second eigenvector), and a K-way spectral clustering for K = 2, 4, 8, 16. For each K, merge all activation patterns in the same spectral cluster: compute the cluster's affine map as the weighted average A_ω of its members (weighted by region support size), then evaluate network output accuracy using these K affine maps. This is the first empirical test of whether the RTG spectral structure (Bosca 2025, Dhayalkar 2025) gives a principled merging criterion, and whether it outperforms random or size-based merging at the same K.
    - Type: implementation + empirical
    - Confirmed if: RTG spectral coarsening achieves ≥ 3× region reduction with < 5% accuracy drop AND outperforms random region merging by ≥ 5 percentage points in accuracy at the same K.
    - Refuted if: spectral coarsening does not outperform random merging, suggesting the RTG eigenvectors carry no useful merging signal.
    - Inconclusive if: spectral coarsening outperforms random on spirals but the benefit disappears for the 100D embedded version, indicating the advantage is geometry-dependent.
    - Depends on: none
+   - **Outcome: INCONCLUSIVE** — 330 patterns, 282 edges, 79 connected components (highly fragmented RTG). Spectral beats random by up to +9pp at K=8,16 (signal exists), but accuracy at all K plateaus around 55-60% (float=95.5%), never within 5% drop. The fragmentation means spectral clustering cannot find good global coarsening: merging across disconnected components forces unrelated affine maps to be averaged. The RTG spectral signal is real but the Hamming-1 graph is too sparse to enable meaningful compression at these K values.
+   - Cycle: 013
+   - Artifacts: `experiments/rtg_spectral_toy.py`, `autoresearch/results/cycle_013_rtg_spectral.json`, `autoresearch/results/cycle_013_rtg_spectral.png`
 
 25. **RTG spectral coarsening — GPT-2 FFN analog**
    - Build a k-NN graph on per-token Jacobians for each GPT-2 FFN block (k=10, distance = Frobenius norm between J(x_i) and J(x_j)). This is the smooth-activation analog of the Hamming graph from experiment 24: instead of Hamming-1 adjacency between binary patterns, we use geometric proximity in Jacobian space. Compute the Laplacian of this graph, extract K eigenvectors, cluster tokens into K groups. For each cluster, fit a per-cluster affine approximation and measure the output reconstruction error relative to the full block output. Compare this to k-means on raw Jacobians (experiment 23) — the hypothesis is that the graph-Laplacian clustering is a better merging criterion because it respects local neighborhood structure.

@@ -1,0 +1,31 @@
+{
+  "float_acc": 0.9549999833106995,
+  "sanity_acc_k_equals_n": 1.0,
+  "N_patterns": 330,
+  "n_edges": 282,
+  "n_connected_components": 79,
+  "n_isolated_nodes": 35,
+  "isolated_fraction": 0.10606060606060606,
+  "mean_degree": 1.709090909090909,
+  "hamming_threshold": 1,
+  "spectral_ok": true,
+  "spectral_accs": {
+    "2": 0.546,
+    "4": 0.553,
+    "8": 0.596,
+    "16": 0.6
+  },
+  "random_accs": {
+    "2": 0.5244000000000001,
+    "4": 0.5115000000000001,
+    "8": 0.5019,
+    "16": 0.5075000000000001
+  },
+  "random_stds": {
+    "2": 0.018364095403803602,
+    "4": 0.02183689538373074,
+    "8": 0.019649173010587512,
+    "16": 0.029513556207275353
+  },
+  "verdict": "INCONCLUSIVE"
+}
