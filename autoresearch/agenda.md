@@ -83,13 +83,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: perplexity increase is moderate (5–20%) and is concentrated in specific blocks rather than spread evenly.
    - Depends on: 32. Skip if experiment 32 is refuted (the PWL approximation is fundamentally inadequate even for toy GELU networks).
 
-34. **Region volume Pareto: do large regions carry most task accuracy? — toy ReLU**
+34. **Region volume Pareto: do large regions carry most task accuracy? — toy ReLU** *(INCONCLUSIVE — cycle 017)*
    - For a trained spirals ReLU network (2D input → 100D embedding → 4 layers × 64 hidden), enumerate all observed activation patterns on the full probe set. Define region "volume" as the fraction of probe inputs that fall in each region. Sort regions by volume in descending order. Compute the cumulative accuracy recovery as a function of regions kept (the "Pareto compression curve"): start with only the largest region, classify all test points using that region's A_ω, add the next largest region and allow each test point to use its own region's A_ω if it falls there, otherwise fall back to the nearest large region. If the Pareto curve is steep (top 20% of regions by volume covers ≥ 80% of correctly classified points), compression can be achieved by keeping only large regions and routing small-region inputs to the nearest large region.
    - Type: empirical
    - Confirmed if: the top 20% of regions by volume covers ≥ 70% of correctly classified test points.
    - Refuted if: regions have an approximately uniform volume distribution (Gini coefficient < 0.3), indicating no Pareto structure.
    - Inconclusive if: Pareto holds in 2D but disappears when the same analysis is run in the 100D embedding, suggesting the structure is input-space-specific.
    - Depends on: none
+   - **Outcome: INCONCLUSIVE** — Gini=0.408 confirms a skewed (non-uniform) volume distribution, but the top 20% of regions (75 of 375) covers only 48.2% of correctly-classified test points, falling short of the 70% threshold. The region-count distribution is Pareto-skewed, but coverage is spread across many medium-sized regions rather than concentrated in the top 20%. Accuracy with A_ω fallback at 20% kept = 86.7% vs float 98.3%. Item 35 (GPT-2 analog) depends on 34 not being refuted — it can proceed since Pareto structure is present, just weaker than expected.
+   - Cycle: 017
+   - Artifacts: `autoresearch/results/cycle_017_pareto.json`, `autoresearch/results/cycle_017_pareto.png`
 
 35. **Region volume Pareto — GPT-2 FFN analog**
    - Apply the Pareto analysis from experiment 34 to GPT-2 FFN blocks. Since exact activation patterns are unavailable for GELU, use k-means clusters on probe-token Jacobians as a proxy for "regions." Sort clusters by token count (proxy for volume). For each block, compute the cumulative reconstruction error of block outputs as clusters are added in descending size order. If a Pareto structure exists (top 20% of clusters covers 80% of total output variance), it suggests that a few dominant "computational modes" drive most of the block's behavior — and keeping only those modes gives a strong compression baseline. Compare the Pareto coefficient to compression damage from cycle 005 to test whether Pareto-skewed blocks are the easy ones.
@@ -225,6 +228,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 10
 
 ## PAST EXPERIMENTS
+
+### Cycle 017
+
+34. **Region volume Pareto: do large regions carry most task accuracy? — toy ReLU**
+   - Outcome: **INCONCLUSIVE** — Gini=0.408 (Pareto structure present, not refuted), but top 20% of regions (75/375) covers only 48.2% of float-correct test points, below the 70% confirmation threshold. Volume is skewed but spread across many medium regions. Accuracy at 20% kept (with Hamming fallback) = 86.7% vs float 98.3%. Item 35 (GPT-2 analog) may still proceed since Pareto structure is present (dependency condition is "not refuted").
+   - Cycle: 017
+   - Artifacts: `experiments/region_volume_pareto.py`, `autoresearch/results/cycle_017_pareto.json`, `autoresearch/results/cycle_017_pareto.png`
 
 ### Cycle 016
 
