@@ -48,3 +48,5 @@ cycle	item	type	outcome	key_metric	description	commit	paths
 028	16	implementation	refuted	0% dead channels; 0.008% near-linear; 1.000x compression (need 1.1x)	Exact prune plus linear collapse baseline (proxy gpt2)	bd5fabb	autoresearch/results/cycle_028_prune_collapse.json,experiments/exact_prune_linear_collapse_gpt2.py
 
 029	17	implementation	refuted	Local-chart worse than global in all 3 blocks at K=4,8; per-chart budget too thin	Local-chart analytic compression inside one FFN block (proxy gpt2)	dea555e	autoresearch/results/cycle_029_local_chart.json,experiments/local_chart_ffn_compression.py
+
+030	18	empirical	inconclusive	Shared compressor wins 1/4 held-out blocks; underfits (blocks compute different functions)	Learned compressor generalization (proxy gpt2)	3ff8dac	autoresearch/results/cycle_030_generalization.json,experiments/learned_compressor_generalization.py

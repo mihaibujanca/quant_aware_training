@@ -1,0 +1,26 @@
+cycle_030_manifest.txt
+======================
+Cycle: 030
+Item: 18 — Learned compressor generalization on held-out blocks
+Verdict: INCONCLUSIVE
+Commit: 3ff8dac
+
+Artifacts
+---------
+autoresearch/briefs/cycle_030.md
+autoresearch/plans/cycle_030.md
+autoresearch/results/cycle_030_generalization.json
+experiments/learned_compressor_generalization.py
+
+Key metrics
+-----------
+Baseline PPL (GPT-2 uncompressed): 122.35
+Train-block mean PPL (shared compressor): 163.44
+Held-out block PPLs — shared / geometric / distill:
+  Block 8:  125.89 / 122.53 / 122.94
+  Block 9:  126.42 / 122.54 / 122.91
+  Block 10: 117.40 / 122.14 / 122.88   <- shared WINS
+  Block 11: 126.95 / 126.03 / 131.86
+Beats geometric: 1/4 blocks
+Generalization ratio (held-out / train): 0.76
+Confirmed threshold: beats_geometric >= 3 AND gen_ratio <= 1.25 -> NOT MET
