@@ -6,7 +6,39 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+48. **Easiest-first multi-block accumulation up to 6 blocks — GPT-2 FFN**
+   - Cycle 007 showed easiest-first ordering is 27% better than hardest-first for 2-block swaps, but the curve was not extended beyond 2 blocks. Run the ordered accumulation experiment for up to 6 blocks (the 6 easiest blocks by single-block swap damage from cycle 005), measuring PPL at each step. The main open question is whether degradation is sub-additive (enabling >2 blocks removed) or super-additive (each additional swap accelerates collapse). Use geometric channel selection (cycle 026) and centroid similarity merge signal (cycle 027) for each swapped block.
+   - Type: empirical
+   - Confirmed if: 4-block swap achieves PPL ≤ baseline × 1.10 (i.e., ≤10% PPL increase from teacher) on the GPT-2 proxy corpus.
+   - Refuted if: PPL exceeds baseline × 1.20 at the 3-block mark, indicating super-additive degradation.
+   - Inconclusive if: 3-block swap stays within 10% but 4-block exceeds it, leaving the boundary undetermined.
+   - Depends on: 5, 7, 14, 26, 27
+
+49. **Block-specific compression ratio sweep — GPT-2 FFN**
+   - Cycle 005 established that single-block swap works at ≤4× compression for most blocks but used a fixed ratio. The block-specific damage profiles differ (some blocks tolerate higher compression than others). Sweep compression ratios 2×, 3×, 4×, 5×, 6× independently for each of the 6 easiest blocks (identified in cycle 005), and for each block find the maximum ratio that keeps single-block PPL ≤ baseline × 1.05. This produces a per-block compression budget map, enabling a principled allocation for multi-block stacking.
+   - Type: empirical
+   - Confirmed if: at least 4 blocks tolerate ≥5× compression within the 5% PPL threshold, suggesting headroom for tighter multi-block stacking.
+   - Refuted if: no block tolerates >4× compression within threshold, indicating the current merge algorithm saturates before structural gains.
+   - Inconclusive if: results are bimodal (some blocks tolerate 6×, others collapse at 3×) without a clear predictor.
+   - Depends on: 5, 26, 27
+
 ### P1
+
+50. **Centroid-merge quality as a function of probe corpus size — GPT-2 FFN**
+   - Cycle 027 established centroid similarity (ρ=0.85) as the merge signal on a fixed probe corpus. It is unknown whether this signal is stable under small probe sets (e.g., 64 vs 512 vs 2048 tokens), which determines minimum data requirements for deployment. Run single-block swap with centroid-guided merge on one representative block across probe sizes {64, 128, 256, 512, 1024, 2048} and measure PPL. Also measure channel selection stability (Jaccard index of selected channels across runs with different random seeds at the same probe size).
+   - Type: empirical
+   - Confirmed if: Jaccard ≥ 0.85 and PPL within 2% of the 2048-token reference at probe size ≤ 256 tokens.
+   - Refuted if: Jaccard < 0.6 or PPL degrades > 5% relative at probe size 256, indicating the signal needs large data.
+   - Inconclusive if: Jaccard is stable but PPL variance across seeds is high (> 3%), suggesting instability from a different source.
+   - Depends on: 26, 27
+
+51. **Per-block learned compressor with block-conditioned bottleneck — GPT-2 FFN**
+   - Cycle 030 showed a shared compressor underfits (INCONCLUSIVE): held-out blocks got geometric-level PPL but the shared compressor didn't beat per-block geometric. Rather than a fully shared compressor, train one lightweight compressor per block (same architecture, separate weights, 500 distill steps each) and measure: (a) whether per-block distillation beats the no-training geometric baseline, and (b) at what step budget the gap closes. This tests whether the cycle 030 failure was due to cross-block sharing vs. insufficient capacity.
+   - Type: empirical
+   - Confirmed if: per-block learned compressor beats geometric baseline by ≥1 PPL point for ≥8 of 12 blocks.
+   - Refuted if: per-block compressor does not beat geometric baseline for any block after 500 distill steps.
+   - Inconclusive if: per-block beats geometric on some blocks but with high variance across blocks, making no systematic conclusion possible.
+   - Depends on: 14, 18
 
 23. **Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**
    - ⚠ **BLOCKED**: Depends on item 22 (REFUTED). Item 22 found no functional redundancy in toy networks, making the GPT-2 Jacobian k-means analog unmotivated per agenda dependency rule.
