@@ -1,0 +1,113 @@
+{
+  "summary": {
+    "n_blocks": 12,
+    "n_score_spearman_ge_0.8": 12,
+    "n_jaccard_ge_0.5": 12,
+    "n_both_pass": 12,
+    "mean_spearman": 0.9789411659727643,
+    "mean_jaccard": 0.8586760223250908,
+    "mean_jacobian_cosine": 0.9994232753912607,
+    "early_mean_spearman": 0.9776816070230849,
+    "late_mean_spearman": 0.9788269041574926,
+    "early_mean_jaccard": 0.8719887336969658,
+    "late_mean_jaccard": 0.8530583665371856
+  },
+  "per_block": [
+    {
+      "layer_id": 0,
+      "channel_score_spearman": 0.9552561448454745,
+      "jacobian_spectrum_cosine": 0.9993453621864319,
+      "selected_set_jaccard": 0.949238578680203,
+      "k_a": 192,
+      "k_b": 192
+    },
+    {
+      "layer_id": 1,
+      "channel_score_spearman": 0.9913140025306016,
+      "jacobian_spectrum_cosine": 0.9999478459358215,
+      "selected_set_jaccard": 0.8285714285714286,
+      "k_a": 192,
+      "k_b": 192
+    },
+    {
+      "layer_id": 2,
+      "channel_score_spearman": 0.987084344316519,
+      "jacobian_spectrum_cosine": 0.9999699592590332,
+      "selected_set_jaccard": 0.855072463768116,
+      "k_a": 192,
+      "k_b": 192
+    },
+    {
+      "layer_id": 3,
+      "channel_score_spearman": 0.9770719363997444,
+      "jacobian_spectrum_cosine": 0.9987270832061768,
+      "selected_set_jaccard": 0.855072463768116,
+      "k_a": 192,
+      "k_b": 192
+    },
+    {
+      "layer_id": 4,
+      "channel_score_spearman": 0.9842657093861402,
+      "jacobian_spectrum_cosine": 0.9999714493751526,
+      "selected_set_jaccard": 0.8916256157635468,
+      "k_a": 192,
+      "k_b": 192
+    },
+    {
+      "layer_id": 5,
+      "channel_score_spearman": 0.9802783735722567,
+      "jacobian_spectrum_cosine": 0.9999538064002991,
+      "selected_set_jaccard": 0.8373205741626795,
+      "k_a": 192,
+      "k_b": 192
+    },
+    {
+      "layer_id": 6,
+      "channel_score_spearman": 0.9793493282933318,
+      "jacobian_spectrum_cosine": 0.9999346137046814,
+      "selected_set_jaccard": 0.8199052132701422,
+      "k_a": 192,
+      "k_b": 192
+    },
+    {
+      "layer_id": 7,
+      "channel_score_spearman": 0.9773665356991328,
+      "jacobian_spectrum_cosine": 0.9999488592147827,
+      "selected_set_jaccard": 0.855072463768116,
+      "k_a": 192,
+      "k_b": 192
+    },
+    {
+      "layer_id": 8,
+      "channel_score_spearman": 0.9789216722666714,
+      "jacobian_spectrum_cosine": 0.9999741911888123,
+      "selected_set_jaccard": 0.8731707317073171,
+      "k_a": 192,
+      "k_b": 192
+    },
+    {
+      "layer_id": 9,
+      "channel_score_spearman": 0.9766654085659778,
+      "jacobian_spectrum_cosine": 0.9997277855873108,
+      "selected_set_jaccard": 0.8373205741626795,
+      "k_a": 192,
+      "k_b": 192
+    },
+    {
+      "layer_id": 10,
+      "channel_score_spearman": 0.9780940944917037,
+      "jacobian_spectrum_cosine": 0.9989486336708069,
+      "selected_set_jaccard": 0.8731707317073171,
+      "k_a": 192,
+      "k_b": 192
+    },
+    {
+      "layer_id": 11,
+      "channel_score_spearman": 0.9816264413056174,
+      "jacobian_spectrum_cosine": 0.9966297149658203,
+      "selected_set_jaccard": 0.8285714285714286,
+      "k_a": 192,
+      "k_b": 192
+    }
+  ]
+}

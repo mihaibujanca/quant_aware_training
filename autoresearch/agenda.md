@@ -7,13 +7,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ### P0
 
 
-13. **Probe-corpus robustness of geometry signals**
-   - Compare the FFN geometry atlas across disjoint probe subsets and, if available, across a proxy corpus vs a more teacher-like corpus. Measure robustness of stable-channel masks, channel rankings, Jacobian spectra, and selected hidden-unit sets. The aim is to determine whether the compression signal is genuinely teacher-specific or just probe-noise.
-   - Type: empirical
-   - Confirmed if: for a majority of tested blocks, score rank correlation is `>=0.8` and selected-set overlap is `>=50%` across disjoint probes.
-   - Refuted if: selected-set overlap drops below `20%` and score correlations stay below `0.5` for most blocks.
-   - Inconclusive if: early and late blocks behave very differently.
-   - Depends on: 9, 11
 
 ### P0 — New geometric directions (cycle 006+, added 2026-03-18)
 
@@ -154,6 +147,88 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 9, 22, 34. Skip if experiment 34 is refuted (Pareto structure does not appear even in toy ReLU networks).
 
 
+### P0 — Novel directions: structured probing + topology (items 36–45, added 2026-03-18)
+
+36. **Procrustes linearity profile + identity-layer pruning — GPT-2**
+   - Replicate the core finding from "Your Transformer is Secretly Linear" (2405.12250) on our GPT-2 proxy. For each pair of consecutive layers (i, i+1), compute generalized Procrustes similarity: linearity_score = 1 − min_A ||X̃A − Ỹ||²₂ where X̃, Ỹ are normalized residual stream embeddings. Rank layers by linearity. Then **ACT**: replace the most linear layer(s) with identity (pure skip connection) — measure perplexity cost. Compare this layer ranking with Jacobian variance ranking (item 19) and single-block swap damage (cycle 005). This is a DIFFERENT signal from item 19: Procrustes measures whole-layer input→output linearity including attention+FFN+residual, not within-FFN Jacobian variation.
+   - Type: empirical + intervention
+   - Confirmed if: ≥4 layers have linearity ≥ 0.98 AND identity replacement of the top-2 most linear layers causes ≤10% perplexity increase AND layer ranking correlates with cycle 005 damage (Spearman ≥ 0.4).
+   - Refuted if: all layers have linearity < 0.90, contradicting the paper's findings on GPT-2.
+   - Inconclusive if: linearity scores are high but identity replacement causes large perplexity increase, suggesting linearity ≠ removability due to cumulative effects.
+   - Depends on: 9
+
+37. **Activation pattern entropy cascade — toy ReLU**
+   - For each layer in a trained spirals network, compute Shannon entropy H(layer) of the activation pattern distribution over data. High H = many equally-used patterns = complex = hard to compress. Low H = few dominant patterns = compressible. Also compute conditional entropy H(pattern_L | pattern_{L-1}) — how much NEW partition information each layer adds. If conditional entropy is near zero for some layer, that layer is partitioning redundantly relative to the previous layer → safe to remove. Plot the entropy cascade: H(L1), H(L2|L1), H(L3|L1,L2), ... This is an information-theoretic characterization of partition redundancy, different from affine-map clustering (item 22) or volume analysis (item 34).
+   - Type: empirical
+   - Confirmed if: conditional entropy drops ≥50% for at least one layer AND low-conditional-entropy layers also have low single-affine residual (item 20 correlation).
+   - Refuted if: conditional entropy is uniformly high across all layers (each layer adds substantial new partition structure).
+   - Inconclusive if: conditional entropy varies but does not correlate with any compression signal from items 20/22.
+   - Depends on: none
+
+38. **Manifold curvature trajectory — GPT-2**
+   - At each layer, estimate local manifold curvature of the representation space. Method: for each probe token, fit local PCA in its k-NN neighborhood (k=50 in activation space). Curvature proxy = fraction of variance NOT explained by top-d principal components (d = estimated local intrinsic dimension). Average over tokens to get per-layer curvature. The curvature trajectory should reveal: (a) where the model builds curvature (early layers creating nonlinear features), (b) where it flattens (late layers approaching linearity). This is the geometric dual of the Procrustes test (item 36): Procrustes measures global linearity, curvature measures local manifold geometry. Correlate curvature with single-block swap damage (cycle 005).
+   - Type: empirical
+   - Confirmed if: curvature decreases monotonically in the final third of layers AND Spearman correlation between curvature and compression difficulty ≥ 0.4.
+   - Refuted if: curvature has no clear trend or anti-correlates with compression difficulty.
+   - Inconclusive if: curvature decreases but correlation with compression difficulty is weak (0.2–0.4).
+   - Depends on: 9
+
+39. **Grokking as compression catalyst — toy ReLU**
+   - Train spirals network for 10× normal epochs (well past convergence into overfitting/grokking regime). At regular checkpoints: (a) count distinct activation patterns on held-out data, (b) compute pattern entropy (item 37), (c) measure single-affine residual per layer (item 20 method). Look for a phase transition where partition complexity drops sharply — this is grokking manifesting as geometric simplification. If found: run the geometric compression pipeline (from `relu_geometric_compression.py`) AT the grokking point vs BEFORE — quantify how much easier compression becomes post-grokking. This bridges "Deep Grokking" theory (already in lit map) with actionable compression timing.
+   - Type: empirical
+   - Confirmed if: pattern count drops ≥40% between pre-grokking and post-grokking checkpoints AND post-grokking compression achieves ≥10% better accuracy at matched parameter budget.
+   - Refuted if: pattern count is stable throughout training or compression quality doesn't change with training duration.
+   - Inconclusive if: pattern count drops but compression quality does not improve, suggesting simplification is not in the dimensions that matter for compression.
+   - Depends on: none (but benefits from item 37 methodology)
+
+40. **Attention head geometry census — GPT-2**
+   - Extend beyond FFN-only analysis. For each attention head in GPT-2 (12 layers × 12 heads = 144 heads): (a) effective rank of attention matrix mean over probe sequences (nuclear norm / operator norm), (b) head output Jacobian variation (std of head output norms across tokens), (c) pairwise CKA between heads within the same layer to measure redundancy. Rank heads by a combined "prunability score" = low_rank × low_variation × high_redundancy. Test: zero-out the top-K most prunable heads, measure perplexity cost. This answers: is there geometric compression opportunity in attention, not just FFN?
+   - Type: empirical + intervention
+   - Confirmed if: ≥20% of heads have effective rank < 0.3 × head_dim AND zeroing the 10 most prunable heads causes ≤5% perplexity increase.
+   - Refuted if: all heads have high effective rank and zeroing any 5 heads causes >15% perplexity increase.
+   - Inconclusive if: effective rank is low but zeroing heads causes high perplexity increase, indicating low-rank heads are still functionally critical.
+   - Depends on: 9
+
+41. **Constructive partition synthesis — toy ReLU (2D input) [MOONSHOT]**
+   - THE open problem in the literature. Given a trained spirals network (2→32→32→1): (a) Extract all observed activation patterns + affine maps via MASO formula (A_ω = ∏ diag(q_ω^i) W^i). (b) Cluster into K macro-regions via k-means on affine maps (leverage item 22). (c) For each macro-region, compute target affine map (support-weighted average of constituent maps). (d) **SYNTHESIS**: solve for weights W'_1, ..., W'_L of a smaller network (2→K'→1 or 2→K'→K'→1) such that for each macro-region k with pattern q_k, the product ∏ diag(q'_k^i) W'^i ≈ target A_k. This is a system of linear equations in the unknown weights, one set per macro-region. Boundary continuity adds constraints: if macro-regions k1, k2 are adjacent, their affine maps must agree on the shared boundary hyperplane. Method: Solve via least-squares with boundary penalty. Start with K=8 macro-regions, target architecture 2→8→1.
+   - Type: implementation + empirical
+   - Confirmed if: synthesized network achieves ≥85% of original accuracy with ≤50% parameters.
+   - Refuted if: the constrained system has no feasible solution for any K ≤ 32, or synthesized network accuracy is below 60%.
+   - Inconclusive if: synthesis works for simple datasets (moons) but fails on spirals, indicating the approach doesn't scale to moderate partition complexity.
+   - Depends on: 22
+
+42. **Topology-preserving distillation — toy ReLU [MOONSHOT]**
+   - Standard distillation matches outputs. This experiment adds a TOPOLOGICAL loss: the student's representation manifold must have the same persistent homology as the teacher's at each layer. Architecture: teacher 2→32→32→32→32→1 (deep), student 2→16→16→1 (shallow+narrow). Training: L_output = MSE(student(x), teacher(x)), L_topo = Σ_layers Wasserstein₁(PD_teacher(layer_k), PD_student(layer_j)) where layer_j is the student layer aligned to teacher layer_k via optimal layer matching, Total = L_output + λ · L_topo. Use Ripser for PH computation (Betti₀ and Betti₁), differentiable through the Wasserstein distance on persistence diagrams (use TopologyLayer / torch-tda or finite-difference approximation). Compare with: (a) output-only distillation, (b) Jacobian-matching distillation, (c) CKA-matching distillation.
+   - Type: implementation + empirical
+   - Confirmed if: topo-distilled student achieves ≥5pp higher test accuracy than output-only distilled student at matched architecture AND the topology loss converges (PD distance decreases during training).
+   - Refuted if: topology loss is too noisy to optimize (PD distance oscillates or diverges) OR topo-distilled student performs ≤ output-only student.
+   - Inconclusive if: topology loss converges but accuracy advantage is < 3pp, suggesting the signal is real but weak.
+   - Depends on: none
+
+43. **Topological truncation: Betti-guided depth reduction [MOONSHOT]**
+   - Compute persistent homology (via Ripser) on hidden representations at each layer. Track Betti numbers (β₀ = connected components, β₁ = loops/holes) through depth. Hypothesis: there exists a "topological triviality point" T — the first layer where Betti numbers stabilize at their final values. Before T, the network performs topological operations (separating classes, untangling manifolds). After T, it's just refining linear separators within an already-correct topology. Test: replace all layers after T with a single affine map (fit via least squares on layer T activations → final output). This is "topologically-justified depth pruning." Toy (primary): spirals (known topology — two interleaved spirals → β₀ should go 1→2, β₁ should decrease). Moons (simpler topology — β₀ goes 1→2). Run on 2D and 100D-embedded variants. GPT-2 (stretch): PH on PCA-projected activations (30D) per layer.
+   - Type: empirical + intervention
+   - Confirmed if: triviality point T exists at layer ≤ L−2 AND post-T affine replacement loses ≤5% accuracy (toy) or ≤15% perplexity (GPT-2).
+   - Refuted if: Betti numbers never stabilize (continuously changing through all layers) or post-T replacement causes >30% accuracy loss.
+   - Inconclusive if: Betti numbers stabilize but the affine replacement still degrades accuracy substantially, suggesting sub-topological refinement is still task-relevant.
+   - Depends on: none
+
+44. **Topological autoencoder for partition space — toy ReLU [MOONSHOT]**
+   - Build an autoencoder that learns a compressed encoding of the activation pattern space: Input: per-sample activation pattern (binary vector, one bit per neuron across all layers — e.g., 128-dim for 4×32 network). Encoder: MLP mapping to low-dimensional latent z ∈ ℝ^K (K << total neurons). Decoder: from z, predict the affine map A_ω (flattened weight matrix of the effective linear map for that pattern). Loss = MSE(A_ω_predicted, A_ω_true) + λ · PH_reg. The PH regularization term: compute persistent homology of the latent space neighborhoods (using k-NN graph on z) and match it to the persistent homology of the activation pattern graph (the RTG — Hamming-1 adjacency graph from Bosca et al.). If the autoencoder achieves good reconstruction with K << number_of_patterns, it proves: (1) the partition space has low intrinsic dimensionality, (2) the decoder provides a direct "K codes → affine map" lookup — a compressed functional representation. Sweep K = {2, 4, 8, 16}. Train on spirals network (~50-100 patterns).
+   - Type: implementation + empirical
+   - Confirmed if: autoencoder with K ≤ 8 achieves affine map reconstruction R² ≥ 0.9 AND the latent PH matches the RTG PH (Wasserstein distance < threshold).
+   - Refuted if: reconstruction requires K ≥ number_of_patterns/2 (no compression), or PH regularization destabilizes training.
+   - Inconclusive if: reconstruction works but PH regularization has no measurable effect (topology matching is trivially satisfied or trivially ignored).
+   - Depends on: 22, 24
+
+45. **Weight-space diffusion on topological level sets — toy ReLU [MOONSHOT]**
+   - Starting from trained weights θ₀, explore the weight space to find maximally compressed parameters that preserve the representation topology. Method: (a) Compute baseline persistent diagram PD₀ of representations at each layer (on training data). (b) Run projected Langevin dynamics: θ_{t+1} = θ_t − ε·∇||θ||₁ + √(2ε)·noise (drift toward minimum L1 norm = sparsity). (c) After each step, compute PD_t. If Wasserstein₁(PD_t, PD₀) > δ (topology changed), reject the step. (d) Run for T steps. The trajectory traces the "topological level set" — all weights producing the same representational topology. (e) Select the point θ* with minimum ||θ||₁ on the trajectory. If the topological level set is large (θ* has much lower norm than θ₀), the network is over-parameterized for its topology. Then: prune θ* (zero out small weights) and measure accuracy. Compare with: (a) standard magnitude pruning of θ₀, (b) L1-regularized retraining.
+   - Type: implementation + empirical
+   - Confirmed if: topological diffusion achieves ≥30% weight norm reduction while preserving PD within δ AND the pruned θ* achieves ≥5pp better accuracy than standard magnitude pruning at matched sparsity.
+   - Refuted if: topological level set is tiny (any perturbation changes PD) or the minimum-norm point within the level set has essentially the same norm as θ₀ (no topological redundancy).
+   - Inconclusive if: norm reduction is achieved but pruned accuracy is not better than standard magnitude pruning, suggesting topology preservation is too coarse a constraint.
+   - Depends on: none
+
 ### P1
 
 14. **Rank-only baseline versus geometry versus distillation**
@@ -271,3 +346,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Commit: 980dec5
    - Artifact: `autoresearch/results/cycle_007_summary.md`, `autoresearch/results/cycle_007_accumulation.json`
    - Key finding: Ordering matters enormously for multi-block accumulation. Hardest-first is catastrophically worse. Single-block damage ranking from cycle 005 correctly predicts safe accumulation order. Sweet spot is k=4-5 easiest blocks (ppl < 150, < 25% degradation). All-block 16x compression fails regardless of ordering (ppl=403).
+
+### Cycle 008
+
+13. **Probe-corpus robustness of geometry signals**
+   - Type: empirical
+   - Outcome: **confirmed (proxy)** — 12/12 blocks pass both criteria; channel score Spearman ≥ 0.95, selected-set Jaccard ≥ 0.82, Jacobian cosine ≥ 0.997 across disjoint Shakespeare probe halves
+   - Cycle: 008
+   - Commit: TBD
+   - Artifact: `autoresearch/results/cycle_008_summary.md`, `autoresearch/results/cycle_008_robustness.json`
+   - Key finding: Compression geometry signals are highly robust to probe-corpus splits. Channel rankings, Jacobian spectra, and selected hidden-unit sets are nearly identical across disjoint probe halves. This validates the single-probe approach used in all prior cycles.
