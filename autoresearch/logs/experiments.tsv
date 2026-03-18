@@ -24,3 +24,5 @@ cycle	item	type	outcome	key_metric	description	commit	paths
 016	32	empirical	inconclusive	K=3 drops 35pp; K=10 drops 2.6%; GELU needs ~10 pieces for PWL fidelity	GELU PWL approximation fidelity toy GELU MLP	0b5c9af	autoresearch/results/cycle_016_gelu_pwl_approximation.png,experiments/gelu_pwl_approximation.py
 
 017	34	empirical	inconclusive	Gini=0.408; top 20% covers 48.2% of correct points (need 70%)	Region volume Pareto toy ReLU	d0eb775	autoresearch/results/cycle_017_pareto.json,autoresearch/results/cycle_017_pareto.png,experiments/region_volume_pareto.py
+
+018	36	empirical	inconclusive	7/12 layers linearity>=0.98; block 6 identity +3.9% ppl; joint top-2 +33.6%	Procrustes linearity profile GPT-2 (proxy)	6d83702	autoresearch/results/cycle_018_linearity.json,autoresearch/results/cycle_018_linearity.png,experiments/procrustes_linearity_gpt2.py

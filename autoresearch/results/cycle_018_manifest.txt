@@ -1,0 +1,27 @@
+cycle_018_manifest.txt
+Cycle: 018
+Item: 36 — Procrustes linearity profile + identity-layer pruning — GPT-2
+Date: 2026-03-18
+Verdict: INCONCLUSIVE
+
+Criteria:
+  C1 (>=4 layers linearity>=0.98): PASS — 7/12 layers
+  C2 (top-2 identity <=10% ppl): FAIL — 33.6% increase (blocks 3+4 combined)
+  C3 (Spearman>=0.4 vs damage): PASS — rho=0.557, p=0.060
+
+Key metrics:
+  Baseline perplexity: 125.723
+  Identity top-2 (blocks 3,4) perplexity: 167.908
+  Most linear blocks: 3 (1.0007), 4 (1.0006), 5 (1.0004)
+  Least linear blocks: 11 (0.552), 1 (0.846), 2 (0.852)
+  Single-block identity cheapest: block 6 (3.9%), block 10 (8.1%), block 4 (8.5%)
+  Single-block identity costliest: block 0 (2314%), block 11 (595%)
+  Spearman(linearity, -damage): rho=0.557, p=0.060
+
+Files:
+  briefs/cycle_018.md
+  plans/cycle_018.md
+  experiments/procrustes_linearity_gpt2.py
+  autoresearch/results/cycle_018_linearity.json
+  autoresearch/results/cycle_018_linearity.png
+  autoresearch/results/cycle_018_manifest.txt
