@@ -1,0 +1,38 @@
+cycle: 025
+item: 33
+outcome: REFUTED
+commit: c6f032c
+
+Key metrics:
+  Baseline PPL (GPT-2, Shakespeare probe, seq_len=128, 32 holdout seqs): 125.72
+  K= 3 pieces: PPL=6996.94  (+5465.5% relative)
+  K= 5 pieces: PPL=3220.65  (+2461.8% relative)
+  K=10 pieces: PPL= 198.40  (  +57.8% relative)
+  K=20 pieces: PPL= 127.14  (   +1.1% relative)
+  PWL range: [-5.0, 5.0]; outside: 0 for x<-5, x for x>5
+
+Block-by-block K=3 (ppl increase per block):
+  block  0: +1238.6%   block  6: +559.4%
+  block  1:  +822.6%   block  7: +203.9%
+  block  2:  +871.5%   block  8: +209.2%
+  block  3:  +935.0%   block  9: +135.2% (least sensitive)
+  block  4: +1106.9%   block 10:  +77.7%
+  block  5:  +351.7%   block 11: +196.2%
+  All blocks cause massive damage even individually.
+
+Outcome interpretation:
+  REFUTED — 3-piece PPL increase +5466% far exceeds 20% threshold.
+  GELU curvature is functionally critical at LLM scale at every granularity.
+  Partition-based theory (SplineCam, RTG, MASO) does NOT apply to GELU networks
+  as a first-order approximation. Even single-block replacement is catastrophic.
+  20-piece PWL is the minimum for near-lossless approximation (+1.1%).
+  Implication: all GELU-based analysis (items 23, 28, 35) must use Jacobian-based
+  methods rather than activation-pattern enumeration.
+
+Artifacts:
+  experiments/gelu_pwl_gpt2.py
+  autoresearch/results/cycle_025_gelu_pwl_gpt2.json
+  autoresearch/results/cycle_025_gelu_pwl_gpt2.png
+  autoresearch/briefs/cycle_025.md
+  autoresearch/plans/cycle_025.md
+  autoresearch/agenda.md (item 33 marked REFUTED, Cycle 025 added to PAST)

@@ -38,3 +38,5 @@ cycle	item	type	outcome	key_metric	description	commit	paths
 023	29	empirical	inconclusive	Spearman(LC,r)=0.80; LC drops only 5.5% early->late (need 30%)	Local complexity compression predictor toy ReLU	847b822	autoresearch/results/cycle_023_local_complexity.json,experiments/local_complexity_toy.py
 
 024	31	empirical	inconclusive	10-block plateau CKA>=0.991; Spearman=0.32 p=0.31; CKA confounded by residual	CKA representational similarity GPT-2 (proxy)	3394b68	autoresearch/results/cycle_024_cka_matrix.json,autoresearch/results/cycle_024_summary.md,experiments/cka_gpt2_layers.py
+
+025	33	empirical	refuted	3-piece +5466% ppl; 10-piece +57.8%; only 20-piece viable (+1.1%)	GELU PWL approximation GPT-2 (proxy)	c6f032c	autoresearch/results/cycle_025_gelu_pwl_gpt2.json,experiments/gelu_pwl_gpt2.py
