@@ -81,13 +81,17 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 32. **GELU → 3-piece PWL approximation fidelity — toy GELU MLP** *(INCONCLUSIVE — cycle 016)*
 
-33. **GELU → 3-piece PWL approximation fidelity — GPT-2**
+33. **GELU → 3-piece PWL approximation fidelity — GPT-2** *(REFUTED — cycle 025)*
    - Apply the same PWL substitution from experiment 32 to GPT-2: replace all GELU activations with the 3-piece PWL function, no retraining, measure perplexity on the probe validation set. If perplexity degrades < 5% relative, then GPT-2's FFN blocks are approximately piecewise-affine and all the partition-based theory (activation patterns, RTG, SplineCam) applies as an approximation. This would justify using ReLU-derived compression signals on GELU networks. Also measure block-by-block contribution: which blocks' perplexity degrades most when only that block's GELU is replaced, to identify which blocks are most sensitive to smooth activation curvature.
    - Type: empirical
    - Confirmed if: full GELU → 3-piece PWL substitution causes < 5% relative perplexity increase on the validation set.
    - Refuted if: perplexity increases > 20%, indicating that GELU's smooth transition zone is functionally critical at the LLM scale.
    - Inconclusive if: perplexity increase is moderate (5–20%) and is concentrated in specific blocks rather than spread evenly.
    - Depends on: 32. Skip if experiment 32 is refuted (the PWL approximation is fundamentally inadequate even for toy GELU networks).
+   - **Outcome: REFUTED** — Baseline PPL=125.7. 3-piece: 6997 (+5466%), 5-piece: 3221 (+2462%), 10-piece: 198 (+57.8%), 20-piece: 127 (+1.1%). Even single-block 3-piece replacement causes catastrophic damage (block 0: +1239%; best block 9: +135%). GELU curvature is functionally critical at every granularity in GPT-2; 3-piece PWL is completely inadequate. Partition-based theory (SplineCam, RTG, MASO) does NOT apply to GELU networks even as a first-order approximation at this scale. 20-piece PWL is the minimum for near-lossless approximation.
+   - Cycle: 025
+   - Artifacts: `experiments/gelu_pwl_gpt2.py`, `autoresearch/results/cycle_025_gelu_pwl_gpt2.json`, `autoresearch/results/cycle_025_gelu_pwl_gpt2.png`
+
 
 34. **Region volume Pareto: do large regions carry most task accuracy? — toy ReLU** *(INCONCLUSIVE — cycle 017)*
    - For a trained spirals ReLU network (2D input → 100D embedding → 4 layers × 64 hidden), enumerate all observed activation patterns on the full probe set. Define region "volume" as the fraction of probe inputs that fall in each region. Sort regions by volume in descending order. Compute the cumulative accuracy recovery as a function of regions kept (the "Pareto compression curve"): start with only the largest region, classify all test points using that region's A_ω, add the next largest region and allow each test point to use its own region's A_ω if it falls there, otherwise fall back to the nearest large region. If the Pareto curve is steep (top 20% of regions by volume covers ≥ 80% of correctly classified points), compression can be achieved by keeping only large regions and routing small-region inputs to the nearest large region.
@@ -235,6 +239,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 10
 
 ## PAST EXPERIMENTS
+
+### Cycle 025
+
+33. **GELU → 3-piece PWL approximation fidelity — GPT-2** — **REFUTED**: Baseline PPL=125.7; 3-piece PPL=6997 (+5466%); 5-piece=3221 (+2462%); 10-piece=198 (+57.8%); 20-piece=127 (+1.1%). Single-block 3-piece already catastrophic (best block +135%). GELU smoothness is functionally critical at LLM scale. Partition-based theory (ReLU/MASO) does not apply to GELU networks without ~20 pieces.
+   - Artifacts: `experiments/gelu_pwl_gpt2.py`, `autoresearch/results/cycle_025_gelu_pwl_gpt2.json`, `autoresearch/results/cycle_025_gelu_pwl_gpt2.png`
 
 ### Cycle 022
 
