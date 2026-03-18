@@ -1,0 +1,4 @@
+autoresearch/results/cycle_029_local_chart.json
+autoresearch/briefs/cycle_029.md
+autoresearch/plans/cycle_029.md
+experiments/local_chart_ffn_compression.py

@@ -1,21 +1,23 @@
-# Research Status — 20 Cycles Complete (009-028)
+# Research Status — 21 Cycles Complete (009-029)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 4 (010, 019, 026, 027) |
-| Refuted | 8 (009, 011, 012, 014, 020, 021, 025, 028) |
+| Refuted | 9 (009, 011, 012, 014, 020, 021, 025, 028, 029) |
 | Inconclusive | 8 (013, 015, 016, 017, 018, 022, 023, 024) |
 
-## Answer to the Research Question
-"Given a trained transformer LM, how do we construct a smaller FFN reparameterization that preserves geometry without SGD?"
+## What Works for No-SGD FFN Compression
+1. **Data-driven channel selection** beats SVD and weight-based methods (cycle 026)
+2. **Centroid activation similarity** is the best merge signal (ρ=0.85, cycle 027)
+3. **Single-block identity removal** viable for easy blocks (+3.9% ppl, cycle 018)
+4. **Global analytic method** is the best no-SGD approach tested
 
-**Partial answer after 20 cycles:**
-- **Single-component removal works**: Block 6 identity → +3.9% ppl (cycle 018). 5 attention heads → +2.7% ppl (cycle 022).
-- **Data-driven channel selection works**: Geometric method beats SVD by consistent margin (cycle 026). Centroid activation similarity (ρ=0.85) is the right merge signal (cycle 027).
-- **Structural pruning is empty**: No dead/linear channels in GELU FFNs (cycles 006, 028).
-- **Compounding is the hard ceiling**: Removing multiple components is superadditive (cycles 007, 018, 022). No-SGD compression alone gives ~1 block + 5 heads.
-- **Partition theory doesn't transfer**: GELU needs ≥20 PWL pieces (cycle 025). k-means/spectral on maps fail (cycles 012-014).
+## What Doesn't Work
+- Single-affine collapse (GPT-2), structural pruning (GELU), k-means/spectral on maps, local-chart compression (budget too thin), GELU→PWL, intrinsic dim, curvature, grokking
+
+## Hard Ceiling
+Compounding limits no-SGD compression to ~1 block + 5 heads. Deeper compression requires SGD.
 
 ## Next
-P1: 17 (local-chart, deps met), 18 (learned compressor, dep 10 done).
+P1: 18 (learned compressor generalization). Last P1 item before the agenda is fully processed.
