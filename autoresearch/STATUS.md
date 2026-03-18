@@ -1,19 +1,16 @@
 # Research Status
 
-## Completed Cycles: 009-023 (15 cycles)
+## Completed Cycles: 009-024 (16 cycles)
 | Outcome | Count | Key Cycles |
 |---------|-------|------------|
-| Confirmed | 2 | 010 (toy single-affine), 019 (toy entropy cascade) |
+| Confirmed | 2 | 010 (toy affine), 019 (toy entropy) |
 | Refuted | 6 | 009, 011, 012, 014, 020, 021 |
-| Inconclusive | 7 | 013, 015, 016, 017, 018, 022, 023 |
+| Inconclusive | 8 | 013, 015, 016, 017, 018, 022, 023, 024 |
 
-## Strongest Signals
-1. **Procrustes linearity** (cycle 018): 7/12 GPT-2 layers near-identity. Block 6 removable at +3.9% ppl.
-2. **Attention head low-rank** (cycle 022): 89.6% heads low-rank. K=5 prunable at +2.7% ppl.
-3. **Entropy cascade** (cycle 019): Deep toy layers add zero new partition information.
-4. **Compounding is the hard problem**: Individual removal is cheap, but collective removal is superadditive.
+## Central Finding
+**Geometric redundancy is real but not exploitable by no-SGD compression alone.** Individual components (FFN blocks, attention heads) are demonstrably redundant by multiple metrics (Procrustes linearity, CKA, attention rank), but removing multiple simultaneously causes superadditive degradation. The compounding effect is the hard barrier.
 
 ## Next
-Eligible P0: 31 (CKA GPT-2), 33 (GELU PWL GPT-2).
-Eligible P1: 14, 15, 16, 17, 18 (core compression experiments).
-Topology items blocked (ripser unavailable): 27, 28, 42, 43, 45.
+Eligible P0: 33 (GELU PWL GPT-2, dep 32 not refuted).
+P1: 14 (rank baseline), 15 (centroid affinity), 16 (exact prune), 17 (local-chart), 18 (learned compressor).
+Topology items blocked (no ripser): 27, 28, 42, 43, 45.
