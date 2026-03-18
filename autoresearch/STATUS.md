@@ -3,26 +3,28 @@
 ## Completed (last 5)
 | Cycle | Item | Type | Outcome | Key Finding |
 |-------|------|------|---------|-------------|
-| 013 | RTG spectral coarsening — toy | impl+empirical | inconclusive | Spectral beats random (+9pp) but RTG too fragmented; acc plateaus at 60% |
-| 012 | Jacobian k-means — toy | empirical | refuted | K*/N=1.0; k-means on affine maps finds no redundancy |
-| 011 | Single-affine collapse — GPT-2 | empirical | refuted (proxy) | 0/12 blocks r<0.15; best swap +33.7% ppl |
-| 010 | Single-affine collapse — toy | empirical | confirmed | 3/4 layers r<0.15; deep layers near-linear |
-| 009 | Jacobian variance atlas | empirical | refuted (proxy) | 0/12 GPT-2 blocks near-linear |
+| 014 | RTG spectral — GPT-2 FFN | empirical | refuted (proxy) | Spectral = k-means; max improvement 1.3% (need 15%) |
+| 013 | RTG spectral — toy ReLU | impl+empirical | inconclusive | Signal exists (+9pp vs random) but RTG too fragmented |
+| 012 | Jacobian k-means — toy | empirical | refuted | K*/N=1.0; no redundancy in affine map space |
+| 011 | Single-affine collapse — GPT-2 | empirical | refuted (proxy) | No block collapsible; best swap +33.7% ppl |
+| 010 | Single-affine collapse — toy | empirical | confirmed | 3/4 layers near-linear (r<0.06) |
 
-## Insights
-- **Single-affine: works on toy ReLU (deep layers), fails on GPT-2 (every block).**
-- **k-means on raw affine maps: no functional redundancy found (cycle 012).** The problem may be the metric, not the redundancy.
-- **RTG spectral: real signal but fragmented Hamming-1 graph prevents compression (cycle 013).** k-NN Jacobian graphs (item 25) avoid this.
-- Items 23, 35, 41 blocked (depend on item 22). Item 25 still eligible (24 not refuted).
+## Key Narrative
+Three approaches to region-merging have now failed:
+1. **k-means on MASO affine maps** (cycle 012): no functional redundancy found
+2. **RTG Hamming-1 spectral** (cycle 013): signal real but graph too sparse
+3. **k-NN Jacobian spectral** (cycle 014): no advantage over k-means on GPT-2
+
+The problem is NOT the clustering algorithm — both Euclidean and graph methods fail. The problem may be that raw Jacobian/affine map similarity is the wrong measure of functional redundancy for compression.
 
 ## Next
-Eligible P0 items: 25 (spectral GPT-2 — deps met), 26 (intrinsic dim GPT-2), 32 (GELU PWL toy), 34 (region volume Pareto toy), 36 (Procrustes GPT-2), 37 (entropy cascade toy), 38 (manifold curvature GPT-2), 39 (grokking toy), 40 (attention head census GPT-2).
+Eligible P0: 26 (intrinsic dim GPT-2), 32 (GELU PWL toy), 34 (region volume Pareto toy), 36 (Procrustes GPT-2), 37 (entropy cascade toy), 38 (manifold curvature GPT-2), 39 (grokking toy), 40 (attention head census GPT-2).
 
 ## Dead Ends
-- Tropical geometry, stable-channel pruning, single-affine collapse (GPT-2), k-means on raw MASO maps
+- Tropical geometry, stable-channel pruning, single-affine (GPT-2), k-means on MASO maps, RTG spectral (both toy and GPT-2)
 
 ## Open Questions
-- Does k-NN Jacobian graph spectral clustering work on GPT-2? (item 25) ← follows from cycle 013
-- Do large activation regions carry most task accuracy? (item 34)
-- Is there a Pareto structure in the activation region space? (item 34)
-- Can GELU be approximated as PWL? (item 32) — enables ReLU theory on transformers
+- Is there a Pareto structure in region volumes? (item 34)
+- Are some GPT-2 layers near-identity? (item 36 — Procrustes)
+- Can GELU be approximated as PWL? (item 32) — enables all ReLU theory
+- Does intrinsic dimension predict compressibility? (item 26)

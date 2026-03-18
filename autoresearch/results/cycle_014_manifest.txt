@@ -1,0 +1,12 @@
+cycle: 014
+item: 25
+title: RTG spectral coarsening — GPT-2 FFN analog
+verdict: REFUTED
+commit: d8838b7
+
+artifacts:
+  experiments/rtg_spectral_gpt2.py
+  autoresearch/results/cycle_014_rtg_spectral_gpt2.json
+  autoresearch/results/cycle_014_rtg_spectral_gpt2.png
+  autoresearch/results/cycle_014_summary.md
+  autoresearch/results/cycle_014_manifest.txt (this file, not committed)
