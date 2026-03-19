@@ -1,0 +1,5 @@
+item_number=56
+outcome=refuted
+key_metric=k=4@6x: 27.8% FFN reduction at +9.77% PPL; all k=5 >15% (best +16.99%)
+commit=53ba582
+paths=autoresearch/results/cycle_037_param_budget.json,autoresearch/results/cycle_037_param_budget.png,experiments/ffn_param_budget_hetero_k5.py
