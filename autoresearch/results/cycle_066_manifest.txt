@@ -1,0 +1,28 @@
+cycle: 066
+item: 45
+verdict: REFUTED
+commit: cc7cf59
+
+scripts:
+  experiments/weight_space_topo_diffusion.py
+
+results:
+  autoresearch/results/cycle_066_topo_diffusion.json
+  autoresearch/results/cycle_066_topo_diffusion.png
+
+agenda:
+  autoresearch/agenda.md  (item 45 moved to PAST under Cycle 066)
+
+key metrics (3 seeds, spirals 2->32x4->1):
+  seed=42:  norm_red=0.076  acc_topo=0.835  acc_mag=0.999  acc_l1=0.983
+  seed=123: norm_red=0.054  acc_topo=0.830  acc_mag=0.998  acc_l1=0.991
+  seed=7:   norm_red=0.038  acc_topo=0.908  acc_mag=0.997  acc_l1=0.970
+  w1_drift: <0.20 (controlled) for all seeds
+  criterion: >=30% norm_red + >=5pp over both baselines — NOT MET (0/3 seeds)
+
+refutation reason:
+  Penalized Langevin without task loss (L(theta)=||theta||_1 + lam*W1) applies
+  sign(theta) subgradient that destroys accuracy from step 1 (~45-50%).
+  Topology pressure (W1 term) provides partial recovery (up to 91%) but prevents
+  any meaningful norm reduction. The topological level set is not navigable via
+  pure L1 descent without a task-loss anchor.
