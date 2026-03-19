@@ -1,0 +1,5 @@
+item_number=53
+outcome=inconclusive
+key_metric=k=4 PPL=131.85 (+9.59%) at 6x avg; only +0.75pp worse than 4x (cycle 033 +8.84%)
+commit=e6e0d93
+paths=autoresearch/results/cycle_036_accumulation_6x.json,autoresearch/results/cycle_036_accumulation_6x.png,experiments/multiblock_accumulation_6x.py
