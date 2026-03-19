@@ -1,0 +1,14 @@
+cycle: 055
+item: 71
+title: Jacobian Frobenius std as corpus-sensitivity predictor — GPT-2 FFN
+outcome: confirmed
+spearman_rho_full: 0.9441
+spearman_p_full: <0.0001
+spearman_rho_inner: 0.9394
+spearman_p_inner: 0.0001
+
+files:
+  experiments/gpt2_p1_corpus_sensitivity.py
+  autoresearch/results/cycle_055_p1_corpus_sensitivity.json
+  autoresearch/results/cycle_055_p1_corpus_sensitivity.png
+  autoresearch/agenda.md (item 71 moved to PAST)
