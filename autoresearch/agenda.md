@@ -105,13 +105,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 064
 
-42. **Topology-preserving distillation — toy ReLU [MOONSHOT]** *(REFUTED — cycle 064)*
-   - Teacher 2→32×4→1, student 2→32→1 (depth is the variable). 4 distillation methods: output-only, distance-matrix matching, CKA, activation-MSE. 3 seeds × 2 datasets (spirals 3-turn, moons). Distance-matrix loss: Frobenius norm of pairwise distance matrix difference (translation/rotation invariant, no PCA needed).
-   - Results (spirals): output-only 0.51-0.59, distance-matrix best 0.49-0.52 (Δ≈−0.05 on avg). Distance-matrix HURT accuracy across all seeds and all λ values. CKA ≈ output-only (+0.00 to +0.01). Activation-MSE ≈ output-only (+0.01 to +0.03).
-   - Results (moons): output-only 0.86-0.92, distance-matrix best 0.48-0.53 (Δ≈−0.39 on avg). All λ values collapsed to 0.47-0.53 — distance-matrix completely disrupts student training on moons too. CKA/activation-MSE matched output-only.
-   - PH Wasserstein (post-hoc): W0 decreases slightly from 0 to 500 epochs (e.g., 31.4→27.2) but does not approach 0, and this is for output-only (not dmat). PH W0 decreasing fraction for dmat: 0.00 (W0 does not decrease during dmat training — student representations diverge).
-   - Root cause: distance-matrix loss in 32D activation space provides a poorly-scaled gradient signal that overrides the output loss. The loss encourages the student to preserve global pairwise distances in 32D, which conflicts with the 1-layer student's limited capacity to reproduce both the correct output and the teacher's high-dimensional activation geometry.
-   - Criterion: Δacc ≥ 5pp required. Measured Δacc = −5pp (spirals) and −39pp (moons) for dmat. REFUTED.
+42. **Topology-preserving distillation — toy ReLU [MOONSHOT]** *(INCONCLUSIVE — cycle 064, audit-corrected)* ⚠ **FLAWED: sqrt gradient singularity**
+   - Teacher 2→32×4→1, student 2→32→1 (depth is the variable). 4 distillation methods: output-only, distance-matrix matching, CKA, activation-MSE. 3 seeds × 2 datasets (spirals, moons).
+   - ⚠ **Audit correction**: `d2.sqrt()` in distance_matrix_loss has divergent gradient at zero. Post-ReLU activations guarantee zero pairwise distances. All 24 dmat runs went NaN by epoch 100. The negative deltas are random-init noise, not topology signal. Output-only baseline also uses suboptimal raw-logit MSE instead of KL+temperature.
+   - Outcome: INCONCLUSIVE (audit-corrected from REFUTED) — method failed to run due to sqrt singularity, not genuine topology signal failure.
+   - Cycle: 064
+   - Commit: 3dca04c
    - Artifacts: `experiments/topo_preserving_distillation.py`, `autoresearch/results/cycle_064_topo_distillation.json`
 
 ### Cycle 056

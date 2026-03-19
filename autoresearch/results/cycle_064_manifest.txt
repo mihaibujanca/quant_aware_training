@@ -1,0 +1,42 @@
+cycle_064 — Topology-preserving distillation — toy ReLU (Item 42)
+Verdict: REFUTED
+
+Files produced:
+  experiments/topo_preserving_distillation.py
+  autoresearch/results/cycle_064_topo_distillation.json
+
+Files modified:
+  autoresearch/agenda.md  (item 42 moved to PAST)
+
+Key metrics:
+  Spirals (3-turn, n=2000, scale=2.0), 3 seeds:
+    Teacher acc: 1.00 / 1.00 / 1.00
+    Student standalone: 0.60 / 0.59 / 0.78
+    Output-only distillation: 0.59 / 0.49 / 0.56
+    Distance-matrix (dmat) best: 0.49 / 0.49 / 0.52  (Δ = -0.10 / -0.005 / -0.04)
+    CKA best: 0.57 / 0.50 / 0.56                     (Δ = -0.015 / +0.013 / +0.003)
+    Activation-MSE best: 0.52 / 0.52 / 0.54          (Δ = -0.065 / +0.033 / -0.023)
+    Mean dmat Δ: -0.048 (spirals)
+
+  Moons (noise=0.1, n=2000), 3 seeds:
+    Teacher acc: 1.00 / 1.00 / 1.00
+    Student standalone: 0.99 / 0.92 / 1.00
+    Output-only distillation: 0.86 / 0.88 / 0.92
+    Distance-matrix (dmat) best: 0.50 / 0.53 / 0.48  (Δ = -0.36 / -0.35 / -0.45)
+    CKA best: 0.86 / 0.88 / 0.93                     (Δ = 0.00 / +0.01 / +0.003)
+    Activation-MSE best: 0.87 / 0.88 / 0.93          (Δ = +0.005 / +0.003 / +0.003)
+    Mean dmat Δ: -0.386 (moons)
+
+  PH Wasserstein (post-hoc, dmat lam=1.0):
+    W0 at epoch 0: ~31 (spirals), ~32 (moons)
+    W0 at epoch 2000: ~27 (spirals), ~23 (moons)  — does not decrease for dmat
+    PH W0 decreasing fraction for dmat: 0.00
+
+Verdict explanation:
+  Distance-matrix matching (dmat) HURTS student accuracy by -5pp to -39pp across all
+  configurations. The loss provides a gradient signal that dominates and conflicts with
+  output matching, collapsing student predictions to a constant (~0.5 accuracy on spirals,
+  ~0.5 on moons). PH W0 does not decrease during dmat training.
+  CKA and activation-MSE are neutral (±1-3pp vs output-only) — no topology benefit.
+  Criterion required: dmat ≥ output-only + 5pp AND PH distance decreasing.
+  Measured: dmat = output-only - 5pp (spirals), -39pp (moons). Criterion: REFUTED.
