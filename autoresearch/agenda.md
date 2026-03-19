@@ -106,18 +106,18 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: norm reduction is achieved but pruned accuracy is not better than standard magnitude pruning, suggesting topology preservation is too coarse a constraint.
    - Depends on: none
 
-### P1
-
-71. **Jacobian Frobenius std as corpus-sensitivity predictor — GPT-2 FFN**
-   - Cycle 048 confirmed P1 (Jacobian Frobenius std) as a strong compression-difficulty oracle (rho=0.84 at 8×). This experiment tests whether the SAME signal predicts corpus sensitivity: compute P1 on Shakespeare probes and on WikiText-2 probes separately for all 12 blocks. If P1 is corpus-invariant (Spearman between Shakespeare-P1 and WikiText-P1 rankings ≥ 0.85), then compression difficulty is an intrinsic block property and the oracle generalizes. If P1 diverges across corpora, blocks that are "easy" on Shakespeare may be "hard" on WikiText-2 — and the oracle must be re-run on each target distribution.
-   - Type: empirical
-   - Confirmed if: Spearman(P1_shakespeare, P1_wikitext) ≥ 0.85 across 12 blocks (difficulty ranking is corpus-invariant).
-   - Refuted if: Spearman < 0.5 (difficulty ranking is corpus-dependent, oracle must be re-run per distribution).
-   - Inconclusive if: Spearman is 0.5-0.85 (partial stability — ranking mostly holds but with important exceptions).
-   - Depends on: none
-
-
 ## PAST EXPERIMENTS
+
+### Cycle 055
+
+71. **Jacobian Frobenius std as corpus-sensitivity predictor — GPT-2 FFN** *(CONFIRMED — cycle 055)*
+   - Cycle 048 confirmed P1 (Jacobian Frobenius std) as a strong compression-difficulty oracle (rho=0.84 at 8×). This experiment tests whether the SAME signal predicts corpus sensitivity: compute P1 on Shakespeare probes and on WikiText-2 probes separately for all 12 blocks. If P1 is corpus-invariant (Spearman between Shakespeare-P1 and WikiText-P1 rankings ≥ 0.85), then compression difficulty is an intrinsic block property and the oracle generalizes. If P1 diverges across corpora, blocks that are "easy" on Shakespeare may be "hard" on WikiText-2 — and the oracle must be re-run on each target distribution.
+   - WikiText-2 P1: [10.571, 3.874, 3.592, 4.630, 5.266, 6.211, 6.429, 8.356, 11.400, 10.727, 11.571, 15.628]
+   - Shakespeare P1 (cycle 048): [12.566, 5.894, 5.010, 5.687, 5.788, 6.456, 6.189, 7.339, 11.009, 12.210, 13.682, 19.539]
+   - Spearman rho (all 12 blocks): 0.9441 (p<0.0001). Spearman rho (blocks 1-10, extreme removed): 0.9394 (p=0.0001).
+   - Verdict: CONFIRMED. P1 block ranking is corpus-invariant at rho=0.944, well above the 0.85 threshold. The Jacobian Frobenius std oracle is an intrinsic geometric property of each GPT-2 FFN block and does not require re-running on each target distribution.
+   - Cycle: 055
+   - Artifacts: `experiments/gpt2_p1_corpus_sensitivity.py`, `autoresearch/results/cycle_055_p1_corpus_sensitivity.json`, `autoresearch/results/cycle_055_p1_corpus_sensitivity.png`
 
 ### Cycle 054
 
