@@ -1,0 +1,12 @@
+{
+  "cycle": 53,
+  "item": 69,
+  "verdict": "APPROVE",
+  "round": 1,
+  "blocking_issues": [],
+  "minor_issues": [
+    "Compute teacher baseline PPL (step 5) before compressions (step 3) as an early sanity check",
+    "If any per-block sensitivity delta is negative, the sum-based concentration metric becomes misleading — add a guard or note"
+  ],
+  "pitfall_flags": []
+}

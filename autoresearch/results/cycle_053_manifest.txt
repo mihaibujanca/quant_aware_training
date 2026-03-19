@@ -1,0 +1,38 @@
+cycle: 053
+item: 69
+title: Per-block corpus sensitivity isolation — GPT-2 FFN
+outcome: INCONCLUSIVE
+commit: c31486f
+
+## Key metrics
+
+Teacher baselines:
+  Shakespeare PPL: 123.35
+  WikiText-2 PPL: 71.84
+
+Shakespeare probes, single-block 6× compression:
+  Block 7: shk_rel=−0.13%, wt2_rel=+10.67%, sensitivity_delta=+10.81pp (25.4% of total)
+  Block 5: shk_rel=−0.24%, wt2_rel=+10.97%, sensitivity_delta=+11.20pp (26.3% of total)
+  Block 4: shk_rel=−0.74%, wt2_rel=+13.78%, sensitivity_delta=+14.52pp (34.1% of total)
+  Block 1: shk_rel=−0.17%, wt2_rel=+5.90%,  sensitivity_delta=+6.07pp  (14.2% of total)
+
+WikiText-2 probes, single-block 6× compression:
+  Block 7: shk_rel=+7.63%, wt2_rel=+6.50%, sensitivity_delta=−1.13pp  (16.0% of total)
+  Block 5: shk_rel=+5.01%, wt2_rel=+5.54%, sensitivity_delta=+0.54pp   (7.6% of total)
+  Block 4: shk_rel=+1.98%, wt2_rel=+5.21%, sensitivity_delta=+3.23pp  (45.7% of total)
+  Block 1: shk_rel=+4.37%, wt2_rel=+2.20%, sensitivity_delta=−2.17pp  (30.7% of total)
+
+## Verdict reasoning
+
+INCONCLUSIVE on both probe conditions:
+- Shakespeare probes: max block (4) = 34.1%, below 50% threshold. Distribution is gradual (6→11→11→14pp).
+- WikiText-2 probes: max block (4) = 45.7%, just below 50% threshold. Smaller overall deltas (sign flips).
+- Not REFUTED: blocks are NOT within ±25% of mean under Shakespeare probes (range 6→14pp, 2.4× spread).
+- Block 4 is the leading candidate in both conditions but does not dominate.
+
+## Artifacts
+
+experiments/per_block_corpus_sensitivity.py
+autoresearch/results/cycle_053_per_block_sensitivity.json
+autoresearch/results/cycle_053_per_block_sensitivity.png
+autoresearch/agenda.md (item 69 moved to PAST)
