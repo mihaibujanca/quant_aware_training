@@ -1,0 +1,1 @@
+{"verdict": "APPROVE", "round": 1, "issues": ["minor: prefer creating a new TeacherBundle for cascaded variant rather than mutating the shared teacher — avoids leaking compressed state into independent baseline if both variants share a process"]}

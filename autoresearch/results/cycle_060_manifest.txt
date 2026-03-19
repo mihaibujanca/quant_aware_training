@@ -1,0 +1,38 @@
+cycle: 060
+item: 76
+title: Iterative cascaded compression: re-probe through compressed blocks — GPT-2 FFN
+verdict: REFUTED
+commit: 6393cf3
+
+baseline_ppl: 57.653
+ppl_independent_mean: 75.062 (±8.917)
+pct_degrad_independent: +30.20% (±15.47%)  [matches cycle 058 +30.2% — replication confirmed]
+ppl_cascaded_mean: 74.011 (±8.692)
+pct_degrad_cascaded: +28.37% (±15.08%)
+improvement: 1.83pp over independent (negligible)
+
+per_seed:
+  seed=42:  independent=+47.3% (+84.94 PPL), cascaded=+45.0% (+83.59 PPL)
+  seed=123: independent=+17.3% (+67.61 PPL), cascaded=+15.6% (+66.62 PPL)
+  seed=7:   independent=+26.0% (+72.63 PPL), cascaded=+24.6% (+71.82 PPL)
+
+per_block_mse (mean over seeds):
+  block 1: independent=0.0875, cascaded=0.0875 (identical — no prior distortion, as expected)
+  block 4: independent=0.1785, cascaded=0.1699
+  block 5: independent=0.2464, cascaded=0.2048
+  block 7: independent=0.4499, cascaded=0.3609
+
+criterion:
+  confirmed: cascaded <= +10%
+  refuted:   cascaded >= +25% [TRIGGERED at +28.37%]
+  inconclusive: +10% to +25%
+
+key finding: Re-probing reduces per-block FFN output MSE by ~10-20%, but does not
+  reduce end-to-end PPL. The residual stream distortion from compressed blocks
+  propagates through attention and layer norm — not just through the FFN lstsq inputs.
+  Cascaded re-probing is the wrong locus of intervention.
+
+files:
+  experiments/cascaded_compression_gpt2.py
+  autoresearch/results/cycle_060_cascaded.json
+  autoresearch/results/cycle_060_cascaded.png
