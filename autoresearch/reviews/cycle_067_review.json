@@ -1,0 +1,1 @@
+{"verdict": "APPROVE", "round": 1, "issues": ["Minor: P5 null baseline computed as pairwise (~0.17) but plan uses 3-way Jaccard (null ~0.001). Not a validity issue — threshold is safe either way.", "Suggestion: report both pairwise-mean and 3-way Jaccard to avoid marginal cases where 3-way dips below 0.85 due to one outlier seed while pairwise scores are solid."]}

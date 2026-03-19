@@ -1,0 +1,1 @@
+{"cycle": 67, "item": 50, "outcome": "REFUTED", "reason": "2048-token 3-way Jaccard of only 0.844 reveals fundamental inter-seed instability in centroid-merge channel scoring beyond small-sample noise, questioning the scoring formula itself."}

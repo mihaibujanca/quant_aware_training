@@ -1,14 +1,20 @@
-# Research Status — 66 Cycles (001–066) — AGENDA COMPLETE
+# Research Status — 67 Cycles (001–067)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 13 |
-| Refuted | 19 |
+| Refuted | 20 |
 | Inconclusive | 25 |
 | Crash | 1 |
 
-## Final Answer
+## Latest Cycle
+- **Cycle 067** (item 50): Centroid-merge quality vs probe corpus size — REFUTED
+  - Jaccard@256=0.517 (< 0.60 threshold), monotonic growth from 0.276@64 to 0.844@2048
+  - Channel scoring is data-hungry: needs >2048 tokens for Jaccard ≥ 0.85
+  - Lstsq singularity hazard when probe_tokens ≈ hidden_dim
+
+## Final Answer (from cycle 061, still valid)
 
 **Research question**: "Given a trained transformer LM and a corpus drawn from the data distribution it was trained on, how do we construct a much smaller FFN reparameterization that preserves geometry without SGD?"
 
@@ -26,7 +32,7 @@
 - **Boundary corrections partially help**: +5pp gain, but far less than gradient polish (cycle 063)
 - **Gradient polish is the answer**: 500 steps = 84% relative reduction of stacking error (cycle 061)
 - **Compression-difficulty oracle**: P1 Frobenius std rho=0.84, corpus-invariant rho=0.94 (cycles 048, 055)
-- **Channel selection is corpus-invariant**: Jaccard=0.5 but zero PPL impact (cycle 057)
+- **Channel selection is data-hungry**: Jaccard@256=0.517, needs >2K tokens (cycle 067)
 
 ### Dead Ends
 - Topology-based methods (PH, Betti, topological distillation): 4 experiments, 0 useful results
@@ -35,4 +41,7 @@
 - Variable per-block ratios: breaks correction step (cycle 050)
 
 ## Remaining NEXT Items
-None. All agenda items exhausted.
+- **P0**: Item 64 (corpus-diverse probing) — was blocked on item 50, now unblocked (50 refuted but 64's dependency is satisfied)
+- **P1**: Item 66 (mixed-corpus refit) — blocked on item 64
+- **P1**: Items 23, 28, 35 — permanently blocked (refuted dependencies)
+- **P2**: Items 41, 44 — permanently blocked (refuted dependencies)
