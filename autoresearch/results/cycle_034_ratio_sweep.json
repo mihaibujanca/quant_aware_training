@@ -1,0 +1,336 @@
+{
+  "config": {
+    "target_blocks": [
+      7,
+      5,
+      4,
+      1,
+      3,
+      6
+    ],
+    "ratios": [
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "probe_train_seq": 200,
+    "probe_holdout_seq": 50,
+    "seed": 42
+  },
+  "baseline_ppl": 120.32104618017831,
+  "threshold_ppl": 126.33709848918724,
+  "sweep": [
+    {
+      "block": 7,
+      "ratio": 2,
+      "hidden_fraction": 0.5,
+      "actual_ratio": 1.9996747967479676,
+      "ppl": 125.709428613688,
+      "rel_pct": 4.478337418576546,
+      "recon_mse": 0.02795969508588314,
+      "safe": true
+    },
+    {
+      "block": 7,
+      "ratio": 3,
+      "hidden_fraction": 0.3333333333333333,
+      "actual_ratio": 2.999024548853845,
+      "ppl": 121.14000297570021,
+      "rel_pct": 0.6806430142699457,
+      "recon_mse": 0.11420296877622604,
+      "safe": true
+    },
+    {
+      "block": 7,
+      "ratio": 4,
+      "hidden_fraction": 0.25,
+      "actual_ratio": 3.998049414824447,
+      "ppl": 120.99044026575663,
+      "rel_pct": 0.5563399811001595,
+      "recon_mse": 0.1850261688232422,
+      "safe": true
+    },
+    {
+      "block": 7,
+      "ratio": 5,
+      "hidden_fraction": 0.2,
+      "actual_ratio": 5.000002117553886,
+      "ppl": 120.47858223051952,
+      "rel_pct": 0.13092975447146635,
+      "recon_mse": 0.23978377878665924,
+      "safe": true
+    },
+    {
+      "block": 7,
+      "ratio": 6,
+      "hidden_fraction": 0.16666666666666666,
+      "actual_ratio": 5.995125121871953,
+      "ppl": 120.12500459936489,
+      "rel_pct": -0.1629320780006021,
+      "recon_mse": 0.2818854749202728,
+      "safe": true
+    },
+    {
+      "block": 5,
+      "ratio": 2,
+      "hidden_fraction": 0.5,
+      "actual_ratio": 1.9996747967479676,
+      "ppl": 126.82618606630508,
+      "rel_pct": 5.406485475853871,
+      "recon_mse": 0.018784085288643837,
+      "safe": false
+    },
+    {
+      "block": 5,
+      "ratio": 3,
+      "hidden_fraction": 0.3333333333333333,
+      "actual_ratio": 2.999024548853845,
+      "ppl": 122.36099497495437,
+      "rel_pct": 1.6954214242130758,
+      "recon_mse": 0.0723300352692604,
+      "safe": true
+    },
+    {
+      "block": 5,
+      "ratio": 4,
+      "hidden_fraction": 0.25,
+      "actual_ratio": 3.998049414824447,
+      "ppl": 120.40298513161103,
+      "rel_pct": 0.06810026511074094,
+      "recon_mse": 0.11421731114387512,
+      "safe": true
+    },
+    {
+      "block": 5,
+      "ratio": 5,
+      "hidden_fraction": 0.2,
+      "actual_ratio": 5.000002117553886,
+      "ppl": 120.26167003589744,
+      "rel_pct": -0.04934809508883509,
+      "recon_mse": 0.1457592248916626,
+      "safe": true
+    },
+    {
+      "block": 5,
+      "ratio": 6,
+      "hidden_fraction": 0.16666666666666666,
+      "actual_ratio": 5.995125121871953,
+      "ppl": 119.98231770005387,
+      "rel_pct": -0.28152055760652694,
+      "recon_mse": 0.17024682462215424,
+      "safe": true
+    },
+    {
+      "block": 4,
+      "ratio": 2,
+      "hidden_fraction": 0.5,
+      "actual_ratio": 1.9996747967479676,
+      "ppl": 124.68173256431747,
+      "rel_pct": 3.624209165875368,
+      "recon_mse": 0.012986323796212673,
+      "safe": true
+    },
+    {
+      "block": 4,
+      "ratio": 3,
+      "hidden_fraction": 0.3333333333333333,
+      "actual_ratio": 2.999024548853845,
+      "ppl": 119.97042505323512,
+      "rel_pct": -0.2914046528635961,
+      "recon_mse": 0.05001477897167206,
+      "safe": true
+    },
+    {
+      "block": 4,
+      "ratio": 4,
+      "hidden_fraction": 0.25,
+      "actual_ratio": 3.998049414824447,
+      "ppl": 119.33758544825247,
+      "rel_pct": -0.817363847097151,
+      "recon_mse": 0.08040536195039749,
+      "safe": true
+    },
+    {
+      "block": 4,
+      "ratio": 5,
+      "hidden_fraction": 0.2,
+      "actual_ratio": 5.000002117553886,
+      "ppl": 118.75927001032223,
+      "rel_pct": -1.2980074720405608,
+      "recon_mse": 0.10462677478790283,
+      "safe": true
+    },
+    {
+      "block": 4,
+      "ratio": 6,
+      "hidden_fraction": 0.16666666666666666,
+      "actual_ratio": 5.995125121871953,
+      "ppl": 119.3067107333636,
+      "rel_pct": -0.8430241250527074,
+      "recon_mse": 0.12253638356924057,
+      "safe": true
+    },
+    {
+      "block": 1,
+      "ratio": 2,
+      "hidden_fraction": 0.5,
+      "actual_ratio": 1.9996747967479676,
+      "ppl": 123.53907499509748,
+      "rel_pct": 2.6745352680031,
+      "recon_mse": 0.003087481716647744,
+      "safe": true
+    },
+    {
+      "block": 1,
+      "ratio": 3,
+      "hidden_fraction": 0.3333333333333333,
+      "actual_ratio": 2.999024548853845,
+      "ppl": 121.5011519981197,
+      "rel_pct": 0.9807975041824328,
+      "recon_mse": 0.015612944960594177,
+      "safe": true
+    },
+    {
+      "block": 1,
+      "ratio": 4,
+      "hidden_fraction": 0.25,
+      "actual_ratio": 3.998049414824447,
+      "ppl": 120.10742090621854,
+      "rel_pct": -0.17754605760315484,
+      "recon_mse": 0.029943982139229774,
+      "safe": true
+    },
+    {
+      "block": 1,
+      "ratio": 5,
+      "hidden_fraction": 0.2,
+      "actual_ratio": 5.000002117553886,
+      "ppl": 120.26578978799743,
+      "rel_pct": -0.045924128766412504,
+      "recon_mse": 0.042841289192438126,
+      "safe": true
+    },
+    {
+      "block": 1,
+      "ratio": 6,
+      "hidden_fraction": 0.16666666666666666,
+      "actual_ratio": 5.995125121871953,
+      "ppl": 120.60420518230596,
+      "rel_pct": 0.23533622015189434,
+      "recon_mse": 0.05328158661723137,
+      "safe": true
+    },
+    {
+      "block": 3,
+      "ratio": 2,
+      "hidden_fraction": 0.5,
+      "actual_ratio": 1.9996747967479676,
+      "ppl": 123.76108886887799,
+      "rel_pct": 2.859053173081859,
+      "recon_mse": 0.009386850520968437,
+      "safe": true
+    },
+    {
+      "block": 3,
+      "ratio": 3,
+      "hidden_fraction": 0.3333333333333333,
+      "actual_ratio": 2.999024548853845,
+      "ppl": 121.46241966942254,
+      "rel_pct": 0.948606686427117,
+      "recon_mse": 0.04292796924710274,
+      "safe": true
+    },
+    {
+      "block": 3,
+      "ratio": 4,
+      "hidden_fraction": 0.25,
+      "actual_ratio": 3.998049414824447,
+      "ppl": 120.49920346985564,
+      "rel_pct": 0.1480682684644737,
+      "recon_mse": 0.07256747782230377,
+      "safe": true
+    },
+    {
+      "block": 3,
+      "ratio": 5,
+      "hidden_fraction": 0.2,
+      "actual_ratio": 5.000002117553886,
+      "ppl": 119.52582848440234,
+      "rel_pct": -0.6609132159515572,
+      "recon_mse": 0.09590897709131241,
+      "safe": true
+    },
+    {
+      "block": 3,
+      "ratio": 6,
+      "hidden_fraction": 0.16666666666666666,
+      "actual_ratio": 5.995125121871953,
+      "ppl": 119.30153159175201,
+      "rel_pct": -0.8473285603747176,
+      "recon_mse": 0.11354678869247437,
+      "safe": true
+    },
+    {
+      "block": 6,
+      "ratio": 2,
+      "hidden_fraction": 0.5,
+      "actual_ratio": 1.9996747967479676,
+      "ppl": 125.03696208326635,
+      "rel_pct": 3.919443898473127,
+      "recon_mse": 0.022626714780926704,
+      "safe": true
+    },
+    {
+      "block": 6,
+      "ratio": 3,
+      "hidden_fraction": 0.3333333333333333,
+      "actual_ratio": 2.999024548853845,
+      "ppl": 120.94562823240254,
+      "rel_pct": 0.5190962612550161,
+      "recon_mse": 0.0850382149219513,
+      "safe": true
+    },
+    {
+      "block": 6,
+      "ratio": 4,
+      "hidden_fraction": 0.25,
+      "actual_ratio": 3.998049414824447,
+      "ppl": 119.98100183063927,
+      "rel_pct": -0.28261418956566625,
+      "recon_mse": 0.1347421109676361,
+      "safe": true
+    },
+    {
+      "block": 6,
+      "ratio": 5,
+      "hidden_fraction": 0.2,
+      "actual_ratio": 5.000002117553886,
+      "ppl": 119.5583265240327,
+      "rel_pct": -0.633903776903222,
+      "recon_mse": 0.17231301963329315,
+      "safe": true
+    },
+    {
+      "block": 6,
+      "ratio": 6,
+      "hidden_fraction": 0.16666666666666666,
+      "actual_ratio": 5.995125121871953,
+      "ppl": 119.19828469801666,
+      "rel_pct": -0.9331380650400407,
+      "recon_mse": 0.20308727025985718,
+      "safe": true
+    }
+  ],
+  "per_block_max_ratio": {
+    "7": 6,
+    "5": 6,
+    "4": 6,
+    "1": 6,
+    "3": 6,
+    "6": 6
+  },
+  "blocks_at_5x": 6,
+  "verdict": "confirmed"
+}

@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-49. **Block-specific compression ratio sweep — GPT-2 FFN**
-   - Cycle 005 established that single-block swap works at ≤4× compression for most blocks but used a fixed ratio. The block-specific damage profiles differ (some blocks tolerate higher compression than others). Sweep compression ratios 2×, 3×, 4×, 5×, 6× independently for each of the 6 easiest blocks (identified in cycle 005), and for each block find the maximum ratio that keeps single-block PPL ≤ baseline × 1.05. This produces a per-block compression budget map, enabling a principled allocation for multi-block stacking.
-   - Type: empirical
-   - Confirmed if: at least 4 blocks tolerate ≥5× compression within the 5% PPL threshold, suggesting headroom for tighter multi-block stacking.
-   - Refuted if: no block tolerates >4× compression within threshold, indicating the current merge algorithm saturates before structural gains.
-   - Inconclusive if: results are bimodal (some blocks tolerate 6×, others collapse at 3×) without a clear predictor.
-   - Depends on: 5, 26, 27
-
 ### P1
 
 50. **Centroid-merge quality as a function of probe corpus size — GPT-2 FFN**
@@ -485,3 +477,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 033
    - Commit: NONE (recovered from incomplete prior session)
    - Artifacts: `autoresearch/results/cycle_033_accumulation.json`, `autoresearch/results/cycle_033_accumulation.png`, `experiments/multiblock_accumulation_6block.py`
+
+### Cycle 034
+
+49. **Block-specific compression ratio sweep — GPT-2 FFN** *(CONFIRMED — cycle 034)*
+   - Swept compression ratios {2×, 3×, 4×, 5×, 6×} independently on each of 6 easiest blocks [7,5,4,1,3,6]. All 6 blocks tolerate 6× compression within 5% PPL threshold. Block 5 at 2× is the only failure (+5.41%). PPL is non-monotonic with ratio (higher compression sometimes improves PPL — lstsq refit acts as regularization), but reconstruction MSE increases monotonically as expected. Per-block max safe ratios: {7:6, 5:6, 4:6, 1:6, 3:6, 6:6}.
+   - Outcome: CONFIRMED — 6/6 blocks tolerate ≥5× compression (criterion: ≥4)
+   - Cycle: 034
+   - Artifacts: `autoresearch/results/cycle_034_ratio_sweep.json`, `autoresearch/results/cycle_034_ratio_sweep.png`, `experiments/block_ratio_sweep_gpt2.py`
