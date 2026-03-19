@@ -1,0 +1,5 @@
+item_number=63
+outcome=inconclusive
+key_metric=Shakespeare +8.52% (matches target ±1pp); WikiText-2 +44.31% (corpus-specific); recipe requires distribution-matched probing
+commit=85f3c2c
+paths=autoresearch/results/cycle_045_recipe.md,autoresearch/results/cycle_045_validation.json,autoresearch/results/cycle_045_validation.png,experiments/compression_recipe_validation.py

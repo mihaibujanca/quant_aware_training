@@ -1,36 +1,30 @@
-# Research Status — 37 Cycles (009-044)
+# Research Status — 38 Cycles (009-045) — PROGRAM COMPLETE
 
-## Score
+## Final Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 9 (010, 019, 026, 027, 033, 039, 040, 041, 042) |
-| Refuted | 13 |
-| Inconclusive | 14 (+ 044) |
+| Refuted | 13 (009, 011, 012, 014, 020, 021, 025, 028, 029, 031, 032, 037, 038) |
+| Inconclusive | 15 (013-018, 022-024, 030, 034-036, 043-045) |
 
-## CRITICAL FINDING (Cycle 044)
-**The method is highly corpus-specific.** Prior results (033-042) showing +6-9% PPL on Shakespeare are valid only for narrow-distribution text. On WikiText-2:
-- Corpus-specific compression: **+31.86% PPL** (unacceptable)
-- Zero-shot transfer from Shakespeare: **+120.57% PPL** (catastrophic)
+## Answer to the Research Question
 
-This fundamentally recontextualizes all prior "good" results. The no-SGD geometric compression method works when the probe distribution is narrow and matched to eval, but fails on broad-distribution text even with corpus-specific fitting.
+**"Given a trained transformer LM, how do we construct a smaller FFN reparameterization that preserves geometry without SGD?"**
 
-## Revised Practical Assessment
-| Condition | PPL cost | Viable? |
-|-----------|---------|---------|
-| Narrow-distribution text (Shakespeare-like) | +6-9% | YES |
-| Broad-distribution text (WikiText-2) | +32% | NO |
-| Cross-domain zero-shot transfer | +120% | CATASTROPHIC |
+### The method works — with a critical caveat.
 
-## What Works (narrow-distribution only)
-1. Topk channel selection + lstsq refit at up to 10× per block
-2. 4-block stacking with single end-point correction
-3. Method generalizes across model sizes (GPT-2-small → GPT-2-medium)
+**What works**: Topk channel selection + lstsq output refit + single-point residual-stream correction compresses 4 of 12 GPT-2 FFN blocks at 6-10× with ~28-30% FFN parameter reduction and +8-9% PPL. The method generalizes across model sizes (GPT-2 small → medium). No SGD, no training data, zero extra inference parameters.
 
-## What Doesn't Work
-1. Domain transfer — Shakespeare-fit compression destroys WikiText quality
-2. Broad-distribution compression — even corpus-specific WikiText is +32%
-3. Multi-point corrections — cascading corrections interfere
+**The critical caveat**: The method is **highly corpus-specific** (cycle 044). On narrow-distribution text (Shakespeare), it works beautifully (+8.5%). On broad-distribution text (WikiText-2), even corpus-specific compression gives +44% PPL. Zero-shot transfer is catastrophic (+120%). **The probe corpus must match the eval distribution.**
 
-## Remaining Items
-- **P0 Item 63**: Practical recipe consolidation (should now include domain caveat)
-- **P1 Items 50, 51, 55**: Secondary experiments
+### What this means:
+1. No-SGD geometric compression of FFN blocks is technically possible
+2. But practical usefulness depends on having distribution-matched calibration data
+3. The "free" compression seen on Shakespeare reflects the narrow distribution, not intrinsic FFN redundancy
+4. For real deployment, either use training data for probing or accept distribution sensitivity
+
+## Recipe (for distribution-matched use)
+See `autoresearch/results/cycle_045_recipe.md`
+
+## Remaining P1 Items
+Items 50, 51, 55 remain but are secondary to the corpus specificity finding.
