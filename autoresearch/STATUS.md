@@ -1,22 +1,21 @@
-# Research Status — 64 Cycles (001–064)
+# Research Status — 65 Cycles (001–065)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 13 |
 | Refuted | 18 |
-| Inconclusive | 24 (incl. cycle 064 audit-corrected) |
+| Inconclusive | 25 |
 | Crash | 1 |
 
 ## Latest Cycle
-Cycle 064 — item 42 (topology-preserving distillation) — **INCONCLUSIVE** (audit-corrected from REFUTED). sqrt gradient singularity caused NaN in all distance-matrix runs.
+Cycle 065 — item 43 (topological truncation) — **INCONCLUSIVE**. Total persistence grows monotonically (no early stabilization). Audit warns this may be a scale artifact (no Gaussian-null normalization).
 
 ## Remaining NEXT Items
 
 | Item | Priority | Description | Dependencies | Status |
 |------|----------|-------------|-------------|--------|
-| 43 | P2 | Topological truncation | none | Eligible |
-| 45 | P2 | Weight-space diffusion | none | Eligible |
+| 45 | P2 | Weight-space diffusion on topological level sets | none | Eligible |
 
 ## Note
-2 items left. Agenda refresh needed if continuing. The central research question is answered — gradient-polished analytic compression works (+4.9% PPL at k=4@6×, cycle 061).
+1 item left. The research program is substantially complete. Key answer: analytic init + 500 gradient steps = +4.9% PPL at k=4@6× on OpenWebText (cycle 061).

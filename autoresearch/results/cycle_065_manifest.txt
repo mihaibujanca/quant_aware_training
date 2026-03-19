@@ -1,0 +1,30 @@
+cycle_065_manifest
+==================
+Item: 43 — Topological truncation: Betti-guided depth reduction [MOONSHOT]
+Outcome: INCONCLUSIVE
+
+Scripts:
+  experiments/topo_truncation_betti.py
+
+Results:
+  autoresearch/results/cycle_065_topo_truncation.json
+  autoresearch/results/cycle_065_topo_truncation.png
+
+Key metrics:
+  Datasets: spirals (acc≈98.8%, 3 seeds), moons (acc≈99.9-100%, 3 seeds)
+  Network: 2→32×4→1 (depth=4)
+  Ripser: maxdim=1, full diameter threshold, 32D activations, 500 subsampled points
+  Total persistence (H0) spirals seed=42: L1=128.6, L2=209.2, L3=234.9, L4=291.0 (monotonic)
+  Total persistence (H0) moons seed=42:   L1=54.0,  L2=62.3,  L3=84.6,  L4=107.3 (monotonic)
+  Stabilization T: always 3 (final layer) for all 6 runs
+  T ≤ L-2 criterion: FAILED (0/6 runs)
+  Affine drop at T=2 (L-1): ≤0.001 spirals (3/3), ≤0.001 moons (3/3)
+  Affine drop at T=1: 0.044-0.231 spirals (inconsistent), ≤0.001 moons (trivial)
+  Affine drop at T=0: 0.341-0.370 spirals (poor), ≤0.002 moons (trivial)
+
+Finding:
+  Total persistence grows monotonically across all 4 layers in every run.
+  The "topological triviality point" T (first stable layer) is always the final layer.
+  No early stabilization detected — Betti-guided early truncation is not viable for these networks.
+  Penultimate-layer affine replacement works (trivially) but that is not the moonshot claim.
+  Moons result is confounded: the task is nearly linearly separable so affine works at any layer.

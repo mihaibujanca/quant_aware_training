@@ -1,0 +1,11 @@
+{
+  "cycle": 65,
+  "item": 43,
+  "round": 2,
+  "verdict": "APPROVE",
+  "issues_from_round_1": 4,
+  "issues_resolved": 4,
+  "new_blocking_issues": 0,
+  "new_notes": 1,
+  "note": "TP_k division-by-zero edge case when beta_1=0; handle with absolute fallback in script"
+}
