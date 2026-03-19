@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-62. **Domain robustness: compression quality on non-Shakespeare text — GPT-2 FFN**
-   - All experiments so far use Shakespeare as the probe and eval corpus. This tests whether the geometric compression generalizes to different text domains. Run k=4@6× with correction on 3 corpora: (a) Shakespeare (baseline), (b) WikiText-2 validation, (c) OpenWebText sample. Use Shakespeare-fit compressed blocks on all 3 corpora (zero-shot transfer), then re-fit channel selection on each corpus separately. If zero-shot transfer works, the compression is data-robust; if re-fitting is needed, the method is corpus-specific. 3 seeds, 200 eval seqs per corpus.
-   - Type: empirical
-   - Confirmed if: zero-shot transfer PPL cost is within 3pp of corpus-specific fit on ≥2 of 3 corpora.
-   - Refuted if: zero-shot transfer causes >20% PPL increase on any non-Shakespeare corpus while corpus-specific fit stays <10%.
-   - Inconclusive if: one corpus transfers well and the other does not.
-   - Depends on: 037, 039
-
 63. **Practical compression recipe: consolidated findings summary — GPT-2 FFN**
    - Synthesize all confirmed results (cycles 005–041) into a single executable compression recipe with exact hyperparameters, block ordering, correction placement, and expected quality. Document: (a) which blocks to compress and at what ratio, (b) channel selection method + lstsq refit procedure, (c) correction fitting procedure and placement, (d) expected PPL cost envelope across seeds, (e) failure modes (block 0, block-count wall). This is a documentation + validation experiment: re-run the full recommended recipe end-to-end once to confirm the documented numbers match. Output: a standalone script + results JSON.
    - Type: implementation + validation
@@ -584,3 +576,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Outcome: INCONCLUSIVE — k=5 multi-point at +12.08% touches but doesn't clearly beat 12% threshold; k=4 multi-point is worse than single-point
    - Cycle: 043
    - Artifacts: `autoresearch/results/cycle_043_multipoint_correction.json`, `autoresearch/results/cycle_043_multipoint_correction.png`, `experiments/ffn_multipoint_correction.py`
+
+### Cycle 044
+
+62. **Domain robustness: compression quality on non-Shakespeare text — GPT-2 FFN** *(INCONCLUSIVE — cycle 044)* ⚠ **CRITICAL FINDING**
+   - Shakespeare→Shakespeare (A): corrected +6.29% — works great. WikiText-2→WikiText-2 corpus-specific (B): corrected +31.86% — severe degradation even with corpus-specific fitting. Shakespeare→WikiText zero-shot (C): corrected +120.57% — catastrophic. Shakespeare channels + WikiText correction refit (D): +41.20% — correction refit helps but still bad. The method is HIGHLY CORPUS-SPECIFIC. Shakespeare's narrow distribution allowed high compression that doesn't transfer. On broader text (WikiText-2), even corpus-specific compression degrades PPL by 32%. All prior "good" results are Shakespeare-specific.
+   - Outcome: INCONCLUSIVE per criteria (gap 88.7pp > 3pp, but B is also >10% so refutation criterion isn't met)
+   - Cycle: 044
+   - Artifacts: `autoresearch/results/cycle_044_domain_robustness.json`, `autoresearch/results/cycle_044_domain_robustness.png`, `experiments/domain_robustness_wikitext.py`
