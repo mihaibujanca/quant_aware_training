@@ -129,10 +129,11 @@ OWN_PID_FILE=1
 launch_child() {
   local prompt_file="$LOG_DIR/claude_autoresearch_prompt.txt"
   cat >"$prompt_file" <<'EOF'
-Read `autoresearch/program.md` and execute the autonomous research loop continuously until interrupted.
+Read `program.md` and execute the autonomous research loop continuously until interrupted.
 
 Runtime rules:
-- Use the root-checkout `autoresearch/` files as the only agenda and bookkeeping source of truth.
+- Your working directory is the `autoresearch/` subdirectory of the project root. All `autoresearch/` paths in program.md and prompts are relative to the project root — use `../` prefix or absolute paths when accessing project-level files (e.g., `../aleph/`, `../experiments/`).
+- Use the `autoresearch/` files as the only agenda and bookkeeping source of truth.
 - Do not use hidden runtime mirrors, detached bot-branch agendas, or second schedulers as the active queue.
 - Do not ask for permission or user input.
 - Keep going after each cycle; do not stop after one experiment.
