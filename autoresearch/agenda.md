@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-61. **Multi-point residual correction at every compressed block boundary — GPT-2 FFN**
-   - Cycle 039 applied a single lstsq correction after the last compressed block and recovered 3.6pp. This experiment places an independent affine correction at each compressed block's output (i.e., 4 corrections for k=4). Each correction C_i is fit via lstsq on the residual-stream error at block i's output, conditioned on all prior corrections being applied. Test k=4@6× and k=5@6× with multi-point correction vs single-point (039 baseline). If multi-point breaks the block-count wall further, k=5 may become viable.
-   - Type: empirical
-   - Confirmed if: k=5 with multi-point correction achieves ≤12% PPL (vs +12.53% single-point from 039) OR k=4 improves by ≥1.5pp over single-point correction.
-   - Refuted if: multi-point correction does not improve over single-point for either k=4 or k=5 (corrections are redundant or interfere).
-   - Inconclusive if: k=4 improves but k=5 does not, or improvements are within noise (< 0.5pp).
-   - Depends on: 039
-
 62. **Domain robustness: compression quality on non-Shakespeare text — GPT-2 FFN**
    - All experiments so far use Shakespeare as the probe and eval corpus. This tests whether the geometric compression generalizes to different text domains. Run k=4@6× with correction on 3 corpora: (a) Shakespeare (baseline), (b) WikiText-2 validation, (c) OpenWebText sample. Use Shakespeare-fit compressed blocks on all 3 corpora (zero-shot transfer), then re-fit channel selection on each corpus separately. If zero-shot transfer works, the compression is data-robust; if re-fitting is needed, the method is corpus-specific. 3 seeds, 200 eval seqs per corpus.
    - Type: empirical
@@ -584,3 +576,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Outcome: CONFIRMED — k=4@10x corrected mean +8.45% (≤12% threshold)
    - Cycle: 042
    - Artifacts: `autoresearch/results/cycle_042_multiblock_10x.json`, `autoresearch/results/cycle_042_multiblock_10x.png`, `experiments/multiblock_10x_stacking_gpt2.py`
+
+### Cycle 043
+
+61. **Multi-point residual correction at every compressed block boundary — GPT-2 FFN** *(INCONCLUSIVE — cycle 043)*
+   - Fitted N sequential affine corrections (one per compressed block in layer order). k=4: multi-point (+7.68%) is WORSE than single-point (+6.22%) by 1.45pp — intermediate corrections interfere (block 4 MSE increases 41% after its correction). k=5: multi-point (+12.08%) barely improves over single-point (+12.31%) by 0.23pp — within noise. Per-correction diagnostic: first correction (block 1) reduces MSE by 40.8%, but subsequent corrections are destructive or neutral. Cascading lstsq corrections are not composable.
+   - Outcome: INCONCLUSIVE — k=5 multi-point at +12.08% touches but doesn't clearly beat 12% threshold; k=4 multi-point is worse than single-point
+   - Cycle: 043
+   - Artifacts: `autoresearch/results/cycle_043_multipoint_correction.json`, `autoresearch/results/cycle_043_multipoint_correction.png`, `experiments/ffn_multipoint_correction.py`

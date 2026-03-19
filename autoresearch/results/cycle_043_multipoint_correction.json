@@ -1,0 +1,138 @@
+{
+  "baseline_ppl": 120.32104618017831,
+  "configs": {
+    "k4": {
+      "blocks": [
+        7,
+        5,
+        4,
+        1
+      ],
+      "uncorrected": {
+        "ppl": 131.85391722154841,
+        "rel_pct": 9.585082084558891
+      },
+      "single_point": {
+        "ppl": 127.80869461382431,
+        "rel_pct": 6.223057953164237,
+        "recovery_pp": 3.362024131394654
+      },
+      "multi_point": {
+        "ppl": 129.5592193838793,
+        "rel_pct": 7.677936235583441,
+        "recovery_pp": 1.9071458489754507,
+        "gain_over_sp_pp": -1.4548782824192035,
+        "per_correction": [
+          {
+            "block": 1,
+            "correction_layer": 2,
+            "mse_before": 0.13777463138103485,
+            "mse_after": 0.08150874078273773,
+            "mse_reduction_pct": 40.83907903385058,
+            "frob_W_delta": 14.978391647338867,
+            "b_norm": 0.054821811616420746
+          },
+          {
+            "block": 4,
+            "correction_layer": 5,
+            "mse_before": 0.3450374901294708,
+            "mse_after": 0.48752185702323914,
+            "mse_reduction_pct": -41.29532904969337,
+            "frob_W_delta": 18.840085983276367,
+            "b_norm": 0.03355654701590538
+          },
+          {
+            "block": 5,
+            "correction_layer": 6,
+            "mse_before": 0.8332808613777161,
+            "mse_after": 0.7484163045883179,
+            "mse_reduction_pct": 10.1843880884395,
+            "frob_W_delta": 19.579227447509766,
+            "b_norm": 0.03263871744275093
+          },
+          {
+            "block": 7,
+            "correction_layer": 8,
+            "mse_before": 1.563362717628479,
+            "mse_after": 1.563779354095459,
+            "mse_reduction_pct": -0.026650019364149458,
+            "frob_W_delta": 19.24290657043457,
+            "b_norm": 0.030558215454220772
+          }
+        ]
+      }
+    },
+    "k5": {
+      "blocks": [
+        7,
+        5,
+        1,
+        3,
+        6
+      ],
+      "uncorrected": {
+        "ppl": 139.7219676808379,
+        "rel_pct": 16.124295887194254
+      },
+      "single_point": {
+        "ppl": 135.13134024592003,
+        "rel_pct": 12.308980461791865,
+        "recovery_pp": 3.815315425402389
+      },
+      "multi_point": {
+        "ppl": 134.86059037207457,
+        "rel_pct": 12.08395758970013,
+        "recovery_pp": 4.040338297494124,
+        "gain_over_sp_pp": 0.22502287209173488,
+        "per_correction": [
+          {
+            "block": 1,
+            "correction_layer": 2,
+            "mse_before": 0.13777463138103485,
+            "mse_after": 0.08150874078273773,
+            "mse_reduction_pct": 40.83907903385058,
+            "frob_W_delta": 14.978391647338867,
+            "b_norm": 0.054821811616420746
+          },
+          {
+            "block": 3,
+            "correction_layer": 4,
+            "mse_before": 0.32827940583229065,
+            "mse_after": 0.3967432379722595,
+            "mse_reduction_pct": -20.855353983108294,
+            "frob_W_delta": 19.15166473388672,
+            "b_norm": 0.03610052913427353
+          },
+          {
+            "block": 5,
+            "correction_layer": 6,
+            "mse_before": 0.7895469069480896,
+            "mse_after": 0.8003027439117432,
+            "mse_reduction_pct": -1.3622796655906155,
+            "frob_W_delta": 19.472253799438477,
+            "b_norm": 0.03318747133016586
+          },
+          {
+            "block": 6,
+            "correction_layer": 7,
+            "mse_before": 1.2517255544662476,
+            "mse_after": 1.1775193214416504,
+            "mse_reduction_pct": 5.9283149377132975,
+            "frob_W_delta": 19.53269386291504,
+            "b_norm": 0.031736910343170166
+          },
+          {
+            "block": 7,
+            "correction_layer": 8,
+            "mse_before": 1.9073445796966553,
+            "mse_after": 1.8182499408721924,
+            "mse_reduction_pct": 4.671134926161713,
+            "frob_W_delta": 19.732454299926758,
+            "b_norm": 0.0292288176715374
+          }
+        ]
+      }
+    }
+  },
+  "verdict": "inconclusive"
+}
