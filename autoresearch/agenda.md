@@ -41,13 +41,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: topology simplifies in toy but GPT-2 shows noise or no trend, suggesting the signal does not survive the transformer architecture's residual connections.
    - Depends on: 9, 27. ⚠ **BLOCKED**: Experiment 27 REFUTED (cycle 047) — topology does not simplify monotonically through depth in toy ReLU networks. Skip per dependency rule.
 
-30. **Local complexity proxy as a compression difficulty predictor — GPT-2**
-   - Apply the local complexity idea from experiment 29 to GPT-2 FFN blocks. Since GELU makes exact activation-pattern counting undefined, use a proxy: for each probe token x, compute the standard deviation of block Jacobians J(x') for x' in the k nearest neighbors of x in the input representation space. High std → the block is highly nonlinear near x → high local complexity. Low std → the block is locally smooth → easy to approximate. Aggregate this proxy over the full probe set per block and correlate with single-block swap damage from cycle 005.
-   - Type: empirical
-   - Confirmed if: Spearman correlation between local complexity proxy and compression damage ≥ 0.5, making this a cheap compression-difficulty oracle.
-   - Refuted if: correlation < 0.2, indicating that local nonlinearity does not predict block-level compression difficulty.
-   - Inconclusive if: the toy result from experiment 29 is strong but the GPT-2 proxy gives weak correlation, suggesting the Jacobian-variation proxy is too indirect.
-   - Depends on: 9, 29. Skip if experiment 29 is refuted (local complexity is not a useful signal even in toy networks).
 
 35. **Region volume Pareto — GPT-2 FFN analog**
    - Apply the Pareto analysis from experiment 34 to GPT-2 FFN blocks. Since exact activation patterns are unavailable for GELU, use k-means clusters on probe-token Jacobians as a proxy for "regions." Sort clusters by token count (proxy for volume). For each block, compute the cumulative reconstruction error of block outputs as clusters are added in descending size order. If a Pareto structure exists (top 20% of clusters covers 80% of total output variance), it suggests that a few dominant "computational modes" drive most of the block's behavior — and keeping only those modes gives a strong compression baseline. Compare the Pareto coefficient to compression damage from cycle 005 to test whether Pareto-skewed blocks are the easy ones.
@@ -108,13 +101,21 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## PAST EXPERIMENTS
 
+### Cycle 048
+
+30. **Local complexity proxy as a compression difficulty predictor — GPT-2** *(CONFIRMED — cycle 048)*
+   - Jacobian Frobenius std (P1) over k=5 nearest neighbors in FFN input space, aggregated over 128 probe tokens. Correlated with cycle 005 single-block swap damage at 8x and 16x compression.
+   - Outcome: CONFIRMED. P1 rho_full=0.839 (8x, p=0.000), rho_without_L0=0.818 (p=0.001). rho_full=0.608 (16x, p=0.018), rho_without_L0=0.527 (p=0.048). Leverage-point guard passed (rho_without_L0 ≥ 0.2 in all confirmed pairs). P2 (spectral norm) is leverage-dependent (rho_full=0.399) but strong after L0 removal. P3 (effective rank) anti-correlates and fails the criterion.
+   - Cycle: 048
+   - Artifacts: `experiments/gpt2_local_complexity.py`, `autoresearch/results/cycle_048_local_complexity_gpt2.json`, `autoresearch/results/cycle_048_local_complexity_gpt2.png`, `autoresearch/results/cycle_048_summary.md`
+
 ### Cycle 047
 
 27. **Persistent homology of activation manifold through depth — toy ReLU** *(REFUTED — cycle 047)*
    - Trained 2→32×4→1 spirals network (acc=98.4%). Total persistence L1-L4: 122.7, 119.1, 113.4, 227.1. Only 2/3 transitions decrease (L4 spikes up); 80% monotonicity criterion NOT MET. Largest Betti drop at L3 but lowest r is at L4 — rank-1 prediction wrong. Spearman(drop, r) = +0.5 (wrong sign, n=3). Random-init monotonically decreases (81→39→18→4), trained network does not. Gaussian null (1917-3562) much higher than trained, confirming PH measures real structure — but the structure does not simplify monotonically through depth.
    - Outcome: REFUTED — topology does not decrease monotonically (2/3 transitions, need ≥ 80%); largest Betti drop layer does not match lowest-r layer
    - Cycle: 047
-   - Commit: PLACEHOLDER
+   - Commit: f2d83c5
    - Artifacts: `experiments/phom_toy_relu.py`, `autoresearch/results/cycle_047_phom_toy.json`, `autoresearch/results/cycle_047_phom_toy.png`
 
 ### Cycle 032
