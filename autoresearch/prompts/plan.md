@@ -15,7 +15,15 @@ Before writing the plan, verify:
 - P3: Is the item concrete enough to produce a testable experiment in one cycle?
 - P4: Would this item require modifying `autoresearch/program.md` or prompt files?
 
-If any check FAILS, write only: "PLAN INVALID: P{N} failed — {reason}" in the plan file and stop.
+If any of P1-P4 FAILS, write only: "PLAN INVALID: P{N} failed — {reason}" in the plan file and stop.
+
+Soft pre-flights (address in the plan, do not abort):
+- P5: Are metrics and thresholds calibrated against a trivial/null baseline?
+      Document what a random/uniform system would score.
+- P6: Are experimental methods appropriate for the specific architecture and
+      activation functions being tested?
+- P7: Does the setup have adequate statistical power? (n_samples vs n_params,
+      model capacity vs task complexity)
 
 ## Plan Format
 
@@ -43,6 +51,11 @@ Requirements:
 - **Validation**: how to verify the experiment produced valid results (not just "it ran")
 - **Fallbacks**: what to do if the primary approach fails
 - Cap at 60 lines
+
+## Revision (if applicable)
+If design review feedback appears below, this is a revision round. Address
+each issue raised. You may adjust methods, thresholds, sample sizes, or setup.
+Do not change the core hypothesis unless feedback says the premise is invalid.
 
 Do NOT execute the plan. Write ONLY the plan file.
 Final response: at most 4 lines — plan status, key approach, plan file path.

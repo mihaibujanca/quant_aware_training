@@ -134,17 +134,19 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 032
 
-47. **Dead channel census — GPT-2 FFN v2 (GELU-correct)** *(REFUTED — cycle 032)*
+47. **Dead channel census — GPT-2 FFN v2 (GELU-correct)** *(REFUTED — cycle 032)* ⚠ **FLAWED: MP1 (threshold above trivial baseline)**
    - Pre-GELU dead (T=-3): 0.00%. Near-linear (T=+3): 0.00%. Pruning 1% (by contribution): +1.14% PPL > 1% threshold. Max safe prune = 0%. Contribution-based metric: 93% of channels below 0.05% threshold — but this is an artifact of near-uniform distribution (equal share = 0.033%); not meaningful "dead" channels. Confirms and closes cycle 028 finding with correct GELU-aware definitions.
+   - ⚠ **Post-hoc review**: the 0.05% contribution threshold exceeds the equal-share baseline (1/3072 = 0.033%), so nearly all channels are trivially flagged. A design review would have caught this via R2 (measurement soundness) and required a threshold well below equal-share.
    - Outcome: REFUTED
    - Commit: b83ddd0
    - Artifacts: autoresearch/results/cycle_032_prune_collapse.json, autoresearch/results/cycle_032_prune_collapse.png
 
 ### Cycle 031
 
-46. **Grokking as compression catalyst — modular arithmetic (v2)** *(REFUTED — cycle 031)*
+46. **Grokking as compression catalyst — modular arithmetic (v2)** *(REFUTED — cycle 031)* ⚠ **FLAWED: MP5 (insufficient model capacity)**
    - Task: (a+b) mod 97. Grokking detected (memorized epoch 1000, grokked epoch 17500, delay 16500 epochs). BUT: distilled student acc = 0.002 both pre and post grokking (essentially chance). Compression gain = +0.001, below 2% threshold. Pattern count stays at 9409 (= P², all examples unique) throughout — no geometric compaction signal. Post-grokking algebraic structure cannot be distilled from training data alone into a 4× smaller network.
    - Outcome: REFUTED — grokking occurred but compression gain <2% (0.001 actual)
+   - ⚠ **Post-hoc review**: student hidden=32 is insufficient capacity for mod-97 (97 residue classes). A design review would have caught this via R3 (capacity adequacy) and required either a larger student or a smaller prime.
    - Commit: c0cb0dd
    - Artifacts: autoresearch/results/cycle_031_grokking.json, autoresearch/results/cycle_031_grokking_trajectory.png
 
@@ -411,13 +413,14 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 006
 
-11. **Stable and near-linear channel census in pretrained FFNs**
+11. **Stable and near-linear channel census in pretrained FFNs** ⚠ **FLAWED: MP2 (detection method mismatched to GELU)**
    - Type: empirical
    - Outcome: **refuted (proxy)** — 0/12 proxy gpt2 FFN blocks reached ≥5% stable-or-near-linear channels; 10/12 stayed below 1%
    - Cycle: 006
    - Commit: NONE (recovered from hidden runtime artifacts)
    - Artifact: `autoresearch/results/cycle_006_summary.md`
    - Key finding: Exact stable-channel pruning (dead + always-active) is insufficient for GELU transformer FFNs — stable channels account for < 1% of hidden width in most blocks on the proxy benchmark.
+   - ⚠ **Post-hoc review**: same GELU detection flaw as cycle 028 — stability thresholds calibrated for ReLU zero-output, but GELU never truly zeros. Pre-GELU input values should be used for dead channel detection. Superseded by cycle 032 (item 47).
 
 ### Cycle 007
 
@@ -451,13 +454,14 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 011
 
-21. **Single-affine collapse quality — GPT-2 FFN blocks**
+21. **Single-affine collapse quality — GPT-2 FFN blocks** ⚠ **FLAWED: MP3 (underdetermined fitting)**
    - Type: empirical
    - Outcome: **refuted (proxy)** — 0/12 blocks have r_held < 0.15 (best: block 2 r_held=0.178). Swap of best block causes +33.7% PPL increase (> 20% threshold). Best-two simultaneous swap causes +344% PPL increase.
    - Cycle: 011
    - Commit: c4ea941
    - Artifact: `autoresearch/results/cycle_011_summary.md`, `autoresearch/results/cycle_011_single_affine_gpt2.json`, `autoresearch/results/cycle_011_single_affine_gpt2.png`
    - Key finding: No GPT-2 FFN block is approximable by a single global affine map on held-out tokens. Block 2 comes closest (r_fit=0.018) but fails to generalize (r_held=0.178), indicating the affine fit memorizes rather than captures structure. Even the best block causes 33.7% PPL increase when swapped, confirming that GELU nonlinearity is functionally critical. This is consistent with cycle 009 (Jacobian variance too high for single-affine). Multi-region approaches (items 22–25) are required.
+   - ⚠ **Post-hoc review**: 512 probe tokens fitting 769 parameters (768 weights + 1 bias) is underdetermined. The r_fit=0.018 → r_held=0.178 gap confirms overfitting. A design review would have caught this via R3 and required n_samples >= 1538.
 
 ### Cycle 010
 

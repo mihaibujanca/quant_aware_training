@@ -13,30 +13,26 @@ Item text: {ITEM_LINE}
 
 ## Phase 2: Quality Checks
 
+Scientific validity (hypothesis soundness, metric calibration, capacity adequacy) was checked during design review. This audit focuses on implementation fidelity and results interpretation.
+
 Read all code and result files produced this cycle. Check ALL of the following:
 
-### G1: Methodology
-- **Literature**: Were primary sources actually read (not just abstracts or summaries)? Are claims properly attributed? Are the extracted techniques genuinely applicable to geometric compression?
-- **Implementation**: Does the code work correctly? Are there obvious bugs? Does it handle edge cases?
-- **Empirical**: Were baselines compared? Are metrics computed on held-out data (not training data)? Are random seeds set?
+### G1: Implementation correctness
+- Did the code do what the plan said? Any bugs, off-by-one errors, wrong variable references?
+- **Literature**: Were primary sources actually read (not just abstracts)?
+- **Implementation**: Does the code work correctly? Edge cases handled?
+- **Empirical**: Are metrics computed on held-out data (not training data)? Are baselines compared?
 
 ### G2: Reproducibility
 - For empirical work: are there ≥3 random seeds? (Flag if fewer, but don't auto-fail for ≤2 seeds on exploratory work)
 - Are hyperparameters recorded? Could someone re-run this?
 
-### G3: Tautology Check
-Is the finding trivially true by construction or linear algebra? Examples:
-- "Active regions < 2^n" when the network/data is small enough that this is guaranteed
-- Metrics that are identical by definition
-- Results that follow from the architecture alone, independent of training
-Tautological results get flagged but NOT failed — they can still be informative if properly contextualized.
-
-### G4: Scope and Connection
-- Did the experiment stay within its agenda item scope?
-- Does the finding connect to the geometric compression research question?
+### G3: Results interpretation
+- Does the conclusion follow from the numbers?
 - For "confirmed" results: is the evidence strong enough to build on?
+- Did the experiment stay within its agenda item scope?
 
-### G5: Counterintuitive Results
+### G4: Counterintuitive results
 If the result is surprising or counterintuitive:
 - Check for bugs in the experiment code
 - Check for methodology issues (wrong baseline, data leakage, etc.)
