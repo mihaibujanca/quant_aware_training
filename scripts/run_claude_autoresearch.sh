@@ -126,14 +126,33 @@ fi
 printf '%s\n' "$$" >"$PID_FILE"
 OWN_PID_FILE=1
 
+SESSIONS_ARCHIVE="$LOG_DIR/sessions"
+# Claude Code stores sessions at ~/.claude/projects/<encoded-path>/<uuid>.jsonl
+# Encode the project root the same way Claude Code does (leading slash → dash, slashes → dashes)
+CLAUDE_PROJECTS_DIR="$HOME/.claude/projects"
+ENCODED_PROJECT_PATH="$(printf '%s' "$PROJECT_ROOT" | sed 's|/|-|g')"
+CLAUDE_SESSION_DIR="$CLAUDE_PROJECTS_DIR/$ENCODED_PROJECT_PATH"
+mkdir -p "$SESSIONS_ARCHIVE"
+
+archive_session() {
+  local sid="$1"
+  local src="$CLAUDE_SESSION_DIR/${sid}.jsonl"
+  if [ -f "$src" ]; then
+    local ts
+    ts="$(date -u +'%Y%m%dT%H%M%SZ')"
+    mv "$src" "$SESSIONS_ARCHIVE/${ts}_${sid}.jsonl"
+    log "archived session $sid to $SESSIONS_ARCHIVE"
+  fi
+}
+
 launch_child() {
   local prompt_file="$LOG_DIR/claude_autoresearch_prompt.txt"
+  CURRENT_SESSION_ID="$(uuidgen | tr '[:upper:]' '[:lower:]')"
   cat >"$prompt_file" <<'EOF'
-Read `program.md` and execute the autonomous research loop continuously until interrupted.
+Read `autoresearch/program.md` and execute the autonomous research loop continuously until interrupted.
 
 Runtime rules:
-- Your working directory is the `autoresearch/` subdirectory of the project root. All `autoresearch/` paths in program.md and prompts are relative to the project root — use `../` prefix or absolute paths when accessing project-level files (e.g., `../aleph/`, `../experiments/`).
-- Use the `autoresearch/` files as the only agenda and bookkeeping source of truth.
+- Use the root-checkout `autoresearch/` files as the only agenda and bookkeeping source of truth.
 - Do not use hidden runtime mirrors, detached bot-branch agendas, or second schedulers as the active queue.
 - Do not ask for permission or user input.
 - Keep going after each cycle; do not stop after one experiment.
@@ -147,12 +166,11 @@ EOF
   rm -f "$BLOCK_REASON_FILE"
 
   (
-    # Run from autoresearch/ subdir so agent sessions are filed separately
-    # from human sessions in /resume (Claude Code keys sessions by CWD).
-    cd "$PROJECT_ROOT/autoresearch"
+    cd "$PROJECT_ROOT"
     claude -p \
       --verbose \
       --dangerously-skip-permissions \
+      --session-id "$CURRENT_SESSION_ID" \
       --output-format stream-json \
       "$(cat "$prompt_file")" | python3 -u -c "
 import sys, json
@@ -206,6 +224,7 @@ while true; do
   log "claude controller exited code=$exit_code restart=$RESTART_COUNT"
   child_pid=""
   rm -f "$CHILD_PID_FILE"
+  archive_session "$CURRENT_SESSION_ID"
 
   if is_quota_or_rate_limit "$CHILD_LOG_FILE" || is_quota_or_rate_limit "$LAST_MESSAGE_FILE"; then
     block_on_quota "detected usage-limit or rate-limit exit in child output"
