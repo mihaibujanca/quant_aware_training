@@ -1,0 +1,5 @@
+item_number=52
+outcome=inconclusive
+key_metric=6/6 blocks within 5% at 6x (3 seeds); 5/6 sub-baseline mean PPL; std 0.18-0.83%; topk beats random 6/6
+commit=99655f9
+paths=autoresearch/results/cycle_035_multiseed_6x.json,autoresearch/results/cycle_035_multiseed_6x.png,experiments/multiseed_6x_confirmation_gpt2.py
