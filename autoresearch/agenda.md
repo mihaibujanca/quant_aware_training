@@ -16,14 +16,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: 2-3/6 blocks pass, suggesting partial transfer with model-specific tuning needed.
    - Depends on: 52
 
-54. **Compression ceiling scan: 8x and 10x single-block — GPT-2 FFN**
-   - Cycles 033-034 explored up to 6x. Extend the single-block sweep to 8x and 10x on the 3 easiest blocks (7, 5, 4) with 3 seeds and 200 eval sequences. This finds the actual per-block compression wall — the ratio at which PPL degradation exceeds 10% — and establishes the theoretical ceiling for no-SGD geometric compression on GPT-2 FFN.
-   - Type: empirical
-   - Confirmed if: at least 1 of 3 blocks tolerates 8x with mean relative PPL <=10%, establishing a ceiling above 6x.
-   - Refuted if: all 3 blocks exceed 10% relative PPL at 8x, indicating 6x is the practical ceiling for no-SGD geometric compression.
-   - Inconclusive if: results are block-dependent (one tolerates 8x, others fail) with no clear pattern, requiring more blocks to establish the trend.
-   - Depends on: 52
-
 55. **Lstsq refit quality degradation analysis across compression ratios — GPT-2 FFN**
    - The geometric method uses least-squares refit of W_down after channel selection. At high compression (6x+), the refit becomes increasingly underdetermined (fewer channels = fewer columns in the design matrix). Measure the condition number of the refit system and held-out reconstruction MSE at ratios {2x, 4x, 6x, 8x} on blocks 7, 5, 4. If the refit condition number explodes at a specific ratio, that explains any compression ceiling and motivates regularized refit (ridge/truncated SVD) as a next step. This is an analysis experiment that explains mechanism, not just measures outcome.
    - Type: analysis
@@ -551,3 +543,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Outcome: CONFIRMED — k=5 correction recovers 3.6pp (≥3pp criterion met), k=4 not worsened
    - Cycle: 039
    - Artifacts: `autoresearch/results/cycle_039_residual_correction.json`, `autoresearch/results/cycle_039_residual_correction.png`, `experiments/ffn_residual_correction_k5.py`
+
+### Cycle 040
+
+54. **Compression ceiling scan: 8x and 10x single-block — GPT-2 FFN** *(CONFIRMED — cycle 040)*
+   - All 3 blocks (7, 5, 4) tolerate 8× AND 10× compression with mean PPL within 5% (most sub-baseline). 3 seeds, 200 eval seqs. Results: block 7: 6×=+0.51%, 8×=+0.12%, 10×=+0.05%. Block 5: 6×=-0.20%, 8×=-0.49%, 10×=-0.59%. Block 4: 6×=-0.13%, 8×=-0.56%, 10×=-0.54%. Cross-seed std 0.17-0.59% (low). 6× cross-check matches cycle 035 exactly. The ceiling has NOT been found — even 10× compression is essentially free for single-block swaps. The lstsq refit regularization effect strengthens with compression.
+   - Outcome: CONFIRMED — 3/3 blocks tolerate 8× at ≤10% (all also tolerate 10×)
+   - Cycle: 040
+   - Commit: pending
+   - Artifacts: `autoresearch/results/cycle_040_ceiling_scan.json`, `autoresearch/results/cycle_040_ceiling_scan.png`, `experiments/compression_ceiling_scan_gpt2.py`
