@@ -1,0 +1,33 @@
+cycle: 050
+item: 65
+title: Oracle-guided adaptive compression ratio — GPT-2 FFN
+verdict: REFUTED
+commit: 37bdb1d
+
+key_metrics:
+  oracle_adaptive_k4_corrected_mean: +12.33% (±0.82)
+  uniform_control_k4_corrected_mean: +6.36% (±0.69)
+  ref_uniform_10x_corrected_c042: +8.45%
+  ref_uniform_6x_corrected_c039: +8.35%
+  oracle_correction_mse_change: 1.71 → 1.88 (worsened)
+  uniform_correction_mse_change: 1.71 → 1.36 (improved)
+
+oracle_ratios:
+  block_4: 10.00x (hidden=307)
+  block_1: 9.82x  (hidden=312)
+  block_5: 8.97x  (hidden=342)
+  block_7: 7.89x  (hidden=389)
+  mean: 9.17x
+
+finding: P1-guided variable ratios destroy boundary lstsq compatibility.
+  The correction MSE *increased* for oracle (adaptive ratios) vs decreased
+  for uniform control at the same mean ratio. The variable hidden dims per
+  block produce hidden-state residuals with incompatible structure for a
+  single affine boundary correction. Ratio allocation from P1 predicts
+  block-level damage but the mixed-ratio pipeline interacts destructively
+  with the residual correction step.
+
+artifacts:
+  experiments/oracle_adaptive_compression_gpt2.py
+  autoresearch/results/cycle_050_oracle_adaptive.json
+  autoresearch/results/cycle_050_oracle_adaptive.png
