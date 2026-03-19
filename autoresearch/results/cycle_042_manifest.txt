@@ -1,0 +1,5 @@
+item_number=60
+outcome=confirmed
+key_metric=k=4@10x corrected mean +8.45% ±0.66% (3 seeds); matches 6x corrected; ~30% FFN reduction
+commit=cb6e00a
+paths=autoresearch/results/cycle_042_multiblock_10x.json,autoresearch/results/cycle_042_multiblock_10x.png,experiments/multiblock_10x_stacking_gpt2.py
