@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-63. **Practical compression recipe: consolidated findings summary — GPT-2 FFN**
-   - Synthesize all confirmed results (cycles 005–041) into a single executable compression recipe with exact hyperparameters, block ordering, correction placement, and expected quality. Document: (a) which blocks to compress and at what ratio, (b) channel selection method + lstsq refit procedure, (c) correction fitting procedure and placement, (d) expected PPL cost envelope across seeds, (e) failure modes (block 0, block-count wall). This is a documentation + validation experiment: re-run the full recommended recipe end-to-end once to confirm the documented numbers match. Output: a standalone script + results JSON.
-   - Type: implementation + validation
-   - Confirmed if: end-to-end recipe reproduces k=4@6× with correction at ≤10% PPL, matching cycle 037/039 numbers within 1pp.
-   - Refuted if: reproduced numbers differ by >3pp from documented, indicating hidden dependencies or stale artifacts.
-   - Inconclusive if: numbers match but the recipe requires corpus-specific tuning not captured in the documentation.
-   - Depends on: 037, 039, 040, 041
-
 ### P1
 
 55. **Lstsq refit quality degradation analysis across compression ratios — GPT-2 FFN**
@@ -584,3 +576,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Outcome: INCONCLUSIVE per criteria (gap 88.7pp > 3pp, but B is also >10% so refutation criterion isn't met)
    - Cycle: 044
    - Artifacts: `autoresearch/results/cycle_044_domain_robustness.json`, `autoresearch/results/cycle_044_domain_robustness.png`, `experiments/domain_robustness_wikitext.py`
+
+### Cycle 045
+
+63. **Practical compression recipe: consolidated findings summary — GPT-2 FFN** *(INCONCLUSIVE — cycle 045)*
+   - Recipe document written and validated end-to-end. Shakespeare replication: +8.52% ±0.62% (matches target +8.35% within 1pp). WikiText-2 corpus-specific: +44.31% ±1.02% (confirms corpus specificity from cycle 044). Recipe is self-contained and reproducible for narrow-distribution text but requires distribution-matched probing data. The fundamental limitation is not the compression method but the corpus sensitivity.
+   - Outcome: INCONCLUSIVE — recipe works but requires corpus-specific tuning (as predicted by cycle 044)
+   - Cycle: 045
+   - Artifacts: `autoresearch/results/cycle_045_recipe.md`, `autoresearch/results/cycle_045_validation.json`, `autoresearch/results/cycle_045_validation.png`, `experiments/compression_recipe_validation.py`

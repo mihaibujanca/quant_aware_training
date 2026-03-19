@@ -1,0 +1,65 @@
+{
+  "shakespeare": [
+    {
+      "seed": 42,
+      "baseline": 123.3571197168479,
+      "uncorrected": 135.47305754997112,
+      "corrected": 133.422899466118,
+      "rel_uncorrected": 9.82183911308399,
+      "rel_corrected": 8.159869306591247
+    },
+    {
+      "seed": 123,
+      "baseline": 125.91727611779676,
+      "uncorrected": 138.78320591217513,
+      "corrected": 137.53796317577385,
+      "rel_uncorrected": 10.217763750180062,
+      "rel_corrected": 9.228826588581725
+    },
+    {
+      "seed": 7,
+      "baseline": 124.98729109936387,
+      "uncorrected": 139.5632953592553,
+      "corrected": 135.1856033729591,
+      "rel_uncorrected": 11.661989096398313,
+      "rel_corrected": 8.159479402979978
+    }
+  ],
+  "wikitext2": [
+    {
+      "seed": 42,
+      "baseline": 71.83853484510485,
+      "uncorrected": 102.23903840175761,
+      "corrected": 103.00498879414276,
+      "rel_uncorrected": 42.31782235286538,
+      "rel_corrected": 43.38403339689163
+    },
+    {
+      "seed": 123,
+      "baseline": 69.65150444870325,
+      "uncorrected": 100.06398025338378,
+      "corrected": 100.39267637262856,
+      "rel_uncorrected": 43.66377445167552,
+      "rel_corrected": 44.13568977044205
+    },
+    {
+      "seed": 7,
+      "baseline": 68.29085732166517,
+      "uncorrected": 99.3894207771571,
+      "corrected": 99.29683325778527,
+      "rel_uncorrected": 45.53839953862456,
+      "rel_corrected": 45.40282133240037
+    }
+  ],
+  "summaries": {
+    "shakespeare": {
+      "mean": 8.51605843271765,
+      "std": 0.617275360772332
+    },
+    "wikitext2": {
+      "mean": 44.30751483324468,
+      "std": 1.0203034211910973
+    }
+  },
+  "verdict": "inconclusive"
+}
