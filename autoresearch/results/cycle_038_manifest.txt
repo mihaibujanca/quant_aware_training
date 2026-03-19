@@ -1,0 +1,5 @@
+item_number=57
+outcome=refuted
+key_metric=All 6 five-block combos >15% PPL; best drop-4 at +16.12%; spread 4.76pp
+commit=756f6dc
+paths=autoresearch/results/cycle_038_block_ordering.json,autoresearch/results/cycle_038_block_ordering.png,experiments/ffn_block_ordering_k5.py
