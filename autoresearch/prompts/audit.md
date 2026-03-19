@@ -38,7 +38,18 @@ If the result is surprising or counterintuitive:
 - Check for methodology issues (wrong baseline, data leakage, etc.)
 - Only accept if the evidence is robust
 
-### G5: Method failure vs genuine refutation
+### G5: Learning quality (all outcomes, critical for INCONCLUSIVE)
+Read the `learned` and `next` fields from the manifest. Every experiment
+must say something you couldn't say before running it.
+- For CONFIRMED/REFUTED: `learned` should state the specific finding.
+  `next` should state what this enables or closes.
+- For INCONCLUSIVE: `learned` must explain what made the result ambiguous.
+  `next` must describe a specific follow-up that would be more informative
+  and WHY. "No clue" or vague restatements of the inconclusive criterion
+  are not acceptable — downgrade to UNCERTAIN with G5 flag if the
+  experiment genuinely produced zero actionable information.
+
+### G6: Method failure vs genuine refutation
 When the verdict is REFUTED or UNCERTAIN, check before accepting:
 - Could the result be explained by a measurement or design failure rather
   than genuine evidence against the hypothesis?
@@ -60,7 +71,11 @@ original_outcome: <from manifest>
 audited_outcome: <your assessment>
 guardrail_flags: <triggered checks, comma-separated, or "none">
 reason: <1-3 sentences explaining your assessment>
+learned: <from manifest, verified — what this experiment told us>
+next: <from manifest, verified — what follows from this result>
 recommendations: <what to explore next based on these findings>
+interesting: true | false
+interesting_reason: <if true: 1 sentence — why this deserves human attention>
 ```
 
 Rules:
@@ -70,4 +85,20 @@ Rules:
 - Do NOT modify program.md, prompt files, or experiment code.
 - Be suspicious but fair. The goal is catching real problems, not nitpicking.
 
-Final response: status, guardrail flags, key issue (if any), recommendations (max 8 lines).
+## Phase 4: Interestingness Flag
+
+If `interesting: true`, append a line to `autoresearch/logs/flagged.jsonl`:
+```json
+{"cycle": {CYCLE}, "item": {ITEM_NUMBER}, "outcome": "<outcome>", "reason": "<interesting_reason>"}
+```
+
+Flag as interesting when ANY of:
+- Result contradicts prior findings or expectations
+- A new capability is demonstrated (compression ratio, transfer, etc.)
+- A strong quantitative signal emerges (high correlation, large effect size)
+- A failure mode is identified that changes how future experiments should be designed
+- The result closes or opens a research direction
+
+Do NOT flag routine confirmations of expected results or inconclusive noise.
+
+Final response: status, guardrail flags, interesting flag, key issue (if any), recommendations (max 8 lines).

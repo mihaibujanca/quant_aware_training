@@ -68,7 +68,14 @@ Read the plan at `autoresearch/plans/cycle_{CYCLE}.md` and execute it step by st
    key_metric=<main finding>
    commit=<short hash>
    paths=<comma-separated result file paths>
+   learned=<what this experiment told us that we didn't know before>
+   next=<what the next experiment should be to make progress, or "none" if the question is closed>
    ```
+   The `learned` and `next` fields are mandatory for ALL outcomes, not just
+   inconclusive. Every experiment must say something you couldn't say before
+   running it. For inconclusive specifically: "no clue" is not acceptable —
+   if the result is ambiguous, explain what made it ambiguous and what would
+   make the next attempt more informative.
 6. Do NOT commit the manifest file. Exit after writing it.
 
 Be economical with turns. Do not rewrite the plan unless blocked.
