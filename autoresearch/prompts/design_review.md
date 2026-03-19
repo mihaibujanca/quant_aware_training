@@ -24,6 +24,11 @@ Compute the trivial/null baseline for each metric in the plan. What would random
 ### R3: Capacity and statistical adequacy
 Check the ratio of n_samples to n_params. Is model capacity sufficient for the task? Are sample sizes adequate for any statistical claims? For fitting tasks, is n_samples >= 2x n_params?
 
+For empirical work: the plan MUST specify ≥3 random seeds. If the plan
+uses 1 seed, REVISE with "minimum 3 seeds required for empirical claims."
+This is a hard rule, not a suggestion — single-seed results are not
+publishable and audit will downgrade them.
+
 ### R4: Method-architecture alignment
 Are the detection and measurement methods appropriate for the actual architecture and activation functions being tested? Would the method work correctly given the output range and behavior of the activations in use?
 
