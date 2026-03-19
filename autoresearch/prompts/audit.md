@@ -38,6 +38,18 @@ If the result is surprising or counterintuitive:
 - Check for methodology issues (wrong baseline, data leakage, etc.)
 - Only accept if the evidence is robust
 
+### G5: Method failure vs genuine refutation
+When the verdict is REFUTED or UNCERTAIN, check before accepting:
+- Could the result be explained by a measurement or design failure rather
+  than genuine evidence against the hypothesis?
+- Did the metric actually vary in a range that could distinguish
+  confirmation from refutation, or was it stuck at a trivial value?
+- If the method was uninformative (metric invariant by construction,
+  capacity insufficient, threshold miscalibrated), the correct verdict is
+  INCONCLUSIVE (method failed), not REFUTED.
+- When downgrading REFUTED → INCONCLUSIVE for this reason, note the
+  specific measurement failure so the next attempt can fix it.
+
 ## Phase 3: Write Result
 
 Write `autoresearch/audits/cycle_{CYCLE}.md`:
