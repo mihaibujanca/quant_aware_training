@@ -1,0 +1,5 @@
+item_number=48
+outcome=confirmed
+key_metric=k=4 PPL=130.96 (+8.84% vs baseline 120.32); within 10% threshold
+commit=NONE
+paths=autoresearch/results/cycle_033_accumulation.json,autoresearch/results/cycle_033_accumulation.png,experiments/multiblock_accumulation_6block.py

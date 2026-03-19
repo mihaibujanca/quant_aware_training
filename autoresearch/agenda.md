@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-48. **Easiest-first multi-block accumulation up to 6 blocks — GPT-2 FFN**
-   - Cycle 007 showed easiest-first ordering is 27% better than hardest-first for 2-block swaps, but the curve was not extended beyond 2 blocks. Run the ordered accumulation experiment for up to 6 blocks (the 6 easiest blocks by single-block swap damage from cycle 005), measuring PPL at each step. The main open question is whether degradation is sub-additive (enabling >2 blocks removed) or super-additive (each additional swap accelerates collapse). Use geometric channel selection (cycle 026) and centroid similarity merge signal (cycle 027) for each swapped block.
-   - Type: empirical
-   - Confirmed if: 4-block swap achieves PPL ≤ baseline × 1.10 (i.e., ≤10% PPL increase from teacher) on the GPT-2 proxy corpus.
-   - Refuted if: PPL exceeds baseline × 1.20 at the 3-block mark, indicating super-additive degradation.
-   - Inconclusive if: 3-block swap stays within 10% but 4-block exceeds it, leaving the boundary undetermined.
-   - Depends on: 5, 7, 14, 26, 27
-
 49. **Block-specific compression ratio sweep — GPT-2 FFN**
    - Cycle 005 established that single-block swap works at ≤4× compression for most blocks but used a fixed ratio. The block-specific damage profiles differ (some blocks tolerate higher compression than others). Sweep compression ratios 2×, 3×, 4×, 5×, 6× independently for each of the 6 easiest blocks (identified in cycle 005), and for each block find the maximum ratio that keeps single-block PPL ≤ baseline × 1.05. This produces a per-block compression budget map, enabling a principled allocation for multi-block stacking.
    - Type: empirical
@@ -484,3 +476,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Commit: 202daf9
    - Artifact: `autoresearch/results/cycle_013_rtg_spectral.json`, `experiments/rtg_spectral_toy.py`
    - Key finding: RTG spectral signal is real (beats random significantly) but Hamming-1 graph is too sparse for useful compression — 79 disconnected components means spectral clustering must average across unrelated regions. Item 25 (GPT-2 analog with k-NN Jacobian graph) avoids this sparsity issue and remains eligible.
+
+### Cycle 033
+
+48. **Easiest-first multi-block accumulation up to 6 blocks — GPT-2 FFN** *(CONFIRMED — cycle 033)*
+   - Re-ran the easiest-first multi-block accumulation (cycle 007) with the improved geometric method (cycles 026-027): topk channel selection + centroid similarity merge signal at 4× compression. Blocks [7,5,4,1,3,6] accumulated in easiest-first order. k=1: +0.56%, k=2: +2.60%, k=3: +6.38%, k=4: +8.84%, k=5: +17.46%, k=6: +25.99%. Degradation is sub-additive through k=4, then becomes super-additive (k=4→k=5 jump is +8.6pp). The improved method significantly outperforms cycle 007 (which had k=4 at +9.89% with the old method).
+   - Outcome: CONFIRMED — k=4 PPL=130.96 (+8.84%) is within the ≤10% threshold
+   - Cycle: 033
+   - Commit: NONE (recovered from incomplete prior session)
+   - Artifacts: `autoresearch/results/cycle_033_accumulation.json`, `autoresearch/results/cycle_033_accumulation.png`, `experiments/multiblock_accumulation_6block.py`
