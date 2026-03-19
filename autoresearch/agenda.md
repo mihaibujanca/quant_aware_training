@@ -18,13 +18,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-74. **Gradient-polished lstsq: 10-50 Adam steps after analytic refit — GPT-2 FFN**
-   - Lstsq gives the minimum-norm analytic solution but ignores the nonlinear context (GELU, downstream blocks). Test whether a tiny amount of gradient-based fine-tuning on top of the lstsq initialization closes the broad-text gap. For blocks [7, 5, 4] at 6×, after topk+lstsq on OpenWebText probes, run {10, 25, 50} Adam steps (lr=1e-4) minimizing next-token cross-entropy loss on 512 OpenWebText tokens, updating ONLY the kept FFN channels' W_down columns. Compare to pure lstsq baseline. This is NOT distillation (no student architecture) — it is a local polish of the analytic solution.
-   - Type: empirical
-   - Confirmed if: 50 gradient steps reduce OpenWebText single-block PPL degradation by ≥30% relative vs pure lstsq (e.g., from +15% to ≤+10%).
-   - Refuted if: gradient polish provides <5% relative improvement or destabilizes (PPL increases).
-   - Inconclusive if: improvement is 5-30% relative — real but insufficient to reach viability.
-   - Depends on: 72
 
 66. **Lstsq refit with mixed-corpus probe data — GPT-2 FFN**
    - If item 64 shows channel selection is stable across corpora (Jaccard ≥ 0.7), test whether mixing probe corpora during the lstsq refit step produces a more robust compressed block. Fix channel selection from Shakespeare (the best-understood config). Run lstsq refit using: (A) Shakespeare-only 512 tokens, (B) mixed 512 tokens (128 each from Shakespeare, WikiText-2, C4, OpenWebText), (C) mixed 2048 tokens (512 each). Evaluate all three on WikiText-2 validation. The mixed refit should generalize better because lstsq sees a broader input distribution.
@@ -120,6 +113,18 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ### Cycle 056
 
 ### Cycle 057
+
+### Cycle 059
+
+74. **Gradient-polished lstsq: 10-50 Adam steps after analytic refit — GPT-2 FFN** *(CONFIRMED — cycle 059)*
+   - Stacked k=4@6× (blocks [7,5,4,1]) on OpenWebText, 3 seeds [42,123,7]. After topk+lstsq, run {10,25,50} Adam steps on W_down columns only (lr=1e-4, polish data = probe_holdout, disjoint from lstsq probe and eval).
+   - Baseline GPT-2 PPL (OWT): 57.653. Pure lstsq (0 steps): PPL=75.06 (+30.2%).
+   - After polishing: 10 steps=72.63 (+25.98%, 14% rel improvement), 25 steps=70.51 (+22.30%, 26% rel), 50 steps=68.29 (+18.44%, 38.9% rel improvement).
+   - Criterion: 50 steps reduce degradation by ≥30% relative. Result: 38.9% → CONFIRMED.
+   - Polish loss descends consistently at 50 steps (e.g., 4.96→4.86, 4.72→4.17 across blocks/seeds). No overfitting observed (eval is disjoint from polish data).
+   - Practical implication: 50 Adam steps at lr=1e-4 on a ~25K-token holdout reduces stacking degradation from +30.2% to +18.4%. Still +18.4% above baseline, so gradient polish alone does not fully close the gap.
+   - Cycle: 059
+   - Artifacts: `experiments/gradient_polish_stacked_gpt2.py`, `autoresearch/results/cycle_059_gradient_polish.json`, `autoresearch/results/cycle_059_gradient_polish.png`
 
 ### Cycle 058
 
