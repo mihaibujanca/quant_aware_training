@@ -1,0 +1,21 @@
+cycle: 061
+item: 77
+title: Gradient polish scaling: 100–500 Adam steps on stacked blocks — GPT-2 FFN
+verdict: CONFIRMED
+commit: 104a35b
+
+key_metrics:
+  baseline_ppl: 57.653
+  0_steps_independent: +30.20%
+  50_steps_independent: +18.44%  (replicates cycle 059: +18.4%)
+  100_steps_independent: +14.00%
+  200_steps_independent: +9.55%
+  500_steps_independent: +4.86%  (criterion: <=+8% -> MET)
+  500_steps_joint: +3.79%        (criterion: <=+8% -> MET)
+  joint_advantage_500: +1.07pp   (criterion: >=5pp -> NOT MET, but primary criterion MET)
+  plateau_detected: false        (200->500 improvement = 4.7pp, well above 2pp threshold)
+
+artifacts:
+  experiments/gradient_polish_scaling_gpt2.py
+  autoresearch/results/cycle_061_gradient_polish_scaling.json
+  autoresearch/results/cycle_061_gradient_polish_scaling.png

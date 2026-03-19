@@ -1,0 +1,1 @@
+{"verdict": "APPROVE", "round": 1, "issues": ["minor: log eval_val PPL at intermediate steps (50, 100, 200, 500) to detect overfitting — 200 polish sequences recycled ~10x at 500 steps risks train-eval divergence, which would make the REFUTED criterion unreliable", "minor: specify deterministic RNG seed for _polish_joint mini-batch sampling to ensure reproducibility"]}
