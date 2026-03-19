@@ -6,7 +6,31 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+57. **Block ordering optimization for 5-block stacking — GPT-2 FFN**
+   - Cycle 033 used easiest-first ordering from cycle 005 damage rankings. But the k=4→k=5 cliff (+8.6pp jump) may be ordering-dependent: the 5th block (block 3) might compound badly with specific earlier blocks. Test all 6 possible 5th-block choices (from the 6 easiest blocks) while keeping the 4 easiest as the base set. Also test reverse-order insertion for the 5th block (compress the 5th block FIRST, then layer in the 4 easy ones). If the cliff depends on which block is 5th, ordering optimization can push the practical ceiling beyond 4 blocks.
+   - Type: empirical
+   - Confirmed if: at least one 5-block configuration achieves <12% relative PPL (beating cycle 033's +17.46% at k=5 by ≥5pp).
+   - Refuted if: all 5-block configurations exceed 15% PPL regardless of which block is 5th or insertion order.
+   - Inconclusive if: the best 5-block config is 12-15% — an improvement over naive ordering but still above the <10% practical threshold.
+   - Depends on: 53
+
 ### P1
+
+58. **Inter-block error correction via residual-stream lstsq adjustment — GPT-2 FFN**
+   - The k=4→k=5 degradation cliff suggests compounding error through the residual stream. Test a cheap post-hoc correction: after compressing k blocks, fit a single global affine correction C (via lstsq on probe data) at the residual stream AFTER the last compressed block, minimizing ||h_float - h_compressed||² at that layer. This is zero-parameter at inference (fold C into the next layer's weights). If inter-block error is mostly a mean shift + low-rank distortion in the residual stream, this correction could recover several pp. Apply to the k=5 configuration from cycle 033 and measure PPL before/after correction.
+   - Type: implementation + empirical
+   - Confirmed if: correction reduces the k=5 PPL gap by ≥3pp (from +17.46% toward +14% or better).
+   - Refuted if: correction reduces the gap by <1pp, indicating the compounding error is distributed and not correctable at a single insertion point.
+   - Inconclusive if: correction helps at k=5 but worsens k=4 (overcorrection), suggesting the technique is fragile.
+   - Depends on: 53
+
+59. **Generalization probe: single-block 4× geometric compression on GPT-2-medium — FFN**
+   - All results so far are on GPT-2-small (12 layers, d=768, FFN=3072). Test whether the geometric compression method (topk + centroid + lstsq refit) transfers to GPT-2-medium (24 layers, d=1024, FFN=4096). Run single-block swaps at 4× on a sample of 6 blocks (evenly spaced: 0, 4, 8, 12, 16, 20) with 3 seeds and 200 eval sequences. This answers the generalization question: does the method depend on GPT-2-small's specific scale, or does it work on larger models?
+   - Type: empirical
+   - Confirmed if: ≥4/6 blocks tolerate 4× compression with mean relative PPL ≤10%, matching GPT-2-small's profile.
+   - Refuted if: ≤1/6 blocks pass the 10% threshold, indicating the method does not transfer to larger models at matched compression ratio.
+   - Inconclusive if: 2-3/6 blocks pass, suggesting partial transfer with model-specific tuning needed.
+   - Depends on: 52
 
 54. **Compression ceiling scan: 8x and 10x single-block — GPT-2 FFN**
    - Cycles 033-034 explored up to 6x. Extend the single-block sweep to 8x and 10x on the 3 easiest blocks (7, 5, 4) with 3 seeds and 200 eval sequences. This finds the actual per-block compression wall — the ratio at which PPL degradation exceeds 10% — and establishes the theoretical ceiling for no-SGD geometric compression on GPT-2 FFN.
@@ -518,3 +542,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Outcome: INCONCLUSIVE — k=4 at +9.59% is in the 8-12% range; better compression but unclear win over uniform 4×
    - Cycle: 036
    - Artifacts: `autoresearch/results/cycle_036_accumulation_6x.json`, `autoresearch/results/cycle_036_accumulation_6x.png`, `experiments/multiblock_accumulation_6x.py`
+
+### Cycle 037
+
+56. **Total FFN parameter reduction budget at <10% PPL — GPT-2 FFN** *(REFUTED — cycle 037)*
+   - k=4@6× (blocks 7,5,4,1): mean +9.77% PPL (±0.26%, 2 seeds), 27.8% total FFN param reduction. k=4 budget is solid. k=5 heterogeneous: tested blocks 3 and 6 as 5th at 2×/3×/4×. ALL k=5 configs exceed +15% (best: block 6 at 4× = +16.99%). The block count wall is hard — reducing the 5th block's ratio to 2× still gives +20%. Per-block ratio doesn't matter; the compounding through the residual stream is the binding constraint.
+   - Outcome: REFUTED — all k=5 configs exceed 15% PPL threshold (best +16.99%)
+   - Positive finding: k=4@6× achieves 27.8% FFN param reduction at <10% PPL
+   - Cycle: 037
+   - Artifacts: `autoresearch/results/cycle_037_param_budget.json`, `autoresearch/results/cycle_037_param_budget.png`, `experiments/ffn_param_budget_hetero_k5.py`
