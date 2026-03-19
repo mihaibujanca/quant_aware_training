@@ -1,7 +1,3 @@
-# Legacy external-loop config.
-# Default repo operation should use `scripts/start_autoresearch_tmux.sh`, which
-# runs against the root checkout. Do not use this file unless you explicitly
-# want the separate `/Users/mihai/Projects/autoresearch` bot-branch workflow.
 contract = "quant_aware_training"
 project_slug = "quant_aware_training"
 
@@ -38,7 +34,7 @@ merge_autoresolve_paths = [
 ]
 
 [prompts]
-plan = "autoresearch/prompts/plan_external_compat.md"
+plan = "autoresearch/prompts/plan.md"
 
 [features]
 audit = true
