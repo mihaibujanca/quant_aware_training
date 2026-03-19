@@ -26,14 +26,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: improvement is 5-30% relative — real but insufficient to reach viability.
    - Depends on: 72
 
-75. **Multi-block stacking error budget: additive vs compounding degradation — GPT-2 FFN**
-   - Cycle 037 showed k=4→k=5 is a hard wall (+8.6pp jump) and cycle 054 showed broad-text failure. But we lack a decomposition of HOW errors compound. Run k=1 through k=4 on OpenWebText (blocks [7,5,4,1] in easiest-first order) and measure: (a) per-block marginal PPL cost (PPL_k - PPL_{k-1}), (b) sum of individual single-block costs vs actual stacked cost, (c) residual-stream MSE at each insertion point. If stacked cost >> sum of singles, the error is compounding super-additively through the residual stream. If stacked ≈ sum of singles, per-block quality is the binding constraint and stacking is not the problem.
-   - Type: empirical
-   - Confirmed if: stacked PPL at k=4 is within 1.5× the sum of individual single-block PPL deltas (sub-additive or mildly super-additive).
-   - Refuted if: stacked PPL exceeds 2× the sum of singles (strong super-additive compounding).
-   - Inconclusive if: ratio is between 1.5× and 2×.
-   - Depends on: 72
-
 66. **Lstsq refit with mixed-corpus probe data — GPT-2 FFN**
    - If item 64 shows channel selection is stable across corpora (Jaccard ≥ 0.7), test whether mixing probe corpora during the lstsq refit step produces a more robust compressed block. Fix channel selection from Shakespeare (the best-understood config). Run lstsq refit using: (A) Shakespeare-only 512 tokens, (B) mixed 512 tokens (128 each from Shakespeare, WikiText-2, C4, OpenWebText), (C) mixed 2048 tokens (512 each). Evaluate all three on WikiText-2 validation. The mixed refit should generalize better because lstsq sees a broader input distribution.
    - Type: empirical
@@ -126,6 +118,21 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ## PAST EXPERIMENTS
 
 ### Cycle 056
+
+### Cycle 057
+
+### Cycle 058
+
+75. **Multi-block stacking error budget: additive vs compounding degradation — GPT-2 FFN** *(INCONCLUSIVE — cycle 058)*
+   - Progressive stacking k=1..4 at 6× on OpenWebText, blocks [7, 5, 4, 1], 3 seeds [42, 123, 7].
+   - Baseline GPT-2 PPL (OWT): 57.653. Single-block deltas: all negative (−3.3% to −7.6%) — each individual block swap improves OWT PPL (probe alignment effect from cycle 057).
+   - Stacked PPL: k=1 55.74 (−3.3%), k=2 61.75 (+7.1%), k=3 69.29 (+20.2%), k=4 75.06 (+30.2%).
+   - Marginals: m1=−3.32, m2=+10.42, m3=+13.08, m4=+10.01 pp. Second differences: [+13.74, +2.66, −3.07]. Mixed-sign — not monotonically convex.
+   - Ratio metric (stacked/sum-of-singles): ill-defined in all cases (denominator negative, all single deltas ≤ 0).
+   - Residual-stream MSE grows with k; block 7 dominates cumulative MSE at each stacking level.
+   - Outcome: INCONCLUSIVE — ratio metric is ill-defined due to negative single-block deltas. Sharp nonlinearity at k=2 (+13.7 pp second diff) is consistent with super-additive compounding onset, but the marginal curve is not monotonically convex. k=1 negative baseline confounds ratio analysis; primary criterion is inapplicable as written.
+   - Cycle: 058
+   - Artifacts: `experiments/stacking_error_budget_gpt2.py`, `autoresearch/results/cycle_058_stacking_budget.json`, `autoresearch/results/cycle_058_stacking_budget.png`
 
 ### Cycle 057
 
