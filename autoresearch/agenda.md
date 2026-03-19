@@ -8,14 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-55. **Lstsq refit quality degradation analysis across compression ratios — GPT-2 FFN**
-   - The geometric method uses least-squares refit of W_down after channel selection. At high compression (6x+), the refit becomes increasingly underdetermined (fewer channels = fewer columns in the design matrix). Measure the condition number of the refit system and held-out reconstruction MSE at ratios {2x, 4x, 6x, 8x} on blocks 7, 5, 4. If the refit condition number explodes at a specific ratio, that explains any compression ceiling and motivates regularized refit (ridge/truncated SVD) as a next step. This is an analysis experiment that explains mechanism, not just measures outcome.
-   - Type: analysis
-   - Confirmed if: condition number increases >10x between 4x and 8x AND held-out MSE / train MSE ratio exceeds 2.0 at 8x for a majority of blocks (overfitting in the refit).
-   - Refuted if: condition number stays below 1e4 across all ratios and held-out MSE tracks train MSE closely, indicating the refit is well-conditioned and the ceiling is from information loss, not fitting artifacts.
-   - Inconclusive if: condition number rises but held-out MSE remains close to train MSE, suggesting the system is ill-conditioned but regularization would not help.
-   - Depends on: 54
-
 50. **Centroid-merge quality as a function of probe corpus size — GPT-2 FFN**
    - Cycle 027 established centroid similarity (ρ=0.85) as the merge signal on a fixed probe corpus. It is unknown whether this signal is stable under small probe sets (e.g., 64 vs 512 vs 2048 tokens), which determines minimum data requirements for deployment. Run single-block swap with centroid-guided merge on one representative block across probe sizes {64, 128, 256, 512, 1024, 2048} and measure PPL. Also measure channel selection stability (Jaccard index of selected channels across runs with different random seeds at the same probe size).
    - Type: empirical
@@ -584,3 +576,10 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Outcome: INCONCLUSIVE — recipe works but requires corpus-specific tuning (as predicted by cycle 044)
    - Cycle: 045
    - Artifacts: `autoresearch/results/cycle_045_recipe.md`, `autoresearch/results/cycle_045_validation.json`, `autoresearch/results/cycle_045_validation.png`, `experiments/compression_recipe_validation.py`
+
+### Cycle 046
+
+55. **Lstsq refit quality degradation analysis — GPT-2 FFN** *(CRASH — cycle 046)*
+   - SIGSEGV during model loading. System memory pressure after 13 consecutive experiment cycles. Not a code bug — retry in fresh session.
+   - Outcome: CRASH
+   - Cycle: 046
