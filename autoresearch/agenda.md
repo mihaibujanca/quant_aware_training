@@ -85,15 +85,18 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: reconstruction works but PH regularization has no measurable effect (topology matching is trivially satisfied or trivially ignored).
    - Depends on: 22, 24
 
-45. **Weight-space diffusion on topological level sets — toy ReLU [MOONSHOT]**
-   - Starting from trained weights θ₀, explore the weight space to find maximally compressed parameters that preserve the representation topology. Method: (a) Compute baseline persistent diagram PD₀ of representations at each layer (on training data). (b) Run projected Langevin dynamics: θ_{t+1} = θ_t − ε·∇||θ||₁ + √(2ε)·noise (drift toward minimum L1 norm = sparsity). (c) After each step, compute PD_t. If Wasserstein₁(PD_t, PD₀) > δ (topology changed), reject the step. (d) Run for T steps. The trajectory traces the "topological level set" — all weights producing the same representational topology. (e) Select the point θ* with minimum ||θ||₁ on the trajectory. If the topological level set is large (θ* has much lower norm than θ₀), the network is over-parameterized for its topology. Then: prune θ* (zero out small weights) and measure accuracy. Compare with: (a) standard magnitude pruning of θ₀, (b) L1-regularized retraining.
-   - Type: implementation + empirical
-   - Confirmed if: topological diffusion achieves ≥30% weight norm reduction while preserving PD within δ AND the pruned θ* achieves ≥5pp better accuracy than standard magnitude pruning at matched sparsity.
-   - Refuted if: topological level set is tiny (any perturbation changes PD) or the minimum-norm point within the level set has essentially the same norm as θ₀ (no topological redundancy).
-   - Inconclusive if: norm reduction is achieved but pruned accuracy is not better than standard magnitude pruning, suggesting topology preservation is too coarse a constraint.
-   - Depends on: none
-
 ## PAST EXPERIMENTS
+
+### Cycle 066
+
+45. **Weight-space diffusion on topological level sets — toy ReLU [MOONSHOT]** *(REFUTED — cycle 066)*
+   - Starting from trained weights θ₀, explore the weight space to find maximally compressed parameters that preserve the representation topology. Method: (a) Compute baseline persistent diagram PD₀ of representations at each layer (on training data). (b) Run projected Langevin dynamics: θ_{t+1} = θ_t − ε·∇||θ||₁ + √(2ε)·noise (drift toward minimum L1 norm = sparsity). (c) After each step, compute PD_t. If Wasserstein₁(PD_t, PD₀) > δ (topology changed), reject the step. (d) Run for T steps. The trajectory traces the "topological level set" — all weights producing the same representational topology. (e) Select the point θ* with minimum ||θ||₁ on the trajectory. If the topological level set is large (θ* has much lower norm than θ₀), the network is over-parameterized for its topology. Then: prune θ* (zero out small weights) and measure accuracy. Compare with: (a) standard magnitude pruning of θ₀, (b) L1-regularized retraining.
+   - Cycle 066 (rev2, penalized Langevin variant): 3 seeds × spirals (2→32×4→1). Penalized Langevin without task loss: L(θ) = ||θ||₁ + λ_topo·W₁(PD_θ, PD₀). W₁ drift controlled (<0.20 of W₁_ref for all seeds). Norm reduction: 3.8–7.6% (far below 30% threshold). acc_topo best checkpoint: 83–91%, vs magnitude pruning 99–100%, vs L1-retrain 97–99%. acc_topo is -6pp to -17pp BELOW both baselines.
+   - Root cause: L1 subgradient (sign(θ)) without a task loss term destroys accuracy immediately (acc drops to ~45-50% on step 0, recovers transiently due to topology pressure). The topological level set constraint is either too weak (W₁ can be preserved while accuracy collapses) or the sign gradient is too destructive. Norm reduction stays below 8% because the optimizer can't reduce norm while maintaining any acc ≥ 80% floor.
+   - Outcome: REFUTED — 0/3 seeds meet the ≥30% norm reduction criterion; acc_topo is consistently worse than both baselines. The penalized Langevin approach without task loss does not work.
+   - Cycle: 066
+   - Artifacts: `experiments/weight_space_topo_diffusion.py`, `autoresearch/results/cycle_066_topo_diffusion.json`, `autoresearch/results/cycle_066_topo_diffusion.png`
+   - Depends on: none
 
 ### Cycle 065
 
