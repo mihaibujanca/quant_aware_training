@@ -1,0 +1,42 @@
+cycle: 049
+item: 51
+verdict: REFUTED
+commit: 72ebee5
+
+experiment_script: experiments/per_block_compressor_data_scaling.py
+results_json: autoresearch/results/cycle_049_per_block_data_scaling.json
+
+baseline_ppl: 122.35
+k_channels: 384
+distill_steps: 500
+lr: 1e-3
+large_max_tokens: 32768
+small_max_tokens: 4096
+
+distill_wins_32k: 1/12  (criterion: >=8/12)
+
+per_block_results_32k:
+  block 0: geo=127.11 distill=128.65 margin=-1.54 win=no
+  block 1: geo=122.55 distill=120.59 margin=+1.96 win=YES
+  block 2: geo=122.13 distill=122.55 margin=-0.42 win=no
+  block 3: geo=121.45 distill=123.41 margin=-1.96 win=no
+  block 4: geo=121.54 distill=122.91 margin=-1.37 win=no
+  block 5: geo=120.84 distill=124.66 margin=-3.82 win=no
+  block 6: geo=121.69 distill=122.51 margin=-0.83 win=no
+  block 7: geo=121.14 distill=121.02 margin=+0.13 win=no
+  block 8: geo=122.61 distill=123.83 margin=-1.22 win=no
+  block 9: geo=122.81 distill=122.03 margin=+0.78 win=no
+  block 10: geo=122.58 distill=121.73 margin=+0.85 win=no
+  block 11: geo=127.25 distill=127.62 margin=-0.37 win=no
+
+repro_4k_vs_cycle030:
+  block 8: geo=122.61 distill=123.90  ref_geo=122.53 ref_distill=122.94
+  block 9: geo=122.81 distill=121.64  ref_geo=122.54 ref_distill=122.91
+  block 10: geo=122.58 distill=122.25  ref_geo=122.14 ref_distill=122.88
+  block 11: geo=127.25 distill=130.10  ref_geo=126.03 ref_distill=131.86
+
+key_finding: 8x more training data (4K->32K tokens) had no effect.
+  Distillation block-MSE is consistently 3-500x higher than geometric,
+  indicating structural underfitting, not data scarcity.
+  The 500-step Adam loop cannot match the lstsq-quality fit that
+  geometric achieves analytically in one shot.
