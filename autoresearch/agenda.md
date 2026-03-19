@@ -108,16 +108,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-
-
-70. **Training-distribution probing with OpenWebText subset — GPT-2 FFN**
-   - The program's central question asks about compression with training-distribution data, but all experiments so far used Shakespeare (narrow) or WikiText-2 (still mismatched). GPT-2 was trained on WebText; OpenWebText is the closest public replica. Download first 10K tokens from `Skylion007/openwebtext` via HuggingFace datasets. Run the full k=4@6× corrected recipe (blocks 7, 5, 4, 1) using OpenWebText as BOTH probe and eval corpus. Compare PPL degradation to Shakespeare-probed (+8.5%) and WikiText-probed (+44%). If training-distribution probing yields ≤ +15% on its own eval set, the method works as intended and corpus specificity is a probe-mismatch artifact, not a fundamental limitation.
-   - Type: empirical
-   - Confirmed if: OpenWebText-probed, OpenWebText-evaluated k=4@6× corrected PPL degradation is ≤ +15%.
-   - Refuted if: degradation is ≥ +30% (even training-distribution data cannot save the method at k=4@6×).
-   - Inconclusive if: degradation is 15-30% — better than WikiText but still too high for practical use.
-   - Depends on: none
-
 71. **Jacobian Frobenius std as corpus-sensitivity predictor — GPT-2 FFN**
    - Cycle 048 confirmed P1 (Jacobian Frobenius std) as a strong compression-difficulty oracle (rho=0.84 at 8×). This experiment tests whether the SAME signal predicts corpus sensitivity: compute P1 on Shakespeare probes and on WikiText-2 probes separately for all 12 blocks. If P1 is corpus-invariant (Spearman between Shakespeare-P1 and WikiText-P1 rankings ≥ 0.85), then compression difficulty is an intrinsic block property and the oracle generalizes. If P1 diverges across corpora, blocks that are "easy" on Shakespeare may be "hard" on WikiText-2 — and the oracle must be re-run on each target distribution.
    - Type: empirical
@@ -128,6 +118,17 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 
 ## PAST EXPERIMENTS
+
+### Cycle 054
+
+70. **Training-distribution probing with OpenWebText subset — GPT-2 FFN** *(REFUTED — cycle 054)*
+   - Full k=4@6× corrected recipe (blocks 7, 5, 4, 1) using OpenWebText as BOTH probe and eval corpus. 3 seeds [42, 123, 7].
+   - Per-seed corrected PPL degradation: seed 42 = +54.01%, seed 123 = +45.68%, seed 7 = +44.94%.
+   - Mean corrected degradation: +48.21% ±5.03 (std across seeds).
+   - Reference comparison: Shakespeare-probed = +8.5%, WikiText-2-probed = +44%.
+   - Verdict: REFUTED. Even using GPT-2's training distribution (OpenWebText) as the probe corpus, corrected PPL degradation is +48.21% — well above the +30% refutation threshold. OpenWebText performance is comparable to WikiText-2 (+44%), not to Shakespeare (+8.5%). The method's corpus specificity is NOT a probe-mismatch artifact: the fundamental limitation is the k=4@6× compression ratio, not the probe corpus identity. Training-distribution probing does not rescue the method.
+   - Cycle: 054
+   - Artifacts: `experiments/openwebtext_training_dist_probe.py`, `data/openwebtext_sample.txt`, `autoresearch/results/cycle_054_openwebtext_probe.json`, `autoresearch/results/cycle_054_openwebtext_probe.png`
 
 ### Cycle 053
 

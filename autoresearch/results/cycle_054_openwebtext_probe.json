@@ -1,0 +1,39 @@
+{
+  "openwebtext": [
+    {
+      "seed": 42,
+      "baseline": 57.65287371228062,
+      "uncorrected": 91.2686908025305,
+      "corrected": 88.78929647655123,
+      "rel_uncorrected": 58.307270610674486,
+      "rel_corrected": 54.00671425271598
+    },
+    {
+      "seed": 123,
+      "baseline": 46.88114352847142,
+      "uncorrected": 73.51216480521113,
+      "corrected": 68.29619079933627,
+      "rel_uncorrected": 56.80540036436271,
+      "rel_corrected": 45.679447340825355
+    },
+    {
+      "seed": 7,
+      "baseline": 50.44882078139756,
+      "uncorrected": 77.89772085542053,
+      "corrected": 73.12099297487691,
+      "rel_uncorrected": 54.40939877061398,
+      "rel_corrected": 44.94093586789935
+    }
+  ],
+  "summary": {
+    "openwebtext": {
+      "mean": 48.20903248714689,
+      "std": 5.034499497469439
+    },
+    "references": {
+      "shakespeare": 8.5,
+      "wikitext2": 44.0
+    },
+    "verdict": "refuted"
+  }
+}
