@@ -1,0 +1,29 @@
+cycle: 054
+item: 70
+title: Training-distribution probing with OpenWebText subset — GPT-2 FFN
+verdict: REFUTED
+
+metrics:
+  openwebtext_corrected_mean: +48.21%
+  openwebtext_corrected_std: ±5.03
+  seed_42_corrected: +54.01%
+  seed_123_corrected: +45.68%
+  seed_7_corrected: +44.94%
+  shakespeare_reference: +8.5%
+  wikitext2_reference: +44.0%
+  refutation_threshold: 30%
+
+interpretation:
+  Using GPT-2's training distribution (OpenWebText) as both probe and eval corpus
+  yields +48.21% corrected PPL degradation — 1.6× above the +30% refutation threshold.
+  Performance is comparable to WikiText-2 (+44%), not Shakespeare (+8.5%).
+  The corpus sensitivity finding is NOT a probe-mismatch artifact.
+  The fundamental limitation is the k=4@6× compression ratio itself.
+
+artifacts:
+  experiments/openwebtext_training_dist_probe.py
+  data/openwebtext_sample.txt (500 OWT docs, 2.48M chars — gitignored)
+  autoresearch/results/cycle_054_openwebtext_probe.json
+  autoresearch/results/cycle_054_openwebtext_probe.png
+
+commit: 3d49f18
