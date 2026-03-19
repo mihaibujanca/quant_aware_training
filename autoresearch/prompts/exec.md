@@ -4,6 +4,20 @@ Cycle: {CYCLE}
 Selected item: {ITEM_NUMBER}
 Item text: {ITEM_LINE}
 
+## Pre-execution gate
+
+Before doing anything else, check that `autoresearch/reviews/cycle_{CYCLE}.md` exists
+and contains a `verdict:` line. If the file is missing or has no verdict, **stop
+immediately** — write a single line to the manifest:
+`item_number={ITEM_NUMBER}` `outcome=crash` `key_metric=N/A`
+`commit=NONE` `paths=NONE` and set the reason to "design review missing".
+Do not proceed to execution without a completed design review.
+
+If the review verdict is `REJECT`, stop with the same crash manifest and
+reason "design review rejected".
+
+If `APPROVE` or round-2 `REVISE`, proceed.
+
 Read the plan at `autoresearch/plans/cycle_{CYCLE}.md` and execute it step by step.
 
 ## Rules
@@ -18,7 +32,7 @@ Read the plan at `autoresearch/plans/cycle_{CYCLE}.md` and execute it step by st
 
 ## For Literature Items
 
-- Use WebFetch to read papers. Try arxiv abs pages, author pages, or direct PDF URLs.
+- Use the available web tools to read papers. In Claude, use WebFetch/WebSearch. In Codex, use web search/open on arxiv abs pages, author pages, or direct PDF URLs.
 - Write a structured summary to `autoresearch/results/cycle_{CYCLE}_summary.md` with:
   - Paper title and authors
   - Key results relevant to geometric compression
