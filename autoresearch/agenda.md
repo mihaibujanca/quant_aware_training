@@ -8,14 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-58. **Inter-block error correction via residual-stream lstsq adjustment — GPT-2 FFN**
-   - The k=4→k=5 degradation cliff suggests compounding error through the residual stream. Test a cheap post-hoc correction: after compressing k blocks, fit a single global affine correction C (via lstsq on probe data) at the residual stream AFTER the last compressed block, minimizing ||h_float - h_compressed||² at that layer. This is zero-parameter at inference (fold C into the next layer's weights). If inter-block error is mostly a mean shift + low-rank distortion in the residual stream, this correction could recover several pp. Apply to the k=5 configuration from cycle 033 and measure PPL before/after correction.
-   - Type: implementation + empirical
-   - Confirmed if: correction reduces the k=5 PPL gap by ≥3pp (from +17.46% toward +14% or better).
-   - Refuted if: correction reduces the gap by <1pp, indicating the compounding error is distributed and not correctable at a single insertion point.
-   - Inconclusive if: correction helps at k=5 but worsens k=4 (overcorrection), suggesting the technique is fragile.
-   - Depends on: 53
-
 59. **Generalization probe: single-block 4× geometric compression on GPT-2-medium — FFN**
    - All results so far are on GPT-2-small (12 layers, d=768, FFN=3072). Test whether the geometric compression method (topk + centroid + lstsq refit) transfers to GPT-2-medium (24 layers, d=1024, FFN=4096). Run single-block swaps at 4× on a sample of 6 blocks (evenly spaced: 0, 4, 8, 12, 16, 20) with 3 seeds and 200 eval sequences. This answers the generalization question: does the method depend on GPT-2-small's specific scale, or does it work on larger models?
    - Type: empirical
@@ -551,3 +543,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Outcome: REFUTED — all 5-block configs exceed 15% regardless of combo
    - Cycle: 038
    - Artifacts: `autoresearch/results/cycle_038_block_ordering.json`, `autoresearch/results/cycle_038_block_ordering.png`, `experiments/ffn_block_ordering_k5.py`
+
+### Cycle 039
+
+58. **Inter-block error correction via residual-stream lstsq adjustment — GPT-2 FFN** *(CONFIRMED — cycle 039)*
+   - Affine correction C fit via lstsq on probe data at the residual stream after the last compressed block (block 8 input). k=5 (blocks 7,5,1,3,6 at 6×): +16.12% → +12.53%, recovery 3.6pp (≥3pp threshold). k=4 also benefits: +9.59% → +8.35%, recovery 1.23pp (no overcorrection). Correction MSE reduction: 20.8%. Correction is high-rank (rank-95 = 392/768) — the error is distributed, not low-rank, but a significant affine component exists. Zero extra inference parameters (correction applied via hook).
+   - Outcome: CONFIRMED — k=5 correction recovers 3.6pp (≥3pp criterion met), k=4 not worsened
+   - Cycle: 039
+   - Artifacts: `autoresearch/results/cycle_039_residual_correction.json`, `autoresearch/results/cycle_039_residual_correction.png`, `experiments/ffn_residual_correction_k5.py`
