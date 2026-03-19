@@ -109,6 +109,17 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: low Procrustes residual but shared-weight PPL degrades significantly (rotation alone doesn't capture the functional difference).
    - Depends on: none (but benefits from item 80 results)
 
+88. **Learned bottleneck autoencoder for FFN compression — GPT-2 FFN [MOONSHOT]**
+   - New formulation of the autoencoder compression idea (see item 44 for the original toy-ReLU version). topk+lstsq is axis-aligned linear encoding + linear decoding — a special case. Replace it with a learned bottleneck: Encoder E: h ∈ R^3072 → z ∈ R^k, Decoder D: z → y ∈ R^768, where h = GELU(W_up @ x + b_up) is the FFN hidden activation and y is the block output. The critical design choice: train under the **model loss** (next-token cross-entropy with the bottleneck swapped into the live model), not per-block reconstruction MSE. This way the bottleneck learns to preserve what matters for downstream computation, not just what's large in magnitude. The information bottleneck principle (Tishby et al.) predicts that under increasing compression pressure (shrinking k), the last features to die are the structurally essential ones — the irreducible functional core of the block.
+   - **Sweep**: k ∈ {512, 384, 256, 128, 64} on blocks [1, 4, 7, 11]. For each k, train E+D for 2000 steps on OWT (lr=1e-4, freeze everything else). Track: (a) single-block swap PPL vs topk+lstsq at matched k, (b) which hidden channels have highest encoder weight — compare to topk ranking, (c) whether encoder learns a near-linear map (measure nonlinearity as ||E(h) − E_linear(h)||/||E(h)|| on held-out data). If the encoder stays near-linear, the autoencoder is just finding a better linear projection than topk (like item 82's Jacobian SVD, but learned). If it goes nonlinear, there's compressible structure that no linear method can capture.
+   - **Stacking extension**: after per-block autoencoders are trained, stack k=4 and measure PPL. Then fine-tune all 4 encoder-decoder pairs jointly under model loss (analogous to joint gradient polish). Compare: (a) per-block AE vs per-block topk+lstsq, (b) joint-tuned AE vs topk+lstsq+gradient polish.
+   - **The real question**: what survives at k=64 (48× compression)? Visualize the encoder's top principal directions in h-space. These are the irreducible features — what the block *must* compute. Compare across blocks: do different blocks protect the same features (globally shared structure, consistent with cycle 029) or different ones (block-specific essential computation)?
+   - Type: implementation + empirical
+   - Confirmed if: AE outperforms topk+lstsq by ≥ 5% relative PPL at k=384 in ≥ 2/4 blocks, OR AE achieves viable compression (≤ +15% PPL) at k=128 where topk+lstsq fails.
+   - Refuted if: AE performs within 2% of topk+lstsq at all k values AND encoder is near-linear (nonlinearity < 5%) — meaning topk+lstsq is already near-optimal and there's no nonlinear structure to exploit.
+   - Inconclusive if: AE outperforms at some k but not others, or encoder is nonlinear but the PPL gain is small (< 3%).
+   - Depends on: none
+
 ### Closed — OBSOLETE items (do not run)
 
 23. ~~**Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**~~ ⚠ OBSOLETE: Superseded by item 80 (Jacobian effective rank census).
