@@ -109,13 +109,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ### P1
 
 
-69. **Per-block corpus sensitivity isolation — GPT-2 FFN**
-   - The k=4 corrected pipeline (blocks 7, 5, 4, 1 at 6×) degrades +8.5% on Shakespeare but +44% on WikiText-2 (cycle 045). This experiment isolates which block(s) drive the gap. For each of the 4 blocks independently: compress that single block using Shakespeare probes, evaluate PPL on both Shakespeare and WikiText-2. Compute per-block corpus sensitivity = (WikiText-2 rel PPL) - (Shakespeare rel PPL). The block with the largest sensitivity delta is the bottleneck for corpus robustness. Also run the same single-block test with WikiText-2 probes to check if the sensitivity is in channel selection or refit.
-   - Type: empirical
-   - Confirmed if: one block accounts for ≥ 50% of the total corpus sensitivity gap (it is a localized problem, fixable per-block).
-   - Refuted if: all 4 blocks contribute roughly equally (within ±25% of mean), indicating corpus sensitivity is a systemic property of topk+lstsq.
-   - Inconclusive if: sensitivity is concentrated but switches between channel-selection and refit depending on the block.
-   - Depends on: none
 
 70. **Training-distribution probing with OpenWebText subset — GPT-2 FFN**
    - The program's central question asks about compression with training-distribution data, but all experiments so far used Shakespeare (narrow) or WikiText-2 (still mismatched). GPT-2 was trained on WebText; OpenWebText is the closest public replica. Download first 10K tokens from `Skylion007/openwebtext` via HuggingFace datasets. Run the full k=4@6× corrected recipe (blocks 7, 5, 4, 1) using OpenWebText as BOTH probe and eval corpus. Compare PPL degradation to Shakespeare-probed (+8.5%) and WikiText-probed (+44%). If training-distribution probing yields ≤ +15% on its own eval set, the method works as intended and corpus specificity is a probe-mismatch artifact, not a fundamental limitation.
@@ -135,6 +128,17 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 
 ## PAST EXPERIMENTS
+
+### Cycle 053
+
+69. **Per-block corpus sensitivity isolation — GPT-2 FFN** *(INCONCLUSIVE — cycle 053)*
+   - Single-block 6× compression (topk, seed 42) for blocks [7, 5, 4, 1] with Shakespeare and WikiText-2 probes separately. Baselines: Shakespeare=123.35 PPL, WikiText-2=71.84 PPL.
+   - Shakespeare probes: all 4 blocks show positive sensitivity delta (WikiText-2 degrades more than Shakespeare). Per-block deltas: block 7=+10.81pp, block 5=+11.20pp, block 4=+14.52pp, block 1=+6.07pp. Block 4 is most sensitive at 34.1% of total — below the 50% concentration threshold.
+   - WikiText-2 probes: smaller overall deltas (blocks closer to matched performance). Block 4=+3.23pp (45.7%), block 1=-2.17pp, block 7=-1.13pp, block 5=+0.54pp.
+   - Verdict: INCONCLUSIVE. No single block reaches 50% concentration. Block 4 is consistently the most sensitive under both probe regimes (34.1% and 45.7%), and the sensitivity is spread across all 4 blocks under Shakespeare probes (+6 to +14pp range). The gap is systemic — all middle blocks contribute — but block 4 is consistently the worst.
+   - Outcome: INCONCLUSIVE — concentration < 50% for both probe corpora. Block 4 is the leading bottleneck (34–46% of total) but does not dominate. Corpus sensitivity appears to be a distributed property of topk channel selection, not a single-block artifact.
+   - Cycle: 053
+   - Artifacts: `experiments/per_block_corpus_sensitivity.py`, `autoresearch/results/cycle_053_per_block_sensitivity.json`, `autoresearch/results/cycle_053_per_block_sensitivity.png`
 
 ### Cycle 050
 
