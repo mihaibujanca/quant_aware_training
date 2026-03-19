@@ -1,0 +1,5 @@
+item_number=54
+outcome=confirmed
+key_metric=3/3 blocks tolerate 10x; block 7: +0.05%, block 5: -0.59%, block 4: -0.54% (all sub-1%)
+commit=f5cda05
+paths=autoresearch/results/cycle_040_ceiling_scan.json,autoresearch/results/cycle_040_ceiling_scan.png,experiments/compression_ceiling_scan_gpt2.py
