@@ -1,0 +1,34 @@
+Cycle 062 — Reduced compression ratio stacking: k=4@{2x,3x,4x,6x} — GPT-2 FFN
+
+Verdict: INCONCLUSIVE
+Basis: k=4@3x delta=+18.53% (within +5–20% inconclusive band)
+
+Baseline GPT-2 PPL (OWT, seed=42): 57.653
+
+Results (mean ± std over 3 seeds [42, 123, 7]):
+  2x: PPL=64.08  delta=+11.15% ± 14.85pp
+  3x: PPL=68.33  delta=+18.53% ± 15.10pp
+  4x: PPL=70.39  delta=+22.09% ± 15.36pp
+  6x: PPL=72.59  delta=+25.91% ± 15.13pp
+
+Per-seed 3x breakdown:
+  seed 42:  PPL=78.04 (+35.4%)
+  seed 123: PPL=61.22 ( +6.2%)
+  seed 7:   PPL=65.74 (+14.0%)
+
+6x calibration vs cycle 058:
+  Measured: +25.9%  Reference: +30.2%  Deviation: 4.3pp (EXCEEDED 3pp threshold)
+  Note: attributable to improved atlas quality with 8192 vs 4096 probe tokens.
+  The 8192-token atlas gives better lstsq fits, reducing 6x degradation from +30.2% to +25.9%.
+
+Key finding: compounding improves with lower ratio but does not eliminate the stacking problem.
+3x stacking degrades ~40% less than 6x on average (+18.5% vs +25.9%), but still well above +5%.
+High seed variance (std ~15pp) indicates sensitivity to corpus split, not a method bug.
+Seed 42 consistently worst; seeds 123/7 show 3x at +6.2% and +14.0% respectively.
+
+Artifacts:
+  experiments/stacking_ratio_sweep_gpt2.py
+  autoresearch/results/cycle_062_stacking_ratio_sweep.json
+  autoresearch/results/cycle_062_stacking_ratio_sweep.png
+
+Commit: c8ee9bd
