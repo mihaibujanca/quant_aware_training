@@ -1,0 +1,20 @@
+cycle: 056
+item: 72
+title: Compression ratio sweep on OpenWebText: finding the viable frontier — GPT-2 FFN
+verdict: CONFIRMED
+commit: 29e3a14
+
+key_metrics:
+  block7: 2x=+16.74%±1.94, 3x=+11.50%±1.31, 4x=+10.24%±0.67, 6x=+9.44%±0.68
+  block5: 2x=+15.53%±1.23, 3x=+10.12%±0.56, 4x=+9.10%±0.69, 6x=+8.25%±0.64
+  block4: 2x=+13.60%±0.70, 3x=+8.70%±0.31, 4x=+7.52%±0.17, 6x=+6.61%±0.05
+
+criterion_evaluation:
+  4x achieves <10% PPL on 2/3 blocks (block5: 9.10%, block4: 7.52%) → PASS
+  2x exceeds 10% on all 3 blocks → FAIL
+  3x exceeds 10% on 2/3 blocks (block7: 11.50%, block5: 10.12%) → FAIL
+
+artifacts:
+  experiments/owt_ratio_sweep.py
+  autoresearch/results/cycle_056_owt_ratio_sweep.json
+  autoresearch/results/cycle_056_owt_ratio_sweep.png

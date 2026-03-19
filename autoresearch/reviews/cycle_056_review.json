@@ -1,0 +1,1 @@
+{"verdict": "APPROVE", "round": 1, "issues": ["minor: report per-cell std alongside mean in JSON output to flag unreliable cells (std > 5%)", "minor: note in results that frontier is for raw topk+lstsq without affine correction — near-boundary ratios may benefit from a correction follow-up"]}

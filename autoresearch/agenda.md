@@ -134,13 +134,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 056
 
-72. **Compression ratio sweep on OpenWebText: finding the viable frontier — GPT-2 FFN** *(CONFIRMED — cycle 056)*
+72. **Compression ratio sweep on OpenWebText: finding the viable frontier — GPT-2 FFN** *(INCONCLUSIVE — cycle 056, audit-corrected)* ⚠ **FLAWED: MP3 (lstsq underdetermination at 2×)**
    - Single-block swaps (no correction) at ratios {2×, 3×, 4×, 6×} on blocks [7, 5, 4] using OpenWebText as BOTH probe and eval corpus. 3 seeds [42, 123, 7], 200 eval sequences each.
    - Per-block mean rel PPL (across 3 seeds): block7: 2x=+16.74%, 3x=+11.50%, 4x=+10.24%, 6x=+9.44% | block5: 2x=+15.53%, 3x=+10.12%, 4x=+9.10%, 6x=+8.25% | block4: 2x=+13.60%, 3x=+8.70%, 4x=+7.52%, 6x=+6.61%
-   - Criterion evaluation: 4× achieves <10% PPL on 2/3 blocks (block5: 9.10%, block4: 7.52%; block7: 10.24% just above threshold). 2× fails all 3 blocks. 3× passes only block4.
-   - 6× sanity check: block4=+6.61% (cycle 054 uncorrected ~+56% at multi-block stack). Single-block vs multi-block stacking accounts for the gap — consistent with plan's expectation.
-   - Verdict: CONFIRMED. 4× is the viable frontier on OpenWebText (raw topk+lstsq, single block). 2× is not viable despite halving the compression. The frontier is narrow: 4× marginal (10.24%) on block7, 3× fails 2/3 blocks. This constrains practical deployment to 4× or better per-block, with stacking remaining the open problem.
+   - ⚠ **Audit correction**: Non-monotonic pattern (2× worse than 4×) is an lstsq overfitting artifact. At 2× (1536 channels kept), the lstsq system has only 1.33× overdetermination (2048 tokens / 1537 params). At 4× (768 channels), overdetermination is 2.66×. The 2× and 3× results are unreliable due to insufficient probe budget relative to parameter count. 4× and 6× results may be valid (overdetermination ≥2.66×) but the frontier conclusion is premature without fixing the probe budget.
+   - Outcome: INCONCLUSIVE (audit-corrected from CONFIRMED) — 4× passes criterion on 2/3 blocks but 2× failure is an artifact of lstsq underdetermination, not genuine compression difficulty. Needs re-run with more probe tokens or L2 regularization.
    - Cycle: 056
+   - Commit: 29e3a14
    - Artifacts: `experiments/owt_ratio_sweep.py`, `autoresearch/results/cycle_056_owt_ratio_sweep.json`, `autoresearch/results/cycle_056_owt_ratio_sweep.png`
 
 ### Cycle 055
