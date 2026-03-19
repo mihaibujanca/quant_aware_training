@@ -1,0 +1,27 @@
+cycle: 058
+item: 75
+title: Multi-block stacking error budget: additive vs compounding degradation — GPT-2 FFN
+verdict: INCONCLUSIVE
+commit: b9c086d
+
+experiment: experiments/stacking_error_budget_gpt2.py
+results_json: autoresearch/results/cycle_058_stacking_budget.json
+results_plot: autoresearch/results/cycle_058_stacking_budget.png
+
+key_metrics:
+  baseline_ppl: 57.653
+  single_block_deltas_pct: {block_7: -3.32, block_5: -4.38, block_4: -5.58, block_1: -7.64}
+  stacked_ppl: {k1: 55.740, k2: 61.747, k3: 69.290, k4: 75.062}
+  stacked_delta_pct: {k1: -3.32, k2: +7.10, k3: +20.19, k4: +30.20}
+  marginals_pp: {k1: -3.32, k2: +10.42, k3: +13.08, k4: +10.01}
+  second_diffs_pp: [+13.74, +2.66, -3.07]
+  all_positive_second_diffs: false
+  mean_second_diff: +4.44
+  ratio_k4_k1: -3.02 (marginal-based; ratio/sum-singles ill-defined, all negative denominators)
+
+reasoning:
+  Primary criterion (ratio stacked/sum-of-singles) is ill-defined in all seeds because
+  every single-block swap produces negative PPL delta (improves OWT PPL due to probe
+  alignment; cycle 057 finding persists). Marginal analysis shows sharp nonlinearity
+  at k=2 (second diff +13.74 pp) then partial plateau; not monotonically convex.
+  Mixed-sign second differences → INCONCLUSIVE by plan criteria.
