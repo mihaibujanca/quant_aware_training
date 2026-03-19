@@ -1,0 +1,5 @@
+item_number=67
+outcome=inconclusive
+key_metric=Design review rejected round 2 (discarded-subspace projector formula wrong)
+commit=NONE
+paths=NONE

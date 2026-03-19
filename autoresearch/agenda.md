@@ -33,13 +33,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: Jaccard is stable but PPL variance across seeds is high (> 3%), suggesting instability from a different source.
    - Depends on: 26, 27
 
-67. **Lstsq refit residual analysis: is the error correctable or chaotic? — GPT-2 FFN**
-   - The lstsq refit at high compression ratios acts as implicit regularization (cycles 035, 040 show sub-baseline PPL). But on broader corpora it fails (cycle 044). Characterize the refit residual: for blocks [7, 5, 4] at 6× on both Shakespeare and WikiText-2 probe data, compute the lstsq residual E = f_block(x) - W_refit @ x_selected. Measure: (a) rank of E via SVD (is the residual low-rank and thus correctable?), (b) correlation of E across tokens (structured vs noise-like), (c) whether the residual direction aligns with the discarded channels' subspace. If the residual is low-rank on Shakespeare but full-rank on WikiText-2, that explains why correction works on narrow distributions and fails on broad ones.
-   - Type: analysis
-   - Confirmed if: residual rank-90% is ≤ 50 on Shakespeare AND ≥ 200 on WikiText-2 for a majority of tested blocks (explaining the corpus specificity mechanistically).
-   - Refuted if: residual rank is similar on both corpora (the corpus specificity is not a rank phenomenon).
-   - Inconclusive if: rank differs but the rank gap doesn't predict PPL gap across blocks.
-   - Depends on: none
 
 23. **Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**
    - ⚠ **BLOCKED**: Depends on item 22 (REFUTED). Item 22 found no functional redundancy in toy networks, making the GPT-2 Jacobian k-means analog unmotivated per agenda dependency rule.
@@ -618,3 +611,47 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - SIGSEGV during model loading. System memory pressure after 13 consecutive experiment cycles. Not a code bug — retry in fresh session.
    - Outcome: CRASH
    - Cycle: 046
+
+### Cycle 047
+
+27. **Persistent homology of activation manifold through depth — toy ReLU** *(REFUTED — cycle 047)*
+   - Trained 2→32×4→1 spirals network (acc=98.4%). Total persistence L1-L4: 122.7, 119.1, 113.4, 227.1. Only 2/3 transitions decrease (L4 spikes up); 80% monotonicity criterion NOT MET. Largest Betti drop at L3 but lowest r is at L4 — rank-1 prediction wrong. Spearman(drop, r) = +0.5 (wrong sign, n=3). Random-init monotonically decreases (81→39→18→4), trained network does not. Gaussian null (1917-3562) much higher than trained, confirming PH measures real structure — but the structure does not simplify monotonically through depth.
+   - Outcome: REFUTED
+   - Cycle: 047
+   - Commit: f2d83c5
+   - Artifacts: `experiments/phom_toy_relu.py`, `autoresearch/results/cycle_047_phom_toy.json`, `autoresearch/results/cycle_047_phom_toy.png`
+
+### Cycle 048
+
+30. **Local complexity proxy as a compression difficulty predictor — GPT-2** *(CONFIRMED — cycle 048)*
+   - Jacobian Frobenius std (P1) strongly predicts compression difficulty: rho_full=0.839 at 8x (p=0.0003), rho_without_L0=0.818 (p=0.001). At 16x: rho_full=0.608, rho_without_L0=0.527. Leverage-point guard passed. Spectral norm and effective rank proxies failed. P1 is a cheap compression-difficulty oracle.
+   - Outcome: CONFIRMED
+   - Cycle: 048
+   - Commit: 0079ae1
+   - Artifacts: `autoresearch/results/cycle_048_local_complexity_gpt2.json`, `autoresearch/results/cycle_048_local_complexity_gpt2.png`, `experiments/gpt2_local_complexity.py`
+
+### Cycle 049
+
+51. **Per-block learned compressor with block-conditioned bottleneck — GPT-2 FFN** *(REFUTED — cycle 049)*
+   - Geometric baseline wins 11/12 blocks even with 8x more training data (32K tokens). 500-step per-block distillation cannot match analytical lstsq refit. Data scarcity was not the bottleneck in cycle 030.
+   - Outcome: REFUTED
+   - Cycle: 049
+   - Commit: 72ebee5
+   - Artifacts: `autoresearch/results/cycle_049_per_block_data_scaling.json`, `experiments/per_block_compressor_data_scaling.py`
+
+### Cycle 050
+
+65. **Oracle-guided adaptive compression ratio — GPT-2 FFN** *(REFUTED — cycle 050)*
+   - Variable hidden dims break residual correction. Oracle +12.33% vs uniform control +6.36%. Pre-correction PPL is identical (~10.4%) — divergence is entirely at the correction step. Variable dims produce incompatible residual structure for single affine boundary correction.
+   - Outcome: REFUTED
+   - Cycle: 050
+   - Commit: 37bdb1d
+   - Artifacts: `autoresearch/results/cycle_050_oracle_adaptive.json`, `autoresearch/results/cycle_050_oracle_adaptive.png`, `experiments/oracle_adaptive_compression_gpt2.py`
+
+### Cycle 051
+
+67. **Lstsq refit residual analysis — GPT-2 FFN** *(INCONCLUSIVE — cycle 051)*
+   - Design review rejected in round 2 due to incorrect discarded-subspace projection formula. Item remains scientifically valid and can be retried with corrected methodology.
+   - Outcome: INCONCLUSIVE (design review reject)
+   - Cycle: 051
+   - Commit: NONE

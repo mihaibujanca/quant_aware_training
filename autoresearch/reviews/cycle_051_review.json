@@ -1,0 +1,14 @@
+{
+  "cycle": 51,
+  "item": 67,
+  "round": 2,
+  "verdict": "REVISE",
+  "blocking_issues": [
+    "Measure (c) QR applied to H_discard (activation space) instead of W_discard (original c_proj weight columns for discarded neurons). E lives in output space so the projection E @ Q is a dimension mismatch. Must QR-decompose W_orig[:, ~selected] to get an output-space basis."
+  ],
+  "resolved_from_round_1": [
+    "Non-orthogonal projector (partially — QR used but on wrong matrix)",
+    "Bias subtraction in residual formula (fully fixed)"
+  ],
+  "notes": "Hypothesis, measures (a)/(b), sample size, and verdict criteria all remain sound. Only measure (c) needs one more revision to fix the space in which the projection operates."
+}
