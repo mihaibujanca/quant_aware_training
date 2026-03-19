@@ -1,0 +1,5 @@
+item_number=30
+outcome=confirmed
+key_metric=P1_frob_std rho_full=0.839 (8x, p=0.000), rho_without_L0=0.818 (p=0.001); rho_full=0.608 (16x, p=0.018), rho_without_L0=0.527 (p=0.048)
+commit=0079ae1
+paths=autoresearch/results/cycle_048_local_complexity_gpt2.json,autoresearch/results/cycle_048_local_complexity_gpt2.png,autoresearch/results/cycle_048_summary.md,experiments/gpt2_local_complexity.py
