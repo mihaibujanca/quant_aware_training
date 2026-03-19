@@ -77,14 +77,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: synthesis works for simple datasets (moons) but fails on spirals, indicating the approach doesn't scale to moderate partition complexity.
    - Depends on: 22
 
-43. **Topological truncation: Betti-guided depth reduction [MOONSHOT]**
-   - Compute persistent homology (via Ripser) on hidden representations at each layer. Track Betti numbers (β₀ = connected components, β₁ = loops/holes) through depth. Hypothesis: there exists a "topological triviality point" T — the first layer where Betti numbers stabilize at their final values. Before T, the network performs topological operations (separating classes, untangling manifolds). After T, it's just refining linear separators within an already-correct topology. Test: replace all layers after T with a single affine map (fit via least squares on layer T activations → final output). This is "topologically-justified depth pruning." Toy (primary): spirals (known topology — two interleaved spirals → β₀ should go 1→2, β₁ should decrease). Moons (simpler topology — β₀ goes 1→2). Run on 2D and 100D-embedded variants. GPT-2 (stretch): PH on PCA-projected activations (30D) per layer.
-   - Type: empirical + intervention
-   - Confirmed if: triviality point T exists at layer ≤ L−2 AND post-T affine replacement loses ≤5% accuracy (toy) or ≤15% perplexity (GPT-2).
-   - Refuted if: Betti numbers never stabilize (continuously changing through all layers) or post-T replacement causes >30% accuracy loss.
-   - Inconclusive if: Betti numbers stabilize but the affine replacement still degrades accuracy substantially, suggesting sub-topological refinement is still task-relevant.
-   - Depends on: none
-
 44. **Topological autoencoder for partition space — toy ReLU [MOONSHOT]**
    - Build an autoencoder that learns a compressed encoding of the activation pattern space: Input: per-sample activation pattern (binary vector, one bit per neuron across all layers — e.g., 128-dim for 4×32 network). Encoder: MLP mapping to low-dimensional latent z ∈ ℝ^K (K << total neurons). Decoder: from z, predict the affine map A_ω (flattened weight matrix of the effective linear map for that pattern). Loss = MSE(A_ω_predicted, A_ω_true) + λ · PH_reg. The PH regularization term: compute persistent homology of the latent space neighborhoods (using k-NN graph on z) and match it to the persistent homology of the activation pattern graph (the RTG — Hamming-1 adjacency graph from Bosca et al.). If the autoencoder achieves good reconstruction with K << number_of_patterns, it proves: (1) the partition space has low intrinsic dimensionality, (2) the decoder provides a direct "K codes → affine map" lookup — a compressed functional representation. Sweep K = {2, 4, 8, 16}. Train on spirals network (~50-100 patterns).
    - Type: implementation + empirical
@@ -102,6 +94,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: none
 
 ## PAST EXPERIMENTS
+
+### Cycle 065
+
+43. **Topological truncation: Betti-guided depth reduction [MOONSHOT]** *(INCONCLUSIVE — cycle 065)*
+   - 2→32×4→1 networks trained on spirals (acc≈98.8%) and moons (acc≈99.9-100%). 3 seeds each. Ripser on 32D post-ReLU activations, 500 stratified subsampled points.
+   - Total persistence grows monotonically across all 4 layers in all 6 runs (spirals: ~100-290 H0; moons: ~44-160 H0). Stabilization T is always 3 (the final layer). T ≤ L−2 criterion NOT MET for any seed/dataset.
+   - Affine replacement at T=2 (L-1): ≤0.001 drop on spirals (3/3 seeds), ≤0.001 drop on moons (3/3 seeds). Moons is nearly linearly separable — early affine works trivially regardless of topology. Spirals at T=2: 98.7-98.9% (excellent). At T=1: 75.7-94.4% (inconsistent). At T=0: 61.8-64.7% (poor).
+   - Outcome: INCONCLUSIVE — topology never stabilizes early (Betti-guided T criterion fails); affine replacement works well but only at T=L-1 (last layer), not earlier. The "topological triviality point" concept is not supported: TP grows monotonically indicating topology keeps evolving. Penultimate-layer affine replacement works (≤0.001 drop) but that is the trivially easy case, not a moonshot result.
+   - Cycle: 065
+   - Artifacts: `experiments/topo_truncation_betti.py`, `autoresearch/results/cycle_065_topo_truncation.json`, `autoresearch/results/cycle_065_topo_truncation.png`
 
 ### Cycle 064
 
