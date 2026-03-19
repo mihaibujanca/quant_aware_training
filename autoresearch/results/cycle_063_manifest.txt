@@ -1,0 +1,27 @@
+cycle: 063
+item: 79
+title: Per-block boundary correction revisited with stacking-aware fitting — GPT-2 FFN
+verdict: INCONCLUSIVE
+date: 2026-03-19
+
+## Key metrics
+baseline_ppl: 57.653
+uncorrected_pct: +30.20% ± 15.47%
+naive_pct: +50.77% ± 26.90%   (worse than uncorrected — interference)
+cascaded_pct: +25.35% ± 18.78%
+criterion_confirmed: ≤+12%
+criterion_refuted: ≥uncorrected (+30.2%)
+
+## Per-seed results
+seed=42: uncorr=84.943 (+47.33%), naive=104.370 (+81.03%), casc=84.553 (+46.66%)
+seed=123: uncorr=67.612 (+17.27%), naive=74.717 (+29.60%), casc=64.109 (+11.20%)
+seed=7: uncorr=72.630 (+25.98%), naive=81.674 (+41.67%), casc=68.146 (+18.20%)
+
+## Overfitting check
+All 12 correction points: held_out/fit MSE ratio ~1.1× (no flags at 1.5× threshold)
+Overdetermination ratio: 26.6× (well above 5× floor)
+
+## Files
+experiments/stacking_aware_correction_gpt2.py
+autoresearch/results/cycle_063_stacking_correction.json
+autoresearch/results/cycle_063_stacking_correction.png
