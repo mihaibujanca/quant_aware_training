@@ -32,6 +32,17 @@ fail, the comparison is between two failure modes, not two approaches.
 Diagnostic: "Can the model succeed at this task at all, independent of the
 experimental variable?"
 
+## MP6: Verdict misclassification — "refuted" when method failed
+When a metric is uninformative by construction (invariant, saturated, or
+operating outside its valid range), a negative result says nothing about
+the hypothesis. Recording REFUTED pollutes the PAST EXPERIMENTS record
+that brief/plan agents read for context, causing downstream agents to
+treat the hypothesis as closed when it was never tested.
+Diagnostic: "Did the metric actually vary in a range that could
+distinguish confirmation from refutation? Or was it stuck at a trivial
+value regardless of the hypothesis being true or false?"
+
 ---
 Historical references (maintainer context only — not for agent consumption):
 MP1 ← cycle 032, MP2 ← cycle 028, MP3 ← cycle 011, MP4 ← cycle 021, MP5 ← cycle 031
+MP6 ← cycles 021, 031 (grokking experiments recorded REFUTED on uninformative metrics)
