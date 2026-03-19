@@ -15,7 +15,31 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 50
 
 
+73. **Failure decomposition: channel selection vs lstsq refit vs stacking — GPT-2 FFN**
+   - The +48% PPL failure on broad text could originate in (A) topk channel selection choosing wrong channels, (B) lstsq refit producing poor coefficients, or (C) error compounding across stacked blocks. Isolate each: (1) Use OpenWebText probes, compute single-block 6× swap PPL for blocks [7, 5, 4] individually (stacking removed). (2) For each block, compare topk-selected channels from Shakespeare vs OpenWebText (Jaccard overlap). (3) Fix channels from Shakespeare but refit lstsq on OpenWebText — if PPL recovers, the refit is the bottleneck. This is a targeted diagnostic version of item 64 focused on the refuted k=4@6× regime.
+   - Type: empirical
+   - Confirmed if: one component (selection, refit, or stacking) accounts for ≥60% of the PPL gap between Shakespeare and OpenWebText single-block performance.
+   - Refuted if: all three components contribute roughly equally (each 25-40%), indicating no single fixable bottleneck.
+   - Inconclusive if: single-block OpenWebText PPL is already <10% (stacking is the sole problem, not the per-block method).
+   - Depends on: none
+
 ### P1
+
+74. **Gradient-polished lstsq: 10-50 Adam steps after analytic refit — GPT-2 FFN**
+   - Lstsq gives the minimum-norm analytic solution but ignores the nonlinear context (GELU, downstream blocks). Test whether a tiny amount of gradient-based fine-tuning on top of the lstsq initialization closes the broad-text gap. For blocks [7, 5, 4] at 6×, after topk+lstsq on OpenWebText probes, run {10, 25, 50} Adam steps (lr=1e-4) minimizing next-token cross-entropy loss on 512 OpenWebText tokens, updating ONLY the kept FFN channels' W_down columns. Compare to pure lstsq baseline. This is NOT distillation (no student architecture) — it is a local polish of the analytic solution.
+   - Type: empirical
+   - Confirmed if: 50 gradient steps reduce OpenWebText single-block PPL degradation by ≥30% relative vs pure lstsq (e.g., from +15% to ≤+10%).
+   - Refuted if: gradient polish provides <5% relative improvement or destabilizes (PPL increases).
+   - Inconclusive if: improvement is 5-30% relative — real but insufficient to reach viability.
+   - Depends on: 72
+
+75. **Multi-block stacking error budget: additive vs compounding degradation — GPT-2 FFN**
+   - Cycle 037 showed k=4→k=5 is a hard wall (+8.6pp jump) and cycle 054 showed broad-text failure. But we lack a decomposition of HOW errors compound. Run k=1 through k=4 on OpenWebText (blocks [7,5,4,1] in easiest-first order) and measure: (a) per-block marginal PPL cost (PPL_k - PPL_{k-1}), (b) sum of individual single-block costs vs actual stacked cost, (c) residual-stream MSE at each insertion point. If stacked cost >> sum of singles, the error is compounding super-additively through the residual stream. If stacked ≈ sum of singles, per-block quality is the binding constraint and stacking is not the problem.
+   - Type: empirical
+   - Confirmed if: stacked PPL at k=4 is within 1.5× the sum of individual single-block PPL deltas (sub-additive or mildly super-additive).
+   - Refuted if: stacked PPL exceeds 2× the sum of singles (strong super-additive compounding).
+   - Inconclusive if: ratio is between 1.5× and 2×.
+   - Depends on: 72
 
 66. **Lstsq refit with mixed-corpus probe data — GPT-2 FFN**
    - If item 64 shows channel selection is stable across corpora (Jaccard ≥ 0.7), test whether mixing probe corpora during the lstsq refit step produces a more robust compressed block. Fix channel selection from Shakespeare (the best-understood config). Run lstsq refit using: (A) Shakespeare-only 512 tokens, (B) mixed 512 tokens (128 each from Shakespeare, WikiText-2, C4, OpenWebText), (C) mixed 2048 tokens (512 each). Evaluate all three on WikiText-2 validation. The mixed refit should generalize better because lstsq sees a broader input distribution.
@@ -107,6 +131,17 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: none
 
 ## PAST EXPERIMENTS
+
+### Cycle 056
+
+72. **Compression ratio sweep on OpenWebText: finding the viable frontier — GPT-2 FFN** *(CONFIRMED — cycle 056)*
+   - Single-block swaps (no correction) at ratios {2×, 3×, 4×, 6×} on blocks [7, 5, 4] using OpenWebText as BOTH probe and eval corpus. 3 seeds [42, 123, 7], 200 eval sequences each.
+   - Per-block mean rel PPL (across 3 seeds): block7: 2x=+16.74%, 3x=+11.50%, 4x=+10.24%, 6x=+9.44% | block5: 2x=+15.53%, 3x=+10.12%, 4x=+9.10%, 6x=+8.25% | block4: 2x=+13.60%, 3x=+8.70%, 4x=+7.52%, 6x=+6.61%
+   - Criterion evaluation: 4× achieves <10% PPL on 2/3 blocks (block5: 9.10%, block4: 7.52%; block7: 10.24% just above threshold). 2× fails all 3 blocks. 3× passes only block4.
+   - 6× sanity check: block4=+6.61% (cycle 054 uncorrected ~+56% at multi-block stack). Single-block vs multi-block stacking accounts for the gap — consistent with plan's expectation.
+   - Verdict: CONFIRMED. 4× is the viable frontier on OpenWebText (raw topk+lstsq, single block). 2× is not viable despite halving the compression. The frontier is narrow: 4× marginal (10.24%) on block7, 3× fails 2/3 blocks. This constrains practical deployment to 4× or better per-block, with stacking remaining the open problem.
+   - Cycle: 056
+   - Artifacts: `experiments/owt_ratio_sweep.py`, `autoresearch/results/cycle_056_owt_ratio_sweep.json`, `autoresearch/results/cycle_056_owt_ratio_sweep.png`
 
 ### Cycle 055
 
