@@ -1,0 +1,26 @@
+Cycle 057 Manifest
+==================
+Item: 73 — Failure decomposition: channel selection vs lstsq refit vs stacking — GPT-2 FFN
+Outcome: INCONCLUSIVE
+Commit: 799fa0b
+
+Key metrics:
+- Baseline GPT-2 PPL (OWT, seq=128): 57.653
+- Variant A (OWT-native single-block, 6×): block7=−3.3%, block5=−4.4%, block4=−5.6% (all <10%, within noise)
+- Variant B (Shk channels + OWT lstsq refit): B-A gap ≤ 0.2pp (selection is interchangeable)
+- Variant C (3-block stacked, OWT): +20.2% PPL across all blocks (±13.8% std over seeds)
+- Stacking overhead (C-A): +23.5pp (block7), +24.6pp (block5), +25.8pp (block4)
+- Selection effect (B-A): −0.2 to +0.1pp (negligible)
+- Jaccard(OWT, Shakespeare): 0.471 (block7), 0.539 (block5), 0.538 (block4)
+
+Verdict rationale:
+- Single-block OWT PPL is <10% (in fact ≈−4 to −5%, within eval noise) → inconclusive by stated criterion
+- Stacking is the sole identifiable failure mode
+- Channel selection and lstsq refit quality are not bottlenecks
+- Jaccard ≈ 0.5 (moderate overlap) but cross-corpus refit shows no PPL sensitivity to which channel set is used
+
+Artifacts:
+- experiments/failure_decomposition_gpt2.py
+- autoresearch/results/cycle_057_decomposition.json
+- autoresearch/results/cycle_057_decomposition.png
+- autoresearch/agenda.md (item 73 moved to PAST)
