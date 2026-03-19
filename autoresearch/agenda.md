@@ -64,6 +64,48 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 9, 22, 34. Skip if experiment 34 is refuted (Pareto structure does not appear even in toy ReLU networks).
 
 
+### P0 — Functional rank & spectral analysis (items 80–84, added 2026-03-19)
+
+80. **FFN Jacobian effective rank census — GPT-2 FFN**
+   - The local-chart failure (cycle 029) and channel selection corpus-invariance (cycle 057) jointly imply that each FFN block implements an approximately **globally low-rank** function — the important output directions are shared across all tokens. This experiment directly measures that rank. For each of the 12 blocks, compute the per-token Jacobian J(x) = W_out @ diag(σ'(z)) @ W_in ∈ ℝ^{768×768} for N=512 probe tokens (OpenWebText). SVD each J(x). Report effective rank at 95% and 99% energy thresholds. Compute mean rank and cross-token variance per block. Correlate with P1 Frobenius std (cycle 048) and single-block compression damage (cycle 005). The effective rank is the theoretical compression limit per block.
+   - Type: empirical
+   - Confirmed if: mean effective rank (99% energy) is ≤ 500 for ≥ 10/12 blocks AND Spearman(rank, P1_frob_std) ≥ 0.5.
+   - Refuted if: effective rank is > 700 for a majority of blocks (FFN is not meaningfully low-rank, topk compression is not explained by rank structure).
+   - Inconclusive if: rank is low but does not correlate with P1 or compression difficulty.
+   - Depends on: none
+
+81. **Shared vs token-specific Jacobian spectral structure — GPT-2 FFN**
+   - Validates the "globally shared" low-rank claim from item 80. For each block, compute the top-k right singular vectors of J(x) for 256 tokens. Measure pairwise subspace alignment (principal angles) between different tokens' top-k subspaces, where k = effective rank from item 80 (or use k=384 as default = 8x compression). Report mean alignment cosine and its variance. If alignment is consistently high (mean > 0.8), the low-rank basis is truly global and topk channel selection is near-optimal. If alignment varies, there's room for adaptive or per-region compression — which must be reconciled with the local-chart failure (cycle 029).
+   - Type: empirical
+   - Confirmed if: mean subspace alignment ≥ 0.8 for ≥ 10/12 blocks (globally shared spectral structure).
+   - Refuted if: mean alignment < 0.5 for a majority of blocks (spectral structure is token-specific, contradicting the global low-rank picture).
+   - Inconclusive if: alignment is moderate (0.5–0.8) or varies widely within blocks (some tokens share structure, others don't).
+   - Depends on: 80
+
+82. **Spectral compression (Jacobian SVD basis) vs channel selection (topk) — GPT-2 FFN**
+   - Current pipeline uses topk channel selection (axis-aligned). If the FFN function is globally low-rank, projecting onto the top singular vectors of the mean Jacobian (or output covariance) is the optimal basis — a rotation rather than axis selection. Cycle 026 compared geometric (topk+lstsq) vs SVD of the *weights* and geometric won 11/12. But weight SVD ≠ data-conditioned Jacobian SVD. For blocks [1, 4, 7, 11], compute the mean Jacobian J̄ = mean_x(J(x)) over 512 probe tokens. Take its top-k left singular vectors U_k as a projection basis. Compress: y_approx = U_k @ U_k^T @ FFN(x). Compare single-block swap PPL vs topk+lstsq at matched budget (k = hidden_dim / compression_ratio). Also test: use U_k as the projection but add lstsq refit on the projected output.
+   - Type: empirical
+   - Confirmed if: Jacobian SVD basis + lstsq outperforms topk+lstsq by ≥ 3% relative PPL in ≥ 2/4 blocks.
+   - Refuted if: topk+lstsq outperforms Jacobian SVD in all 4 blocks (axis-aligned channel selection is already near-optimal despite being suboptimal in theory).
+   - Inconclusive if: Jacobian SVD wins in some blocks but loses in others, or improvement is < 3%.
+   - Depends on: 80
+
+83. **Stacking error spectral decomposition — GPT-2 FFN**
+   - Cascaded re-probing only saved 1.83pp (cycle 060), but 500 Adam steps reduce stacking from +30% to +4.9% (cycle 061). WHERE in the spectrum does the stacking error live? For k=4 blocks [7,5,4,1] at 6x (no gradient polish), compute per-block reconstruction error e_i = FFN_compressed(x) - FFN_float(x). Project each e_i onto the block's Jacobian singular vectors (from item 80). Report: fraction of error energy in the retained spectrum (top-k singular directions) vs discarded spectrum (bottom directions). If error is concentrated in discarded directions, the problem is information loss (and gradient polish succeeds by learning to route around the missing info). If error leaks into retained directions, the compression corrupts what it's trying to preserve (a harder problem). Also measure whether stacked error (through 4 blocks) shifts spectral profile vs single-block error.
+   - Type: analysis
+   - Confirmed if: ≥ 70% of stacking error energy is in the discarded spectral directions AND stacking shifts error into retained spectrum (explaining super-additivity).
+   - Refuted if: error is uniformly distributed across the spectrum (no spectral structure to the compression error).
+   - Inconclusive if: error is concentrated but stacking does not shift the profile (super-additivity has a different cause).
+   - Depends on: 80
+
+84. **Rank-matched adaptive compression — GPT-2 FFN**
+   - Instead of uniform 6x across all blocks, set per-block compression ratio to match measured effective rank from item 80. Block with rank 200 keeps ~250 channels (~12x), block with rank 500 keeps ~550 (~6x). Total budget is the same as uniform 6x across k blocks. Compare stacked k=4 PPL against uniform 6x baseline (both with and without gradient polish). This should be near-optimal per block while potentially reducing total params further or improving stacking quality.
+   - Type: empirical
+   - Confirmed if: rank-matched stacking achieves ≤ +20% PPL without gradient polish (vs +30% at uniform 6x) OR achieves ≤ +3% with 500-step polish (vs +4.9% at uniform 6x).
+   - Refuted if: rank-matched performs worse than uniform 6x (rank variation across blocks doesn't affect stacking).
+   - Inconclusive if: improvement exists but is < 3pp without polish.
+   - Depends on: 80
+
 ### P0 — Novel directions: structured probing + topology (items 36–45, added 2026-03-18)
 
 

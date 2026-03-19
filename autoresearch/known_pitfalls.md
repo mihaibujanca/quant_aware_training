@@ -42,7 +42,27 @@ Diagnostic: "Did the metric actually vary in a range that could
 distinguish confirmation from refutation? Or was it stuck at a trivial
 value regardless of the hypothesis being true or false?"
 
+## MP7: Post-LayerNorm geometric measurements
+LayerNorm normalizes representations to zero mean and unit variance, erasing
+local geometric signatures (curvature, variance structure, intrinsic dimension).
+Any geometric metric measured on post-LayerNorm activations reflects the
+geometry of LayerNorm's output distribution, not the geometry of the computation.
+Diagnostic: "Am I hooking before or after LayerNorm? If after, would the metric
+give the same value for any input that has been renormalized?"
+
+## MP8: Representation dimension vs functional rank
+The intrinsic dimension of the representation cloud (how many dimensions token
+vectors span) is NOT the same as the effective functional rank (how many
+independent output directions the map uses). For compression, functional rank
+is what matters: it sets the theoretical compression limit. Measure functional
+rank via SVD of the data-dependent Jacobian J(x), not via nearest-neighbor
+estimators on the representation vectors.
+Diagnostic: "Am I measuring a property of the data manifold, or a property of
+the function? For compression, I need the function's rank."
+
 ---
 Historical references (maintainer context only — not for agent consumption):
 MP1 ← cycle 032, MP2 ← cycle 028, MP3 ← cycle 011, MP4 ← cycle 021, MP5 ← cycle 031
 MP6 ← cycles 021, 031 (grokking experiments recorded REFUTED on uninformative metrics)
+MP7 ← cycles 015, 020 (post-LayerNorm measurements gave flat/uninformative results)
+MP8 ← cycle 015 vs cycle 029 (TwoNN on representations ≠ functional rank; local-chart failure proves FFN is globally low-rank)
