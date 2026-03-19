@@ -28,14 +28,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: improvement exists but is < 5pp, suggesting the gain is real but insufficient to make the method corpus-robust.
    - Depends on: 64
 
-50. **Centroid-merge quality as a function of probe corpus size — GPT-2 FFN**
-   - Cycle 027 established centroid similarity (ρ=0.85) as the merge signal on a fixed probe corpus. It is unknown whether this signal is stable under small probe sets (e.g., 64 vs 512 vs 2048 tokens), which determines minimum data requirements for deployment. Run single-block swap with centroid-guided merge on one representative block across probe sizes {64, 128, 256, 512, 1024, 2048} and measure PPL. Also measure channel selection stability (Jaccard index of selected channels across runs with different random seeds at the same probe size).
-   - Type: empirical
-   - Confirmed if: Jaccard ≥ 0.85 and PPL within 2% of the 2048-token reference at probe size ≤ 256 tokens.
-   - Refuted if: Jaccard < 0.6 or PPL degrades > 5% relative at probe size 256, indicating the signal needs large data.
-   - Inconclusive if: Jaccard is stable but PPL variance across seeds is high (> 3%), suggesting instability from a different source.
-   - Depends on: 26, 27
-
 
 23. **Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**
    - ⚠ **BLOCKED**: Depends on item 22 (REFUTED). Item 22 found no functional redundancy in toy networks, making the GPT-2 Jacobian k-means analog unmotivated per agenda dependency rule.
@@ -128,6 +120,20 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22, 24
 
 ## PAST EXPERIMENTS
+
+### Cycle 067
+
+50. **Centroid-merge quality as a function of probe corpus size — GPT-2 FFN** *(REFUTED — cycle 067)*
+   - Measured topk channel selection stability (Jaccard across 3 seeds) and single-block swap PPL as probe corpus size varied from 64 to 2048 tokens on GPT-2 block 7 (6× compression, k=512 of 3072).
+   - Jaccard@2048=0.844 (3-way), 0.893 (pairwise mean). Self-consistency WARNING: even at 2048 tokens, 3-way Jaccard is below 0.9, indicating the method is inherently variable across seeds.
+   - Jaccard by probe size: 64→0.276, 128→0.356, 256→0.517, 512→0.640, 1024→0.733, 2048→0.844. Monotonically increasing but never reaches 0.85 threshold until above 2048.
+   - PPL at probe_size=512 is catastrophically bad (mean 44147, std 37729, baseline 123.4) due to lstsq near-singularity: 512 probe tokens × 512 selected channels creates a near-square system in the output projection refit. PPL normalizes at 1024+ tokens (~+3–4% vs baseline).
+   - At probe_size=256: Jaccard=0.517 < 0.6 refutation threshold, PPL vs 2048-ref +3.91%.
+   - Outcome: REFUTED — Jaccard@256=0.517 < 0.6; channel selection requires large probe corpora (>1024 tokens) to reach acceptable stability. The centroid-merge signal is data-hungry, not data-efficient.
+   - Secondary finding: lstsq output-projection refit is numerically unstable when probe_tokens ≈ hidden_dim (512 tokens, 512 channels). This is an implementation hazard for small-corpus deployments.
+   - Cycle: 067
+   - Artifacts: `experiments/centroid_merge_corpus_size.py`, `autoresearch/results/cycle_067_centroid_merge_corpus_size.json`, `autoresearch/results/cycle_067_centroid_merge_corpus_size.png`
+   - Depends on: 26, 27
 
 ### Cycle 066
 
