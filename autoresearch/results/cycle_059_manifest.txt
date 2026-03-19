@@ -1,0 +1,26 @@
+cycle: 059
+item: 74
+title: Gradient-polished lstsq: 10-50 Adam steps after analytic refit — GPT-2 FFN
+verdict: CONFIRMED
+
+key_metrics:
+  baseline_gpt2_ppl: 57.653
+  pure_lstsq_ppl: 75.062  # +30.2% degradation (k=4 stacked @ 6x)
+  polish_10_steps_ppl: 72.629  # +25.98% (+14.0% relative improvement)
+  polish_25_steps_ppl: 70.511  # +22.30% (+26.1% relative improvement)
+  polish_50_steps_ppl: 68.286  # +18.44% (+38.9% relative improvement)
+  criterion_threshold: 30% relative reduction at 50 steps
+  criterion_met: yes (38.9% >= 30%)
+
+seeds: [42, 123, 7]
+blocks: [7, 5, 4, 1]
+compression: 6x (hidden_fraction=1/6)
+polish_lr: 1e-4
+polish_data: probe_holdout (disjoint from lstsq probe_train and eval_val)
+
+artifacts:
+  script: experiments/gradient_polish_stacked_gpt2.py
+  results: autoresearch/results/cycle_059_gradient_polish.json
+  plot: autoresearch/results/cycle_059_gradient_polish.png
+
+commit: cc879cc

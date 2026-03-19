@@ -1,0 +1,15 @@
+{
+  "cycle": 59,
+  "item": 74,
+  "item_text": "Gradient-polished lstsq — GPT-2 FFN",
+  "round": 2,
+  "verdict": "APPROVE",
+  "issues_major": 0,
+  "issues_minor": 0,
+  "pitfall_scan": "none",
+  "round1_issues_resolved": [
+    "MP3: polish data increased from 512 to 4096 tokens (~8:1 data/param ratio)",
+    "Data split: polish tokens explicitly from probe_holdout, disjoint from lstsq and eval",
+    "Gradient scope: requires_grad_(False) on full model, selective W_down unfreeze"
+  ]
+}
