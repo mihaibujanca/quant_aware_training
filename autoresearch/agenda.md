@@ -8,14 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-59. **Generalization probe: single-block 4× geometric compression on GPT-2-medium — FFN**
-   - All results so far are on GPT-2-small (12 layers, d=768, FFN=3072). Test whether the geometric compression method (topk + centroid + lstsq refit) transfers to GPT-2-medium (24 layers, d=1024, FFN=4096). Run single-block swaps at 4× on a sample of 6 blocks (evenly spaced: 0, 4, 8, 12, 16, 20) with 3 seeds and 200 eval sequences. This answers the generalization question: does the method depend on GPT-2-small's specific scale, or does it work on larger models?
-   - Type: empirical
-   - Confirmed if: ≥4/6 blocks tolerate 4× compression with mean relative PPL ≤10%, matching GPT-2-small's profile.
-   - Refuted if: ≤1/6 blocks pass the 10% threshold, indicating the method does not transfer to larger models at matched compression ratio.
-   - Inconclusive if: 2-3/6 blocks pass, suggesting partial transfer with model-specific tuning needed.
-   - Depends on: 52
-
 55. **Lstsq refit quality degradation analysis across compression ratios — GPT-2 FFN**
    - The geometric method uses least-squares refit of W_down after channel selection. At high compression (6x+), the refit becomes increasingly underdetermined (fewer channels = fewer columns in the design matrix). Measure the condition number of the refit system and held-out reconstruction MSE at ratios {2x, 4x, 6x, 8x} on blocks 7, 5, 4. If the refit condition number explodes at a specific ratio, that explains any compression ceiling and motivates regularized refit (ridge/truncated SVD) as a next step. This is an analysis experiment that explains mechanism, not just measures outcome.
    - Type: analysis
@@ -552,3 +544,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 040
    - Commit: pending
    - Artifacts: `autoresearch/results/cycle_040_ceiling_scan.json`, `autoresearch/results/cycle_040_ceiling_scan.png`, `experiments/compression_ceiling_scan_gpt2.py`
+
+### Cycle 041
+
+59. **Generalization probe: single-block 4× geometric compression on GPT-2-medium — FFN** *(CONFIRMED — cycle 041)*
+   - GPT-2-medium (24 layers, d=1024, FFN=4096). 6 blocks (0,4,8,12,16,20) at 4× with 3 seeds, 200 eval seqs. Baseline PPL: 94-97. Block 0: +29.74% (catastrophic, same as GPT-2-small). Blocks 4,8,12,16,20: all within +1% PPL (block 8 actually sub-baseline at -0.16%). 5/6 blocks pass ≤10% threshold. The method generalizes cleanly from GPT-2-small to GPT-2-medium with identical block-0-hard, rest-easy pattern.
+   - Outcome: CONFIRMED — 5/6 blocks pass (≥4 required)
+   - Cycle: 041
+   - Artifacts: `autoresearch/results/cycle_041_medium_generalization.json`, `autoresearch/results/cycle_041_medium_generalization.png`, `experiments/gpt2_medium_generalization_probe.py`
