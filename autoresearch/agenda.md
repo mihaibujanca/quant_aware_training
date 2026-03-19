@@ -16,13 +16,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: Jaccard is stable but PPL variance across seeds is high (> 3%), suggesting instability from a different source.
    - Depends on: 26, 27
 
-51. **Per-block learned compressor with block-conditioned bottleneck — GPT-2 FFN**
-   - Cycle 030 showed a shared compressor underfits (INCONCLUSIVE): held-out blocks got geometric-level PPL but the shared compressor didn't beat per-block geometric. Rather than a fully shared compressor, train one lightweight compressor per block (same architecture, separate weights, 500 distill steps each) and measure: (a) whether per-block distillation beats the no-training geometric baseline, and (b) at what step budget the gap closes. This tests whether the cycle 030 failure was due to cross-block sharing vs. insufficient capacity.
-   - Type: empirical
-   - Confirmed if: per-block learned compressor beats geometric baseline by ≥1 PPL point for ≥8 of 12 blocks.
-   - Refuted if: per-block compressor does not beat geometric baseline for any block after 500 distill steps.
-   - Inconclusive if: per-block beats geometric on some blocks but with high variance across blocks, making no systematic conclusion possible.
-   - Depends on: 14, 18
 
 23. **Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**
    - ⚠ **BLOCKED**: Depends on item 22 (REFUTED). Item 22 found no functional redundancy in toy networks, making the GPT-2 Jacobian k-means analog unmotivated per agenda dependency rule.
@@ -100,6 +93,14 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 
 ## PAST EXPERIMENTS
+
+### Cycle 049
+
+51. **Per-block learned compressor with block-conditioned bottleneck — GPT-2 FFN** *(REFUTED — cycle 049)*
+   - 32K-token per-block distillation (768->384->768, 500 steps, Adam 1e-3) tested on all 12 GPT-2 FFN blocks. Geometric (topk+lstsq) won 11/12 blocks; distillation beat geometric by ≥1 PPL on only 1/12 (block 1: +1.96 PPL gain). Reproduction with 4K tokens (blocks 8-11) matches cycle 030 Baseline B numbers within noise. Key result: 8× more training data (4K→32K) did not help. The bottleneck is not data volume — distillation at 500 steps does not recover the lstsq-quality fit even with full data. Block-MSE for distillation consistently higher than geometric (1.0–55.5 vs 0.08–1.06), confirming underfitting is structural, not due to data scarcity.
+   - Outcome: REFUTED — geometric wins 11/12 blocks even with 32K tokens; criterion requires ≥8/12 wins for distillation.
+   - Cycle: 049
+   - Artifacts: `experiments/per_block_compressor_data_scaling.py`, `autoresearch/results/cycle_049_per_block_data_scaling.json`
 
 ### Cycle 048
 

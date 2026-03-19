@@ -1,0 +1,153 @@
+{
+  "baseline_ppl": 122.34978716998432,
+  "k_channels": 384,
+  "distill_steps": 500,
+  "lr": 0.001,
+  "large_max_tokens": 32768,
+  "small_max_tokens": 4096,
+  "all_blocks_32k": {
+    "0": {
+      "geometric_ppl": 127.11232405534534,
+      "geometric_block_mse": 0.2075025588274002,
+      "distill_ppl": 128.65066723803355,
+      "distill_block_mse": 1.0494166612625122,
+      "distill_beats_geo": false,
+      "distill_margin": -1.5383431826882088
+    },
+    "1": {
+      "geometric_ppl": 122.55054237739373,
+      "geometric_block_mse": 0.08216684311628342,
+      "distill_ppl": 120.58727642364813,
+      "distill_block_mse": 2.5597171783447266,
+      "distill_beats_geo": true,
+      "distill_margin": 1.9632659537455908
+    },
+    "2": {
+      "geometric_ppl": 122.13301681918706,
+      "geometric_block_mse": 0.11866281181573868,
+      "distill_ppl": 122.55330354032304,
+      "distill_block_mse": 55.46096420288086,
+      "distill_beats_geo": false,
+      "distill_margin": -0.4202867211359802
+    },
+    "3": {
+      "geometric_ppl": 121.45192744528538,
+      "geometric_block_mse": 0.15951752662658691,
+      "distill_ppl": 123.40918781032713,
+      "distill_block_mse": 0.6849457621574402,
+      "distill_beats_geo": false,
+      "distill_margin": -1.9572603650417477
+    },
+    "4": {
+      "geometric_ppl": 121.54315261875159,
+      "geometric_block_mse": 0.16768307983875275,
+      "distill_ppl": 122.91067504371347,
+      "distill_block_mse": 0.5587782859802246,
+      "distill_beats_geo": false,
+      "distill_margin": -1.3675224249618765
+    },
+    "5": {
+      "geometric_ppl": 120.84359815916946,
+      "geometric_block_mse": 0.24642382562160492,
+      "distill_ppl": 124.6589130691246,
+      "distill_block_mse": 0.5390777587890625,
+      "distill_beats_geo": false,
+      "distill_margin": -3.8153149099551342
+    },
+    "6": {
+      "geometric_ppl": 121.6874842123102,
+      "geometric_block_mse": 0.28171393275260925,
+      "distill_ppl": 122.51399570184704,
+      "distill_block_mse": 0.599311351776123,
+      "distill_beats_geo": false,
+      "distill_margin": -0.8265114895368413
+    },
+    "7": {
+      "geometric_ppl": 121.14329037266134,
+      "geometric_block_mse": 0.38793501257896423,
+      "distill_ppl": 121.01650345910826,
+      "distill_block_mse": 0.8269268870353699,
+      "distill_beats_geo": false,
+      "distill_margin": 0.12678691355307592
+    },
+    "8": {
+      "geometric_ppl": 122.61143388251998,
+      "geometric_block_mse": 0.4982837438583374,
+      "distill_ppl": 123.83498804634417,
+      "distill_block_mse": 1.116551160812378,
+      "distill_beats_geo": false,
+      "distill_margin": -1.2235541638241898
+    },
+    "9": {
+      "geometric_ppl": 122.80649887090065,
+      "geometric_block_mse": 0.6362785696983337,
+      "distill_ppl": 122.02795052005236,
+      "distill_block_mse": 1.729384183883667,
+      "distill_beats_geo": false,
+      "distill_margin": 0.7785483508482969
+    },
+    "10": {
+      "geometric_ppl": 122.58030485606486,
+      "geometric_block_mse": 0.8928508758544922,
+      "distill_ppl": 121.73325287297993,
+      "distill_block_mse": 4.419091701507568,
+      "distill_beats_geo": false,
+      "distill_margin": 0.8470519830849241
+    },
+    "11": {
+      "geometric_ppl": 127.25148929049173,
+      "geometric_block_mse": 1.0612287521362305,
+      "distill_ppl": 127.6197083815897,
+      "distill_block_mse": 9.590864181518555,
+      "distill_beats_geo": false,
+      "distill_margin": -0.3682190910979699
+    }
+  },
+  "repro_4k": {
+    "8": {
+      "geometric_ppl": 122.61143388251998,
+      "distill_ppl": 123.89868151969084,
+      "ref_geometric_ppl": 122.53,
+      "ref_distill_ppl": 122.94
+    },
+    "9": {
+      "geometric_ppl": 122.80649887090065,
+      "distill_ppl": 121.63984766692943,
+      "ref_geometric_ppl": 122.54,
+      "ref_distill_ppl": 122.91
+    },
+    "10": {
+      "geometric_ppl": 122.58030485606486,
+      "distill_ppl": 122.24865124429891,
+      "ref_geometric_ppl": 122.14,
+      "ref_distill_ppl": 122.88
+    },
+    "11": {
+      "geometric_ppl": 127.25148929049173,
+      "distill_ppl": 130.10000424659745,
+      "ref_geometric_ppl": 126.03,
+      "ref_distill_ppl": 131.86
+    }
+  },
+  "cycle_030_ref": {
+    "8": {
+      "geometric_ppl": 122.53,
+      "distill_ppl": 122.94
+    },
+    "9": {
+      "geometric_ppl": 122.54,
+      "distill_ppl": 122.91
+    },
+    "10": {
+      "geometric_ppl": 122.14,
+      "distill_ppl": 122.88
+    },
+    "11": {
+      "geometric_ppl": 126.03,
+      "distill_ppl": 131.86
+    }
+  },
+  "distill_wins_32k": 1,
+  "total_blocks": 12,
+  "verdict": "REFUTED"
+}
