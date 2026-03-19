@@ -1,0 +1,5 @@
+item_number=11
+outcome=refuted
+key_metric=0 of 12 proxy gpt2 FFN blocks reached >=5% stable-or-near-linear channels and 10 of 12 stayed below 1% across two recovered hidden runs
+commit=NONE
+paths=autoresearch/results/cycle_006_summary.md,autoresearch/agenda.md

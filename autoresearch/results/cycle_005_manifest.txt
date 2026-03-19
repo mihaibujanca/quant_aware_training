@@ -1,0 +1,5 @@
+item_number=10
+outcome=confirmed
+key_metric=22 of 24 latest >=4x proxy gpt2 single-block geometric swaps met <=10% relative perplexity increase and stayed within 1.25x of the distilled baseline; only layer 0 failed
+commit=NONE
+paths=autoresearch/results/cycle_005_summary.md,autoresearch/results/cycle_005_live_summary.md,runs/nanochat_single_block_localization_overnight_main/results.jsonl,autoresearch/agenda.md

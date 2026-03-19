@@ -19,3 +19,13 @@ This is different from distillation. Distillation trains a small network against
 **Stretch:** geometric compression matches or exceeds the quality of a small network trained from scratch on the original data, meaning the source network + geometric extraction provides a genuine advantage over just retraining.
 
 Any of these outcomes produces a publishable result. Even negative results (geometric info doesn't help) are informative for the field.
+
+## Evaluation Rules
+
+Any claimed positive result must include a plain `MLP`-only comparison at approximately the same size.
+
+- The default rule is: no positive claim without an `MLP` baseline within `+/- 10%` trainable parameters.
+- If the method uses a fixed extracted representation before the final predictor, the required control is an `MLP` on that same fixed representation at the matched budget.
+- If a dense ambient-space `MLP` cannot exist within `+/- 10%` because the input dimension already makes the smallest feasible model too large, report the nearest feasible ambient `MLP` anyway and explicitly mark it as budget-mismatched.
+- Positive claims should be judged against the strongest matched-budget `MLP`-only control, not against pruning or distillation alone.
+- Every result must report both `trainable_params` and total `stored_numbers` when those differ.

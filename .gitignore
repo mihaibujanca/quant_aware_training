@@ -41,3 +41,10 @@ notebooks/experiments/
 *.ply
 *.csv
 model/
+
+# Autoresearch supervisor runtime logs (transient)
+autoresearch/logs/claude_autoresearch_*
+autoresearch/logs/codex_autoresearch_*
+autoresearch/logs/item*_watchdog*
+autoresearch/logs/*_child.pid
+.mplconfig/

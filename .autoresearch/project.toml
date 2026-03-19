@@ -1,0 +1,46 @@
+# Legacy external-loop config.
+# Default repo operation should use `scripts/start_autoresearch_tmux.sh`, which
+# runs against the root checkout. Do not use this file unless you explicitly
+# want the separate `/Users/mihai/Projects/autoresearch` bot-branch workflow.
+contract = "quant_aware_training"
+project_slug = "quant_aware_training"
+
+[paths]
+program = "autoresearch/program.md"
+agenda = "autoresearch/agenda.md"
+status = "autoresearch/STATUS.md"
+experiment_log_dir = "autoresearch/logs"
+results_dir = "autoresearch/results"
+
+[runtime]
+python = ".venv/bin/python"
+agent_cli_default = "claude"
+runtime_state_dir = "~/.local/state/autoresearch/quant_aware_training"
+
+[runtime.env]
+MAX_CYCLES = "0"
+CYCLE_WAIT = "30"
+RETRY_WAIT = "60"
+LIVE_OUTPUT_MODE = "quiet"
+AGENT_HEARTBEAT_SEC = "0"
+AGENT_TIMEOUT_SEC = "1800"
+AGENT_SILENCE_TIMEOUT_SEC = "300"
+AGENT_SILENCE_TIMEOUT_SEC_EXEC = "1200"
+VALIDATE_PIPELINE_ON_START = "1"
+
+[git]
+autoresearch_branch_prefix = "autoresearch"
+integration_branch_suffix = "-integration"
+merge_autoresolve_paths = [
+  "autoresearch/logs/experiments.tsv",
+  "autoresearch/agenda.md",
+  "autoresearch/STATUS.md",
+]
+
+[prompts]
+plan = "autoresearch/prompts/plan_external_compat.md"
+
+[features]
+audit = true
+diagnostics = true
+agenda_refill = true

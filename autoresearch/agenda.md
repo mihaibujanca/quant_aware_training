@@ -83,13 +83,45 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: Pareto holds in toy but LLM distribution is flat.
    - Depends on: 9, 34. Note: item 34 was INCONCLUSIVE (Gini=0.408, partial Pareto), not refuted. **Unblocked.**
 
+### P2 — Moonshots
+
+85. **Analytic stacking correction via Jacobian chain rule — GPT-2 FFN [MOONSHOT]**
+   - Gradient polish works (cycle 061: +30% → +4.9%) but uses 500 Adam steps — can we compute the same correction analytically? The stacking error for block i is e_i = FFN_comp_i(x) − FFN_float_i(x). Through the residual stream, block j downstream sees input shifted by e_i (plus attention/LN mixing). If we linearize the downstream path via the Jacobian chain ∂loss/∂W_down_i = ∂loss/∂output · ∏ ∂block_k/∂input_k · ∂FFN_i/∂W_down_i, we can compute the optimal W_down correction in closed form: ΔW_down_i = −(J^T J)^{-1} J^T e, where J is the chained Jacobian from W_down_i to the loss and e is the stacking error vector. This is Newton's method in one step — should land near the Adam solution if the landscape is locally quadratic. For k=4 blocks at 6×, compute the full Jacobian chain (tractable: 4 × 384 × 768 free params, 4096 tokens). Compare single-step Newton correction vs 500-step Adam on stacking PPL.
+   - Type: implementation + empirical
+   - Confirmed if: single Newton step achieves ≤ +8% PPL (within 2× of Adam's +4.9%), making the pipeline fully analytic.
+   - Refuted if: Newton step diverges or gives > +20% PPL (landscape is too nonlinear for single-step correction).
+   - Inconclusive if: Newton step helps (+15–20%) but doesn't match Adam (curvature is significant, needs damping/iteration).
+   - Depends on: none (uses existing compression pipeline)
+
+86. **Mutual information bottleneck channel selection — GPT-2 FFN [MOONSHOT]**
+   - Current topk selects channels by activation magnitude × output weight norm — a heuristic proxy. The information-theoretic optimum: select the k channels that maximize mutual information I(h_selected; y_block) where y_block is the full block output. Exact MI is intractable in 768D, but we can use the MINE estimator (Belghazi et al. 2018) or a simpler Gaussian MI approximation: I ≈ 0.5 · log det(Σ_full) − 0.5 · log det(Σ_residual), where Σ_residual is the covariance of y_block conditioned on the selected channels. This reduces to a greedy forward selection: at each step, add the channel that maximally reduces det(Σ_residual). For blocks [1, 4, 7, 11] at 6×, compare MI-greedy channel selection + lstsq vs topk + lstsq on single-block swap PPL. If MI selection finds channels that topk misses (high MI but low magnitude), the compression ceiling is higher than topk suggests.
+   - Type: empirical
+   - Confirmed if: MI-greedy + lstsq outperforms topk + lstsq by ≥ 5% relative PPL in ≥ 2/4 blocks.
+   - Refuted if: MI-greedy selects ≥ 90% the same channels as topk (the heuristic is already near-optimal).
+   - Inconclusive if: MI-greedy selects different channels but PPL improvement is < 3%.
+   - Depends on: none
+
+87. **Cross-block weight sharing via Procrustes alignment — GPT-2 FFN [MOONSHOT]**
+   - If multiple blocks have similar Jacobian spectral structure (testable after item 80), their compressed W_down matrices might be related by a rotation. For each pair of compressed blocks (i, j), compute the Procrustes alignment: find orthogonal R that minimizes ||W_down_i − R · W_down_j||_F. If the residual is small (< 10% of ||W_down_i||_F), blocks i and j can share a single W_down with per-block rotation R_i — reducing total parameter count further. For k=4 compressed blocks: compute all 6 pairwise Procrustes distances. If any pairs are close, test shared-W_down + rotation vs independent W_down on stacked PPL. The extreme case: ONE shared W_down with 4 learned rotations (4 × 768 × 768 rotation params, but the rotation can be low-rank if spectral overlap is high).
+   - Type: analysis + empirical
+   - Confirmed if: ≥ 1 pair of blocks has Procrustes residual < 10% AND shared-weight stacking PPL is within 2pp of independent.
+   - Refuted if: all pairwise Procrustes residuals > 30% (blocks are functionally dissimilar despite similar rank).
+   - Inconclusive if: low Procrustes residual but shared-weight PPL degrades significantly (rotation alone doesn't capture the functional difference).
+   - Depends on: none (but benefits from item 80 results)
+
 ### Closed — OBSOLETE items (do not run)
 
-23. ~~**Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**~~ — Superseded by item 80. Do not run.
+23. ~~**Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**~~ ⚠ OBSOLETE: Superseded by item 80 (Jacobian effective rank census).
+   - Apply the same clustering idea from experiment 22 to GPT-2 FFN blocks. Instead of MASO affine maps (unavailable for GELU networks), use per-token Jacobians J(x) ∈ ℝ^{768×768} computed via `torch.func.jacrev`. Run k-means on the flattened Jacobians for each block. Measure the reconstruction error of block outputs when each token's output is replaced by J̄_cluster(x − x̄_cluster) + f(x̄_cluster) (first-order Taylor approximation using the cluster centroid Jacobian). Find minimum K* such that reconstruction error < 5% of block output norm. Compare K* across blocks and correlate with single-block swap damage from cycle 005.
+   - Depends on: 9, 22 (refuted)
 
-41. ~~**Constructive partition synthesis — toy ReLU [MOONSHOT]**~~ — Depends on item 22 (refuted). Do not run.
+41. ~~**Constructive partition synthesis — toy ReLU (2D input) [MOONSHOT]**~~ ⚠ OBSOLETE: Depends on item 22 (refuted).
+   - THE open problem in the literature. Given a trained spirals network (2→32→32→1): (a) Extract all observed activation patterns + affine maps via MASO formula (A_ω = ∏ diag(q_ω^i) W^i). (b) Cluster into K macro-regions via k-means on affine maps (leverage item 22). (c) For each macro-region, compute target affine map (support-weighted average of constituent maps). (d) SYNTHESIS: solve for weights W'_1, ..., W'_L of a smaller network such that for each macro-region k with pattern q_k, the product ∏ diag(q'_k^i) W'^i ≈ target A_k. Boundary continuity adds constraints: adjacent macro-regions' affine maps must agree on the shared boundary hyperplane. Method: Solve via least-squares with boundary penalty.
+   - Depends on: 22 (refuted)
 
-44. ~~**Topological autoencoder for partition space — toy ReLU [MOONSHOT]**~~ — Depends on items 22 (refuted) and 24 (dead end). Do not run.
+44. ~~**Topological autoencoder for partition space — toy ReLU [MOONSHOT]**~~ ⚠ OBSOLETE: Depends on items 22 (refuted) and 24 (dead end).
+   - Build an autoencoder that learns a compressed encoding of the activation pattern space: Input = per-sample activation pattern (binary vector, one bit per neuron across all layers). Encoder: MLP mapping to low-dimensional latent z ∈ ℝ^K. Decoder: from z, predict the affine map A_ω. Loss = MSE(A_ω_predicted, A_ω_true) + λ · PH_reg (persistent homology regularization matching latent topology to RTG topology). If the autoencoder achieves good reconstruction with K << number_of_patterns, it proves the partition space has low intrinsic dimensionality and the decoder provides a direct "K codes → affine map" compressed functional representation.
+   - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
 
