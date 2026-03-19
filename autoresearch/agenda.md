@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-57. **Block ordering optimization for 5-block stacking — GPT-2 FFN**
-   - Cycle 033 used easiest-first ordering from cycle 005 damage rankings. But the k=4→k=5 cliff (+8.6pp jump) may be ordering-dependent: the 5th block (block 3) might compound badly with specific earlier blocks. Test all 6 possible 5th-block choices (from the 6 easiest blocks) while keeping the 4 easiest as the base set. Also test reverse-order insertion for the 5th block (compress the 5th block FIRST, then layer in the 4 easy ones). If the cliff depends on which block is 5th, ordering optimization can push the practical ceiling beyond 4 blocks.
-   - Type: empirical
-   - Confirmed if: at least one 5-block configuration achieves <12% relative PPL (beating cycle 033's +17.46% at k=5 by ≥5pp).
-   - Refuted if: all 5-block configurations exceed 15% PPL regardless of which block is 5th or insertion order.
-   - Inconclusive if: the best 5-block config is 12-15% — an improvement over naive ordering but still above the <10% practical threshold.
-   - Depends on: 53
-
 ### P1
 
 58. **Inter-block error correction via residual-stream lstsq adjustment — GPT-2 FFN**
@@ -551,3 +543,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Positive finding: k=4@6× achieves 27.8% FFN param reduction at <10% PPL
    - Cycle: 037
    - Artifacts: `autoresearch/results/cycle_037_param_budget.json`, `autoresearch/results/cycle_037_param_budget.png`, `experiments/ffn_param_budget_hetero_k5.py`
+
+### Cycle 038
+
+57. **Block ordering optimization for 5-block stacking — GPT-2 FFN** *(REFUTED — cycle 038)*
+   - All C(6,5)=6 five-block combos from the 6 easiest blocks at 6×. Best: drop block 4 (+16.12%). Worst: drop block 1 (+20.88%). Spread 4.76pp — combo matters but not enough. All combos >15%. Insertion order is a no-op (pipeline compresses all blocks independently from float activations). The k=5 wall is robust across all block selections.
+   - Outcome: REFUTED — all 5-block configs exceed 15% regardless of combo
+   - Cycle: 038
+   - Artifacts: `autoresearch/results/cycle_038_block_ordering.json`, `autoresearch/results/cycle_038_block_ordering.png`, `experiments/ffn_block_ordering_k5.py`
