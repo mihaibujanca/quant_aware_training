@@ -1,0 +1,6 @@
+status: PASS
+original_outcome: inconclusive
+audited_outcome: inconclusive
+guardrail_flags: G4 (counterintuitive — prior "good" results are corpus-specific)
+reason: INCONCLUSIVE is technically correct per criteria but the finding is decisive. The method's success on Shakespeare was inflated by the narrow distribution. WikiText-2 corpus-specific compression gives +31.86% PPL — unacceptable even with the best possible fitting. This fundamentally changes the interpretation of all prior cycles (033-042): the ~8% PPL results are valid only for Shakespeare-like narrow-distribution text. On general text, the no-SGD geometric compression does not achieve useful quality even with corpus-specific channel selection. The compression-as-regularization effect (sub-baseline PPL from cycles 034-040) is also likely Shakespeare-specific.
+recommendations: This is the most important finding of the entire research program. The method works on narrow-distribution text but fails on broad-distribution text. Future work should either: (a) use the training data distribution (not a proxy) for probing, (b) develop distribution-robust channel selection, or (c) accept that no-SGD compression requires distribution-matched probing data.

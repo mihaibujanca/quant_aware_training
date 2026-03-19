@@ -1,0 +1,5 @@
+item_number=62
+outcome=inconclusive
+key_metric=Shakespeare +6.29%; WikiText-2 corpus-specific +31.86%; zero-shot +120.57%; method is corpus-specific
+commit=5c8d016
+paths=autoresearch/results/cycle_044_domain_robustness.json,autoresearch/results/cycle_044_domain_robustness.png,experiments/domain_robustness_wikitext.py

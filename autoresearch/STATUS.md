@@ -1,31 +1,36 @@
-# Research Status — 36 Cycles (009-043)
+# Research Status — 37 Cycles (009-044)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 9 (010, 019, 026, 027, 033, 039, 040, 041, 042) |
 | Refuted | 13 |
-| Inconclusive | 13 (+ 043) |
+| Inconclusive | 14 (+ 044) |
 
-## Best Compression Recipe (GPT-2 proxy, FINAL)
-1. Select 4 easiest blocks by single-block damage ranking [7,5,4,1]
-2. Compress each at 6-10× via topk channel selection + lstsq output refit
-3. Fit single affine correction at block 8 input via lstsq on ~25K probe tokens
-4. **Result: ~28-30% FFN param reduction at +8-9% PPL, zero extra inference params**
+## CRITICAL FINDING (Cycle 044)
+**The method is highly corpus-specific.** Prior results (033-042) showing +6-9% PPL on Shakespeare are valid only for narrow-distribution text. On WikiText-2:
+- Corpus-specific compression: **+31.86% PPL** (unacceptable)
+- Zero-shot transfer from Shakespeare: **+120.57% PPL** (catastrophic)
 
-## Key Results Summary
-| Finding | Cycle | Status |
-|---------|-------|--------|
-| Topk + lstsq is the viable no-SGD method | 026-027 | CONFIRMED |
-| Single-block 10× is free (regularization) | 040 | CONFIRMED |
-| 4-block stacking at 10× + correction = +8.45% | 042 | CONFIRMED |
-| Residual correction recovers 2-3.6pp | 039, 042 | CONFIRMED |
-| Method generalizes to GPT-2-medium | 041 | CONFIRMED |
-| Block count wall is hard (5 blocks >15%) | 037, 038 | REFUTED items |
-| Multi-point corrections interfere | 043 | INCONCLUSIVE |
-| Single end-point correction is optimal | 039, 043 | Established |
+This fundamentally recontextualizes all prior "good" results. The no-SGD geometric compression method works when the probe distribution is narrow and matched to eval, but fails on broad-distribution text even with corpus-specific fitting.
 
-## Eligible Next
-- **P0 Item 62**: Domain robustness (non-Shakespeare eval)
-- **P0 Item 63**: Practical recipe consolidation
+## Revised Practical Assessment
+| Condition | PPL cost | Viable? |
+|-----------|---------|---------|
+| Narrow-distribution text (Shakespeare-like) | +6-9% | YES |
+| Broad-distribution text (WikiText-2) | +32% | NO |
+| Cross-domain zero-shot transfer | +120% | CATASTROPHIC |
+
+## What Works (narrow-distribution only)
+1. Topk channel selection + lstsq refit at up to 10× per block
+2. 4-block stacking with single end-point correction
+3. Method generalizes across model sizes (GPT-2-small → GPT-2-medium)
+
+## What Doesn't Work
+1. Domain transfer — Shakespeare-fit compression destroys WikiText quality
+2. Broad-distribution compression — even corpus-specific WikiText is +32%
+3. Multi-point corrections — cascading corrections interfere
+
+## Remaining Items
+- **P0 Item 63**: Practical recipe consolidation (should now include domain caveat)
 - **P1 Items 50, 51, 55**: Secondary experiments
