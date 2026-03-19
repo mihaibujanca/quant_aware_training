@@ -20,14 +20,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-79. **Per-block boundary correction revisited with stacking-aware fitting — GPT-2 FFN**
-   - Cycle 043 found multi-point correction interferes when applied naively. But that was before the stacking-as-sole-bottleneck finding (cycle 057-058). Revisit: after compressing k=4 blocks at 6× with topk+lstsq, fit a single affine correction C_i = A_i · h + b_i at each compressed block's output (4 corrections total). Critically, fit corrections in stacking order — C_1 fitted on float inputs, C_2 fitted on (compressed_block_1 + C_1) outputs, etc. — using the same cascaded re-probing idea. This separates the "correction concept" from the "stacking concept": corrections are trained to fix compounding error, not just single-block error.
-   - Type: empirical
-   - Confirmed if: cascaded boundary corrections reduce stacked k=4@6× PPL degradation to ≤ +12% (vs +30.2% uncorrected).
-   - Refuted if: corrections overfit or degrade PPL further than uncorrected stacking (interference effect from cycle 043 persists).
-   - Inconclusive if: corrections help (+15–25% range) but the gain is less than gradient polish alone (cycle 059's +18.4%).
-   - Depends on: none
-
 66. **Lstsq refit with mixed-corpus probe data — GPT-2 FFN**
    - If item 64 shows channel selection is stable across corpora (Jaccard ≥ 0.7), test whether mixing probe corpora during the lstsq refit step produces a more robust compressed block. Fix channel selection from Shakespeare (the best-understood config). Run lstsq refit using: (A) Shakespeare-only 512 tokens, (B) mixed 512 tokens (128 each from Shakespeare, WikiText-2, C4, OpenWebText), (C) mixed 2048 tokens (512 each). Evaluate all three on WikiText-2 validation. The mixed refit should generalize better because lstsq sees a broader input distribution.
    - Type: empirical
@@ -132,6 +124,17 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Criterion: 50 steps reduce degradation by ≥30% relative. Result: 38.9% → CONFIRMED.
    - Polish loss descends consistently at 50 steps (e.g., 4.96→4.86, 4.72→4.17 across blocks/seeds). No overfitting observed (eval is disjoint from polish data).
    - Practical implication: 50 Adam steps at lr=1e-4 on a ~25K-token holdout reduces stacking degradation from +30.2% to +18.4%. Still +18.4% above baseline, so gradient polish alone does not fully close the gap.
+
+### Cycle 063
+
+79. **Per-block boundary correction revisited with stacking-aware fitting — GPT-2 FFN** *(INCONCLUSIVE — cycle 063)*
+   - Cascaded affine corrections (each fitted on the actual comp_model outputs, including prior corrections) vs naive corrections (each fitted on float activations). k=4@6× blocks [1,4,5,7], OWT probe/eval, 3 seeds [42,123,7]. 25,600 probe tokens with 80/20 held-out split; all 12 correction points show held-out/fit MSE ratio ~1.1× (no overfitting flagged, threshold 1.5×).
+   - Baseline GPT-2 PPL (OWT): 57.653. Uncorrected stacked: +30.20%±15.47%. Naive corrections: +50.77%±26.90% (worse than uncorrected — interference confirmed). Cascaded corrections: +25.35%±18.78%.
+   - Criterion: cascaded ≤+12% → CONFIRMED; cascaded ≥ uncorrected → REFUTED. Result: +25.35% → INCONCLUSIVE (12–30% range).
+   - Cascaded corrections do beat naive corrections substantially (50.8% vs 25.4%) and slightly beat uncorrected (+30.2% vs +25.4%), but do not reach the +12% threshold. Naive interference effect from cycle 043 persists and is worse — fitting on float activations makes corrections interfere destructively when stacked.
+   - Cascaded correction reduces the MSE at each correction point vs naive (e.g., block 1: 0.097 vs 0.290 fit MSE), but later blocks still accumulate large error (block 7 cascaded fit MSE ~1.32). This shows corrections partially absorb error but do not eliminate compounding.
+   - Practical implication: stacking-aware corrections are directionally correct but insufficient alone. Combining cascaded corrections + gradient polish (cycle 059) may close the gap further. The stacking problem remains a fundamental challenge at 6× compression with 4 blocks.
+   - Artifacts: `experiments/stacking_aware_correction_gpt2.py`, `autoresearch/results/cycle_063_stacking_correction.json`, `autoresearch/results/cycle_063_stacking_correction.png`
 
 ### Cycle 062
 
