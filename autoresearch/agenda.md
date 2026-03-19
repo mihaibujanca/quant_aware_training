@@ -480,8 +480,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 034
 
-49. **Block-specific compression ratio sweep — GPT-2 FFN** *(CONFIRMED — cycle 034)*
-   - Swept compression ratios {2×, 3×, 4×, 5×, 6×} independently on each of 6 easiest blocks [7,5,4,1,3,6]. All 6 blocks tolerate 6× compression within 5% PPL threshold. Block 5 at 2× is the only failure (+5.41%). PPL is non-monotonic with ratio (higher compression sometimes improves PPL — lstsq refit acts as regularization), but reconstruction MSE increases monotonically as expected. Per-block max safe ratios: {7:6, 5:6, 4:6, 1:6, 3:6, 6:6}.
-   - Outcome: CONFIRMED — 6/6 blocks tolerate ≥5× compression (criterion: ≥4)
+49. **Block-specific compression ratio sweep — GPT-2 FFN** *(INCONCLUSIVE — cycle 034, audit-downgraded)*
+   - Swept compression ratios {2×, 3×, 4×, 5×, 6×} independently on each of 6 easiest blocks [7,5,4,1,3,6]. All 6 blocks tolerate 6× compression within 5% PPL threshold (29/30 points). Block 5 at 2× is the only failure (+5.41%). PPL is non-monotonic with ratio (higher compression sometimes gives sub-baseline PPL). Reconstruction MSE increases monotonically. Per-block max safe ratios: {7:6, 5:6, 4:6, 1:6, 3:6, 6:6}. Audit downgraded to INCONCLUSIVE: single seed + 50 eval sequences insufficient to confirm sub-baseline PPL values are real vs noise. The directional finding (high compression tolerance) is likely correct but needs multi-seed confirmation.
+   - Outcome: INCONCLUSIVE (audit-downgraded from CONFIRMED)
    - Cycle: 034
+   - Commit: b8dad28
    - Artifacts: `autoresearch/results/cycle_034_ratio_sweep.json`, `autoresearch/results/cycle_034_ratio_sweep.png`, `experiments/block_ratio_sweep_gpt2.py`

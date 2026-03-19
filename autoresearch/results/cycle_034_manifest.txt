@@ -1,0 +1,5 @@
+item_number=49
+outcome=confirmed
+key_metric=6/6 blocks tolerate 6x compression within 5% PPL; all max_ratio=6x
+commit=b8dad28
+paths=autoresearch/results/cycle_034_ratio_sweep.json,autoresearch/results/cycle_034_ratio_sweep.png,experiments/block_ratio_sweep_gpt2.py
