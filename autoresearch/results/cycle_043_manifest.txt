@@ -1,0 +1,5 @@
+item_number=61
+outcome=inconclusive
+key_metric=k=4 MP +7.68% worse than SP +6.22%; k=5 MP +12.08% barely at threshold; cascading corrections interfere
+commit=c4fe9da
+paths=autoresearch/results/cycle_043_multipoint_correction.json,autoresearch/results/cycle_043_multipoint_correction.png,experiments/ffn_multipoint_correction.py
