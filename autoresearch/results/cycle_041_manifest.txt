@@ -1,0 +1,5 @@
+item_number=59
+outcome=confirmed
+key_metric=5/6 GPT-2-medium blocks tolerate 4x at ≤10% PPL; block 0 +29.7%, blocks 4-20 within +1%
+commit=a023fad
+paths=autoresearch/results/cycle_041_medium_generalization.json,autoresearch/results/cycle_041_medium_generalization.png,experiments/gpt2_medium_generalization_probe.py
