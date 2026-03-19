@@ -1,30 +1,33 @@
-# Research Status — 38 Cycles (009-045) — PROGRAM COMPLETE
+# Research Status — 47 Cycles (001–047)
 
-## Final Score
+## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 9 (010, 019, 026, 027, 033, 039, 040, 041, 042) |
-| Refuted | 13 (009, 011, 012, 014, 020, 021, 025, 028, 029, 031, 032, 037, 038) |
-| Inconclusive | 15 (013-018, 022-024, 030, 034-036, 043-045) |
+| Refuted | 14 (009, 011, 012, 014, 020, 021, 025, 028, 029, 031, 032, 037, 038, 047) |
+| Inconclusive | 15 (013, 015–018, 022–024, 030, 034–036, 043–045) |
+| Crash | 1 (046) |
 
-## Answer to the Research Question
+## Latest Cycle
+Cycle 047 — item 27 (PH toy ReLU) — **REFUTED**. Betti complexity does not decrease monotonically (2/3 transitions, L4 spikes). Rank-1 prediction wrong. Item 28 (GPT-2 PH) now blocked.
 
-**"Given a trained transformer LM, how do we construct a smaller FFN reparameterization that preserves geometry without SGD?"**
+## Remaining NEXT Items (eligible)
 
-### The method works — with a critical caveat.
+| Item | Priority | Description | Dependencies | Status |
+|------|----------|-------------|-------------|--------|
+| 30 | P1 | Local complexity proxy GPT-2 | 9 ✓, 29 (inc) | Eligible |
+| 51 | P1 | Per-block learned compressor | 14 ✓, 18 (inc) | Eligible |
+| 42 | P2 | Topology-preserving distillation | none | Eligible |
+| 43 | P2 | Topological truncation | none | Eligible |
+| 45 | P2 | Weight-space diffusion | none | Eligible |
 
-**What works**: Topk channel selection + lstsq output refit + single-point residual-stream correction compresses 4 of 12 GPT-2 FFN blocks at 6-10× with ~28-30% FFN parameter reduction and +8-9% PPL. The method generalizes across model sizes (GPT-2 small → medium). No SGD, no training data, zero extra inference parameters.
-
-**The critical caveat**: The method is **highly corpus-specific** (cycle 044). On narrow-distribution text (Shakespeare), it works beautifully (+8.5%). On broad-distribution text (WikiText-2), even corpus-specific compression gives +44% PPL. Zero-shot transfer is catastrophic (+120%). **The probe corpus must match the eval distribution.**
-
-### What this means:
-1. No-SGD geometric compression of FFN blocks is technically possible
-2. But practical usefulness depends on having distribution-matched calibration data
-3. The "free" compression seen on Shakespeare reflects the narrow distribution, not intrinsic FFN redundancy
-4. For real deployment, either use training data for probing or accept distribution sensitivity
-
-## Recipe (for distribution-matched use)
-See `autoresearch/results/cycle_045_recipe.md`
-
-## Remaining P1 Items
-Items 50, 51, 55 remain but are secondary to the corpus specificity finding.
+## Blocked Items
+| Item | Blocked on |
+|------|------------|
+| 23 | 22 (REFUTED) |
+| 27 | DONE (REFUTED cycle 047) |
+| 28 | 27 (REFUTED) — skip |
+| 35 | 22 (REFUTED) |
+| 41 | 22 (REFUTED) |
+| 44 | 22 (REFUTED), 24 |
+| 50 | 26 (inc), 27 (REFUTED) |

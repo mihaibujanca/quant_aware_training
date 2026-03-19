@@ -66,3 +66,4 @@ cycle	item	type	outcome	key_metric	description	commit	paths
 044	62	empirical	inconclusive	Shakespeare +6.29%; WikiText-2 specific +31.86%; zero-shot +120.57%; method corpus-specific	Domain robustness WikiText-2 vs Shakespeare GPT-2 FFN (proxy)	5c8d016	autoresearch/results/cycle_044_domain_robustness.json,experiments/domain_robustness_wikitext.py
 045	63	implementation	inconclusive	Shakespeare +8.52% matches target; WikiText-2 +44.31%; recipe corpus-specific	Compression recipe validation GPT-2 FFN (proxy)	85f3c2c	autoresearch/results/cycle_045_recipe.md,autoresearch/results/cycle_045_validation.json
 046	55	analysis	crash	SIGSEGV during model load (OOM after 13 cycles)	Lstsq refit quality analysis GPT-2 FFN	NONE	NONE
+047	27	empirical	refuted	2/3 transitions decrease (need >=80%); rank-1 prediction wrong	Persistent homology toy ReLU	f2d83c5	experiments/phom_toy_relu.py,autoresearch/results/cycle_047_phom_toy.json,autoresearch/results/cycle_047_phom_toy.png

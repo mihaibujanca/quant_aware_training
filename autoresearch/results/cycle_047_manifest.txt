@@ -1,0 +1,5 @@
+item_number=27
+outcome=refuted
+key_metric=2/3 transitions decrease (need >=80%); L4 persistence spikes 113->227; rank-1 prediction wrong (largest drop L3, lowest r L4)
+commit=f2d83c5
+paths=experiments/phom_toy_relu.py,autoresearch/results/cycle_047_phom_toy.json,autoresearch/results/cycle_047_phom_toy.png
