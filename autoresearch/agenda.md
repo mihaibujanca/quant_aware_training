@@ -33,21 +33,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: K* is low but reconstruction error does not translate to perplexity improvement when the approximation is used for inference.
    - Depends on: 9, 22. Skip if experiment 22 is refuted (functional redundancy does not exist in toy networks, making the LLM analog unmotivated).
 
-27. **Persistent homology of activation manifold through depth — toy ReLU**
-   - For a trained spirals ReLU network (2D input, embedded into 100D), collect the hidden-layer representations at each layer. Apply the ripser persistent homology algorithm to the resulting point clouds, computing Betti numbers β_0 (connected components) and β_1 (loops/holes) at each layer. A well-trained classifier should progressively "untangle" the two spiral classes through depth: early layers should show high topological complexity (many β_1 loops = classes still entangled), while late layers should approach trivial topology (β_0 = 2 isolated clusters, β_1 = 0 = classes cleanly separated). Measure whether topological simplification (decrease in total Betti complexity) correlates with layer-wise compression ease from experiment 20.
-   - Type: empirical
-   - Confirmed if: total Betti complexity decreases monotonically through at least 80% of layers AND layers with the largest Betti drop have the lowest single-affine residual r from experiment 20.
-   - Refuted if: Betti complexity does not decrease or is the same for trained and randomly-initialized networks.
-   - Inconclusive if: topology simplifies overall but the relationship to compression ease is not consistent.
-   - Depends on: 20
-
 28. **Persistent homology of activation manifold through depth — GPT-2**
    - Apply the same analysis from experiment 27 to GPT-2 hidden states: collect token representations at each block output, apply PCA to 30D, run ripser. The question is whether the progressive topological simplification seen in toy networks also appears in a trained language model, and whether it can serve as a compression predictor. If layers with high Betti drop are also the easy-to-compress layers from cycle 005, persistent homology becomes a geometry-driven compression signal that requires no compression attempt.
    - Type: empirical
    - Confirmed if: Betti complexity decreases monotonically through at least 60% of GPT-2 blocks AND Spearman correlation between (per-block Betti drop) and (1 − compression difficulty) from cycle 005 is ≥ 0.35.
    - Refuted if: Betti numbers are approximately constant across all GPT-2 blocks after PCA, indicating that topology is not a useful signal in the residual stream.
    - Inconclusive if: topology simplifies in toy but GPT-2 shows noise or no trend, suggesting the signal does not survive the transformer architecture's residual connections.
-   - Depends on: 9, 27. Skip if experiment 27 is refuted (topology does not simplify through depth even in toy networks).
+   - Depends on: 9, 27. ⚠ **BLOCKED**: Experiment 27 REFUTED (cycle 047) — topology does not simplify monotonically through depth in toy ReLU networks. Skip per dependency rule.
 
 30. **Local complexity proxy as a compression difficulty predictor — GPT-2**
    - Apply the local complexity idea from experiment 29 to GPT-2 FFN blocks. Since GELU makes exact activation-pattern counting undefined, use a proxy: for each probe token x, compute the standard deviation of block Jacobians J(x') for x' in the k nearest neighbors of x in the input representation space. High std → the block is highly nonlinear near x → high local complexity. Low std → the block is locally smooth → easy to approximate. Aggregate this proxy over the full probe set per block and correlate with single-block swap damage from cycle 005.
@@ -115,6 +107,15 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 
 ## PAST EXPERIMENTS
+
+### Cycle 047
+
+27. **Persistent homology of activation manifold through depth — toy ReLU** *(REFUTED — cycle 047)*
+   - Trained 2→32×4→1 spirals network (acc=98.4%). Total persistence L1-L4: 122.7, 119.1, 113.4, 227.1. Only 2/3 transitions decrease (L4 spikes up); 80% monotonicity criterion NOT MET. Largest Betti drop at L3 but lowest r is at L4 — rank-1 prediction wrong. Spearman(drop, r) = +0.5 (wrong sign, n=3). Random-init monotonically decreases (81→39→18→4), trained network does not. Gaussian null (1917-3562) much higher than trained, confirming PH measures real structure — but the structure does not simplify monotonically through depth.
+   - Outcome: REFUTED — topology does not decrease monotonically (2/3 transitions, need ≥ 80%); largest Betti drop layer does not match lowest-r layer
+   - Cycle: 047
+   - Commit: PLACEHOLDER
+   - Artifacts: `experiments/phom_toy_relu.py`, `autoresearch/results/cycle_047_phom_toy.json`, `autoresearch/results/cycle_047_phom_toy.png`
 
 ### Cycle 032
 
