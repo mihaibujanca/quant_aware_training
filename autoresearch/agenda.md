@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-53. **Heterogeneous-ratio multi-block accumulation — GPT-2 FFN**
-   - Cycle 033 stacked 4 blocks at uniform 4x (+8.84%). Cycle 034 suggests per-block tolerance varies. Assign each block its maximum safe ratio from the multi-seed result of item 52 (or 4x fallback if 52 not yet done), then run easiest-first accumulation through k=1..6. Compare PPL curve against the uniform-4x curve from cycle 033. This tests whether per-block ratio optimization yields better total compression at matched or lower PPL.
-   - Type: empirical
-   - Confirmed if: heterogeneous accumulation at k=4 achieves <=8% relative PPL (matching or beating cycle 033's 8.84%) while delivering >4x average compression ratio across the 4 blocks.
-   - Refuted if: heterogeneous k=4 PPL exceeds 12%, indicating that per-block max-safe ratios are not compositionally safe (R4 concern).
-   - Inconclusive if: PPL is between 8-12%, better average compression but unclear win over uniform 4x.
-   - Depends on: 48, 52
-
 ### P1
 
 54. **Compression ceiling scan: 8x and 10x single-block — GPT-2 FFN**
@@ -518,3 +510,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Outcome: INCONCLUSIVE — 6/6 within 5% but 5/6 sub-baseline (regularization effect confirmed real)
    - Cycle: 035
    - Artifacts: `autoresearch/results/cycle_035_multiseed_6x.json`, `autoresearch/results/cycle_035_multiseed_6x.png`, `experiments/multiseed_6x_confirmation_gpt2.py`
+
+### Cycle 036
+
+53. **Heterogeneous-ratio multi-block accumulation — GPT-2 FFN** *(INCONCLUSIVE — cycle 036)*
+   - 6× per-block accumulation on blocks [7,5,4,1,3,6]. k=1: -0.16%, k=2: +2.04%, k=3: +6.40%, k=4: +9.59%, k=5: +17.40%, k=6: +26.57%. Baseline 120.32. Compared to cycle 033 (uniform 4×): k=4 at +9.59% vs +8.84% — only +0.75pp worse despite 50% more per-block compression (6× vs 4×). The compounding degradation is dominated by block count, not per-block ratio. Curves nearly overlap at k=3 and diverge slightly at k=4+. Average compression at k=4 is 6.0× (vs criterion >4×).
+   - Outcome: INCONCLUSIVE — k=4 at +9.59% is in the 8-12% range; better compression but unclear win over uniform 4×
+   - Cycle: 036
+   - Artifacts: `autoresearch/results/cycle_036_accumulation_6x.json`, `autoresearch/results/cycle_036_accumulation_6x.png`, `experiments/multiblock_accumulation_6x.py`
