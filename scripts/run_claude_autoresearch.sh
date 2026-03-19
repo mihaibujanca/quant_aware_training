@@ -146,11 +146,12 @@ EOF
   rm -f "$BLOCK_REASON_FILE"
 
   (
-    cd "$PROJECT_ROOT"
+    # Run from autoresearch/ subdir so agent sessions are filed separately
+    # from human sessions in /resume (Claude Code keys sessions by CWD).
+    cd "$PROJECT_ROOT/autoresearch"
     claude -p \
       --verbose \
       --dangerously-skip-permissions \
-      --no-session-persistence \
       --output-format stream-json \
       "$(cat "$prompt_file")" | python3 -u -c "
 import sys, json
