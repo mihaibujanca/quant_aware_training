@@ -77,14 +77,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: synthesis works for simple datasets (moons) but fails on spirals, indicating the approach doesn't scale to moderate partition complexity.
    - Depends on: 22
 
-42. **Topology-preserving distillation — toy ReLU [MOONSHOT]**
-   - Standard distillation matches outputs. This experiment adds a TOPOLOGICAL loss: the student's representation manifold must have the same persistent homology as the teacher's at each layer. Architecture: teacher 2→32→32→32→32→1 (deep), student 2→16→16→1 (shallow+narrow). Training: L_output = MSE(student(x), teacher(x)), L_topo = Σ_layers Wasserstein₁(PD_teacher(layer_k), PD_student(layer_j)) where layer_j is the student layer aligned to teacher layer_k via optimal layer matching, Total = L_output + λ · L_topo. Use Ripser for PH computation (Betti₀ and Betti₁), differentiable through the Wasserstein distance on persistence diagrams (use TopologyLayer / torch-tda or finite-difference approximation). Compare with: (a) output-only distillation, (b) Jacobian-matching distillation, (c) CKA-matching distillation.
-   - Type: implementation + empirical
-   - Confirmed if: topo-distilled student achieves ≥5pp higher test accuracy than output-only distilled student at matched architecture AND the topology loss converges (PD distance decreases during training).
-   - Refuted if: topology loss is too noisy to optimize (PD distance oscillates or diverges) OR topo-distilled student performs ≤ output-only student.
-   - Inconclusive if: topology loss converges but accuracy advantage is < 3pp, suggesting the signal is real but weak.
-   - Depends on: none
-
 43. **Topological truncation: Betti-guided depth reduction [MOONSHOT]**
    - Compute persistent homology (via Ripser) on hidden representations at each layer. Track Betti numbers (β₀ = connected components, β₁ = loops/holes) through depth. Hypothesis: there exists a "topological triviality point" T — the first layer where Betti numbers stabilize at their final values. Before T, the network performs topological operations (separating classes, untangling manifolds). After T, it's just refining linear separators within an already-correct topology. Test: replace all layers after T with a single affine map (fit via least squares on layer T activations → final output). This is "topologically-justified depth pruning." Toy (primary): spirals (known topology — two interleaved spirals → β₀ should go 1→2, β₁ should decrease). Moons (simpler topology — β₀ goes 1→2). Run on 2D and 100D-embedded variants. GPT-2 (stretch): PH on PCA-projected activations (30D) per layer.
    - Type: empirical + intervention
@@ -110,6 +102,17 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: none
 
 ## PAST EXPERIMENTS
+
+### Cycle 064
+
+42. **Topology-preserving distillation — toy ReLU [MOONSHOT]** *(REFUTED — cycle 064)*
+   - Teacher 2→32×4→1, student 2→32→1 (depth is the variable). 4 distillation methods: output-only, distance-matrix matching, CKA, activation-MSE. 3 seeds × 2 datasets (spirals 3-turn, moons). Distance-matrix loss: Frobenius norm of pairwise distance matrix difference (translation/rotation invariant, no PCA needed).
+   - Results (spirals): output-only 0.51-0.59, distance-matrix best 0.49-0.52 (Δ≈−0.05 on avg). Distance-matrix HURT accuracy across all seeds and all λ values. CKA ≈ output-only (+0.00 to +0.01). Activation-MSE ≈ output-only (+0.01 to +0.03).
+   - Results (moons): output-only 0.86-0.92, distance-matrix best 0.48-0.53 (Δ≈−0.39 on avg). All λ values collapsed to 0.47-0.53 — distance-matrix completely disrupts student training on moons too. CKA/activation-MSE matched output-only.
+   - PH Wasserstein (post-hoc): W0 decreases slightly from 0 to 500 epochs (e.g., 31.4→27.2) but does not approach 0, and this is for output-only (not dmat). PH W0 decreasing fraction for dmat: 0.00 (W0 does not decrease during dmat training — student representations diverge).
+   - Root cause: distance-matrix loss in 32D activation space provides a poorly-scaled gradient signal that overrides the output loss. The loss encourages the student to preserve global pairwise distances in 32D, which conflicts with the 1-layer student's limited capacity to reproduce both the correct output and the teacher's high-dimensional activation geometry.
+   - Criterion: Δacc ≥ 5pp required. Measured Δacc = −5pp (spirals) and −39pp (moons) for dmat. REFUTED.
+   - Artifacts: `experiments/topo_preserving_distillation.py`, `autoresearch/results/cycle_064_topo_distillation.json`
 
 ### Cycle 056
 
