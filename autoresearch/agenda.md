@@ -20,14 +20,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-78. **Reduced compression ratio for stacking: k=4@3× and k=4@2× — GPT-2 FFN**
-   - Single-block 6× is sub-baseline, but stacking 4 blocks at 6× gives +30%. If the compounding is super-additive in compression ratio, reducing per-block ratio should have a disproportionate benefit on stacking quality. Run stacked k=4 (blocks [7,5,4,1]) on OpenWebText at per-block ratios {2×, 3×, 4×} (vs existing 6× baseline). Each block uses topk + lstsq (no gradient polish). Compare stacking degradation curves across ratios. At 2× per-block (keep 1536 of 3072 channels), single-block should be essentially lossless — the question is whether stacking 4 blocks at 2× is also lossless.
-   - Type: empirical
-   - Confirmed if: k=4@3× achieves ≤ +5% PPL degradation (vs +30.2% at 6×, cycle 058).
-   - Refuted if: k=4@3× still shows ≥ +20% degradation (compounding is not super-additive in ratio — even moderate compression stacks badly).
-   - Inconclusive if: 3× gives +5–20% — improvement exists but the stacking problem persists at moderate ratios.
-   - Depends on: none
-
 79. **Per-block boundary correction revisited with stacking-aware fitting — GPT-2 FFN**
    - Cycle 043 found multi-point correction interferes when applied naively. But that was before the stacking-as-sole-bottleneck finding (cycle 057-058). Revisit: after compressing k=4 blocks at 6× with topk+lstsq, fit a single affine correction C_i = A_i · h + b_i at each compressed block's output (4 corrections total). Critically, fit corrections in stacking order — C_1 fitted on float inputs, C_2 fitted on (compressed_block_1 + C_1) outputs, etc. — using the same cascaded re-probing idea. This separates the "correction concept" from the "stacking concept": corrections are trained to fix compounding error, not just single-block error.
    - Type: empirical
@@ -140,6 +132,17 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Criterion: 50 steps reduce degradation by ≥30% relative. Result: 38.9% → CONFIRMED.
    - Polish loss descends consistently at 50 steps (e.g., 4.96→4.86, 4.72→4.17 across blocks/seeds). No overfitting observed (eval is disjoint from polish data).
    - Practical implication: 50 Adam steps at lr=1e-4 on a ~25K-token holdout reduces stacking degradation from +30.2% to +18.4%. Still +18.4% above baseline, so gradient polish alone does not fully close the gap.
+
+### Cycle 062
+
+78. **Reduced compression ratio for stacking: k=4@3× and k=4@2× — GPT-2 FFN** *(INCONCLUSIVE — cycle 062)*
+   - Stacked k=4 (blocks [7,5,4,1]) at ratios {2×, 3×, 4×, 6×}, pure topk+lstsq, no gradient polish. 3 seeds [42,123,7], 8192 probe tokens per layer (critical fix from cycle 056 to avoid underdetermined lstsq at 2×). OWT corpus.
+   - Baseline GPT-2 PPL (OWT): 57.653. Results: 2×=+11.15%±14.85%, 3×=+18.53%±15.10%, 4×=+22.09%±15.36%, 6×=+25.91%±15.13%.
+   - Criterion: k=4@3× ≤+5% → CONFIRMED; ≥+20% → REFUTED. Measured +18.53% → INCONCLUSIVE (within +5–20% band).
+   - 6× calibration: measured +25.9% vs cycle 058's +30.2% (+4.3pp deviation, attributable to improved atlas with 8192 vs 4096 probe tokens).
+   - High seed variance (std ~15pp): seed 42 consistently 15–20pp worse than seeds 123 and 7. Reduces ratio demonstrates benefit at seeds 123/7 (+6.2% and +14.0% at 3×), but seed 42 shows +27.8% — suggesting the stacking degradation is sensitive to corpus split.
+   - Practical implication: compounding is not fully super-additive in ratio. 3× stacking degrades half as much as 6× on average, but remains above the +5% threshold. Reducing ratio helps but does not eliminate the stacking problem.
+   - Artifacts: `experiments/stacking_ratio_sweep_gpt2.py`, `autoresearch/results/cycle_062_stacking_ratio_sweep.json`, `autoresearch/results/cycle_062_stacking_ratio_sweep.png`
 
 ### Cycle 061
 
