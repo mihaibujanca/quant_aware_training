@@ -11,7 +11,11 @@ Read the full agenda item in `autoresearch/agenda.md` for item {ITEM_NUMBER}, in
 
 Before writing the plan, verify:
 - P1: Is this item a duplicate of something in PAST EXPERIMENTS?
-- P2: Does this item depend on results from an unfinished item? (Check PAST EXPERIMENTS for dependencies)
+- P2: Dependency check (FAIL if any condition is true):
+      (a) Does this item depend on results from an unfinished item?
+      (b) Does the agenda item text say "Skip if experiment N is refuted"
+          and that experiment IS refuted in PAST EXPERIMENTS?
+      Check both PAST EXPERIMENTS outcomes and the item's own dependency notes.
 - P3: Is the item concrete enough to produce a testable experiment in one cycle?
 - P4: Would this item require modifying `autoresearch/program.md` or prompt files?
 
