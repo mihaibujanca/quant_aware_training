@@ -6,6 +6,15 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+
+77. **Gradient polish scaling: 100–500 Adam steps on stacked blocks — GPT-2 FFN**
+   - Cycle 059 showed 50 Adam steps reduce stacking degradation from +30.2% to +18.4% (39% relative improvement). Is this converging or still descending? Run stacked k=4@6× (blocks [7,5,4,1]) on OpenWebText with gradient polish at {100, 200, 500} Adam steps (lr=1e-4, same holdout setup as cycle 059). Track per-step loss curve to identify convergence plateau. Also test joint polish: instead of polishing each block independently, run Adam on all 4 compressed W_down matrices simultaneously with the stacked forward pass.
+   - Type: empirical
+   - Confirmed if: 500 steps achieves ≤ +8% PPL degradation (vs +18.4% at 50 steps) OR joint polish outperforms independent polish by ≥ 5pp.
+   - Refuted if: 200 steps shows < 2pp improvement over 50 steps (diminishing returns plateau already reached).
+   - Inconclusive if: improvement continues but 500 steps still > +12%, and loss curve has not plateaued (would need even more steps).
+   - Depends on: none
+
 64. **Corpus-diverse probing: multi-domain channel selection stability — GPT-2 FFN**
    - The fundamental blocker (cycle 044): compression fitted on Shakespeare degrades +120% on WikiText-2 zero-shot. Hypothesis: the instability is in *channel selection*, not in the lstsq refit. For blocks [7, 5, 4, 1] at 6×, run topk channel selection independently on 4 probe corpora: Shakespeare, WikiText-2, C4 (first 2K tokens), and OpenWebText (first 2K tokens). Measure pairwise Jaccard similarity of selected channel sets across corpora. Then evaluate each corpus's compressed block on all 4 eval sets (4×4 cross-matrix of PPL). If channel overlap is high (Jaccard ≥ 0.7) but PPL still diverges, the problem is in the lstsq coefficients, not channel identity — and a corpus-invariant channel set with per-domain refit might work.
    - Type: empirical
@@ -18,6 +27,21 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
+78. **Reduced compression ratio for stacking: k=4@3× and k=4@2× — GPT-2 FFN**
+   - Single-block 6× is sub-baseline, but stacking 4 blocks at 6× gives +30%. If the compounding is super-additive in compression ratio, reducing per-block ratio should have a disproportionate benefit on stacking quality. Run stacked k=4 (blocks [7,5,4,1]) on OpenWebText at per-block ratios {2×, 3×, 4×} (vs existing 6× baseline). Each block uses topk + lstsq (no gradient polish). Compare stacking degradation curves across ratios. At 2× per-block (keep 1536 of 3072 channels), single-block should be essentially lossless — the question is whether stacking 4 blocks at 2× is also lossless.
+   - Type: empirical
+   - Confirmed if: k=4@3× achieves ≤ +5% PPL degradation (vs +30.2% at 6×, cycle 058).
+   - Refuted if: k=4@3× still shows ≥ +20% degradation (compounding is not super-additive in ratio — even moderate compression stacks badly).
+   - Inconclusive if: 3× gives +5–20% — improvement exists but the stacking problem persists at moderate ratios.
+   - Depends on: none
+
+79. **Per-block boundary correction revisited with stacking-aware fitting — GPT-2 FFN**
+   - Cycle 043 found multi-point correction interferes when applied naively. But that was before the stacking-as-sole-bottleneck finding (cycle 057-058). Revisit: after compressing k=4 blocks at 6× with topk+lstsq, fit a single affine correction C_i = A_i · h + b_i at each compressed block's output (4 corrections total). Critically, fit corrections in stacking order — C_1 fitted on float inputs, C_2 fitted on (compressed_block_1 + C_1) outputs, etc. — using the same cascaded re-probing idea. This separates the "correction concept" from the "stacking concept": corrections are trained to fix compounding error, not just single-block error.
+   - Type: empirical
+   - Confirmed if: cascaded boundary corrections reduce stacked k=4@6× PPL degradation to ≤ +12% (vs +30.2% uncorrected).
+   - Refuted if: corrections overfit or degrade PPL further than uncorrected stacking (interference effect from cycle 043 persists).
+   - Inconclusive if: corrections help (+15–25% range) but the gain is less than gradient polish alone (cycle 059's +18.4%).
+   - Depends on: none
 
 66. **Lstsq refit with mixed-corpus probe data — GPT-2 FFN**
    - If item 64 shows channel selection is stable across corpora (Jaccard ≥ 0.7), test whether mixing probe corpora during the lstsq refit step produces a more robust compressed block. Fix channel selection from Shakespeare (the best-understood config). Run lstsq refit using: (A) Shakespeare-only 512 tokens, (B) mixed 512 tokens (128 each from Shakespeare, WikiText-2, C4, OpenWebText), (C) mixed 2048 tokens (512 each). Evaluate all three on WikiText-2 validation. The mixed refit should generalize better because lstsq sees a broader input distribution.
@@ -123,6 +147,17 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Criterion: 50 steps reduce degradation by ≥30% relative. Result: 38.9% → CONFIRMED.
    - Polish loss descends consistently at 50 steps (e.g., 4.96→4.86, 4.72→4.17 across blocks/seeds). No overfitting observed (eval is disjoint from polish data).
    - Practical implication: 50 Adam steps at lr=1e-4 on a ~25K-token holdout reduces stacking degradation from +30.2% to +18.4%. Still +18.4% above baseline, so gradient polish alone does not fully close the gap.
+
+### Cycle 060
+
+76. **Iterative cascaded compression: re-probe through compressed blocks — GPT-2 FFN** *(REFUTED — cycle 060)*
+   - Baseline GPT-2 PPL (OWT): 57.653. Independent (float activations, 4 blocks simultaneous): +30.20%±15.47% (mean PPL=75.06). Cascaded (layer order [1,4,5,7], re-probe through partially-compressed model): +28.37%±15.08% (mean PPL=74.01).
+   - Cascaded is 1.83pp better than independent — negligible improvement.
+   - Independent baseline replication confirmed: +30.20% matches cycle 058's +30.2%.
+   - Block 1 cascaded = block 1 independent (no prior distortion), as expected.
+   - Per-block reconstruction MSE: cascaded shows ~10–20% lower FFN output MSE per block (distorted inputs are better matched), but this does not translate to PPL improvement because the residual stream distortion propagates from all prior compressed blocks regardless.
+   - Criterion: cascaded ≥ +25% = REFUTED. Re-probing through compressed blocks does not meaningfully reduce stacking degradation.
+   - Implication: the compounding PPL penalty is not primarily caused by lstsq input mismatch. The distortion propagates through the residual stream (attention, layer norm, etc.), which cascaded re-probing does not address.
    - Cycle: 059
    - Artifacts: `experiments/gradient_polish_stacked_gpt2.py`, `autoresearch/results/cycle_059_gradient_polish.json`, `autoresearch/results/cycle_059_gradient_polish.png`
 
