@@ -6,7 +6,31 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+53. **Heterogeneous-ratio multi-block accumulation — GPT-2 FFN**
+   - Cycle 033 stacked 4 blocks at uniform 4x (+8.84%). Cycle 034 suggests per-block tolerance varies. Assign each block its maximum safe ratio from the multi-seed result of item 52 (or 4x fallback if 52 not yet done), then run easiest-first accumulation through k=1..6. Compare PPL curve against the uniform-4x curve from cycle 033. This tests whether per-block ratio optimization yields better total compression at matched or lower PPL.
+   - Type: empirical
+   - Confirmed if: heterogeneous accumulation at k=4 achieves <=8% relative PPL (matching or beating cycle 033's 8.84%) while delivering >4x average compression ratio across the 4 blocks.
+   - Refuted if: heterogeneous k=4 PPL exceeds 12%, indicating that per-block max-safe ratios are not compositionally safe (R4 concern).
+   - Inconclusive if: PPL is between 8-12%, better average compression but unclear win over uniform 4x.
+   - Depends on: 48, 52
+
 ### P1
+
+54. **Compression ceiling scan: 8x and 10x single-block — GPT-2 FFN**
+   - Cycles 033-034 explored up to 6x. Extend the single-block sweep to 8x and 10x on the 3 easiest blocks (7, 5, 4) with 3 seeds and 200 eval sequences. This finds the actual per-block compression wall — the ratio at which PPL degradation exceeds 10% — and establishes the theoretical ceiling for no-SGD geometric compression on GPT-2 FFN.
+   - Type: empirical
+   - Confirmed if: at least 1 of 3 blocks tolerates 8x with mean relative PPL <=10%, establishing a ceiling above 6x.
+   - Refuted if: all 3 blocks exceed 10% relative PPL at 8x, indicating 6x is the practical ceiling for no-SGD geometric compression.
+   - Inconclusive if: results are block-dependent (one tolerates 8x, others fail) with no clear pattern, requiring more blocks to establish the trend.
+   - Depends on: 52
+
+55. **Lstsq refit quality degradation analysis across compression ratios — GPT-2 FFN**
+   - The geometric method uses least-squares refit of W_down after channel selection. At high compression (6x+), the refit becomes increasingly underdetermined (fewer channels = fewer columns in the design matrix). Measure the condition number of the refit system and held-out reconstruction MSE at ratios {2x, 4x, 6x, 8x} on blocks 7, 5, 4. If the refit condition number explodes at a specific ratio, that explains any compression ceiling and motivates regularized refit (ridge/truncated SVD) as a next step. This is an analysis experiment that explains mechanism, not just measures outcome.
+   - Type: analysis
+   - Confirmed if: condition number increases >10x between 4x and 8x AND held-out MSE / train MSE ratio exceeds 2.0 at 8x for a majority of blocks (overfitting in the refit).
+   - Refuted if: condition number stays below 1e4 across all ratios and held-out MSE tracks train MSE closely, indicating the refit is well-conditioned and the ceiling is from information loss, not fitting artifacts.
+   - Inconclusive if: condition number rises but held-out MSE remains close to train MSE, suggesting the system is ill-conditioned but regularization would not help.
+   - Depends on: 54
 
 50. **Centroid-merge quality as a function of probe corpus size — GPT-2 FFN**
    - Cycle 027 established centroid similarity (ρ=0.85) as the merge signal on a fixed probe corpus. It is unknown whether this signal is stable under small probe sets (e.g., 64 vs 512 vs 2048 tokens), which determines minimum data requirements for deployment. Run single-block swap with centroid-guided merge on one representative block across probe sizes {64, 128, 256, 512, 1024, 2048} and measure PPL. Also measure channel selection stability (Jaccard index of selected channels across runs with different random seeds at the same probe size).
@@ -486,3 +510,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 034
    - Commit: b8dad28
    - Artifacts: `autoresearch/results/cycle_034_ratio_sweep.json`, `autoresearch/results/cycle_034_ratio_sweep.png`, `experiments/block_ratio_sweep_gpt2.py`
+
+### Cycle 035
+
+52. **Multi-seed confirmation of single-block compression tolerance at 6x — GPT-2 FFN** *(INCONCLUSIVE — cycle 035)*
+   - 3 seeds (42, 123, 7), 200 eval sequences each, blocks [7,5,4,1,3,6] at 6× with topk + random null baseline. Baselines differ across seeds (123.4, 125.9, 125.0) confirming shuffle_seed works. All 6/6 blocks within 5% threshold (mean rel PPL: block 7 +0.51%, block 5 -0.20%, block 4 -0.13%, block 1 -1.00%, block 3 -1.55%, block 6 -0.57%). Cross-seed std low (0.18-0.83%). Topk beats random on all 6 blocks. BUT: 5/6 blocks show sub-baseline mean PPL — the non-monotonicity from cycle 034 is REAL, not noise. The lstsq refit at 6× acts as regularization, removing channels that hurt generalization. Verdict: INCONCLUSIVE because confirmation criterion requires no sub-baseline mean PPL.
+   - Outcome: INCONCLUSIVE — 6/6 within 5% but 5/6 sub-baseline (regularization effect confirmed real)
+   - Cycle: 035
+   - Artifacts: `autoresearch/results/cycle_035_multiseed_6x.json`, `autoresearch/results/cycle_035_multiseed_6x.png`, `experiments/multiseed_6x_confirmation_gpt2.py`
