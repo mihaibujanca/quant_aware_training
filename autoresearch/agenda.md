@@ -15,13 +15,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 50
 
 
-73. **Failure decomposition: channel selection vs lstsq refit vs stacking — GPT-2 FFN**
-   - The +48% PPL failure on broad text could originate in (A) topk channel selection choosing wrong channels, (B) lstsq refit producing poor coefficients, or (C) error compounding across stacked blocks. Isolate each: (1) Use OpenWebText probes, compute single-block 6× swap PPL for blocks [7, 5, 4] individually (stacking removed). (2) For each block, compare topk-selected channels from Shakespeare vs OpenWebText (Jaccard overlap). (3) Fix channels from Shakespeare but refit lstsq on OpenWebText — if PPL recovers, the refit is the bottleneck. This is a targeted diagnostic version of item 64 focused on the refuted k=4@6× regime.
-   - Type: empirical
-   - Confirmed if: one component (selection, refit, or stacking) accounts for ≥60% of the PPL gap between Shakespeare and OpenWebText single-block performance.
-   - Refuted if: all three components contribute roughly equally (each 25-40%), indicating no single fixable bottleneck.
-   - Inconclusive if: single-block OpenWebText PPL is already <10% (stacking is the sole problem, not the per-block method).
-   - Depends on: none
 
 ### P1
 
@@ -133,6 +126,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ## PAST EXPERIMENTS
 
 ### Cycle 056
+
+### Cycle 057
+
+73. **Failure decomposition: channel selection vs lstsq refit vs stacking — GPT-2 FFN** *(INCONCLUSIVE — cycle 057)*
+   - Decomposed +48% PPL gap (cycle 054, stacked k=4@6×) into three components for blocks [7, 5, 4] at 6×, seeds [42, 123, 7].
+   - Key results: Variant A (OWT-native single-block): −3.3% to −5.6% PPL vs baseline (all three blocks, mean ≈−4.4%). Variant B (Shakespeare channels + OWT lstsq refit): essentially identical to A (B-A gap ≤ 0.2pp). Variant C (3-block stacked): +20.2% PPL degradation (mean across blocks, ±13.8%). Jaccard(OWT, Shakespeare) channel overlap: 0.47–0.54 (moderate).
+   - Stacking overhead (C-A): +23.5pp to +25.8pp per block. Selection effect (B-A): −0.2pp to +0.1pp (negligible).
+   - Outcome: INCONCLUSIVE by criterion — single-block OWT is <10% (in fact ≈−4 to −5%, within evaluation noise), confirming stacking is the sole failure mode and per-block method (selection, refit) is not the problem. Channel selection is interchangeable across corpora at moderate Jaccard (0.5); lstsq refit quality is insensitive to which channel set is selected.
+   - Cycle: 057
+   - Artifacts: `experiments/failure_decomposition_gpt2.py`, `autoresearch/results/cycle_057_decomposition.json`, `autoresearch/results/cycle_057_decomposition.png`
 
 72. **Compression ratio sweep on OpenWebText: finding the viable frontier — GPT-2 FFN** *(INCONCLUSIVE — cycle 056, audit-corrected)* ⚠ **FLAWED: MP3 (lstsq underdetermination at 2×)**
    - Single-block swaps (no correction) at ratios {2×, 3×, 4×, 6×} on blocks [7, 5, 4] using OpenWebText as BOTH probe and eval corpus. 3 seeds [42, 123, 7], 200 eval sequences each.
