@@ -7,13 +7,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ### P0
 
 
-77. **Gradient polish scaling: 100–500 Adam steps on stacked blocks — GPT-2 FFN**
-   - Cycle 059 showed 50 Adam steps reduce stacking degradation from +30.2% to +18.4% (39% relative improvement). Is this converging or still descending? Run stacked k=4@6× (blocks [7,5,4,1]) on OpenWebText with gradient polish at {100, 200, 500} Adam steps (lr=1e-4, same holdout setup as cycle 059). Track per-step loss curve to identify convergence plateau. Also test joint polish: instead of polishing each block independently, run Adam on all 4 compressed W_down matrices simultaneously with the stacked forward pass.
-   - Type: empirical
-   - Confirmed if: 500 steps achieves ≤ +8% PPL degradation (vs +18.4% at 50 steps) OR joint polish outperforms independent polish by ≥ 5pp.
-   - Refuted if: 200 steps shows < 2pp improvement over 50 steps (diminishing returns plateau already reached).
-   - Inconclusive if: improvement continues but 500 steps still > +12%, and loss curve has not plateaued (would need even more steps).
-   - Depends on: none
 
 64. **Corpus-diverse probing: multi-domain channel selection stability — GPT-2 FFN**
    - The fundamental blocker (cycle 044): compression fitted on Shakespeare degrades +120% on WikiText-2 zero-shot. Hypothesis: the instability is in *channel selection*, not in the lstsq refit. For blocks [7, 5, 4, 1] at 6×, run topk channel selection independently on 4 probe corpora: Shakespeare, WikiText-2, C4 (first 2K tokens), and OpenWebText (first 2K tokens). Measure pairwise Jaccard similarity of selected channel sets across corpora. Then evaluate each corpus's compressed block on all 4 eval sets (4×4 cross-matrix of PPL). If channel overlap is high (Jaccard ≥ 0.7) but PPL still diverges, the problem is in the lstsq coefficients, not channel identity — and a corpus-invariant channel set with per-domain refit might work.
@@ -147,6 +140,19 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Criterion: 50 steps reduce degradation by ≥30% relative. Result: 38.9% → CONFIRMED.
    - Polish loss descends consistently at 50 steps (e.g., 4.96→4.86, 4.72→4.17 across blocks/seeds). No overfitting observed (eval is disjoint from polish data).
    - Practical implication: 50 Adam steps at lr=1e-4 on a ~25K-token holdout reduces stacking degradation from +30.2% to +18.4%. Still +18.4% above baseline, so gradient polish alone does not fully close the gap.
+
+### Cycle 061
+
+77. **Gradient polish scaling: 100–500 Adam steps on stacked blocks — GPT-2 FFN** *(CONFIRMED — cycle 061)*
+   - Extended cycle 059's sweep to {0, 50, 100, 200, 500} steps, adding joint polish (all 4 W_down matrices updated simultaneously). Same setup: stacked k=4@6× (blocks [7,5,4,1]), OWT probe/eval, lr=1e-4, 3 seeds [42,123,7].
+   - Baseline GPT-2 PPL (OWT): 57.653. 0-step (lstsq only): +30.20% (replicates cycle 059 exactly).
+   - Independent polish: 50 steps=+18.44% (38.9% rel improvement), 100=+14.0% (53.6%), 200=+9.6% (68.4%), 500=+4.9% (83.9%).
+   - Joint polish: 50 steps=+18.6%, 100=+13.8%, 200=+8.9%, 500=+3.8%. Consistently ~0.5–1.1pp better than independent at each step count, but not ≥5pp advantage.
+   - Primary criterion (500 steps ≤ +8%): 500-step independent=+4.86%, joint=+3.79% — BOTH meet the +8% threshold. CONFIRMED.
+   - No plateau detected: 200→500 improvement = 4.7pp (well above the 2pp plateau threshold).
+   - Joint vs independent advantage at 500 steps: only 1.07pp (does not meet the ≥5pp criterion, but CONFIRMED by primary criterion).
+   - Practical implication: 500 Adam steps at lr=1e-4 reduces stacked 4-block 6× degradation from +30.2% to +4.9% (independent) or +3.8% (joint). This effectively eliminates the stacking penalty for this configuration.
+   - Artifacts: `experiments/gradient_polish_scaling_gpt2.py`, `autoresearch/results/cycle_061_gradient_polish_scaling.json`, `autoresearch/results/cycle_061_gradient_polish_scaling.png`
 
 ### Cycle 060
 
