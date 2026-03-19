@@ -6,7 +6,24 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+64. **Corpus-diverse probing: multi-domain channel selection stability — GPT-2 FFN**
+   - The fundamental blocker (cycle 044): compression fitted on Shakespeare degrades +120% on WikiText-2 zero-shot. Hypothesis: the instability is in *channel selection*, not in the lstsq refit. For blocks [7, 5, 4, 1] at 6×, run topk channel selection independently on 4 probe corpora: Shakespeare, WikiText-2, C4 (first 2K tokens), and OpenWebText (first 2K tokens). Measure pairwise Jaccard similarity of selected channel sets across corpora. Then evaluate each corpus's compressed block on all 4 eval sets (4×4 cross-matrix of PPL). If channel overlap is high (Jaccard ≥ 0.7) but PPL still diverges, the problem is in the lstsq coefficients, not channel identity — and a corpus-invariant channel set with per-domain refit might work.
+   - Type: empirical
+   - Confirmed if: cross-corpus Jaccard of selected channels ≥ 0.7 for ≥ 3/4 blocks AND cross-eval PPL gap between best and worst probe corpus is ≤ 10% for at least 2/4 blocks.
+   - Refuted if: Jaccard < 0.4 for a majority of blocks (channel selection is fundamentally corpus-specific, not just the refit).
+   - Inconclusive if: Jaccard is moderate (0.4–0.7) or high Jaccard does not translate to cross-corpus PPL stability.
+   - Depends on: 50
+
+
 ### P1
+
+66. **Lstsq refit with mixed-corpus probe data — GPT-2 FFN**
+   - If item 64 shows channel selection is stable across corpora (Jaccard ≥ 0.7), test whether mixing probe corpora during the lstsq refit step produces a more robust compressed block. Fix channel selection from Shakespeare (the best-understood config). Run lstsq refit using: (A) Shakespeare-only 512 tokens, (B) mixed 512 tokens (128 each from Shakespeare, WikiText-2, C4, OpenWebText), (C) mixed 2048 tokens (512 each). Evaluate all three on WikiText-2 validation. The mixed refit should generalize better because lstsq sees a broader input distribution.
+   - Type: empirical
+   - Confirmed if: mixed-corpus refit (B or C) reduces WikiText-2 PPL degradation by ≥ 10pp relative compared to Shakespeare-only refit (from cycle 044's +44% baseline).
+   - Refuted if: mixed-corpus refit performs worse than or equal to Shakespeare-only on WikiText-2 (mixing dilutes the refit quality without improving generalization).
+   - Inconclusive if: improvement exists but is < 5pp, suggesting the gain is real but insufficient to make the method corpus-robust.
+   - Depends on: 64
 
 50. **Centroid-merge quality as a function of probe corpus size — GPT-2 FFN**
    - Cycle 027 established centroid similarity (ρ=0.85) as the merge signal on a fixed probe corpus. It is unknown whether this signal is stable under small probe sets (e.g., 64 vs 512 vs 2048 tokens), which determines minimum data requirements for deployment. Run single-block swap with centroid-guided merge on one representative block across probe sizes {64, 128, 256, 512, 1024, 2048} and measure PPL. Also measure channel selection stability (Jaccard index of selected channels across runs with different random seeds at the same probe size).
@@ -16,6 +33,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: Jaccard is stable but PPL variance across seeds is high (> 3%), suggesting instability from a different source.
    - Depends on: 26, 27
 
+67. **Lstsq refit residual analysis: is the error correctable or chaotic? — GPT-2 FFN**
+   - The lstsq refit at high compression ratios acts as implicit regularization (cycles 035, 040 show sub-baseline PPL). But on broader corpora it fails (cycle 044). Characterize the refit residual: for blocks [7, 5, 4] at 6× on both Shakespeare and WikiText-2 probe data, compute the lstsq residual E = f_block(x) - W_refit @ x_selected. Measure: (a) rank of E via SVD (is the residual low-rank and thus correctable?), (b) correlation of E across tokens (structured vs noise-like), (c) whether the residual direction aligns with the discarded channels' subspace. If the residual is low-rank on Shakespeare but full-rank on WikiText-2, that explains why correction works on narrow distributions and fails on broad ones.
+   - Type: analysis
+   - Confirmed if: residual rank-90% is ≤ 50 on Shakespeare AND ≥ 200 on WikiText-2 for a majority of tested blocks (explaining the corpus specificity mechanistically).
+   - Refuted if: residual rank is similar on both corpora (the corpus specificity is not a rank phenomenon).
+   - Inconclusive if: rank differs but the rank gap doesn't predict PPL gap across blocks.
+   - Depends on: none
 
 23. **Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**
    - ⚠ **BLOCKED**: Depends on item 22 (REFUTED). Item 22 found no functional redundancy in toy networks, making the GPT-2 Jacobian k-means analog unmotivated per agenda dependency rule.
@@ -93,6 +117,14 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 
 ## PAST EXPERIMENTS
+
+### Cycle 050
+
+65. **Oracle-guided adaptive compression ratio — GPT-2 FFN** *(REFUTED — cycle 050)*
+   - P1-guided per-block ratios (block 4: 10×, block 1: 9.82×, block 5: 9.0×, block 7: 7.89×, mean=9.17×) compared to uniform control at same mean ratio (~9.17×). Oracle k=4 corrected: +12.33% ±0.82 (mean, 3 seeds). Critically, the boundary lstsq correction worsened oracle performance (MSE increased: 1.71→1.88), while the uniform control at the same mean ratio got +6.36% ±0.69 with correction working normally (MSE: 1.71→1.36). The oracle's variable hidden dims per block produce hidden-state residuals that are incompatible with a single affine boundary correction. The P1 signal predicts block-level damage correctly but variable ratios in a stacked pipeline interact destructively with the boundary refit.
+   - Outcome: REFUTED — oracle mean +12.33% is worse than uniform 10× corrected (+8.45%) and worse than uniform 6× uncorrected (+9.59%). Ratio allocation predicts the wrong direction when combined with boundary correction.
+   - Cycle: 050
+   - Artifacts: `experiments/oracle_adaptive_compression_gpt2.py`, `autoresearch/results/cycle_050_oracle_adaptive.json`, `autoresearch/results/cycle_050_oracle_adaptive.png`
 
 ### Cycle 049
 
