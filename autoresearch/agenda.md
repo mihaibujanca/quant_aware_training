@@ -6,6 +6,30 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+61. **Multi-point residual correction at every compressed block boundary — GPT-2 FFN**
+   - Cycle 039 applied a single lstsq correction after the last compressed block and recovered 3.6pp. This experiment places an independent affine correction at each compressed block's output (i.e., 4 corrections for k=4). Each correction C_i is fit via lstsq on the residual-stream error at block i's output, conditioned on all prior corrections being applied. Test k=4@6× and k=5@6× with multi-point correction vs single-point (039 baseline). If multi-point breaks the block-count wall further, k=5 may become viable.
+   - Type: empirical
+   - Confirmed if: k=5 with multi-point correction achieves ≤12% PPL (vs +12.53% single-point from 039) OR k=4 improves by ≥1.5pp over single-point correction.
+   - Refuted if: multi-point correction does not improve over single-point for either k=4 or k=5 (corrections are redundant or interfere).
+   - Inconclusive if: k=4 improves but k=5 does not, or improvements are within noise (< 0.5pp).
+   - Depends on: 039
+
+62. **Domain robustness: compression quality on non-Shakespeare text — GPT-2 FFN**
+   - All experiments so far use Shakespeare as the probe and eval corpus. This tests whether the geometric compression generalizes to different text domains. Run k=4@6× with correction on 3 corpora: (a) Shakespeare (baseline), (b) WikiText-2 validation, (c) OpenWebText sample. Use Shakespeare-fit compressed blocks on all 3 corpora (zero-shot transfer), then re-fit channel selection on each corpus separately. If zero-shot transfer works, the compression is data-robust; if re-fitting is needed, the method is corpus-specific. 3 seeds, 200 eval seqs per corpus.
+   - Type: empirical
+   - Confirmed if: zero-shot transfer PPL cost is within 3pp of corpus-specific fit on ≥2 of 3 corpora.
+   - Refuted if: zero-shot transfer causes >20% PPL increase on any non-Shakespeare corpus while corpus-specific fit stays <10%.
+   - Inconclusive if: one corpus transfers well and the other does not.
+   - Depends on: 037, 039
+
+63. **Practical compression recipe: consolidated findings summary — GPT-2 FFN**
+   - Synthesize all confirmed results (cycles 005–041) into a single executable compression recipe with exact hyperparameters, block ordering, correction placement, and expected quality. Document: (a) which blocks to compress and at what ratio, (b) channel selection method + lstsq refit procedure, (c) correction fitting procedure and placement, (d) expected PPL cost envelope across seeds, (e) failure modes (block 0, block-count wall). This is a documentation + validation experiment: re-run the full recommended recipe end-to-end once to confirm the documented numbers match. Output: a standalone script + results JSON.
+   - Type: implementation + validation
+   - Confirmed if: end-to-end recipe reproduces k=4@6× with correction at ≤10% PPL, matching cycle 037/039 numbers within 1pp.
+   - Refuted if: reproduced numbers differ by >3pp from documented, indicating hidden dependencies or stale artifacts.
+   - Inconclusive if: numbers match but the recipe requires corpus-specific tuning not captured in the documentation.
+   - Depends on: 037, 039, 040, 041
+
 ### P1
 
 55. **Lstsq refit quality degradation analysis across compression ratios — GPT-2 FFN**
@@ -552,3 +576,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Outcome: CONFIRMED — 5/6 blocks pass (≥4 required)
    - Cycle: 041
    - Artifacts: `autoresearch/results/cycle_041_medium_generalization.json`, `autoresearch/results/cycle_041_medium_generalization.png`, `experiments/gpt2_medium_generalization_probe.py`
+
+### Cycle 042
+
+60. **Multi-block stacking at 10× per-block — GPT-2 FFN** *(CONFIRMED — cycle 042)*
+   - k=4 blocks [7,5,4,1] at 10× compression, 3 seeds, 200 eval seqs. Uncorrected: +10.62% ±0.82%. With residual correction at block 8: **+8.45% ±0.66%**, recovery 2.17pp. This essentially matches k=4@6× corrected (+8.35% from cycle 039). Per-block ratio (6× vs 10×) makes no difference once correction is applied. Total FFN param reduction at 10×: ~30%.
+   - Outcome: CONFIRMED — k=4@10x corrected mean +8.45% (≤12% threshold)
+   - Cycle: 042
+   - Artifacts: `autoresearch/results/cycle_042_multiblock_10x.json`, `autoresearch/results/cycle_042_multiblock_10x.png`, `experiments/multiblock_10x_stacking_gpt2.py`
