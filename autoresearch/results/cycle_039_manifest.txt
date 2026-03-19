@@ -1,0 +1,5 @@
+item_number=58
+outcome=confirmed
+key_metric=k=5 recovery 3.6pp (+16.12%→+12.53%); k=4 recovery 1.23pp (+9.59%→+8.35%); zero inference params
+commit=84fee02
+paths=autoresearch/results/cycle_039_residual_correction.json,autoresearch/results/cycle_039_residual_correction.png,experiments/ffn_residual_correction_k5.py
