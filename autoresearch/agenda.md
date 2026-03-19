@@ -109,6 +109,31 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ### P1
 
 
+69. **Per-block corpus sensitivity isolation — GPT-2 FFN**
+   - The k=4 corrected pipeline (blocks 7, 5, 4, 1 at 6×) degrades +8.5% on Shakespeare but +44% on WikiText-2 (cycle 045). This experiment isolates which block(s) drive the gap. For each of the 4 blocks independently: compress that single block using Shakespeare probes, evaluate PPL on both Shakespeare and WikiText-2. Compute per-block corpus sensitivity = (WikiText-2 rel PPL) - (Shakespeare rel PPL). The block with the largest sensitivity delta is the bottleneck for corpus robustness. Also run the same single-block test with WikiText-2 probes to check if the sensitivity is in channel selection or refit.
+   - Type: empirical
+   - Confirmed if: one block accounts for ≥ 50% of the total corpus sensitivity gap (it is a localized problem, fixable per-block).
+   - Refuted if: all 4 blocks contribute roughly equally (within ±25% of mean), indicating corpus sensitivity is a systemic property of topk+lstsq.
+   - Inconclusive if: sensitivity is concentrated but switches between channel-selection and refit depending on the block.
+   - Depends on: none
+
+70. **Training-distribution probing with OpenWebText subset — GPT-2 FFN**
+   - The program's central question asks about compression with training-distribution data, but all experiments so far used Shakespeare (narrow) or WikiText-2 (still mismatched). GPT-2 was trained on WebText; OpenWebText is the closest public replica. Download first 10K tokens from `Skylion007/openwebtext` via HuggingFace datasets. Run the full k=4@6× corrected recipe (blocks 7, 5, 4, 1) using OpenWebText as BOTH probe and eval corpus. Compare PPL degradation to Shakespeare-probed (+8.5%) and WikiText-probed (+44%). If training-distribution probing yields ≤ +15% on its own eval set, the method works as intended and corpus specificity is a probe-mismatch artifact, not a fundamental limitation.
+   - Type: empirical
+   - Confirmed if: OpenWebText-probed, OpenWebText-evaluated k=4@6× corrected PPL degradation is ≤ +15%.
+   - Refuted if: degradation is ≥ +30% (even training-distribution data cannot save the method at k=4@6×).
+   - Inconclusive if: degradation is 15-30% — better than WikiText but still too high for practical use.
+   - Depends on: none
+
+71. **Jacobian Frobenius std as corpus-sensitivity predictor — GPT-2 FFN**
+   - Cycle 048 confirmed P1 (Jacobian Frobenius std) as a strong compression-difficulty oracle (rho=0.84 at 8×). This experiment tests whether the SAME signal predicts corpus sensitivity: compute P1 on Shakespeare probes and on WikiText-2 probes separately for all 12 blocks. If P1 is corpus-invariant (Spearman between Shakespeare-P1 and WikiText-P1 rankings ≥ 0.85), then compression difficulty is an intrinsic block property and the oracle generalizes. If P1 diverges across corpora, blocks that are "easy" on Shakespeare may be "hard" on WikiText-2 — and the oracle must be re-run on each target distribution.
+   - Type: empirical
+   - Confirmed if: Spearman(P1_shakespeare, P1_wikitext) ≥ 0.85 across 12 blocks (difficulty ranking is corpus-invariant).
+   - Refuted if: Spearman < 0.5 (difficulty ranking is corpus-dependent, oracle must be re-run per distribution).
+   - Inconclusive if: Spearman is 0.5-0.85 (partial stability — ranking mostly holds but with important exceptions).
+   - Depends on: none
+
+
 ## PAST EXPERIMENTS
 
 ### Cycle 050
@@ -654,4 +679,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Design review rejected in round 2 due to incorrect discarded-subspace projection formula. Item remains scientifically valid and can be retried with corrected methodology.
    - Outcome: INCONCLUSIVE (design review reject)
    - Cycle: 051
+   - Commit: NONE
+
+### Cycle 052
+
+68. **Corrected lstsq refit residual rank analysis — GPT-2 FFN** *(INCONCLUSIVE — cycle 052)*
+   - Design review REJECTED: at 6× compression, 2560 discarded neurons' weight columns over-span the 768-dim output space → QR projection becomes identity (discarded_energy = 100% trivially). Subspace decomposition is uninformative by construction (MP6). The core question (is residual rank corpus-dependent?) remains valid but requires a different decomposition approach — e.g., project onto col(W_kept) instead, or drop subspace decomposition and compare total residual SVD rank directly.
+   - Outcome: INCONCLUSIVE (design review reject — MP6 uninformative metric)
+   - Cycle: 052
    - Commit: NONE

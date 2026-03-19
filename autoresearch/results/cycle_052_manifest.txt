@@ -1,0 +1,5 @@
+item_number=68
+outcome=inconclusive
+key_metric=Design review REJECT — discarded subspace (2560 cols in R^768) over-spans output → projection = I trivially
+commit=NONE
+paths=NONE
