@@ -41,7 +41,9 @@
 - Variable per-block ratios: breaks correction step (cycle 050)
 
 ## Remaining NEXT Items
-- **P0**: Item 64 (corpus-diverse probing) — was blocked on item 50, now unblocked (50 refuted but 64's dependency is satisfied)
+- **P0**: Items 80–84 (functional rank & spectral analysis) — 80 has no deps (run first), 81–84 depend on 80
+- **P0**: Item 64 (corpus-diverse probing) — no deps, ready to run
 - **P1**: Item 66 (mixed-corpus refit) — blocked on item 64
-- **P1**: Items 23, 28, 35 — permanently blocked (refuted dependencies)
-- **P2**: Items 41, 44 — permanently blocked (refuted dependencies)
+- **P1**: Item 28 (persistent homology GPT-2) — unblocked (item 27 marginal refutation insufficient to block)
+- **P1**: Item 35 (region volume Pareto GPT-2) — unblocked (item 34 was INCONCLUSIVE, not refuted)
+- **Closed**: Items 23 (superseded by 80), 41, 44 (refuted deps) — OBSOLETE, do not run

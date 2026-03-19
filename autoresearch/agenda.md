@@ -4,59 +4,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## NEXT EXPERIMENTS
 
-### P0
-
-
-
-64. **Corpus-diverse probing: multi-domain channel selection stability — GPT-2 FFN**
-   - The fundamental blocker (cycle 044): compression fitted on Shakespeare degrades +120% on WikiText-2 zero-shot. Hypothesis: the instability is in *channel selection*, not in the lstsq refit. For blocks [7, 5, 4, 1] at 6×, run topk channel selection independently on 4 probe corpora: Shakespeare, WikiText-2, C4 (first 2K tokens), and OpenWebText (first 2K tokens). Measure pairwise Jaccard similarity of selected channel sets across corpora. Then evaluate each corpus's compressed block on all 4 eval sets (4×4 cross-matrix of PPL). If channel overlap is high (Jaccard ≥ 0.7) but PPL still diverges, the problem is in the lstsq coefficients, not channel identity — and a corpus-invariant channel set with per-domain refit might work.
-   - Type: empirical
-   - Confirmed if: cross-corpus Jaccard of selected channels ≥ 0.7 for ≥ 3/4 blocks AND cross-eval PPL gap between best and worst probe corpus is ≤ 10% for at least 2/4 blocks.
-   - Refuted if: Jaccard < 0.4 for a majority of blocks (channel selection is fundamentally corpus-specific, not just the refit).
-   - Inconclusive if: Jaccard is moderate (0.4–0.7) or high Jaccard does not translate to cross-corpus PPL stability.
-   - Depends on: 50
-
-
-
-### P1
-
-66. **Lstsq refit with mixed-corpus probe data — GPT-2 FFN**
-   - If item 64 shows channel selection is stable across corpora (Jaccard ≥ 0.7), test whether mixing probe corpora during the lstsq refit step produces a more robust compressed block. Fix channel selection from Shakespeare (the best-understood config). Run lstsq refit using: (A) Shakespeare-only 512 tokens, (B) mixed 512 tokens (128 each from Shakespeare, WikiText-2, C4, OpenWebText), (C) mixed 2048 tokens (512 each). Evaluate all three on WikiText-2 validation. The mixed refit should generalize better because lstsq sees a broader input distribution.
-   - Type: empirical
-   - Confirmed if: mixed-corpus refit (B or C) reduces WikiText-2 PPL degradation by ≥ 10pp relative compared to Shakespeare-only refit (from cycle 044's +44% baseline).
-   - Refuted if: mixed-corpus refit performs worse than or equal to Shakespeare-only on WikiText-2 (mixing dilutes the refit quality without improving generalization).
-   - Inconclusive if: improvement exists but is < 5pp, suggesting the gain is real but insufficient to make the method corpus-robust.
-   - Depends on: 64
-
-
-23. **Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**
-   - ⚠ **BLOCKED**: Depends on item 22 (REFUTED). Item 22 found no functional redundancy in toy networks, making the GPT-2 Jacobian k-means analog unmotivated per agenda dependency rule.
-   - Apply the same clustering idea from experiment 22 to GPT-2 FFN blocks. Instead of MASO affine maps (unavailable for GELU networks), use per-token Jacobians J(x) ∈ ℝ^{768×768} computed via `torch.func.jacrev`. Run k-means on the flattened Jacobians for each block. Measure the reconstruction error of block outputs when each token's output is replaced by J̄_cluster(x − x̄_cluster) + f(x̄_cluster) (first-order Taylor approximation using the cluster centroid Jacobian). Find minimum K* such that reconstruction error < 5% of block output norm. Compare K* across blocks and correlate with single-block swap damage from cycle 005.
-   - Type: empirical
-   - Confirmed if: for a majority of GPT-2 blocks, K* < 0.1 × N_probe AND K* correlates with compression difficulty (Spearman ≥ 0.4).
-   - Refuted if: K* > 0.5 × N_probe for most blocks, indicating that every probe token activates a genuinely distinct functional regime.
-   - Inconclusive if: K* is low but reconstruction error does not translate to perplexity improvement when the approximation is used for inference.
-   - Depends on: 9, 22. Skip if experiment 22 is refuted (functional redundancy does not exist in toy networks, making the LLM analog unmotivated).
-
-28. **Persistent homology of activation manifold through depth — GPT-2**
-   - Apply the same analysis from experiment 27 to GPT-2 hidden states: collect token representations at each block output, apply PCA to 30D, run ripser. The question is whether the progressive topological simplification seen in toy networks also appears in a trained language model, and whether it can serve as a compression predictor. If layers with high Betti drop are also the easy-to-compress layers from cycle 005, persistent homology becomes a geometry-driven compression signal that requires no compression attempt.
-   - Type: empirical
-   - Confirmed if: Betti complexity decreases monotonically through at least 60% of GPT-2 blocks AND Spearman correlation between (per-block Betti drop) and (1 − compression difficulty) from cycle 005 is ≥ 0.35.
-   - Refuted if: Betti numbers are approximately constant across all GPT-2 blocks after PCA, indicating that topology is not a useful signal in the residual stream.
-   - Inconclusive if: topology simplifies in toy but GPT-2 shows noise or no trend, suggesting the signal does not survive the transformer architecture's residual connections.
-   - Depends on: 9, 27. ⚠ **BLOCKED**: Experiment 27 REFUTED (cycle 047) — topology does not simplify monotonically through depth in toy ReLU networks. Skip per dependency rule.
-
-
-35. **Region volume Pareto — GPT-2 FFN analog**
-   - Apply the Pareto analysis from experiment 34 to GPT-2 FFN blocks. Since exact activation patterns are unavailable for GELU, use k-means clusters on probe-token Jacobians as a proxy for "regions." Sort clusters by token count (proxy for volume). For each block, compute the cumulative reconstruction error of block outputs as clusters are added in descending size order. If a Pareto structure exists (top 20% of clusters covers 80% of total output variance), it suggests that a few dominant "computational modes" drive most of the block's behavior — and keeping only those modes gives a strong compression baseline. Compare the Pareto coefficient to compression damage from cycle 005 to test whether Pareto-skewed blocks are the easy ones.
-   - Type: empirical
-   - Confirmed if: top 20% of clusters by size covers ≥ 70% of output variance in a majority of blocks AND Gini coefficient of cluster-size distribution correlates with (1 − compression difficulty) at Spearman ≥ 0.35.
-   - Refuted if: cluster size distribution is approximately uniform across all blocks (Gini < 0.2), indicating no dominant computational modes.
-   - Inconclusive if: Pareto holds in toy but the LLM cluster distribution is flat, suggesting the Jacobian k-means proxy is not capturing the same structure as true activation regions.
-   - Depends on: 9, 22, 34. Skip if experiment 34 is refuted (Pareto structure does not appear even in toy ReLU networks).
-
-
-### P0 — Functional rank & spectral analysis (items 80–84, added 2026-03-19)
+### P0 — Functional rank & spectral analysis (items 80–84)
 
 80. **FFN Jacobian effective rank census — GPT-2 FFN**
    - The local-chart failure (cycle 029) and channel selection corpus-invariance (cycle 057) jointly imply that each FFN block implements an approximately **globally low-rank** function — the important output directions are shared across all tokens. This experiment directly measures that rank. For each of the 12 blocks, compute the per-token Jacobian J(x) = W_out @ diag(σ'(z)) @ W_in ∈ ℝ^{768×768} for N=512 probe tokens (OpenWebText). SVD each J(x). Report effective rank at 95% and 99% energy thresholds. Compute mean rank and cross-token variance per block. Correlate with P1 Frobenius std (cycle 048) and single-block compression damage (cycle 005). The effective rank is the theoretical compression limit per block.
@@ -98,26 +46,50 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: improvement exists but is < 3pp without polish.
    - Depends on: 80
 
-### P0 — Novel directions: structured probing + topology (items 36–45, added 2026-03-18)
+### P0 — Corpus robustness
 
+64. **Corpus-diverse probing: multi-domain channel selection stability — GPT-2 FFN**
+   - The fundamental blocker (cycle 044): compression fitted on Shakespeare degrades +120% on WikiText-2 zero-shot. Hypothesis: the instability is in *channel selection*, not in the lstsq refit. For blocks [7, 5, 4, 1] at 6×, run topk channel selection independently on 4 probe corpora: Shakespeare, WikiText-2, C4 (first 2K tokens), and OpenWebText (first 2K tokens). Measure pairwise Jaccard similarity of selected channel sets across corpora. Then evaluate each corpus's compressed block on all 4 eval sets (4×4 cross-matrix of PPL). If channel overlap is high (Jaccard ≥ 0.7) but PPL still diverges, the problem is in the lstsq coefficients, not channel identity — and a corpus-invariant channel set with per-domain refit might work.
+   - Type: empirical
+   - Confirmed if: cross-corpus Jaccard of selected channels ≥ 0.7 for ≥ 3/4 blocks AND cross-eval PPL gap between best and worst probe corpus is ≤ 10% for at least 2/4 blocks.
+   - Refuted if: Jaccard < 0.4 for a majority of blocks (channel selection is fundamentally corpus-specific, not just the refit).
+   - Inconclusive if: Jaccard is moderate (0.4–0.7) or high Jaccard does not translate to cross-corpus PPL stability.
+   - Depends on: none. (Item 50 completed — cycle 067, refuted: Jaccard@256=0.517, channel selection requires ≥1024 tokens for stability.)
 
-### P2 — Moonshots
+### P1
 
-41. **Constructive partition synthesis — toy ReLU (2D input) [MOONSHOT]**
-   - THE open problem in the literature. Given a trained spirals network (2→32→32→1): (a) Extract all observed activation patterns + affine maps via MASO formula (A_ω = ∏ diag(q_ω^i) W^i). (b) Cluster into K macro-regions via k-means on affine maps (leverage item 22). (c) For each macro-region, compute target affine map (support-weighted average of constituent maps). (d) **SYNTHESIS**: solve for weights W'_1, ..., W'_L of a smaller network (2→K'→1 or 2→K'→K'→1) such that for each macro-region k with pattern q_k, the product ∏ diag(q'_k^i) W'^i ≈ target A_k. This is a system of linear equations in the unknown weights, one set per macro-region. Boundary continuity adds constraints: if macro-regions k1, k2 are adjacent, their affine maps must agree on the shared boundary hyperplane. Method: Solve via least-squares with boundary penalty. Start with K=8 macro-regions, target architecture 2→8→1.
-   - Type: implementation + empirical
-   - Confirmed if: synthesized network achieves ≥85% of original accuracy with ≤50% parameters.
-   - Refuted if: the constrained system has no feasible solution for any K ≤ 32, or synthesized network accuracy is below 60%.
-   - Inconclusive if: synthesis works for simple datasets (moons) but fails on spirals, indicating the approach doesn't scale to moderate partition complexity.
-   - Depends on: 22
+66. **Lstsq refit with mixed-corpus probe data — GPT-2 FFN**
+   - If item 64 shows channel selection is stable across corpora (Jaccard ≥ 0.7), test whether mixing probe corpora during the lstsq refit step produces a more robust compressed block. Fix channel selection from Shakespeare (the best-understood config). Run lstsq refit using: (A) Shakespeare-only 512 tokens, (B) mixed 512 tokens (128 each from Shakespeare, WikiText-2, C4, OpenWebText), (C) mixed 2048 tokens (512 each). Evaluate all three on WikiText-2 validation. The mixed refit should generalize better because lstsq sees a broader input distribution.
+   - Type: empirical
+   - Confirmed if: mixed-corpus refit (B or C) reduces WikiText-2 PPL degradation by ≥ 10pp relative compared to Shakespeare-only refit (from cycle 044's +44% baseline).
+   - Refuted if: mixed-corpus refit performs worse than or equal to Shakespeare-only on WikiText-2 (mixing dilutes the refit quality without improving generalization).
+   - Inconclusive if: improvement exists but is < 5pp, suggesting the gain is real but insufficient to make the method corpus-robust.
+   - Depends on: 64
 
-44. **Topological autoencoder for partition space — toy ReLU [MOONSHOT]**
-   - Build an autoencoder that learns a compressed encoding of the activation pattern space: Input: per-sample activation pattern (binary vector, one bit per neuron across all layers — e.g., 128-dim for 4×32 network). Encoder: MLP mapping to low-dimensional latent z ∈ ℝ^K (K << total neurons). Decoder: from z, predict the affine map A_ω (flattened weight matrix of the effective linear map for that pattern). Loss = MSE(A_ω_predicted, A_ω_true) + λ · PH_reg. The PH regularization term: compute persistent homology of the latent space neighborhoods (using k-NN graph on z) and match it to the persistent homology of the activation pattern graph (the RTG — Hamming-1 adjacency graph from Bosca et al.). If the autoencoder achieves good reconstruction with K << number_of_patterns, it proves: (1) the partition space has low intrinsic dimensionality, (2) the decoder provides a direct "K codes → affine map" lookup — a compressed functional representation. Sweep K = {2, 4, 8, 16}. Train on spirals network (~50-100 patterns).
-   - Type: implementation + empirical
-   - Confirmed if: autoencoder with K ≤ 8 achieves affine map reconstruction R² ≥ 0.9 AND the latent PH matches the RTG PH (Wasserstein distance < threshold).
-   - Refuted if: reconstruction requires K ≥ number_of_patterns/2 (no compression), or PH regularization destabilizes training.
-   - Inconclusive if: reconstruction works but PH regularization has no measurable effect (topology matching is trivially satisfied or trivially ignored).
-   - Depends on: 22, 24
+28. **Persistent homology of activation manifold through depth — GPT-2**
+   - Compute persistent homology of GPT-2 hidden states at each block output (PCA to 30D, ripser). Test whether Betti complexity predicts compression difficulty.
+   - Type: empirical
+   - Confirmed if: Betti complexity decreases monotonically through ≥60% of blocks AND Spearman(Betti drop, 1−compression difficulty) ≥ 0.35.
+   - Refuted if: Betti numbers approximately constant across all blocks after PCA.
+   - Inconclusive if: noise or no trend.
+   - Depends on: 9. ⚠ **Requires ripser** — check availability before running.
+   - Note: item 27 (toy ReLU) was marginally refuted (2/3 transitions vs 80% threshold, on only 3 data points). GPT-2 has 12 transitions — much more statistical power. **Unblocked.**
+
+35. **Region volume Pareto — GPT-2 FFN analog**
+   - K-means on probe-token Jacobians as proxy for "regions." Cumulative reconstruction error as clusters added in descending size order. Test for Pareto structure (top 20% covers ≥70% variance).
+   - Type: empirical
+   - Confirmed if: top 20% covers ≥70% output variance in majority of blocks AND Gini correlates with (1−compression difficulty) at Spearman ≥ 0.35.
+   - Refuted if: cluster size distribution uniform (Gini < 0.2).
+   - Inconclusive if: Pareto holds in toy but LLM distribution is flat.
+   - Depends on: 9, 34. Note: item 34 was INCONCLUSIVE (Gini=0.408, partial Pareto), not refuted. **Unblocked.**
+
+### Closed — OBSOLETE items (do not run)
+
+23. ~~**Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**~~ — Superseded by item 80. Do not run.
+
+41. ~~**Constructive partition synthesis — toy ReLU [MOONSHOT]**~~ — Depends on item 22 (refuted). Do not run.
+
+44. ~~**Topological autoencoder for partition space — toy ReLU [MOONSHOT]**~~ — Depends on items 22 (refuted) and 24 (dead end). Do not run.
 
 ## PAST EXPERIMENTS
 
