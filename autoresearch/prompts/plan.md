@@ -4,7 +4,7 @@ Cycle: {CYCLE}
 Selected item: {ITEM_NUMBER}
 Item text: {ITEM_LINE}
 
-Read the brief at `autoresearch/briefs/cycle_{CYCLE}.md` first. Only read additional repo files when the brief is insufficient.
+Read the brief at `${COORD_BRIEF_FILE}` first. Only read additional repo files when the brief is insufficient.
 Read the full agenda item in `autoresearch/agenda.md` for item {ITEM_NUMBER}, including all Confirmed/Refuted/Inconclusive criteria.
 
 ## Pre-flight Checks
@@ -31,7 +31,7 @@ Soft pre-flights (address in the plan, do not abort):
 
 ## Plan Format
 
-Write `autoresearch/plans/cycle_{CYCLE}.md` with these headings:
+Write `${PLAN_FILE}` with these headings:
 
 ```
 # Task
@@ -62,4 +62,4 @@ each issue raised. You may adjust methods, thresholds, sample sizes, or setup.
 Do not change the core hypothesis unless feedback says the premise is invalid.
 
 Do NOT execute the plan. Write ONLY the plan file.
-Final response: at most 4 lines — plan status, key approach, plan file path.
+Final response: at most 4 lines — plan status, key approach, ${PLAN_FILE} path.
