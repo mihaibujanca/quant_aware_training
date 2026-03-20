@@ -16,7 +16,7 @@ Steps:
 6. If the item is literature, note the specific papers/topics to fetch
 7. If the item depends on previous items, check if dependencies are met (look in PAST EXPERIMENTS)
 
-Write `autoresearch/briefs/cycle_{CYCLE}.md` with these headings:
+Write `${COORD_BRIEF_FILE}` with these headings:
 
 ```
 # Item
