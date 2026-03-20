@@ -7,7 +7,7 @@ Item text: {ITEM_LINE}
 ## Phase 1: Verdict Check
 
 1. Read the agenda item criteria in `autoresearch/agenda.md` — find item {ITEM_NUMBER} in PAST EXPERIMENTS
-2. Read `autoresearch/results/cycle_{CYCLE}_manifest.txt` for the claimed outcome
+2. Read `${CYCLE_RESULT_FILE}` for the claimed outcome
 3. Read the result files referenced in the manifest
 4. Determine: does the evidence actually support the stated outcome against the item's criteria?
 
@@ -63,20 +63,22 @@ When the verdict is REFUTED or UNCERTAIN, check before accepting:
 
 ## Phase 3: Write Result
 
-Write `autoresearch/audits/cycle_{CYCLE}.md`:
+Write `${AUDIT_RESULT_FILE}` (key=value format, one per line):
 
 ```
-status: PASS | CORRECTED | UNCERTAIN
-original_outcome: <from manifest>
-audited_outcome: <your assessment>
-guardrail_flags: <triggered checks, comma-separated, or "none">
-reason: <1-3 sentences explaining your assessment>
-learned: <from manifest, verified — what this experiment told us>
-next: <from manifest, verified — what follows from this result>
-recommendations: <what to explore next based on these findings>
-interesting: true | false
-interesting_reason: <if true: 1 sentence — why this deserves human attention>
+status=PASS|CORRECTED|UNCERTAIN
+old_outcome=<from manifest outcome field>
+new_outcome=<your audited verdict — same as old_outcome if PASS>
+reason=<1-3 sentences>
+guardrail_flags=<comma-separated triggered checks, or "none">
+uncertain_guardrails=<comma-separated if UNCERTAIN, else omit>
+tsv_path=<from manifest tsv_path field>
+recommendations=<what to try next>
+interesting=true|false
+interesting_reason=<if interesting=true>
 ```
+
+IMPORTANT: Use `=` not `:` as separator. loop.sh parses this with awk -F= and will fail to read colon-separated lines.
 
 Rules:
 - **PASS**: Verdict is correct and quality checks pass. Do not modify any files.
@@ -87,7 +89,7 @@ Rules:
 
 ## Phase 4: Interestingness Flag
 
-If `interesting: true`, append a line to `autoresearch/logs/flagged.jsonl`:
+If `interesting=true`, append a line to `autoresearch/logs/flagged.jsonl`:
 ```json
 {"cycle": {CYCLE}, "item": {ITEM_NUMBER}, "outcome": "<outcome>", "reason": "<interesting_reason>"}
 ```
