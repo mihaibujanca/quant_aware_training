@@ -4,21 +4,7 @@ Cycle: {CYCLE}
 Selected item: {ITEM_NUMBER}
 Item text: {ITEM_LINE}
 
-## Pre-execution gate
-
-Before doing anything else, check that `autoresearch/reviews/cycle_{CYCLE}.md` exists
-and contains a `verdict:` line. If the file is missing or has no verdict, **stop
-immediately** — write a single line to the manifest:
-`item_number={ITEM_NUMBER}` `outcome=crash` `key_metric=N/A`
-`commit=NONE` `paths=NONE` and set the reason to "design review missing".
-Do not proceed to execution without a completed design review.
-
-If the review verdict is `REJECT`, stop with the same crash manifest and
-reason "design review rejected".
-
-If `APPROVE` or round-2 `REVISE`, proceed.
-
-Read the plan at `autoresearch/plans/cycle_{CYCLE}.md` and execute it step by step.
+Read the plan at `${PLAN_FILE}` and execute it step by step.
 
 ## Rules
 
@@ -60,23 +46,23 @@ Read the plan at `autoresearch/plans/cycle_{CYCLE}.md` and execute it step by st
    - Outcome (confirmed/refuted/inconclusive)
    - Commit hash
    - Result file paths
-4. Commit all changes: `[autoresearch] cycle {CYCLE}: {brief description}`
-5. Write `autoresearch/results/cycle_{CYCLE}_manifest.txt`:
-   ```
+4. Append a row to `autoresearch/logs/experiments.tsv` (tab-separated, same columns as
+   existing rows: cycle, item, type, outcome, key_metric, description, commit, paths).
+   Use {CYCLE}, {ITEM_NUMBER}, the item type from the agenda, your verdict, the main
+   metric, a brief description, the commit hash, and comma-separated result file paths.
+
+5. Commit all changes including the TSV row:
+   `[autoresearch] cycle {CYCLE}: {description}`
+
+6. Write `${CYCLE_RESULT_FILE}` (do NOT commit this file):
    item_number={ITEM_NUMBER}
-   outcome=confirmed|refuted|inconclusive
-   key_metric=<main finding>
-   commit=<short hash>
-   paths=<comma-separated result file paths>
-   learned=<what this experiment told us that we didn't know before>
-   next=<what the next experiment should be to make progress, or "none" if the question is closed>
-   ```
-   The `learned` and `next` fields are mandatory for ALL outcomes, not just
-   inconclusive. Every experiment must say something you couldn't say before
-   running it. For inconclusive specifically: "no clue" is not acceptable —
-   if the result is ambiguous, explain what made it ambiguous and what would
-   make the next attempt more informative.
-6. Do NOT commit the manifest file. Exit after writing it.
+   tsv_path=autoresearch/logs/experiments.tsv
+   result_paths=<comma-separated paths of result files, relative to worktree root>
+   code_paths=<comma-separated paths of experiment scripts, relative to worktree root>
+   final_commit_hash=<full git commit hash from step 6>
+   agenda_updated=yes
+
+All paths in result_paths and code_paths must exist in the worktree. final_commit_hash must be a valid committed hash.
 
 Be economical with turns. Do not rewrite the plan unless blocked.
 Final response: outcome, key metrics, commit hash, file paths (max 8 lines).
