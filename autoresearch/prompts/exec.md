@@ -34,7 +34,7 @@ Read the plan at `${PLAN_FILE}` and execute it step by step.
 
 ## For Empirical Items
 
-- Set random seeds for reproducibility
+- Run ≥3 random seeds (e.g. 42, 137, 2024). Report mean ± std. Single-seed runs will be rejected by audit.
 - Always include at least one baseline comparison
 - Report raw metrics before interpreting
 
@@ -63,6 +63,10 @@ Read the plan at `${PLAN_FILE}` and execute it step by step.
    agenda_updated=yes
 
 All paths in result_paths and code_paths must exist in the worktree. final_commit_hash must be a valid committed hash.
+
+CRITICAL: Writing `${CYCLE_RESULT_FILE}` is the highest-priority deliverable. The loop
+cannot proceed without it. If you are running low on turns, skip non-essential cleanup
+and write this file immediately after committing.
 
 Be economical with turns. Do not rewrite the plan unless blocked.
 Final response: outcome, key metrics, commit hash, file paths (max 8 lines).
