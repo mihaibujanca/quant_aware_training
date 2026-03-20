@@ -4,13 +4,13 @@ Cycle {CYCLE} failed at stage: {FAILED_STAGE}
 Failure reason: {FAILURE_REASON}
 
 Read available cycle artifacts:
-1. `autoresearch/briefs/cycle_{CYCLE}.md` if it exists
-2. `autoresearch/plans/cycle_{CYCLE}.md` if it exists
-3. `autoresearch/results/cycle_{CYCLE}_manifest.txt` if it exists
-4. `autoresearch/audits/cycle_{CYCLE}.md` if it exists
+1. `${COORD_BRIEF_FILE}` if it exists
+2. `${PLAN_FILE}` if it exists
+3. `${CYCLE_RESULT_FILE}` if it exists
+4. `${AUDIT_RESULT_FILE}` if it exists
 5. Run `git status --short` and `git log --oneline -5`
 
-Write `autoresearch/audits/cycle_{CYCLE}_diagnostic.md`:
+Write `${DIAGNOSTIC_FILE}`:
 
 ```
 # Failure
@@ -28,5 +28,16 @@ Item: {ITEM_NUMBER}
 ```
 
 Keep under 20 lines.
+
+Then write `${DIAGNOSTIC_VERDICT_FILE}` (key=value):
+```
+recommendation=RETRY|REDESIGN|INFEASIBLE
+agenda_note=<one-line summary for the agenda>
+```
+
+Use RETRY for transient failures (brief missing, rate limit, timeout).
+Use REDESIGN for design flaws (wrong metric, architecture mismatch).
+Use INFEASIBLE for fundamental blockers.
+
 Do NOT modify code, agenda, or any other file.
 Final response: 4 lines max — failed stage, likely cause, recommendation.
