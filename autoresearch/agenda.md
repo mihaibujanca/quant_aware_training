@@ -38,13 +38,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 072
    - Artifacts: `experiments/stacking_error_spectral_decomposition.py`, `autoresearch/results/cycle_072_stacking_error_spectrum.json`, `autoresearch/results/cycle_072_stacking_error_spectrum.png`
 
-84. **Rank-matched adaptive compression — GPT-2 FFN**
-   - Instead of uniform 6x across all blocks, set per-block compression ratio to match measured effective rank from item 80. Block with rank 200 keeps ~250 channels (~12x), block with rank 500 keeps ~550 (~6x). Total budget is the same as uniform 6x across k blocks. Compare stacked k=4 PPL against uniform 6x baseline (both with and without gradient polish). This should be near-optimal per block while potentially reducing total params further or improving stacking quality.
-   - Type: empirical
-   - Confirmed if: rank-matched stacking achieves ≤ +20% PPL without gradient polish (vs +30% at uniform 6x) OR achieves ≤ +3% with 500-step polish (vs +4.9% at uniform 6x).
-   - Refuted if: rank-matched performs worse than uniform 6x (rank variation across blocks doesn't affect stacking).
-   - Inconclusive if: improvement exists but is < 3pp without polish.
-   - Depends on: 80
+84. *(moved to PAST — cycle 073)*
 
 ### P0 — Corpus robustness
 
@@ -128,6 +122,18 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 073
+
+84. **Rank-matched adaptive compression — GPT-2 FFN** *(REFUTED — cycle 073)*
+   - Budget: uniform={b:512 for b in [7,5,4,1]}, rank_matched={7:481,5:479,4:477,1:611}. Both sum to 2048 channels. Baselines from cycle 068 rank_99. Seeds [42,123,7], 400 probe + 200 holdout + 200 eval seqs, seq_len=128.
+   - Unpolished: uniform +30.2%±15.5, rank_matched +30.3%±15.3. Polished (500 steps): uniform +3.7%±16.0, rank_matched +3.8%±15.8.
+   - Per-seed differences rank_matched − uniform: −0.08 to +0.29 PPL (unpolished), −0.09 to +0.12 PPL (polished). Effectively noise.
+   - Per-block recon error norms nearly identical: uniform {1:187.4, 4:189.1, 5:184.9, 7:182.5}, rank_matched {1:185.1, 4:189.9, 5:185.7, 7:183.3}.
+   - Key finding: rank variation of only 464→588 (ratio ~1.27) across these 4 blocks is too small to produce measurable benefit. The bottleneck is gradient polish quality, not channel allocation. Rank-matched allocation at this scale is indistinguishable from uniform.
+   - Outcome: REFUTED (rank_matched worse than uniform at both conditions; improvements in mean are sub-noise)
+   - Cycle: 073
+   - Artifacts: `experiments/rank_matched_compression_gpt2.py`, `autoresearch/results/cycle_073_rank_matched_compression.json`, `autoresearch/results/cycle_073_rank_matched_compression.png`
 
 ### Cycle 072
 
