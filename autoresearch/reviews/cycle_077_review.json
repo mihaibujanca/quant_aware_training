@@ -1,0 +1,15 @@
+{
+  "cycle": 77,
+  "item": 89,
+  "round": 1,
+  "verdict": "APPROVE",
+  "blocking_issues": 0,
+  "minor_issues": 2,
+  "minor_observations": [
+    "At k/n=0.1, topk+lstsq and SVD+lstsq are parameter-matched (both ~59K), unlike at k/n=0.67 where topk had 2x params. Cleaner comparison — note in results.",
+    "Random basis seed scheme (seed+block_idx) should be documented explicitly in the script for reproducibility."
+  ],
+  "pitfalls_checked": ["MP1", "MP2", "MP3", "MP4", "MP5", "MP6", "MP7", "MP8"],
+  "pitfalls_triggered": [],
+  "pitfall_mitigated": true
+}

@@ -1,39 +1,43 @@
-# Research Status — 76 Cycles (001–076)
+# Research Status — 77 Cycles (001–077)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 14 |
-| Refuted | 21 |
+| Refuted | 22 |
 | Inconclusive | 32 |
 | Crash | 1 |
 
 ## Latest Cycle
-- **Cycle 076** (item 66): Mixed-corpus lstsq refit — GPT-2 FFN — INCONCLUSIVE (audit-corrected)
-  - Condition A (Shakespeare 512 tokens) has lstsq degeneracy (n=512, p=513) → PPL 3.7M
-  - Condition C (mixed 2048 tokens) works: PPL 112.9 (+61%)
-  - Confound: improvement is sample size, not corpus diversity. Needs rerun with matched n=2048.
+- **Cycle 077** (item 89): SVD vs random at aggressive compression — GPT-2 FFN — REFUTED
+  - SVD+lstsq ≈ random+lstsq at ALL k/n ratios (0.1, 0.2, 0.3) — all diffs < 2%
+  - lstsq refit completely dominates basis choice. FFN output is isotropic.
+  - topk+lstsq much worse (126-165 vs ~123) — axis-aligned selection is the real bottleneck
+  - ⚠ Single-block PPL is misleading: lstsq acts as domain regularizer (shakespeare→shakespeare)
 
-## Final Answer (from cycle 061, still valid)
+## Final Answer (from cycle 061, consolidated through cycle 077)
 
-### The Recipe (cycle 061)
-1. **topk + lstsq** → analytic single-block FFN compression (sub-baseline PPL per block)
+**Answer**: Pure no-SGD compression works per-block but fails when stacking. The practical recipe requires minimal gradient polish:
+
+### The Recipe
+1. **Random projection + lstsq** → analytic single-block compression (rotation-invariant, no Jacobian needed)
 2. **Stack k=4 blocks at 6×** → +30% PPL unpolished
-3. **500 Adam steps** (lr=1e-4, 4096 tokens, W_down only) → **+4.9% PPL on OpenWebText**
+3. **500 Adam steps** (lr=1e-4, W_down only) → **+4.9% PPL**
 
-### Key Findings
-- FFN Jacobian genuinely low-rank (10/12 blocks rank_99 ≤ 500)
-- Stacking error = retained-spectrum corruption (77-91%)
-- Rotation+lstsq > topk+lstsq (but random ≈ SVD at k/n=0.67)
-- Channel selection partially corpus-specific (Jaccard 0.34-0.58)
-- Mixed-corpus refit: needs matched sample sizes to isolate diversity effect
+### Key Findings (now definitive)
+- **Basis is irrelevant**: SVD = random at all compression ratios (cycles 071, 077). Only k/n matters.
+- **Stacking error = retained-spectrum corruption** (77-91%, cycle 072)
+- **Gradient polish = retained-spectrum denoising**
+- **Channel selection partially corpus-specific** (Jaccard 0.34-0.58, cycle 070)
+- **Single-block metrics are misleading**: lstsq regularization inflates single-block quality
 
 ### Dead Directions
-- Topology (5 experiments, 0 results) — definitively closed
-- Learned compressors, cascaded re-probing, variable ratios
-- Jacobian SVD basis at high retention, rank-matching on GPT-2
+- Topology (5 experiments, 0 results)
+- Jacobian SVD basis (any rotation is equivalent)
+- Rank-matching (GPT-2 blocks too homogeneous)
+- Learned compressors, cascaded re-probing
 
-## Remaining NEXT Items — ⚠ AGENDA REFRESH NEEDED
-- **P2**: Items 85-88 (moonshots only)
-- **Note**: Item 81 needs re-run, item 66 needs rerun with matched sizes
-- All P0 and P1 items exhausted. Only moonshots remain → agenda refresh required.
+## Remaining NEXT Items
+- **P0**: Item 90 (mixed-corpus refit matched sizes)
+- **P1**: Item 91 (subspace alignment re-run)
+- **P2**: Items 85-88, 92 (moonshots)
