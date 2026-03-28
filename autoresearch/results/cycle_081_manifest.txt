@@ -1,0 +1,6 @@
+item_number=85
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_081_newton_correction.json,autoresearch/results/cycle_081_newton_correction.png
+code_paths=experiments/newton_correction_stacked_gpt2.py
+final_commit_hash=3d622056d60226e433dcee0d314f02b785158f3e
+agenda_updated=yes

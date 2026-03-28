@@ -1,21 +1,21 @@
-# Research Status — 80 Cycles (001–080)
+# Research Status — 81 Cycles (001–081)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 15 |
-| Refuted | 22 |
-| Inconclusive | 34 |
+| Refuted | 21 |
+| Inconclusive | 36 |
 | Crash | 1 |
 
 ## Latest Cycle
-- **Cycle 080** (item 92): Retained-spectrum denoising — GPT-2 FFN — INCONCLUSIVE (audit: UNCERTAIN)
-  - Analytic projection is algebraically vacuous: re-solving lstsq with same h_comp ≈ no-op
-  - Shakespeare corpus makes results incomparable to cycle 061 (OWT)
-  - Adam sub-baseline PPL is domain fine-tuning artifact
-  - Retained-spectrum denoising via lstsq is a dead end
+- **Cycle 081** (item 85): Analytic Newton correction via Jacobian chain rule — GPT-2 FFN — INCONCLUSIVE (audit: UNCERTAIN — method failure)
+  - Implementation used finite-diff full-Hessian (indefinite) instead of true Gauss-Newton J^T J
+  - Newton step diverged +902%, but steepest descent +14.3% shows gradient signal is valid
+  - Audit downgraded from REFUTED: wrong Hv approximation, 10 CG iters on 98K params, damping ~1e-10
+  - Not evidence against the hypothesis — implementation was inadequate
 
-## Final Answer (consolidated through cycle 080)
+## Final Answer (consolidated through cycle 081)
 
 ### The Recipe
 1. **Random projection + lstsq** on **mixed-corpus probe data** (2048+ tokens, diverse sources)
@@ -36,4 +36,5 @@
 - Analytic stacking correction via retained-spectrum projection (cycle 080)
 
 ## Remaining NEXT Items
-- **P2**: Items 85-88 (moonshots: Jacobian chain Newton, MI channel selection, Procrustes sharing, learned bottleneck AE)
+- **P2**: Items 86-88 (moonshots: MI channel selection, Procrustes sharing, learned bottleneck AE)
+- Item 85 (Newton correction) remains inconclusive — could be revisited with correct GN implementation

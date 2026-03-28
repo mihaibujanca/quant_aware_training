@@ -1,0 +1,9 @@
+status=UNCERTAIN
+old_outcome=REFUTED (Newton PPL +902% >> +20% threshold)
+new_outcome=UNCERTAIN — method was algebraically vacuous: full-Hessian finite-diff (not Gauss-Newton), negligible damping (~1e-10), 10 CG iters on 98K params. Divergence reflects implementation setup, not hypothesis test.
+reason=The Hv product computes the full Hessian (can have negative eigenvalues), not the Gauss-Newton J^T J (PSD by construction). Tikhonov damping lambda ~ 1e-4 * grad_norm / n_params ~ 1e-10 is negligible. 10 CG iterations on a 98K-parameter system is ~0.01% of the Krylov subspace. The experiment was set up in a way that almost guarantees failure, so the divergence tells us little about whether a well-implemented Gauss-Newton step could work.
+guardrail_flags=G4,G6
+uncertain_guardrails=G4,G6
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=If revisiting: (1) use true Gauss-Newton (J^T J v via two backward passes, not finite-diff full Hessian), (2) use Levenberg-Marquardt damping (lambda ~ 1e-2 to 1e-1, not 1e-10), (3) increase CG to 100+ iters, (4) correct one block at a time with re-evaluation. However, given Adam 500 already achieves +2.6%, the practical value of a single-step method is low — recommend deprioritizing this direction.
+interesting=false

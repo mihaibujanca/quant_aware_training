@@ -52,13 +52,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 081
 
-85. **Analytic stacking correction via Jacobian chain rule — GPT-2 FFN [MOONSHOT]** *(REFUTED — cycle 081)*
-   - Single Gauss-Newton step (via finite-difference CG) catastrophically diverged: Newton PPL +755%/+900%/+1052% across seeds (mean +902%), vs Adam 500 steps +20.7%/-9.2%/-3.6% (mean +2.6%) and unpolished +47%/+17%/+26% (mean +30%).
-   - CG convergence: 0/12 blocks converged (10-iter max, residual ~0.3 on all blocks).
-   - Steepest descent (optimal lr = g^T g / g^T Hg) also failed: optimal lr clipped at 10.0 on all blocks, indicating near-zero or negative curvature in the Hv direction from finite differences. Steepest descent gave mean +14.3% — moderate improvement over unpolished but far from Adam.
-   - Diagnosis: The compressed FFN landscape is highly non-quadratic. Newton's method cannot take a useful single step. The Hessian is effectively ill-conditioned at the compressed solution (sparse Jacobian, many zero-gradient directions). The finite-diff Hv underestimates curvature in key directions. Adam succeeds because it uses adaptive learning rates that effectively invert the diagonal of a running Hessian estimate.
-   - Key finding: "Fully analytic" correction via a single Newton step is infeasible for stacked compressed blocks. The landscape nonlinearity from stacking 4 compressed blocks requires iterative optimization.
-   - Outcome: REFUTED (Newton PPL +902% >> +20% threshold)
+85. **Analytic stacking correction via Jacobian chain rule — GPT-2 FFN [MOONSHOT]** *(inconclusive — cycle 081, audit: UNCERTAIN — method failure, not genuine refutation)*
+   - Implementation used finite-difference full-Hessian Hv (indefinite, not PSD) instead of true Gauss-Newton J^T J. Tikhonov damping ~1e-10 was negligible. Only 10 CG iterations on ~98K params.
+   - Newton PPL mean +902% (diverged), but steepest descent +14.3% (gradient signal valid). CG 0/12 converged (residual ~0.3).
+   - Audit: method failure (wrong Hv approximation + insufficient CG iters), not evidence against the hypothesis itself.
+   - Outcome: inconclusive (audit downgrade from refuted)
    - Commit: 5a2b487
    - Artifacts: `experiments/newton_correction_stacked_gpt2.py`, `autoresearch/results/cycle_081_newton_correction.json`, `autoresearch/results/cycle_081_newton_correction.png`
 
