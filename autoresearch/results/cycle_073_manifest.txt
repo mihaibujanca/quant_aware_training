@@ -1,0 +1,6 @@
+item_number=84
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_073_rank_matched_compression.json,autoresearch/results/cycle_073_rank_matched_compression.png
+code_paths=experiments/rank_matched_compression_gpt2.py
+final_commit_hash=3eb43f5
+agenda_updated=yes
