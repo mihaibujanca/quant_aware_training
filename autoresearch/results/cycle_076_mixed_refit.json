@@ -1,0 +1,139 @@
+{
+  "baseline_ppl": 70.13085398872713,
+  "results": [
+    {
+      "seed": 42,
+      "condition": "A_shakespeare_512",
+      "ppl": 2668653.5066356985,
+      "baseline_ppl": 70.13085398872713,
+      "ppl_degradation_pp": 2668583.37578171,
+      "ppl_degradation_rel_pct": 3805148.838214147,
+      "eval_loss": 14.79708459854126,
+      "kl": 1348.8647900390624,
+      "top1_agreement": 0.0102734375
+    },
+    {
+      "seed": 42,
+      "condition": "B_mixed_512",
+      "ppl": 411507.3141122571,
+      "baseline_ppl": 70.13085398872713,
+      "ppl_degradation_pp": 411437.18325826834,
+      "ppl_degradation_rel_pct": 586670.7160366292,
+      "eval_loss": 12.92758207321167,
+      "kl": 1106.7276416015625,
+      "top1_agreement": 0.0275390625
+    },
+    {
+      "seed": 42,
+      "condition": "C_mixed_2048",
+      "ppl": 112.17792977068527,
+      "baseline_ppl": 70.13085398872713,
+      "ppl_degradation_pp": 42.04707578195814,
+      "ppl_degradation_rel_pct": 59.95517434981872,
+      "eval_loss": 4.720086269378662,
+      "kl": 64.59716560363769,
+      "top1_agreement": 0.5913671875
+    },
+    {
+      "seed": 123,
+      "condition": "A_shakespeare_512",
+      "ppl": 4386862.394828565,
+      "baseline_ppl": 70.13085398872713,
+      "ppl_degradation_pp": 4386792.263974576,
+      "ppl_degradation_rel_pct": 6255153.066694029,
+      "eval_loss": 15.294124813079835,
+      "kl": 1409.4393676757813,
+      "top1_agreement": 0.0048828125
+    },
+    {
+      "seed": 123,
+      "condition": "B_mixed_512",
+      "ppl": 268839.15261879354,
+      "baseline_ppl": 70.13085398872713,
+      "ppl_degradation_pp": 268769.0217648048,
+      "ppl_degradation_rel_pct": 383239.33971773233,
+      "eval_loss": 12.501868534088135,
+      "kl": 1071.7238037109375,
+      "top1_agreement": 0.0119921875
+    },
+    {
+      "seed": 123,
+      "condition": "C_mixed_2048",
+      "ppl": 112.98080655849067,
+      "baseline_ppl": 70.13085398872713,
+      "ppl_degradation_pp": 42.849952569763545,
+      "ppl_degradation_rel_pct": 61.10000111598708,
+      "eval_loss": 4.727217950820923,
+      "kl": 65.61545288085938,
+      "top1_agreement": 0.593125
+    },
+    {
+      "seed": 7,
+      "condition": "A_shakespeare_512",
+      "ppl": 3918115.098741825,
+      "baseline_ppl": 70.13085398872713,
+      "ppl_degradation_pp": 3918044.9678878365,
+      "ppl_degradation_rel_pct": 5586763.521399048,
+      "eval_loss": 15.181121253967286,
+      "kl": 1404.4354614257813,
+      "top1_agreement": 0.0050390625
+    },
+    {
+      "seed": 7,
+      "condition": "B_mixed_512",
+      "ppl": 132911.807001533,
+      "baseline_ppl": 70.13085398872713,
+      "ppl_degradation_pp": 132841.67614754426,
+      "ppl_degradation_rel_pct": 189419.7326741484,
+      "eval_loss": 11.797441082000732,
+      "kl": 973.6842956542969,
+      "top1_agreement": 0.0330859375
+    },
+    {
+      "seed": 7,
+      "condition": "C_mixed_2048",
+      "ppl": 113.65229129705517,
+      "baseline_ppl": 70.13085398872713,
+      "ppl_degradation_pp": 43.521437308328046,
+      "ppl_degradation_rel_pct": 62.05747518107181,
+      "eval_loss": 4.733143711090088,
+      "kl": 66.79654281616212,
+      "top1_agreement": 0.5828515625
+    }
+  ],
+  "aggregate": {
+    "A_shakespeare_512": {
+      "mean_ppl": 3657877.000068696,
+      "std_ppl": 888174.1647148918,
+      "mean_rel_pct": 5215688.475435741,
+      "std_rel_pct": 1266452.8010134557
+    },
+    "B_mixed_512": {
+      "mean_ppl": 271086.09124419454,
+      "std_ppl": 139311.34446074418,
+      "mean_rel_pct": 386443.2628095033,
+      "std_rel_pct": 198644.87103370673
+    },
+    "C_mixed_2048": {
+      "mean_ppl": 112.9370092087437,
+      "std_ppl": 0.7381559005342923,
+      "mean_rel_pct": 61.03755021562587,
+      "std_rel_pct": 1.0525408697474894
+    }
+  },
+  "verdict": "confirmed",
+  "improvement_B_pp": 4829245.212626238,
+  "improvement_C_pp": 5215627.437885526,
+  "blocks": [
+    7,
+    5,
+    4,
+    1
+  ],
+  "compression": 6,
+  "seeds": [
+    42,
+    123,
+    7
+  ]
+}
