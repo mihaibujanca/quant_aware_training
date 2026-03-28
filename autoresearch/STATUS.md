@@ -1,37 +1,39 @@
-# Research Status — 79 Cycles (001–079)
+# Research Status — 80 Cycles (001–080)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 15 |
 | Refuted | 22 |
-| Inconclusive | 33 |
+| Inconclusive | 34 |
 | Crash | 1 |
 
 ## Latest Cycle
-- **Cycle 079** (item 91): Subspace alignment v2 (correct hooks) — GPT-2 FFN — INCONCLUSIVE
-  - All 12 blocks: alignment 0.74–0.79 (below 0.8 threshold, 0/12 pass)
-  - Random baseline: 0.637. Excess: 0.28–0.41 (non-trivial but moderate)
-  - Corrected result invalidates cycle 069 (bug inflated alignment by ~0.05-0.10)
-  - FFN spectral structure is partially but not globally shared
+- **Cycle 080** (item 92): Retained-spectrum denoising — GPT-2 FFN — INCONCLUSIVE (audit: UNCERTAIN)
+  - Analytic projection is algebraically vacuous: re-solving lstsq with same h_comp ≈ no-op
+  - Shakespeare corpus makes results incomparable to cycle 061 (OWT)
+  - Adam sub-baseline PPL is domain fine-tuning artifact
+  - Retained-spectrum denoising via lstsq is a dead end
 
-## Final Answer (consolidated through cycle 079)
+## Final Answer (consolidated through cycle 080)
 
 ### The Recipe
-1. **Random projection + lstsq** on **mixed-corpus probe data** (2048+ tokens from diverse sources)
-2. **Stack k=4 blocks at 6×** → ~+60% PPL cross-domain
-3. **500 Adam steps** (lr=1e-4, W_down only) → **+4.9% PPL** (in-domain)
+1. **Random projection + lstsq** on **mixed-corpus probe data** (2048+ tokens, diverse sources)
+2. **Stack k=4 blocks at 6×** → ~+30% PPL on training distribution, ~+60% cross-domain
+3. **500 Adam steps** (lr=1e-4, W_down only) → **+4.9% PPL** on training distribution
+4. No analytic replacement for gradient polish found — Adam steps remain necessary
 
 ### Definitive Findings
 - **Basis is irrelevant**: SVD = random at all compression ratios (cycles 071, 077)
-- **Corpus diversity matters**: 19.1% PPL improvement from mixed vs single-corpus refit (cycle 078)
-- **FFN spectral structure partially shared**: alignment 0.74-0.79 (cycle 079) — topk reasonable but not optimal
-- **Stacking error = retained-spectrum corruption** (77-91%, cycle 072)
-- **Gradient polish = retained-spectrum denoising**
+- **Corpus diversity matters**: 19.1% improvement from mixed refit (cycle 078)
+- **FFN spectral structure partially shared**: alignment 0.74-0.79 (cycle 079)
+- **Stacking error = retained-spectrum corruption** (cycle 072), but analytic correction doesn't work (cycle 080)
+- **Single-block metrics misleading**: lstsq domain adaptation inflates quality
 
 ### Dead Directions
-- Topology (5 experiments), Jacobian SVD basis, rank-matching, learned compressors
+- Topology (5 experiments), Jacobian SVD basis, rank-matching
+- Learned compressors, cascaded re-probing
+- Analytic stacking correction via retained-spectrum projection (cycle 080)
 
 ## Remaining NEXT Items
-- **P2**: Items 85-88, 92 (moonshots only)
-- All P0/P1 items exhausted again. Consider agenda refresh if moonshots are not the priority.
+- **P2**: Items 85-88 (moonshots: Jacobian chain Newton, MI channel selection, Procrustes sharing, learned bottleneck AE)

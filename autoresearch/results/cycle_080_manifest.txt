@@ -1,0 +1,6 @@
+item_number=92
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_080_analytic_projection.json,autoresearch/results/cycle_080_analytic_projection.png
+code_paths=experiments/retained_spectrum_denoising_gpt2.py
+final_commit_hash=0c22a14
+agenda_updated=yes

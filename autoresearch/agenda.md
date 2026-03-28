@@ -102,11 +102,10 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 080
 
-92. **Retained-spectrum denoising via analytic projection — GPT-2 FFN** *(INCONCLUSIVE — cycle 080)*
-   - After topk+lstsq compression of blocks [7,5,4,1] at 6×, projected per-block error onto output covariance SVD basis (99% variance threshold, rank 315–668), re-solved lstsq for W_down. Tested 3 iterative passes. 3 seeds [42, 123, 7].
-   - Key numbers (mean ± std): Baseline PPL=125.1±5.3, Unpolished=138.8±5.4 (+10.9%), Analytic 1pass=138.3±5.6 (+10.6%), Analytic 2pass=165.8±4.7 (+32.7%), Analytic 3pass=157.0±9.9 (+25.4%), Adam 500-step=78.1±4.4 (−37.3%). Mean retained energy fraction=0.940.
-   - Interpretation: The analytic correction is essentially a no-op (1pass: +10.6% vs unpolished +10.9%). Passes 2 and 3 make things WORSE, not better. Adam 500-step dramatically outperforms (−37.3% vs baseline), confirming the retained-spectrum theory fails in practice for one-shot lstsq. Error growth across passes indicates the correction destabilizes the model. The retained-spectrum projection (98.5% of error energy in retained subspace) does not translate to an effective analytic correction because the lstsq re-solve optimizes for local block outputs but ignores downstream interactions.
-   - Verdict: INCONCLUSIVE (best analytic +10.6% in 10–25% range; Adam −37.3% far better)
+92. **Retained-spectrum denoising via analytic projection — GPT-2 FFN** *(INCONCLUSIVE — cycle 080, audit: UNCERTAIN)*
+   - ⚠ AUDIT: (1) Method is algebraically vacuous — re-solving lstsq with shifted target but same h_comp produces identical W_down. (2) Shakespeare corpus (baseline 125) makes results incomparable to cycle 061 (OWT baseline 57.7). (3) Adam −37.3% is domain fine-tuning artifact, not compression polishing. (4) Unpolished +10.9% (vs cycle 061's +30.2%) is lstsq domain adaptation.
+   - Analytic 1-pass: +10.6% ≈ unpolished +10.9% (0.3pp difference = noise). Method does nothing.
+   - Verdict: INCONCLUSIVE (technically in 10-25% band, but method is effectively dead)
    - Cycle: 080
    - Artifacts: `experiments/retained_spectrum_denoising_gpt2.py`, `autoresearch/results/cycle_080_analytic_projection.json`, `autoresearch/results/cycle_080_analytic_projection.png`
 
