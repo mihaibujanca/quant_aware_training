@@ -42,11 +42,42 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0 — Corpus robustness
 
+89. **SVD vs topk vs random basis at aggressive compression (k/n ≤ 0.3) — GPT-2 FFN**
+   - Cycle 071 showed random+lstsq ≈ SVD+lstsq at k/n=0.67, but high retention may mask basis quality differences. Re-run the same comparison at k/n ∈ {0.3, 0.2, 0.1} on blocks [1, 4, 7, 11] with 3 seeds. At low k/n the "right" directions should matter more — if SVD still equals random, the FFN function is so diffuse that no linear basis is privileged.
+   - Type: empirical
+   - Confirmed if: SVD+lstsq outperforms random+lstsq by ≥ 5% relative PPL at k/n ≤ 0.3 in ≥ 3/4 blocks (basis quality matters at aggressive compression).
+   - Refuted if: random+lstsq matches SVD+lstsq within 3% at all tested k/n ratios in all 4 blocks (basis is truly irrelevant, compression ceiling is set by dimensionality alone).
+   - Inconclusive if: SVD wins at k/n=0.1 but not 0.2-0.3 (crossover exists but location is unclear), or results vary across blocks.
+   - Depends on: 82
+
+90. **Mixed-corpus lstsq refit with matched sample sizes — GPT-2 FFN**
+   - Cycle 076 was confounded: Shakespeare had n=512 (underdetermined lstsq) while mixed had n=2048. Rerun with n=2048 for both conditions: A'=Shakespeare-only 2048 tokens, C=mixed 2048 tokens (OWT+Shakespeare+code), same blocks [7,5,4,1] at 6×, 3 seeds. This isolates corpus diversity from sample size. Cycle 044 baseline: Shakespeare-only at 2048 gives PPL ~135.
+   - Type: empirical
+   - Confirmed if: mixed-corpus refit (C) outperforms single-corpus (A') by ≥ 5% relative PPL at matched n=2048 (corpus diversity genuinely helps lstsq conditioning).
+   - Refuted if: Shakespeare-only at n=2048 matches mixed within 3% relative PPL (the cycle 076 improvement was entirely sample size, not diversity).
+   - Inconclusive if: improvement is 3–5% or varies across seeds (effect exists but is too small to be operationally useful).
+   - Depends on: 66
 
 ### P1
 
+91. **Subspace alignment re-run with correct hooks — GPT-2 FFN**
+   - Item 81 (cycle 069) had an implementation bug: manual Jacobian computation from block-level hidden states missed attention + ln_2 preprocessing. Re-run using `register_forward_hook` on `mlp.c_fc` (as cycle 068 did) to capture the true FFN input. For each of 12 blocks, compute top-k right singular vectors of J(x) for 256 tokens (k=384). Report pairwise subspace alignment (mean principal-angle cosine) between tokens. This determines whether the low-rank basis is globally shared (supporting topk) or token-specific (motivating adaptive compression).
+   - Type: empirical
+   - Confirmed if: mean subspace alignment ≥ 0.8 for ≥ 10/12 blocks (globally shared spectral structure, topk is near-optimal).
+   - Refuted if: mean alignment < 0.5 for a majority of blocks (spectral structure is token-specific, contradicting the global low-rank picture).
+   - Inconclusive if: alignment is moderate (0.5–0.8) or varies widely within blocks.
+   - Depends on: 80
+
 
 ### P2 — Moonshots
+
+92. **Retained-spectrum denoising via analytic projection — GPT-2 FFN**
+   - Cycle 072 showed stacking error lives in the retained spectrum (77–91%), and gradient polish is effectively retained-spectrum denoising. Test whether an analytic projection can replace the 500-step Adam polish: after topk+lstsq compression, compute the per-block error e = FFN_comp(x) − FFN_float(x) on 4096 probe tokens. Project e onto the top-k SVD basis of the block output covariance (the retained subspace). Apply rank-deficient lstsq correction ΔW_down = argmin ||W_down_new @ h_comp − (y_float − U_k U_k^T e)||_F to W_down only. Compare single-step analytic correction vs 500-step Adam polish on stacked PPL for blocks [7,5,4,1] at 6×.
+   - Type: implementation + empirical
+   - Confirmed if: analytic retained-spectrum correction achieves ≤ +10% PPL (within 2× of Adam's +4.9%), making the polish step analytic.
+   - Refuted if: analytic correction gives > +25% PPL or diverges (the retained-spectrum corruption is too nonlinear for one-shot lstsq).
+   - Inconclusive if: correction helps (+10–25%) but doesn't match Adam closely (needs iteration or damping).
+   - Depends on: 83
 
 85. **Analytic stacking correction via Jacobian chain rule — GPT-2 FFN [MOONSHOT]**
    - Gradient polish works (cycle 061: +30% → +4.9%) but uses 500 Adam steps — can we compute the same correction analytically? The stacking error for block i is e_i = FFN_comp_i(x) − FFN_float_i(x). Through the residual stream, block j downstream sees input shifted by e_i (plus attention/LN mixing). If we linearize the downstream path via the Jacobian chain ∂loss/∂W_down_i = ∂loss/∂output · ∏ ∂block_k/∂input_k · ∂FFN_i/∂W_down_i, we can compute the optimal W_down correction in closed form: ΔW_down_i = −(J^T J)^{-1} J^T e, where J is the chained Jacobian from W_down_i to the loss and e is the stacking error vector. This is Newton's method in one step — should land near the Adam solution if the landscape is locally quadratic. For k=4 blocks at 6×, compute the full Jacobian chain (tractable: 4 × 384 × 768 free params, 4096 tokens). Compare single-step Newton correction vs 500-step Adam on stacking PPL.
