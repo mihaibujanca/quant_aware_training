@@ -101,11 +101,10 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 076
 
-66. **Lstsq refit with mixed-corpus probe data — GPT-2 FFN** *(CONFIRMED — cycle 076)*
-   - Channel selection fixed from Shakespeare (512 tokens, blocks [7,5,4,1], 6x, 3 seeds [42,123,7]). Conditions: A=Shakespeare-only 512 tok, B=mixed 512 tok (128×4 corpora), C=mixed 2048 tok (512×4 corpora). Evaluated on WikiText-2 validation.
-   - Key findings: Condition A catastrophically fails (PPL ~3.7M, +5.2M% degradation). Condition B partially recovers (PPL ~271K, +386K%). Condition C achieves near-baseline PPL: 112.9±0.7 vs baseline 70.1 (+61% relative, ~43pp abs).
-   - Root cause of A/B failure: Shakespeare activations are a poor lstsq design matrix for WikiText-2 — the hidden activation distribution is corpus-specific. 512 mixed tokens still insufficient (OOD test distribution dominates); 2048 mixed tokens span enough of the input distribution for stable lstsq.
-   - Verdict: CONFIRMED — mixed 2048 refit reduces degradation from catastrophic (+5M%) to manageable (+61%). The improvement far exceeds the 10pp threshold. The key insight is that refit quality is dominated by activation distribution coverage, not channel selection.
+66. **Lstsq refit with mixed-corpus probe data — GPT-2 FFN** *(INCONCLUSIVE — cycle 076, audit-corrected from CONFIRMED)*
+   - ⚠ AUDIT G1/G3: Condition A (512 Shakespeare tokens) has n=512 samples for p=513 lstsq params — underdetermined system. PPL 3.7M is lstsq degeneracy, not corpus mismatch. Condition C (2048 mixed tokens) is well-conditioned and works (PPL 112.9), but the A→C improvement is confounded by sample size vs corpus diversity.
+   - Needs rerun with matched sample sizes: A'=Shakespeare 2048 tokens vs C=mixed 2048 tokens to isolate corpus diversity effect. Cycle 044 showed Shakespeare-only at 2048 tokens gives PPL ~135, not millions.
+   - Verdict: INCONCLUSIVE — lstsq degeneracy confound prevents isolating corpus diversity effect.
    - Cycle: 076
    - Artifacts: `experiments/mixed_corpus_lstsq_refit_gpt2.py`, `autoresearch/results/cycle_076_mixed_refit.json`, `autoresearch/results/cycle_076_mixed_refit.png`
    - Depends on: 64

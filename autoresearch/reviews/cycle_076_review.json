@@ -1,0 +1,14 @@
+{
+  "cycle": 76,
+  "item": 66,
+  "round": 1,
+  "verdict": "APPROVE",
+  "blocking_issues": 0,
+  "minor_issues": 1,
+  "minor_observations": [
+    "Condition A uses 512 tokens for lstsq refit while cycle 044 used 2048 via probe_ffn_geometry. Within-experiment comparison (A vs B vs C) is fair at matched token counts, but cross-cycle comparison to cycle 044 numbers should note sample size difference."
+  ],
+  "pitfalls_checked": ["MP1", "MP2", "MP3", "MP4", "MP5", "MP6", "MP7", "MP8"],
+  "pitfalls_triggered": [],
+  "pitfall_mitigated": true
+}
