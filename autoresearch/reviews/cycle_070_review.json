@@ -1,0 +1,9 @@
+{
+  "verdict": "APPROVED",
+  "round": 1,
+  "issues": [],
+  "minor_observations": [
+    "C4 download may need HF_TOKEN or pre-download; fallback to 3 corpora is adequate",
+    "All 4 corpora are English prose — sufficient for the stated hypothesis but not adversarial"
+  ]
+}

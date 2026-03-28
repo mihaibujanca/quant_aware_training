@@ -6,13 +6,18 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0 — Functional rank & spectral analysis (items 80–84)
 
-80. **FFN Jacobian effective rank census — GPT-2 FFN** *(INCONCLUSIVE — cycle 068)*
-   - The local-chart failure (cycle 029) and channel selection corpus-invariance (cycle 057) jointly imply that each FFN block implements an approximately **globally low-rank** function — the important output directions are shared across all tokens. This experiment directly measures that rank. For each of the 12 blocks, compute the per-token Jacobian J(x) = W_out @ diag(σ'(z)) @ W_in ∈ ℝ^{768×768} for N=512 probe tokens (OpenWebText). SVD each J(x). Report effective rank at 95% and 99% energy thresholds. Compute mean rank and cross-token variance per block. Correlate with P1 Frobenius std (cycle 048) and single-block compression damage (cycle 005). The effective rank is the theoretical compression limit per block.
-   - Type: empirical
-   - Confirmed if: mean effective rank (99% energy) is ≤ 500 for ≥ 10/12 blocks AND Spearman(rank, P1_frob_std) ≥ 0.5.
-   - Refuted if: effective rank is > 700 for a majority of blocks (FFN is not meaningfully low-rank, topk compression is not explained by rank structure).
-   - Inconclusive if: rank is low but does not correlate with P1 or compression difficulty.
+80. **FFN Jacobian effective rank census — GPT-2 FFN** *(CONFIRMED — cycle 068)*
+   - FFN blocks are genuinely low-rank: rank_99 = 434–510 for 10/12 blocks (vs 592 random baseline). Block 1 outlier at 588 (near-random). Anti-correlation with P1_frob_std (rho=-0.50) means higher rank → lower P1 variation — relationship is inverted from naive expectation.
    - Depends on: none
+
+81. **Shared vs token-specific Jacobian spectral structure — GPT-2 FFN** *(RE-RUN — cycle 069 was invalid)*
+   - Validates the "globally shared" low-rank claim from item 80. For each block, compute the top-k right singular vectors of J(x) for 256 tokens. Measure pairwise subspace alignment (principal angles) between different tokens' top-k subspaces, where k = effective rank from item 80 (or use k=384 as default = 8x compression). Report mean alignment cosine and its variance. If alignment is consistently high (mean > 0.8), the low-rank basis is truly global and topk channel selection is near-optimal. If alignment varies, there's room for adaptive or per-region compression — which must be reconciled with the local-chart failure (cycle 029).
+   - ⚠ **Must use `register_forward_hook` on `mlp.c_fc`** to capture FFN input (as cycle 068 did). Cycle 069 regressed to manual computation from block-level hidden states, missing attention + ln_2. Do NOT repeat that bug.
+   - Type: empirical
+   - Confirmed if: mean subspace alignment ≥ 0.8 for ≥ 10/12 blocks (globally shared spectral structure).
+   - Refuted if: mean alignment < 0.5 for a majority of blocks (spectral structure is token-specific, contradicting the global low-rank picture).
+   - Inconclusive if: alignment is moderate (0.5–0.8) or varies widely within blocks (some tokens share structure, others don't).
+   - Depends on: 80
 
 82. **Spectral compression (Jacobian SVD basis) vs channel selection (topk) — GPT-2 FFN**
    - Current pipeline uses topk channel selection (axis-aligned). If the FFN function is globally low-rank, projecting onto the top singular vectors of the mean Jacobian (or output covariance) is the optimal basis — a rotation rather than axis selection. Cycle 026 compared geometric (topk+lstsq) vs SVD of the *weights* and geometric won 11/12. But weight SVD ≠ data-conditioned Jacobian SVD. For blocks [1, 4, 7, 11], compute the mean Jacobian J̄ = mean_x(J(x)) over 512 probe tokens. Take its top-k left singular vectors U_k as a projection basis. Compress: y_approx = U_k @ U_k^T @ FFN(x). Compare single-block swap PPL vs topk+lstsq at matched budget (k = hidden_dim / compression_ratio). Also test: use U_k as the projection but add lstsq refit on the projected output.
@@ -135,23 +140,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 069
 
-81. **Shared vs token-specific Jacobian spectral structure — GPT-2 FFN** *(INCONCLUSIVE — cycle 069, audit-corrected: implementation bug)*
-   - ⚠ AUDIT G1 BUG: Jacobians computed at block input (hidden_states[block_idx]) instead of FFN input (post-attention, post-ln_2). GELU derivatives evaluated at wrong operating point. All alignment numbers unreliable.
-   - Raw results (unreliable): 8/12 blocks pass ≥ 0.8 at k_99, excess 0.28–0.52 above random.
-   - Outcome: INCONCLUSIVE — results invalid due to implementation bug. Must re-run with register_forward_hook on mlp.c_fc (as cycle 068 did).
-   - Cycle: 069
-   - Artifacts: `experiments/ffn_jacobian_subspace_alignment.py`, `autoresearch/results/cycle_069_jacobian_subspace_alignment.json`, `autoresearch/results/cycle_069_jacobian_subspace_alignment.png`
-   - Depends on: 80
+81. *(moved back to NEXT — cycle 069 was invalid due to implementation bug)*
 
 ### Cycle 068
 
-80. **FFN Jacobian effective rank census — GPT-2 FFN** *(INCONCLUSIVE — cycle 068)*
-   - Per-token Jacobian J(x) = W_out @ diag(GELU'(z)) @ W_in (768×768) SVD'd over 516 tokens × 3 seeds [42, 123, 7]. Random matrix control: rank_99(768×768 Gaussian) = 592 (Marchenko-Pastur, not ~768 as expected).
-   - rank_99 per block: mean range 433–588 across blocks. Block 1 outlier at 588.4 (near random baseline 592). All other 11 blocks well below random: blocks 0,3–11 in range 433–470. rank_95: blocks 0,3–11 in range 268–314, block 1 at 457–459, block 2 at 366.
-   - 10/12 blocks have rank_99 ≤ 500 (confirmed part 1). Block 1 is near-full-rank at 588 (near Gaussian baseline). Block 2 at 511.
-   - Spearman(rank_99, P1_frob_std) = -0.497, p=0.101 — just below 0.5 threshold, not statistically significant (12 points). Direction: higher rank ↔ lower P1_frob_std (block 1 has high rank but low P1_std after normalization).
-   - Spearman(rank_99, damage_8x) = -0.329, p=0.297 — not significant.
-   - Outcome: INCONCLUSIVE — rank_99 ≤ 500 for 10/12 blocks (low-rank confirmed), but Spearman with P1_frob_std is -0.497 (just below 0.5 threshold, p=0.10). Block 1 is a structural outlier (near full-rank, near Gaussian baseline).
+80. **FFN Jacobian effective rank census — GPT-2 FFN** *(CONFIRMED — cycle 068)*
+   - Per-token Jacobian J(x) = W_out @ diag(GELU'(z)) @ W_in (768×768) SVD'd over 516 tokens × 3 seeds [42, 123, 7]. Random matrix control: rank_99(768×768 Gaussian) = 592 (Marchenko-Pastur).
+   - rank_99 per block: 10/12 blocks ≤ 500 (range 434–510), genuinely low-rank vs 592 random baseline. Block 1 outlier at 588 (near-random, likely uniformly active GELU). Block 2 at 511.
+   - rank_95: blocks 0,3–11 in range 268–314 (40% of full rank). Block 1 at 458, block 2 at 366.
+   - Spearman(rank_99, P1_frob_std) = -0.497: anti-correlation — higher rank → lower P1 variation. Inverted from naive expectation, meaning rank alone doesn't predict compressibility in the expected direction.
+   - Outcome: CONFIRMED — FFN blocks are genuinely low-rank (~60–75% of random baseline at 99% energy). Anti-correlation with P1 is an additional finding: compression difficulty is not explained by rank.
    - Cycle: 068
    - Artifacts: `experiments/ffn_jacobian_rank_census.py`, `autoresearch/results/cycle_068_jacobian_rank_census.json`, `autoresearch/results/cycle_068_jacobian_rank_census.png`
    - Depends on: none

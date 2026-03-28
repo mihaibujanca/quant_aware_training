@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=INCONCLUSIVE — Jaccard in moderate range (0.4–0.7); channel selection is meaningfully but not fully corpus-specific.
+new_outcome=INCONCLUSIVE — confirmed. 0/4 blocks reach Jaccard ≥ 0.7 (range 0.34–0.58), 2/4 blocks pass PPL gap ≤ 10% (blocks 4 and 1). Web corpora cluster (J ≈ 0.55–0.68), Shakespeare is the outlier (J ≈ 0.27–0.53). Channel selection is partially corpus-specific — well above random baseline (0.091) but below full stability.
+reason=Implementation verified: channel selection independent per corpus, Jaccard manually confirmed, single-block swaps via deepcopy, 3 seeds. Numbers match verdict logic. Minor: refuted criterion uses all() instead of majority-of-blocks but doesn't affect outcome (only 1/4 blocks below 0.4).
+guardrail_flags=none
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=The web-corpus clustering (J ≈ 0.6 between WT2/OWT/C4 vs J ≈ 0.4 Shakespeare-vs-web) suggests a two-tier structure: domain-invariant "core" channels plus domain-specific channels. Experiment 82 (Jacobian SVD basis) may bypass corpus sensitivity entirely by using a rotation instead of axis selection. If pursuing corpus-robustness directly, try union-of-topk across corpora as a robust channel set.
+interesting=true
+interesting_reason=Web corpora form a tight cluster (J ≈ 0.6) while Shakespeare diverges (J ≈ 0.4), suggesting topk channels decompose into a domain-invariant core plus domain-specific tail. This two-tier structure could inform a robust channel selection strategy (union-of-topk or Jacobian SVD rotation).
