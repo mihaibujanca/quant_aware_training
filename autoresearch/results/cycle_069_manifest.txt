@@ -1,0 +1,6 @@
+item_number=81
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_069_jacobian_subspace_alignment.json,autoresearch/results/cycle_069_jacobian_subspace_alignment.png
+code_paths=experiments/ffn_jacobian_subspace_alignment.py
+final_commit_hash=4aab306985cef96146bc989165e403eceb62275e
+agenda_updated=yes
