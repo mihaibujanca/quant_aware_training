@@ -1,0 +1,221 @@
+{
+  "baseline_ppl": 57.652867939164075,
+  "target_blocks": [
+    7,
+    5,
+    4,
+    1
+  ],
+  "hidden_fraction": 0.16666666666666666,
+  "seeds": [
+    42,
+    123,
+    7
+  ],
+  "agg": {
+    "unpolished": {
+      "ppl_mean": 75.0617904663086,
+      "ppl_std": 8.917317390441895,
+      "delta_pct_mean": 30.19610595703125,
+      "delta_pct_std": 15.467255592346191,
+      "per_seed": {
+        "42": 84.94261073137766,
+        "123": 67.61228270170336,
+        "7": 72.63047486813089
+      }
+    },
+    "steepest_descent": {
+      "ppl_mean": 65.92569732666016,
+      "ppl_std": 8.858173370361328,
+      "delta_pct_mean": 14.349384307861328,
+      "delta_pct_std": 15.364667892456055,
+      "per_seed": {
+        "42": 75.88725142738923,
+        "123": 58.934247696824876,
+        "7": 62.95559868448229
+      }
+    },
+    "newton": {
+      "ppl_mean": 577.8701782226562,
+      "ppl_std": 85.36336517333984,
+      "delta_pct_mean": 902.3268432617188,
+      "delta_pct_std": 148.06439208984375,
+      "per_seed": {
+        "42": 493.13180966032564,
+        "123": 576.6335196575824,
+        "7": 663.8451129538864
+      }
+    },
+    "adam_500": {
+      "ppl_mean": 59.16875076293945,
+      "ppl_std": 9.17463207244873,
+      "delta_pct_mean": 2.6293318271636963,
+      "delta_pct_std": 15.913576126098633,
+      "per_seed": {
+        "42": 69.59942127481779,
+        "123": 52.348812270146574,
+        "7": 55.558025467661025
+      }
+    }
+  },
+  "per_seed": {
+    "42": {
+      "unpolished_ppl": 84.94261073137766,
+      "unpolished_delta_pct": 47.33457981831885,
+      "per_block_ppl_newton": [
+        182.01178987989894,
+        222.94423922947928,
+        474.7195863212069,
+        493.13180966032564
+      ],
+      "newton_cg_info": [
+        {
+          "block_id": 7,
+          "converged": false,
+          "n_iter": 10,
+          "residual": 0.2795656418260291,
+          "grad_norm": 0.08701373636722565,
+          "dw_norm": 18.153165817260742
+        },
+        {
+          "block_id": 5,
+          "converged": false,
+          "n_iter": 10,
+          "residual": 0.27047250014536534,
+          "grad_norm": 0.4160103499889374,
+          "dw_norm": 9.038840293884277
+        },
+        {
+          "block_id": 4,
+          "converged": false,
+          "n_iter": 10,
+          "residual": 0.2824748837648776,
+          "grad_norm": 0.3059936761856079,
+          "dw_norm": 14.214390754699707
+        },
+        {
+          "block_id": 1,
+          "converged": false,
+          "n_iter": 10,
+          "residual": 0.3906880709275215,
+          "grad_norm": 0.212590754032135,
+          "dw_norm": 9.087265968322754
+        }
+      ],
+      "newton_ppl": 493.13180966032564,
+      "newton_delta_pct": 755.3465374535809,
+      "newton_second_pass_ppl": 1224.2567297692804,
+      "steepest_descent_ppl": 75.88725142738923,
+      "steepest_descent_delta_pct": 31.627886244039537,
+      "adam_500_ppl": 69.59942127481779,
+      "adam_500_delta_pct": 20.721524813405367
+    },
+    "123": {
+      "unpolished_ppl": 67.61228270170336,
+      "unpolished_delta_pct": 17.27479502502559,
+      "per_block_ppl_newton": [
+        5027.615963073169,
+        335.6353858868087,
+        408.966455484612,
+        576.6335196575824
+      ],
+      "newton_cg_info": [
+        {
+          "block_id": 7,
+          "converged": false,
+          "n_iter": 10,
+          "residual": 0.2662056578842405,
+          "grad_norm": 0.09100618958473206,
+          "dw_norm": 32.64855194091797
+        },
+        {
+          "block_id": 5,
+          "converged": false,
+          "n_iter": 10,
+          "residual": 1.9720006476511482,
+          "grad_norm": 1.9421123266220093,
+          "dw_norm": 10.334540367126465
+        },
+        {
+          "block_id": 4,
+          "converged": false,
+          "n_iter": 10,
+          "residual": 0.3526568123673944,
+          "grad_norm": 0.5089465379714966,
+          "dw_norm": 8.86227798461914
+        },
+        {
+          "block_id": 1,
+          "converged": false,
+          "n_iter": 10,
+          "residual": 0.2774822265500585,
+          "grad_norm": 0.2192046195268631,
+          "dw_norm": 9.191941261291504
+        }
+      ],
+      "newton_ppl": 576.6335196575824,
+      "newton_delta_pct": 900.1818474426152,
+      "newton_second_pass_ppl": 1386227.7769996438,
+      "steepest_descent_ppl": 58.934247696824876,
+      "steepest_descent_delta_pct": 2.2225776504525787,
+      "adam_500_ppl": 52.348812270146574,
+      "adam_500_delta_pct": -9.199985809230508
+    },
+    "7": {
+      "unpolished_ppl": 72.63047486813089,
+      "unpolished_delta_pct": 25.97894513204676,
+      "per_block_ppl_newton": [
+        128.89281294720868,
+        266.4395784189284,
+        537.4438263654783,
+        663.8451129538864
+      ],
+      "newton_cg_info": [
+        {
+          "block_id": 7,
+          "converged": false,
+          "n_iter": 10,
+          "residual": 0.14928168622281177,
+          "grad_norm": 0.09304068237543106,
+          "dw_norm": 22.4819393157959
+        },
+        {
+          "block_id": 5,
+          "converged": false,
+          "n_iter": 10,
+          "residual": 0.2702155479584656,
+          "grad_norm": 0.23534473776817322,
+          "dw_norm": 13.268095970153809
+        },
+        {
+          "block_id": 4,
+          "converged": false,
+          "n_iter": 10,
+          "residual": 0.4687683419771622,
+          "grad_norm": 0.5916628837585449,
+          "dw_norm": 10.770987510681152
+        },
+        {
+          "block_id": 1,
+          "converged": false,
+          "n_iter": 10,
+          "residual": 0.3665951150561942,
+          "grad_norm": 0.22374379634857178,
+          "dw_norm": 7.810020446777344
+        }
+      ],
+      "newton_ppl": 663.8451129538864,
+      "newton_delta_pct": 1051.4520208333486,
+      "newton_second_pass_ppl": 57977.84526712615,
+      "steepest_descent_ppl": 62.95559868448229,
+      "steepest_descent_delta_pct": 9.19768770378208,
+      "adam_500_ppl": 55.558025467661025,
+      "adam_500_delta_pct": -3.633544256139261
+    }
+  },
+  "verdict": "REFUTED",
+  "verdict_reason": "Newton step gives 902.3% PPL degradation (> +20% or diverged).",
+  "cg_convergence": "0/12",
+  "reference_cycle_061_adam500_delta": 4.863,
+  "reference_cycle_061_unpolished_delta": 30.196
+}

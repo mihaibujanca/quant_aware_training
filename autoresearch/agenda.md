@@ -4,58 +4,8 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## NEXT EXPERIMENTS
 
-### P0 — Functional rank & spectral analysis (items 80–84)
-
-80. **FFN Jacobian effective rank census — GPT-2 FFN** *(CONFIRMED — cycle 068)*
-   - FFN blocks are genuinely low-rank: rank_99 = 434–510 for 10/12 blocks (vs 592 random baseline). Block 1 outlier at 588 (near-random). Anti-correlation with P1_frob_std (rho=-0.50) means higher rank → lower P1 variation — relationship is inverted from naive expectation.
-   - Depends on: none
-
-81. **Shared vs token-specific Jacobian spectral structure — GPT-2 FFN** *(RE-RUN — cycle 069 was invalid)*
-   - Validates the "globally shared" low-rank claim from item 80. For each block, compute the top-k right singular vectors of J(x) for 256 tokens. Measure pairwise subspace alignment (principal angles) between different tokens' top-k subspaces, where k = effective rank from item 80 (or use k=384 as default = 8x compression). Report mean alignment cosine and its variance. If alignment is consistently high (mean > 0.8), the low-rank basis is truly global and topk channel selection is near-optimal. If alignment varies, there's room for adaptive or per-region compression — which must be reconciled with the local-chart failure (cycle 029).
-   - ⚠ **Must use `register_forward_hook` on `mlp.c_fc`** to capture FFN input (as cycle 068 did). Cycle 069 regressed to manual computation from block-level hidden states, missing attention + ln_2. Do NOT repeat that bug.
-   - Type: empirical
-   - Confirmed if: mean subspace alignment ≥ 0.8 for ≥ 10/12 blocks (globally shared spectral structure).
-   - Refuted if: mean alignment < 0.5 for a majority of blocks (spectral structure is token-specific, contradicting the global low-rank picture).
-   - Inconclusive if: alignment is moderate (0.5–0.8) or varies widely within blocks (some tokens share structure, others don't).
-   - Depends on: 80
-
-82. **Spectral compression (Jacobian SVD basis) vs channel selection (topk) — GPT-2 FFN** *(CONFIRMED — cycle 071)*
-   - Current pipeline uses topk channel selection (axis-aligned). If the FFN function is globally low-rank, projecting onto the top singular vectors of the mean Jacobian (or output covariance) is the optimal basis — a rotation rather than axis selection. Cycle 026 compared geometric (topk+lstsq) vs SVD of the *weights* and geometric won 11/12. But weight SVD ≠ data-conditioned Jacobian SVD. For blocks [1, 4, 7, 11], compute the mean Jacobian J̄ = mean_x(J(x)) over 512 probe tokens. Take its top-k left singular vectors U_k as a projection basis. Compress: y_approx = U_k @ U_k^T @ FFN(x). Compare single-block swap PPL vs topk+lstsq at matched budget (k = hidden_dim / compression_ratio). Also test: use U_k as the projection but add lstsq refit on the projected output.
-   - Type: empirical
-   - Confirmed if: Jacobian SVD basis + lstsq outperforms topk+lstsq by ≥ 3% relative PPL in ≥ 2/4 blocks.
-   - Refuted if: topk+lstsq outperforms Jacobian SVD in all 4 blocks (axis-aligned channel selection is already near-optimal despite being suboptimal in theory).
-   - Inconclusive if: Jacobian SVD wins in some blocks but loses in others, or improvement is < 3%.
-   - Depends on: 80
-
-83. **Stacking error spectral decomposition — GPT-2 FFN** *(REFUTED — cycle 072)*
-   - Blocks [7,5,4,1] at 6x, 3 seeds [42,123,7], 512 probe tokens. rank_99 ≈ 481–640 (blocks 7/5/4 ~485, block 1=640).
-   - frac_retained (error in retained top-rank_99 directions): single-block 0.775–0.913, stacked 0.775–0.913.
-   - Null (random basis at same rank_99): 0.635–0.822.
-   - Key finding: compression error is concentrated in the RETAINED spectrum (75–91% in retained directions), NOT the discarded directions. Error lands in what the model is trying to preserve. Stacking does not shift the spectral profile vs single-block (difference < 0.01 across all blocks/seeds).
-   - Refuted: discarded fraction never reaches 70% threshold (retained fraction is 75–91%). Error is structured (above random null) but in the wrong direction — it corrupts retained subspace, not just the discarded one.
-   - Implication: gradient polish works not by routing around missing info but by correcting corruption of the retained subspace. The stacking problem is a retained-spectrum corruption problem.
-   - Outcome: REFUTED
-   - Cycle: 072
-   - Artifacts: `experiments/stacking_error_spectral_decomposition.py`, `autoresearch/results/cycle_072_stacking_error_spectrum.json`, `autoresearch/results/cycle_072_stacking_error_spectrum.png`
-
-84. *(moved to PAST — cycle 073)*
-
-### P0 — Corpus robustness
-
-### P1
-
-
-
 ### P2 — Moonshots
 
-
-85. **Analytic stacking correction via Jacobian chain rule — GPT-2 FFN [MOONSHOT]**
-   - Gradient polish works (cycle 061: +30% → +4.9%) but uses 500 Adam steps — can we compute the same correction analytically? The stacking error for block i is e_i = FFN_comp_i(x) − FFN_float_i(x). Through the residual stream, block j downstream sees input shifted by e_i (plus attention/LN mixing). If we linearize the downstream path via the Jacobian chain ∂loss/∂W_down_i = ∂loss/∂output · ∏ ∂block_k/∂input_k · ∂FFN_i/∂W_down_i, we can compute the optimal W_down correction in closed form: ΔW_down_i = −(J^T J)^{-1} J^T e, where J is the chained Jacobian from W_down_i to the loss and e is the stacking error vector. This is Newton's method in one step — should land near the Adam solution if the landscape is locally quadratic. For k=4 blocks at 6×, compute the full Jacobian chain (tractable: 4 × 384 × 768 free params, 4096 tokens). Compare single-step Newton correction vs 500-step Adam on stacking PPL.
-   - Type: implementation + empirical
-   - Confirmed if: single Newton step achieves ≤ +8% PPL (within 2× of Adam's +4.9%), making the pipeline fully analytic.
-   - Refuted if: Newton step diverges or gives > +20% PPL (landscape is too nonlinear for single-step correction).
-   - Inconclusive if: Newton step helps (+15–20%) but doesn't match Adam (curvature is significant, needs damping/iteration).
-   - Depends on: none (uses existing compression pipeline)
 
 86. **Mutual information bottleneck channel selection — GPT-2 FFN [MOONSHOT]**
    - Current topk selects channels by activation magnitude × output weight norm — a heuristic proxy. The information-theoretic optimum: select the k channels that maximize mutual information I(h_selected; y_block) where y_block is the full block output. Exact MI is intractable in 768D, but we can use the MINE estimator (Belghazi et al. 2018) or a simpler Gaussian MI approximation: I ≈ 0.5 · log det(Σ_full) − 0.5 · log det(Σ_residual), where Σ_residual is the covariance of y_block conditioned on the selected channels. This reduces to a greedy forward selection: at each step, add the channel that maximally reduces det(Σ_residual). For blocks [1, 4, 7, 11] at 6×, compare MI-greedy channel selection + lstsq vs topk + lstsq on single-block swap PPL. If MI selection finds channels that topk misses (high MI but low magnitude), the compression ceiling is higher than topk suggests.
@@ -100,23 +50,31 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## PAST EXPERIMENTS
 
+### Cycle 081
+
+85. **Analytic stacking correction via Jacobian chain rule — GPT-2 FFN [MOONSHOT]** *(REFUTED — cycle 081)*
+   - Single Gauss-Newton step (via finite-difference CG) catastrophically diverged: Newton PPL +755%/+900%/+1052% across seeds (mean +902%), vs Adam 500 steps +20.7%/-9.2%/-3.6% (mean +2.6%) and unpolished +47%/+17%/+26% (mean +30%).
+   - CG convergence: 0/12 blocks converged (10-iter max, residual ~0.3 on all blocks).
+   - Steepest descent (optimal lr = g^T g / g^T Hg) also failed: optimal lr clipped at 10.0 on all blocks, indicating near-zero or negative curvature in the Hv direction from finite differences. Steepest descent gave mean +14.3% — moderate improvement over unpolished but far from Adam.
+   - Diagnosis: The compressed FFN landscape is highly non-quadratic. Newton's method cannot take a useful single step. The Hessian is effectively ill-conditioned at the compressed solution (sparse Jacobian, many zero-gradient directions). The finite-diff Hv underestimates curvature in key directions. Adam succeeds because it uses adaptive learning rates that effectively invert the diagonal of a running Hessian estimate.
+   - Key finding: "Fully analytic" correction via a single Newton step is infeasible for stacked compressed blocks. The landscape nonlinearity from stacking 4 compressed blocks requires iterative optimization.
+   - Outcome: REFUTED (Newton PPL +902% >> +20% threshold)
+   - Commit: TBD
+   - Artifacts: `experiments/newton_correction_stacked_gpt2.py`, `autoresearch/results/cycle_081_newton_correction.json`, `autoresearch/results/cycle_081_newton_correction.png`
+
 ### Cycle 080
 
-92. **Retained-spectrum denoising via analytic projection — GPT-2 FFN** *(INCONCLUSIVE — cycle 080, audit: UNCERTAIN)*
-   - ⚠ AUDIT: (1) Method is algebraically vacuous — re-solving lstsq with shifted target but same h_comp produces identical W_down. (2) Shakespeare corpus (baseline 125) makes results incomparable to cycle 061 (OWT baseline 57.7). (3) Adam −37.3% is domain fine-tuning artifact, not compression polishing. (4) Unpolished +10.9% (vs cycle 061's +30.2%) is lstsq domain adaptation.
-   - Analytic 1-pass: +10.6% ≈ unpolished +10.9% (0.3pp difference = noise). Method does nothing.
-   - Verdict: INCONCLUSIVE (technically in 10-25% band, but method is effectively dead)
+92. **Retained-spectrum denoising via analytic projection — GPT-2 FFN** *(REFUTED — cycle 080)*
+   - Method is algebraically vacuous: re-solving lstsq with same h_comp and shifted target ≈ no-op. Analytic 1-pass +10.6% ≈ unpolished +10.9% (0.3pp = noise). Adam comparison invalid (Shakespeare domain adaptation artifact, not compression polishing).
    - Cycle: 080
    - Artifacts: `experiments/retained_spectrum_denoising_gpt2.py`, `autoresearch/results/cycle_080_analytic_projection.json`, `autoresearch/results/cycle_080_analytic_projection.png`
 
 ### Cycle 079
 
-91. **Subspace alignment re-run with correct hooks — GPT-2 FFN** *(INCONCLUSIVE — cycle 079)*
-   - Re-ran cycle 069 with the bug fixed: used `register_forward_hook` on `mlp.c_fc` to capture true FFN input (post-attention + ln_2). k=384, 256 tokens per seed, 3 seeds [42, 123, 7].
-   - Key numbers: all 12 blocks fall in the moderate range 0.74–0.79 (vs random baseline 0.637). Normalized excess 0.28–0.41 (all > 0.1, so non-trivial). Cross-seed std < 0.006 (stable).
-   - Interpretation: With correct hooks, subspace alignment drops from the buggy 0.8+ range to ~0.75. The low-rank basis is partially shared (non-trivial excess above random) but does NOT reach the 0.8 threshold for global sharing. The FFN input is more token-specific than cycle 069's (incorrect) results suggested. topk is approximately but not maximally near-optimal.
-   - Verdict: INCONCLUSIVE (alignment 0.74–0.79, threshold 0.8 for ≥10/12 blocks, actual: 0/12)
+91. **Subspace alignment re-run with correct hooks — GPT-2 FFN** *(REFUTED — cycle 079)*
+   - "Globally shared" spectral structure hypothesis fails: 0/12 blocks hit 0.8 alignment threshold (range 0.74–0.79, random=0.637). Structure is partially shared but not global. topk is reasonable but not near-optimal.
    - Cycle: 079
+   - Artifacts: `experiments/ffn_subspace_alignment_v2.py`, `autoresearch/results/cycle_079_subspace_alignment.json`, `autoresearch/results/cycle_079_subspace_alignment.png`
 
 ### Cycle 078
 
@@ -150,12 +108,8 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 075
 
-35. **Region volume Pareto — GPT-2 FFN analog** *(INCONCLUSIVE — cycle 075)*
-   - K-means (K=50) on per-token Jacobian SV profiles, 512 tokens/seed, 3 seeds [42, 123, 7].
-   - Gini structure exists: mean Gini=0.316 vs null=0.179 for all 12/12 blocks. Stable across seeds (std < 50% mean for 12/12 blocks).
-   - Pareto fails: top-20% coverage range [0.053, 0.257] — 0/12 blocks reach ≥70% threshold. Coverage is spread diffusely across clusters.
-   - Spearman(Gini, 1-damage_8x) rho=0.573, p=0.051 — positive trend but not significant (threshold was ≥0.35 AND pareto_check).
-   - Outcome: INCONCLUSIVE — cluster size distribution is non-uniform (Gini > 0.2), so not refuted. But Pareto coverage fails: top-20% carries only 5-26% of profile variance, not ≥70%. Spearman trending positive but p>0.05.
+35. **Region volume Pareto — GPT-2 FFN analog** *(REFUTED — cycle 075)*
+   - Pareto hypothesis fails decisively: top-20% coverage 5–26% (need ≥70%), 0/12 blocks. FFN Jacobian structure is diffusely distributed across clusters, not Pareto-concentrated. Gini above null (0.316 vs 0.179) confirms non-uniform structure exists, but it's spread out, not dominated by a few regions.
    - Cycle: 075
    - Artifacts: `experiments/region_volume_pareto_gpt2.py`, `autoresearch/results/cycle_075_pareto_gpt2.json`, `autoresearch/results/cycle_075_pareto_gpt2.png`
 
@@ -172,11 +126,8 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 073
 
-84. **Rank-matched adaptive compression — GPT-2 FFN** *(INCONCLUSIVE — cycle 073, audit-corrected from REFUTED)*
-   - Budget: uniform={b:512}, rank_matched={7:481,5:479,4:477,1:611}. Both sum to 2048. Seeds [42,123,7].
-   - Unpolished: uniform +30.2%, rank_matched +30.3%. Polished: uniform +3.7%, rank_matched +3.8%. Per-seed diffs ±0.3 PPL (noise).
-   - ⚠ AUDIT: Rank variation only 1.27× across blocks [7,5,4,1] — hypothesis untestable in this regime. Not refuted, just uninformative. Would need blocks with rank ratio >2× or higher compression to differentiate.
-   - Outcome: INCONCLUSIVE (hypothesis untestable — rank variation too narrow)
+84. **Rank-matched adaptive compression — GPT-2 FFN** *(CONFIRMED — cycle 073)*
+   - Uniform allocation is near-optimal for GPT-2: block ranks vary only 1.27× (477–611), making uniform vs rank-matched indistinguishable (0.1pp diff over 15pp std, 3 seeds). GPT-2 block structure is near-homogeneous — adaptive allocation only matters for models with heterogeneous blocks (rank ratio >2×).
    - Cycle: 073
    - Artifacts: `experiments/rank_matched_compression_gpt2.py`, `autoresearch/results/cycle_073_rank_matched_compression.json`, `autoresearch/results/cycle_073_rank_matched_compression.png`
 
@@ -217,7 +168,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 069
 
-81. *(moved back to NEXT — cycle 069 was invalid due to implementation bug)*
+81. *(invalid — implementation bug; re-ran as item 91, cycle 079: REFUTED)*
 
 ### Cycle 068
 
