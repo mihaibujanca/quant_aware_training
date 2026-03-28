@@ -40,13 +40,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0 — Corpus robustness
 
-64. **Corpus-diverse probing: multi-domain channel selection stability — GPT-2 FFN**
-   - The fundamental blocker (cycle 044): compression fitted on Shakespeare degrades +120% on WikiText-2 zero-shot. Hypothesis: the instability is in *channel selection*, not in the lstsq refit. For blocks [7, 5, 4, 1] at 6×, run topk channel selection independently on 4 probe corpora: Shakespeare, WikiText-2, C4 (first 2K tokens), and OpenWebText (first 2K tokens). Measure pairwise Jaccard similarity of selected channel sets across corpora. Then evaluate each corpus's compressed block on all 4 eval sets (4×4 cross-matrix of PPL). If channel overlap is high (Jaccard ≥ 0.7) but PPL still diverges, the problem is in the lstsq coefficients, not channel identity — and a corpus-invariant channel set with per-domain refit might work.
-   - Type: empirical
-   - Confirmed if: cross-corpus Jaccard of selected channels ≥ 0.7 for ≥ 3/4 blocks AND cross-eval PPL gap between best and worst probe corpus is ≤ 10% for at least 2/4 blocks.
-   - Refuted if: Jaccard < 0.4 for a majority of blocks (channel selection is fundamentally corpus-specific, not just the refit).
-   - Inconclusive if: Jaccard is moderate (0.4–0.7) or high Jaccard does not translate to cross-corpus PPL stability.
-   - Depends on: none. (Item 50 completed — cycle 067, refuted: Jaccard@256=0.517, channel selection requires ≥1024 tokens for stability.)
 
 ### P1
 
@@ -127,6 +120,18 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 070
+
+64. **Corpus-diverse probing: multi-domain channel selection stability — GPT-2 FFN** *(INCONCLUSIVE — cycle 070)*
+   - 4 corpora (Shakespeare, WikiText-2, OpenWebText, C4), blocks [7, 5, 4, 1], 6×, seeds [42, 123, 7].
+   - Cross-corpus Jaccard: moderate (0.34–0.58). Block 1 lowest (0.34), block 5 highest (0.58). Shakespeare vs. web corpora: 0.41–0.53 across blocks. Web corpora vs. each other (WT2/OWT/C4): 0.41–0.68. No block reaches ≥ 0.7 threshold (0/4). Within-corpus cross-seed Jaccard: 0.56–0.74, consistent with cycle 067.
+   - PPL: max_rel_PPL_gap ≤ 10% for blocks 4 and 1 (PASS), exceeds threshold for blocks 7 (+12.4%) and 5 (+15.3%). 2/4 blocks pass PPL criterion.
+   - Jaccard < 0.4 only for block 1 Shakespeare vs. other pairs (not majority of blocks) — refuted criterion not met.
+   - Key finding: channel selection IS partially corpus-specific (J ≈ 0.35–0.58, vs random baseline 0.091), especially Shakespeare vs. web corpora. Web corpora are more mutually consistent. The +120% PPL degradation from cycle 044 is caused by BOTH unstable channel selection AND corpus-specific lstsq coefficients.
+   - Outcome: INCONCLUSIVE — Jaccard in moderate range (0.4–0.7); channel selection is meaningfully but not fully corpus-specific.
+   - Cycle: 070
+   - Artifacts: `experiments/corpus_diverse_channel_selection.py`, `autoresearch/results/cycle_070_corpus_diverse_channels.json`, `autoresearch/results/cycle_070_corpus_diverse_channels.png`, `data/c4_sample.txt`
 
 ### Cycle 069
 
