@@ -59,7 +59,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Diagnosis: The compressed FFN landscape is highly non-quadratic. Newton's method cannot take a useful single step. The Hessian is effectively ill-conditioned at the compressed solution (sparse Jacobian, many zero-gradient directions). The finite-diff Hv underestimates curvature in key directions. Adam succeeds because it uses adaptive learning rates that effectively invert the diagonal of a running Hessian estimate.
    - Key finding: "Fully analytic" correction via a single Newton step is infeasible for stacked compressed blocks. The landscape nonlinearity from stacking 4 compressed blocks requires iterative optimization.
    - Outcome: REFUTED (Newton PPL +902% >> +20% threshold)
-   - Commit: TBD
+   - Commit: 5a2b487
    - Artifacts: `experiments/newton_correction_stacked_gpt2.py`, `autoresearch/results/cycle_081_newton_correction.json`, `autoresearch/results/cycle_081_newton_correction.png`
 
 ### Cycle 080
