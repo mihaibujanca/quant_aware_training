@@ -53,15 +53,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: improvement exists but is < 5pp, suggesting the gain is real but insufficient to make the method corpus-robust.
    - Depends on: 64
 
-28. **Persistent homology of activation manifold through depth — GPT-2**
-   - Compute persistent homology of GPT-2 hidden states at each block output (PCA to 30D, ripser). Test whether Betti complexity predicts compression difficulty.
-   - Type: empirical
-   - Confirmed if: Betti complexity decreases monotonically through ≥60% of blocks AND Spearman(Betti drop, 1−compression difficulty) ≥ 0.35.
-   - Refuted if: Betti numbers approximately constant across all blocks after PCA.
-   - Inconclusive if: noise or no trend.
-   - Depends on: 9. ⚠ **Requires ripser** — check availability before running.
-   - Note: item 27 (toy ReLU) was marginally refuted (2/3 transitions vs 80% threshold, on only 3 data points). GPT-2 has 12 transitions — much more statistical power. **Unblocked.**
-
 35. **Region volume Pareto — GPT-2 FFN analog**
    - K-means on probe-token Jacobians as proxy for "regions." Cumulative reconstruction error as clusters added in descending size order. Test for Pareto structure (top 20% covers ≥70% variance).
    - Type: empirical
@@ -122,6 +113,17 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 074
+
+28. **Persistent homology of activation manifold through depth — GPT-2** *(INCONCLUSIVE — cycle 074)*
+   - PCA 30D, ripser, 3 seeds [42,123,7], 512 tokens/seed. Damage from cycle 048.
+   - TP grows monotonically through ALL 12 blocks (0/11 decreasing pairs). Spearman(TP, damage_8x)=0.448, but without block 0 it jumps to 0.882 (L0 leverage artifact). Null baseline TP > block TP for 11/12 blocks.
+   - PCA variance @ 30D: 72.4% for blocks 0-1 (< 80% threshold). Pre-LN verified (norm std 5.5–132). PCA sensitivity: Spearman(20D,40D)=1.000.
+   - Inconclusive because pca_ok=False for blocks 0-1. Main signal: TP increases monotonically, opposite of confirm hypothesis; no compression predictor.
+   - Outcome: INCONCLUSIVE (PCA variance fails threshold for early blocks; TP monotonically increases, not decreases)
+   - Cycle: 074
+   - Artifacts: `experiments/phom_gpt2.py`, `autoresearch/results/cycle_074_phom_gpt2.json`, `autoresearch/results/cycle_074_phom_gpt2.png`
 
 ### Cycle 073
 
