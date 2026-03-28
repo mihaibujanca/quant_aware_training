@@ -1,0 +1,8 @@
+status=PASS
+original_outcome=INCONCLUSIVE
+audited_outcome=INCONCLUSIVE
+guardrail_flags=none
+reason=Bug fix verified: code correctly uses register_forward_hook on mlp.c_fc (line 153), capturing true FFN input post-attention+ln_2. All 12 blocks fall in 0.738-0.786 range (vs 0.637 random baseline), normalized excess 0.28-0.41. Cross-seed std < 0.006 across 3 seeds. 0/12 blocks reach the 0.8 threshold (need >= 10 for confirmed). This invalidates cycle 069's near-confirmed result (8/12 at 0.8+ with buggy hooks) — the bug inflated alignment by ~0.05-0.10 points. Genuine finding: FFN Jacobian spectral structure is partially shared across tokens but not globally shared. topk channel selection is reasonable but not near-optimal.
+recommendations=(1) Consider lowering the confirmation threshold or reframing the hypothesis: 0.75 is meaningfully above random and may suffice for practical compression. (2) Test whether alignment increases at smaller k (e.g. k=200) — the top singular vectors may be more shared than the tail. (3) Investigate per-block variation: blocks 0-2 show higher alignment (0.775-0.786) vs middle blocks 7-8 (0.738-0.741) — early layers may have more global structure. (4) This motivates adaptive compression: use global basis for early blocks, token-specific refinement for later blocks.
+interesting=true
+interesting_reason=First clean measurement of GPT-2 FFN Jacobian subspace alignment with correct hooks. Definitively shows cycle 069 was inflated by ~0.05-0.10 due to operating-point bug. The 0.75 moderate alignment suggests a mixed global/local spectral structure that neither pure topk nor pure adaptive compression handles optimally — motivates hybrid approaches.
