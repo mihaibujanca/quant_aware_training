@@ -42,13 +42,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0 — Corpus robustness
 
-89. **SVD vs topk vs random basis at aggressive compression (k/n ≤ 0.3) — GPT-2 FFN**
-   - Cycle 071 showed random+lstsq ≈ SVD+lstsq at k/n=0.67, but high retention may mask basis quality differences. Re-run the same comparison at k/n ∈ {0.3, 0.2, 0.1} on blocks [1, 4, 7, 11] with 3 seeds. At low k/n the "right" directions should matter more — if SVD still equals random, the FFN function is so diffuse that no linear basis is privileged.
-   - Type: empirical
-   - Confirmed if: SVD+lstsq outperforms random+lstsq by ≥ 5% relative PPL at k/n ≤ 0.3 in ≥ 3/4 blocks (basis quality matters at aggressive compression).
-   - Refuted if: random+lstsq matches SVD+lstsq within 3% at all tested k/n ratios in all 4 blocks (basis is truly irrelevant, compression ceiling is set by dimensionality alone).
-   - Inconclusive if: SVD wins at k/n=0.1 but not 0.2-0.3 (crossover exists but location is unclear), or results vary across blocks.
-   - Depends on: 82
 
 90. **Mixed-corpus lstsq refit with matched sample sizes — GPT-2 FFN**
    - Cycle 076 was confounded: Shakespeare had n=512 (underdetermined lstsq) while mixed had n=2048. Rerun with n=2048 for both conditions: A'=Shakespeare-only 2048 tokens, C=mixed 2048 tokens (OWT+Shakespeare+code), same blocks [7,5,4,1] at 6×, 3 seeds. This isolates corpus diversity from sample size. Cycle 044 baseline: Shakespeare-only at 2048 gives PPL ~135.
@@ -129,6 +122,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 077
+
+89. **SVD vs topk vs random basis at aggressive compression (k/n ≤ 0.3) — GPT-2 FFN** *(REFUTED — cycle 077)*
+   - Re-ran cycle 071 comparison at k/n ∈ {0.3, 0.2, 0.1} on blocks [1, 4, 7, 11] with 3 seeds. SVD+lstsq and random+lstsq match within <2% relative PPL at all k/n ratios and all 4 blocks. Criterion: within 3% at all conditions.
+   - Key numbers (mean across blocks, 3 seeds): k/n=0.3: SVD 122.4, random 122.8; k/n=0.2: SVD 122.7, random 123.4; k/n=0.1: SVD 123.4, random 123.6. topk+lstsq substantially worse at all k/n (126–165 PPL).
+   - Interpretation: the lstsq refit entirely dominates basis choice. The output manifold of GPT-2 FFNs is so isotropic that any random k-dimensional subspace is as good as the Jacobian SVD subspace. Compression quality is determined by k/n (dimensionality retained), not the basis orientation.
+   - Verdict: REFUTED
+   - Cycle: 077
+   - Artifacts: `experiments/ffn_aggressive_basis_compression.py`, `autoresearch/results/cycle_077_aggressive_basis.json`, `autoresearch/results/cycle_077_aggressive_basis.png`
 
 ### Cycle 076
 
