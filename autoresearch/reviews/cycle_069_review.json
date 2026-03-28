@@ -1,0 +1,13 @@
+{
+  "verdict": "APPROVED",
+  "round": 2,
+  "issues": [],
+  "round1_issues_resolved": [
+    "Normalized excess metric implemented as primary interpretive metric with two-layer verdict",
+    "Both rank_95 and rank_99 k-settings run as primary conditions per block"
+  ],
+  "minor_observations": [
+    "1000/32640 pair subsample is fine by CLT but not explicitly justified",
+    "Runtime dependency on cycle_068 JSON field names"
+  ]
+}

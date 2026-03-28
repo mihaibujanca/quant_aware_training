@@ -130,11 +130,10 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 069
 
-81. **Shared vs token-specific Jacobian spectral structure — GPT-2 FFN** *(INCONCLUSIVE — cycle 069)*
-   - 768 tokens × 3 seeds [42, 123, 7]. Pairwise alignment of top-k right singular vectors of J(x) = W_out @ diag(GELU'(z)) @ W_in (768×768). Two k settings per block: k_99 (mean_rank_99 from cycle 068) and k_95 (mean_rank_95).
-   - k_99 alignment (actual vs random): blocks 0–1, 3–4, 9–11 clear ≥ 0.8 (8/12); blocks 2, 5–8 near-miss (0.79–0.80). k_95 alignment: majority < 0.8 (range 0.70–0.80). Random baseline k_99: 0.68–0.82 (scales with k/d ratio). Excess (normalized above random) all in 0.28–0.52 range — NONE trivial (all excess ≥ 0.1).
-   - confirmed_raw = 8/12 (k_99 setting) — below the ≥ 10/12 confirmation threshold. genuinely_confirmed = 8 (no trivial cases). 0 blocks refuted.
-   - Outcome: INCONCLUSIVE — 8/12 blocks pass raw ≥ 0.8 at k_99 (just below the 10/12 threshold). The spectral structure is partially shared: alignment is consistently above random (excess 0.28–0.52), but not strongly enough to confirm global sharing. Blocks 5–8 (middle depth) show weaker alignment than early/late blocks.
+81. **Shared vs token-specific Jacobian spectral structure — GPT-2 FFN** *(INCONCLUSIVE — cycle 069, audit-corrected: implementation bug)*
+   - ⚠ AUDIT G1 BUG: Jacobians computed at block input (hidden_states[block_idx]) instead of FFN input (post-attention, post-ln_2). GELU derivatives evaluated at wrong operating point. All alignment numbers unreliable.
+   - Raw results (unreliable): 8/12 blocks pass ≥ 0.8 at k_99, excess 0.28–0.52 above random.
+   - Outcome: INCONCLUSIVE — results invalid due to implementation bug. Must re-run with register_forward_hook on mlp.c_fc (as cycle 068 did).
    - Cycle: 069
    - Artifacts: `experiments/ffn_jacobian_subspace_alignment.py`, `autoresearch/results/cycle_069_jacobian_subspace_alignment.json`, `autoresearch/results/cycle_069_jacobian_subspace_alignment.png`
    - Depends on: 80
