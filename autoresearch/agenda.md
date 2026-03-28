@@ -53,13 +53,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: improvement exists but is < 5pp, suggesting the gain is real but insufficient to make the method corpus-robust.
    - Depends on: 64
 
-35. **Region volume Pareto — GPT-2 FFN analog**
-   - K-means on probe-token Jacobians as proxy for "regions." Cumulative reconstruction error as clusters added in descending size order. Test for Pareto structure (top 20% covers ≥70% variance).
-   - Type: empirical
-   - Confirmed if: top 20% covers ≥70% output variance in majority of blocks AND Gini correlates with (1−compression difficulty) at Spearman ≥ 0.35.
-   - Refuted if: cluster size distribution uniform (Gini < 0.2).
-   - Inconclusive if: Pareto holds in toy but LLM distribution is flat.
-   - Depends on: 9, 34. Note: item 34 was INCONCLUSIVE (Gini=0.408, partial Pareto), not refuted. **Unblocked.**
 
 ### P2 — Moonshots
 
@@ -113,6 +106,17 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 075
+
+35. **Region volume Pareto — GPT-2 FFN analog** *(INCONCLUSIVE — cycle 075)*
+   - K-means (K=50) on per-token Jacobian SV profiles, 512 tokens/seed, 3 seeds [42, 123, 7].
+   - Gini structure exists: mean Gini=0.316 vs null=0.179 for all 12/12 blocks. Stable across seeds (std < 50% mean for 12/12 blocks).
+   - Pareto fails: top-20% coverage range [0.053, 0.257] — 0/12 blocks reach ≥70% threshold. Coverage is spread diffusely across clusters.
+   - Spearman(Gini, 1-damage_8x) rho=0.573, p=0.051 — positive trend but not significant (threshold was ≥0.35 AND pareto_check).
+   - Outcome: INCONCLUSIVE — cluster size distribution is non-uniform (Gini > 0.2), so not refuted. But Pareto coverage fails: top-20% carries only 5-26% of profile variance, not ≥70%. Spearman trending positive but p>0.05.
+   - Cycle: 075
+   - Artifacts: `experiments/region_volume_pareto_gpt2.py`, `autoresearch/results/cycle_075_pareto_gpt2.json`, `autoresearch/results/cycle_075_pareto_gpt2.png`
 
 ### Cycle 074
 
