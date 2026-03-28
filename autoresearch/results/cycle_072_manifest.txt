@@ -1,0 +1,6 @@
+item_number=83
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_072_stacking_error_spectrum.json,autoresearch/results/cycle_072_stacking_error_spectrum.png
+code_paths=experiments/stacking_error_spectral_decomposition.py
+final_commit_hash=448ec4c
+agenda_updated=yes
