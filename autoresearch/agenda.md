@@ -14,14 +14,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: rank is low but does not correlate with P1 or compression difficulty.
    - Depends on: none
 
-81. **Shared vs token-specific Jacobian spectral structure — GPT-2 FFN**
-   - Validates the "globally shared" low-rank claim from item 80. For each block, compute the top-k right singular vectors of J(x) for 256 tokens. Measure pairwise subspace alignment (principal angles) between different tokens' top-k subspaces, where k = effective rank from item 80 (or use k=384 as default = 8x compression). Report mean alignment cosine and its variance. If alignment is consistently high (mean > 0.8), the low-rank basis is truly global and topk channel selection is near-optimal. If alignment varies, there's room for adaptive or per-region compression — which must be reconciled with the local-chart failure (cycle 029).
-   - Type: empirical
-   - Confirmed if: mean subspace alignment ≥ 0.8 for ≥ 10/12 blocks (globally shared spectral structure).
-   - Refuted if: mean alignment < 0.5 for a majority of blocks (spectral structure is token-specific, contradicting the global low-rank picture).
-   - Inconclusive if: alignment is moderate (0.5–0.8) or varies widely within blocks (some tokens share structure, others don't).
-   - Depends on: 80
-
 82. **Spectral compression (Jacobian SVD basis) vs channel selection (topk) — GPT-2 FFN**
    - Current pipeline uses topk channel selection (axis-aligned). If the FFN function is globally low-rank, projecting onto the top singular vectors of the mean Jacobian (or output covariance) is the optimal basis — a rotation rather than axis selection. Cycle 026 compared geometric (topk+lstsq) vs SVD of the *weights* and geometric won 11/12. But weight SVD ≠ data-conditioned Jacobian SVD. For blocks [1, 4, 7, 11], compute the mean Jacobian J̄ = mean_x(J(x)) over 512 probe tokens. Take its top-k left singular vectors U_k as a projection basis. Compress: y_approx = U_k @ U_k^T @ FFN(x). Compare single-block swap PPL vs topk+lstsq at matched budget (k = hidden_dim / compression_ratio). Also test: use U_k as the projection but add lstsq refit on the projected output.
    - Type: empirical
@@ -135,6 +127,17 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 069
+
+81. **Shared vs token-specific Jacobian spectral structure — GPT-2 FFN** *(INCONCLUSIVE — cycle 069)*
+   - 768 tokens × 3 seeds [42, 123, 7]. Pairwise alignment of top-k right singular vectors of J(x) = W_out @ diag(GELU'(z)) @ W_in (768×768). Two k settings per block: k_99 (mean_rank_99 from cycle 068) and k_95 (mean_rank_95).
+   - k_99 alignment (actual vs random): blocks 0–1, 3–4, 9–11 clear ≥ 0.8 (8/12); blocks 2, 5–8 near-miss (0.79–0.80). k_95 alignment: majority < 0.8 (range 0.70–0.80). Random baseline k_99: 0.68–0.82 (scales with k/d ratio). Excess (normalized above random) all in 0.28–0.52 range — NONE trivial (all excess ≥ 0.1).
+   - confirmed_raw = 8/12 (k_99 setting) — below the ≥ 10/12 confirmation threshold. genuinely_confirmed = 8 (no trivial cases). 0 blocks refuted.
+   - Outcome: INCONCLUSIVE — 8/12 blocks pass raw ≥ 0.8 at k_99 (just below the 10/12 threshold). The spectral structure is partially shared: alignment is consistently above random (excess 0.28–0.52), but not strongly enough to confirm global sharing. Blocks 5–8 (middle depth) show weaker alignment than early/late blocks.
+   - Cycle: 069
+   - Artifacts: `experiments/ffn_jacobian_subspace_alignment.py`, `autoresearch/results/cycle_069_jacobian_subspace_alignment.json`, `autoresearch/results/cycle_069_jacobian_subspace_alignment.png`
+   - Depends on: 80
 
 ### Cycle 068
 

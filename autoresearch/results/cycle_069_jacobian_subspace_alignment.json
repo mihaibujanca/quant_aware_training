@@ -1,0 +1,286 @@
+{
+  "cycle": 69,
+  "item": 81,
+  "seeds": [
+    42,
+    123,
+    7
+  ],
+  "n_tokens_per_seed_per_seq": 256,
+  "seq_len": 128,
+  "n_sequences": 2,
+  "block_results": {
+    "0": {
+      "k_99": {
+        "k": 469,
+        "actual_mean_cos": 0.8624240295426385,
+        "actual_std_cos": 0.041189622874794225,
+        "random_mean_cos": 0.7152106347680092,
+        "random_std_cos": 0.0006474085972525435,
+        "excess": 0.5169202653961054,
+        "is_trivial": false,
+        "n_pairs": 999
+      },
+      "k_95": {
+        "k": 305,
+        "actual_mean_cos": 0.8023601071135299,
+        "actual_std_cos": 0.06181752579113176,
+        "random_mean_cos": 0.5593830162286758,
+        "random_std_cos": 0.0009300482676285241,
+        "excess": 0.551447400537582,
+        "is_trivial": false,
+        "n_pairs": 999
+      }
+    },
+    "1": {
+      "k_99": {
+        "k": 588,
+        "actual_mean_cos": 0.8727843662997982,
+        "actual_std_cos": 0.02533570808835369,
+        "random_mean_cos": 0.8227968257665634,
+        "random_std_cos": 0.00045847693104259326,
+        "excess": 0.2820916750920756,
+        "is_trivial": false,
+        "n_pairs": 999
+      },
+      "k_95": {
+        "k": 458,
+        "actual_mean_cos": 0.8077955947027311,
+        "actual_std_cos": 0.04968374887330312,
+        "random_mean_cos": 0.7051274397969246,
+        "random_std_cos": 0.0006452465972967039,
+        "excess": 0.3481780552484166,
+        "is_trivial": false,
+        "n_pairs": 999
+      }
+    },
+    "2": {
+      "k_99": {
+        "k": 511,
+        "actual_mean_cos": 0.8409806201805421,
+        "actual_std_cos": 0.030418848491199035,
+        "random_mean_cos": 0.7531589898467064,
+        "random_std_cos": 0.0005844015652522715,
+        "excess": 0.3557821689496183,
+        "is_trivial": false,
+        "n_pairs": 995
+      },
+      "k_95": {
+        "k": 366,
+        "actual_mean_cos": 0.7689734869771773,
+        "actual_std_cos": 0.04717627145951654,
+        "random_mean_cos": 0.6192902252078056,
+        "random_std_cos": 0.0008700370781415499,
+        "excess": 0.3931689472851213,
+        "is_trivial": false,
+        "n_pairs": 999
+      }
+    },
+    "3": {
+      "k_99": {
+        "k": 455,
+        "actual_mean_cos": 0.8059185662785092,
+        "actual_std_cos": 0.027988404889679675,
+        "random_mean_cos": 0.7023194554448128,
+        "random_std_cos": 0.0007120920187421721,
+        "excess": 0.34802109973454787,
+        "is_trivial": false,
+        "n_pairs": 999
+      },
+      "k_95": {
+        "k": 304,
+        "actual_mean_cos": 0.7201970446109772,
+        "actual_std_cos": 0.04916428481950998,
+        "random_mean_cos": 0.5581644874811172,
+        "random_std_cos": 0.0010449297979551978,
+        "excess": 0.366725969670012,
+        "is_trivial": false,
+        "n_pairs": 1000
+      }
+    },
+    "4": {
+      "k_99": {
+        "k": 460,
+        "actual_mean_cos": 0.8049036640460895,
+        "actual_std_cos": 0.02240930823123044,
+        "random_mean_cos": 0.7069545567035675,
+        "random_std_cos": 0.0007010574592903866,
+        "excess": 0.33424545321865073,
+        "is_trivial": false,
+        "n_pairs": 997
+      },
+      "k_95": {
+        "k": 308,
+        "actual_mean_cos": 0.7142593454312276,
+        "actual_std_cos": 0.04114493553020416,
+        "random_mean_cos": 0.5623278680443764,
+        "random_std_cos": 0.001038833299935366,
+        "excess": 0.3471353690280661,
+        "is_trivial": false,
+        "n_pairs": 999
+      }
+    },
+    "5": {
+      "k_99": {
+        "k": 461,
+        "actual_mean_cos": 0.7958621913129026,
+        "actual_std_cos": 0.01974304735395644,
+        "random_mean_cos": 0.707852940261364,
+        "random_std_cos": 0.0006691608341274553,
+        "excess": 0.3012498254441602,
+        "is_trivial": false,
+        "n_pairs": 999
+      },
+      "k_95": {
+        "k": 310,
+        "actual_mean_cos": 0.7003579784631729,
+        "actual_std_cos": 0.03283156147202618,
+        "random_mean_cos": 0.5642039057612419,
+        "random_std_cos": 0.0009943027836843469,
+        "excess": 0.31242609603313853,
+        "is_trivial": false,
+        "n_pairs": 1000
+      }
+    },
+    "6": {
+      "k_99": {
+        "k": 467,
+        "actual_mean_cos": 0.794806431889534,
+        "actual_std_cos": 0.01985223771340986,
+        "random_mean_cos": 0.7133266216516495,
+        "random_std_cos": 0.0006897874422339346,
+        "excess": 0.28422524066622357,
+        "is_trivial": false,
+        "n_pairs": 1000
+      },
+      "k_95": {
+        "k": 315,
+        "actual_mean_cos": 0.6983611474414627,
+        "actual_std_cos": 0.02994615518681796,
+        "random_mean_cos": 0.56936439037323,
+        "random_std_cos": 0.0009741541886720777,
+        "excess": 0.2995496746785153,
+        "is_trivial": false,
+        "n_pairs": 998
+      }
+    },
+    "7": {
+      "k_99": {
+        "k": 464,
+        "actual_mean_cos": 0.7926388075332603,
+        "actual_std_cos": 0.017075388056669215,
+        "random_mean_cos": 0.7106533709168434,
+        "random_std_cos": 0.0007354483351202191,
+        "excess": 0.28334678234494987,
+        "is_trivial": false,
+        "n_pairs": 998
+      },
+      "k_95": {
+        "k": 313,
+        "actual_mean_cos": 0.6986730354087608,
+        "actual_std_cos": 0.029325702960770063,
+        "random_mean_cos": 0.5674179914593697,
+        "random_std_cos": 0.001029298968294465,
+        "excess": 0.30342233623810233,
+        "is_trivial": false,
+        "n_pairs": 999
+      }
+    },
+    "8": {
+      "k_99": {
+        "k": 462,
+        "actual_mean_cos": 0.796238610813687,
+        "actual_std_cos": 0.01711293799506504,
+        "random_mean_cos": 0.7088350000977516,
+        "random_std_cos": 0.0007243816658016581,
+        "excess": 0.3001858411728511,
+        "is_trivial": false,
+        "n_pairs": 999
+      },
+      "k_95": {
+        "k": 311,
+        "actual_mean_cos": 0.7098133334057604,
+        "actual_std_cos": 0.02753672971808352,
+        "random_mean_cos": 0.5653594455122948,
+        "random_std_cos": 0.0010439171052165851,
+        "excess": 0.3323525291637259,
+        "is_trivial": false,
+        "n_pairs": 998
+      }
+    },
+    "9": {
+      "k_99": {
+        "k": 455,
+        "actual_mean_cos": 0.8047170216191508,
+        "actual_std_cos": 0.01745997680310025,
+        "random_mean_cos": 0.7024095040559769,
+        "random_std_cos": 0.0007330003959292538,
+        "excess": 0.34378623851828843,
+        "is_trivial": false,
+        "n_pairs": 998
+      },
+      "k_95": {
+        "k": 304,
+        "actual_mean_cos": 0.7266974856257439,
+        "actual_std_cos": 0.026089903444875006,
+        "random_mean_cos": 0.5582653874158859,
+        "random_std_cos": 0.0010290799095716585,
+        "excess": 0.381297034532218,
+        "is_trivial": false,
+        "n_pairs": 1000
+      }
+    },
+    "10": {
+      "k_99": {
+        "k": 447,
+        "actual_mean_cos": 0.8332412693806306,
+        "actual_std_cos": 0.01722210320459473,
+        "random_mean_cos": 0.6950686553120613,
+        "random_std_cos": 0.0007339268754864648,
+        "excess": 0.45312696127335056,
+        "is_trivial": false,
+        "n_pairs": 998
+      },
+      "k_95": {
+        "k": 292,
+        "actual_mean_cos": 0.7836733973205988,
+        "actual_std_cos": 0.025987116498099126,
+        "random_mean_cos": 0.5460793787240982,
+        "random_std_cos": 0.0010162808041286693,
+        "excess": 0.5234263590079552,
+        "is_trivial": false,
+        "n_pairs": 995
+      }
+    },
+    "11": {
+      "k_99": {
+        "k": 434,
+        "actual_mean_cos": 0.8171980873942375,
+        "actual_std_cos": 0.02091214092728145,
+        "random_mean_cos": 0.6831005656719208,
+        "random_std_cos": 0.000683626093912974,
+        "excess": 0.42315481434508834,
+        "is_trivial": false,
+        "n_pairs": 1000
+      },
+      "k_95": {
+        "k": 270,
+        "actual_mean_cos": 0.7486750863194466,
+        "actual_std_cos": 0.033045225051993886,
+        "random_mean_cos": 0.5231568446755409,
+        "random_std_cos": 0.0010835273527450627,
+        "excess": 0.47294008239987395,
+        "is_trivial": false,
+        "n_pairs": 1000
+      }
+    }
+  },
+  "verdict": {
+    "agenda_verdict": "Inconclusive",
+    "geometric_outcome": "inconclusive",
+    "confirmed_raw": 8,
+    "genuinely_confirmed": 8,
+    "trivially_confirmed": 0,
+    "refuted": 0
+  }
+}
