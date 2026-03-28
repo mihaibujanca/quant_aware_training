@@ -1,0 +1,6 @@
+item_number=89
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_077_aggressive_basis.json,autoresearch/results/cycle_077_aggressive_basis.png
+code_paths=experiments/ffn_aggressive_basis_compression.py
+final_commit_hash=bcfa40b
+agenda_updated=yes
