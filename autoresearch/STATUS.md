@@ -1,18 +1,19 @@
-# Research Status — 67 Cycles (001–067)
+# Research Status — 68 Cycles (001–068)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 13 |
 | Refuted | 20 |
-| Inconclusive | 25 |
+| Inconclusive | 26 |
 | Crash | 1 |
 
 ## Latest Cycle
-- **Cycle 067** (item 50): Centroid-merge quality vs probe corpus size — REFUTED
-  - Jaccard@256=0.517 (< 0.60 threshold), monotonic growth from 0.276@64 to 0.844@2048
-  - Channel scoring is data-hungry: needs >2048 tokens for Jaccard ≥ 0.85
-  - Lstsq singularity hazard when probe_tokens ≈ hidden_dim
+- **Cycle 068** (item 80): FFN Jacobian effective rank census — GPT-2 FFN — INCONCLUSIVE
+  - 10/12 blocks have rank_99 ≤ 500 (low-rank confirmed), but Block 1 outlier at 588 (near random baseline 592)
+  - Spearman(rank_99, P1_frob_std) = -0.497 (below +0.5 threshold, wrong sign)
+  - Rank does NOT correlate with compression damage (rho=-0.33, p=0.30)
+  - Low rank is real but does not predict compressibility
 
 ## Final Answer (from cycle 061, still valid)
 
@@ -33,6 +34,7 @@
 - **Gradient polish is the answer**: 500 steps = 84% relative reduction of stacking error (cycle 061)
 - **Compression-difficulty oracle**: P1 Frobenius std rho=0.84, corpus-invariant rho=0.94 (cycles 048, 055)
 - **Channel selection is data-hungry**: Jaccard@256=0.517, needs >2K tokens (cycle 067)
+- **FFN Jacobian rank**: 10/12 blocks rank_99 ≤ 500 (low-rank), but rank does not predict compressibility (cycle 068)
 
 ### Dead Ends
 - Topology-based methods (PH, Betti, topological distillation): 4 experiments, 0 useful results
@@ -41,9 +43,10 @@
 - Variable per-block ratios: breaks correction step (cycle 050)
 
 ## Remaining NEXT Items
-- **P0**: Items 80–84 (functional rank & spectral analysis) — 80 has no deps (run first), 81–84 depend on 80
+- **P0**: Items 81–84 (spectral analysis, depend on 80 — now complete) — 81 next (subspace alignment)
 - **P0**: Item 64 (corpus-diverse probing) — no deps, ready to run
 - **P1**: Item 66 (mixed-corpus refit) — blocked on item 64
-- **P1**: Item 28 (persistent homology GPT-2) — unblocked (item 27 marginal refutation insufficient to block)
-- **P1**: Item 35 (region volume Pareto GPT-2) — unblocked (item 34 was INCONCLUSIVE, not refuted)
+- **P1**: Item 28 (persistent homology GPT-2) — unblocked
+- **P1**: Item 35 (region volume Pareto GPT-2) — unblocked
+- **P2**: Items 85–88 (moonshots) — unblocked
 - **Closed**: Items 23 (superseded by 80), 41, 44 (refuted deps) — OBSOLETE, do not run
