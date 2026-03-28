@@ -48,13 +48,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2 — Moonshots
 
-92. **Retained-spectrum denoising via analytic projection — GPT-2 FFN**
-   - Cycle 072 showed stacking error lives in the retained spectrum (77–91%), and gradient polish is effectively retained-spectrum denoising. Test whether an analytic projection can replace the 500-step Adam polish: after topk+lstsq compression, compute the per-block error e = FFN_comp(x) − FFN_float(x) on 4096 probe tokens. Project e onto the top-k SVD basis of the block output covariance (the retained subspace). Apply rank-deficient lstsq correction ΔW_down = argmin ||W_down_new @ h_comp − (y_float − U_k U_k^T e)||_F to W_down only. Compare single-step analytic correction vs 500-step Adam polish on stacked PPL for blocks [7,5,4,1] at 6×.
-   - Type: implementation + empirical
-   - Confirmed if: analytic retained-spectrum correction achieves ≤ +10% PPL (within 2× of Adam's +4.9%), making the polish step analytic.
-   - Refuted if: analytic correction gives > +25% PPL or diverges (the retained-spectrum corruption is too nonlinear for one-shot lstsq).
-   - Inconclusive if: correction helps (+10–25%) but doesn't match Adam closely (needs iteration or damping).
-   - Depends on: 83
 
 85. **Analytic stacking correction via Jacobian chain rule — GPT-2 FFN [MOONSHOT]**
    - Gradient polish works (cycle 061: +30% → +4.9%) but uses 500 Adam steps — can we compute the same correction analytically? The stacking error for block i is e_i = FFN_comp_i(x) − FFN_float_i(x). Through the residual stream, block j downstream sees input shifted by e_i (plus attention/LN mixing). If we linearize the downstream path via the Jacobian chain ∂loss/∂W_down_i = ∂loss/∂output · ∏ ∂block_k/∂input_k · ∂FFN_i/∂W_down_i, we can compute the optimal W_down correction in closed form: ΔW_down_i = −(J^T J)^{-1} J^T e, where J is the chained Jacobian from W_down_i to the loss and e is the stacking error vector. This is Newton's method in one step — should land near the Adam solution if the landscape is locally quadratic. For k=4 blocks at 6×, compute the full Jacobian chain (tractable: 4 × 384 × 768 free params, 4096 tokens). Compare single-step Newton correction vs 500-step Adam on stacking PPL.
@@ -106,6 +99,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 080
+
+92. **Retained-spectrum denoising via analytic projection — GPT-2 FFN** *(INCONCLUSIVE — cycle 080)*
+   - After topk+lstsq compression of blocks [7,5,4,1] at 6×, projected per-block error onto output covariance SVD basis (99% variance threshold, rank 315–668), re-solved lstsq for W_down. Tested 3 iterative passes. 3 seeds [42, 123, 7].
+   - Key numbers (mean ± std): Baseline PPL=125.1±5.3, Unpolished=138.8±5.4 (+10.9%), Analytic 1pass=138.3±5.6 (+10.6%), Analytic 2pass=165.8±4.7 (+32.7%), Analytic 3pass=157.0±9.9 (+25.4%), Adam 500-step=78.1±4.4 (−37.3%). Mean retained energy fraction=0.940.
+   - Interpretation: The analytic correction is essentially a no-op (1pass: +10.6% vs unpolished +10.9%). Passes 2 and 3 make things WORSE, not better. Adam 500-step dramatically outperforms (−37.3% vs baseline), confirming the retained-spectrum theory fails in practice for one-shot lstsq. Error growth across passes indicates the correction destabilizes the model. The retained-spectrum projection (98.5% of error energy in retained subspace) does not translate to an effective analytic correction because the lstsq re-solve optimizes for local block outputs but ignores downstream interactions.
+   - Verdict: INCONCLUSIVE (best analytic +10.6% in 10–25% range; Adam −37.3% far better)
+   - Cycle: 080
+   - Artifacts: `experiments/retained_spectrum_denoising_gpt2.py`, `autoresearch/results/cycle_080_analytic_projection.json`, `autoresearch/results/cycle_080_analytic_projection.png`
 
 ### Cycle 079
 
