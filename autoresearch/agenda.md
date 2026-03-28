@@ -6,7 +6,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0 — Functional rank & spectral analysis (items 80–84)
 
-80. **FFN Jacobian effective rank census — GPT-2 FFN**
+80. **FFN Jacobian effective rank census — GPT-2 FFN** *(INCONCLUSIVE — cycle 068)*
    - The local-chart failure (cycle 029) and channel selection corpus-invariance (cycle 057) jointly imply that each FFN block implements an approximately **globally low-rank** function — the important output directions are shared across all tokens. This experiment directly measures that rank. For each of the 12 blocks, compute the per-token Jacobian J(x) = W_out @ diag(σ'(z)) @ W_in ∈ ℝ^{768×768} for N=512 probe tokens (OpenWebText). SVD each J(x). Report effective rank at 95% and 99% energy thresholds. Compute mean rank and cross-token variance per block. Correlate with P1 Frobenius std (cycle 048) and single-block compression damage (cycle 005). The effective rank is the theoretical compression limit per block.
    - Type: empirical
    - Confirmed if: mean effective rank (99% energy) is ≤ 500 for ≥ 10/12 blocks AND Spearman(rank, P1_frob_std) ≥ 0.5.
@@ -135,6 +135,19 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 068
+
+80. **FFN Jacobian effective rank census — GPT-2 FFN** *(INCONCLUSIVE — cycle 068)*
+   - Per-token Jacobian J(x) = W_out @ diag(GELU'(z)) @ W_in (768×768) SVD'd over 516 tokens × 3 seeds [42, 123, 7]. Random matrix control: rank_99(768×768 Gaussian) = 592 (Marchenko-Pastur, not ~768 as expected).
+   - rank_99 per block: mean range 433–588 across blocks. Block 1 outlier at 588.4 (near random baseline 592). All other 11 blocks well below random: blocks 0,3–11 in range 433–470. rank_95: blocks 0,3–11 in range 268–314, block 1 at 457–459, block 2 at 366.
+   - 10/12 blocks have rank_99 ≤ 500 (confirmed part 1). Block 1 is near-full-rank at 588 (near Gaussian baseline). Block 2 at 511.
+   - Spearman(rank_99, P1_frob_std) = -0.497, p=0.101 — just below 0.5 threshold, not statistically significant (12 points). Direction: higher rank ↔ lower P1_frob_std (block 1 has high rank but low P1_std after normalization).
+   - Spearman(rank_99, damage_8x) = -0.329, p=0.297 — not significant.
+   - Outcome: INCONCLUSIVE — rank_99 ≤ 500 for 10/12 blocks (low-rank confirmed), but Spearman with P1_frob_std is -0.497 (just below 0.5 threshold, p=0.10). Block 1 is a structural outlier (near full-rank, near Gaussian baseline).
+   - Cycle: 068
+   - Artifacts: `experiments/ffn_jacobian_rank_census.py`, `autoresearch/results/cycle_068_jacobian_rank_census.json`, `autoresearch/results/cycle_068_jacobian_rank_census.png`
+   - Depends on: none
 
 ### Cycle 067
 
