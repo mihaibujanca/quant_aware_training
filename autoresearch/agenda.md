@@ -19,7 +19,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: alignment is moderate (0.5–0.8) or varies widely within blocks (some tokens share structure, others don't).
    - Depends on: 80
 
-82. **Spectral compression (Jacobian SVD basis) vs channel selection (topk) — GPT-2 FFN**
+82. **Spectral compression (Jacobian SVD basis) vs channel selection (topk) — GPT-2 FFN** *(CONFIRMED — cycle 071)*
    - Current pipeline uses topk channel selection (axis-aligned). If the FFN function is globally low-rank, projecting onto the top singular vectors of the mean Jacobian (or output covariance) is the optimal basis — a rotation rather than axis selection. Cycle 026 compared geometric (topk+lstsq) vs SVD of the *weights* and geometric won 11/12. But weight SVD ≠ data-conditioned Jacobian SVD. For blocks [1, 4, 7, 11], compute the mean Jacobian J̄ = mean_x(J(x)) over 512 probe tokens. Take its top-k left singular vectors U_k as a projection basis. Compress: y_approx = U_k @ U_k^T @ FFN(x). Compare single-block swap PPL vs topk+lstsq at matched budget (k = hidden_dim / compression_ratio). Also test: use U_k as the projection but add lstsq refit on the projected output.
    - Type: empirical
    - Confirmed if: Jacobian SVD basis + lstsq outperforms topk+lstsq by ≥ 3% relative PPL in ≥ 2/4 blocks.
@@ -125,6 +125,19 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 071
+
+82. **Spectral compression (Jacobian SVD basis) vs channel selection (topk) — GPT-2 FFN** *(CONFIRMED — cycle 071)*
+   - 4 methods at k=512 on blocks [1, 4, 7, 11], 3 seeds [42, 123, 7]. Baseline PPL: 121.5.
+   - SVD+lstsq: 121.69/121.90/121.52/122.24 (mean 121.84). topk+lstsq: 122.98/126.95/124.56/130.13 (mean 126.16).
+   - Relative PPL diffs (SVD+lstsq vs topk+lstsq): -1.1%, -4.0%, -2.4%, -6.1%. Wins by ≥3% in 2/4 blocks (blocks 4 and 11).
+   - SVD-only (no refit) also competitive: 128.28/121.73/119.07/122.54 (mean 122.90) — beats topk in 3/4 blocks.
+   - Random+lstsq: 121.87/122.22/122.05/123.11 (mean 122.31) — SVD+lstsq ≈ random+lstsq (tiny gap), suggesting the lstsq refit does the heavy lifting and the SVD basis provides only marginal benefit over random orthogonal.
+   - Key finding: SVD+lstsq slightly outperforms topk, but random+lstsq nearly matches SVD+lstsq — lstsq refit dominates; SVD basis advantage is modest. topk+lstsq underperforms because topk axis selection is not an optimal projection basis.
+   - Outcome: CONFIRMED — SVD+lstsq wins by ≥3% in 2/4 blocks. But near-equivalence to random+lstsq reveals refit quality matters more than basis choice.
+   - Cycle: 071
+   - Artifacts: `experiments/ffn_jacobian_svd_compression.py`, `autoresearch/results/cycle_071_jacobian_svd_basis.json`, `autoresearch/results/cycle_071_jacobian_svd_basis.png`
 
 ### Cycle 070
 
