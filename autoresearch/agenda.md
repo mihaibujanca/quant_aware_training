@@ -125,13 +125,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 073
 
-84. **Rank-matched adaptive compression — GPT-2 FFN** *(REFUTED — cycle 073)*
-   - Budget: uniform={b:512 for b in [7,5,4,1]}, rank_matched={7:481,5:479,4:477,1:611}. Both sum to 2048 channels. Baselines from cycle 068 rank_99. Seeds [42,123,7], 400 probe + 200 holdout + 200 eval seqs, seq_len=128.
-   - Unpolished: uniform +30.2%±15.5, rank_matched +30.3%±15.3. Polished (500 steps): uniform +3.7%±16.0, rank_matched +3.8%±15.8.
-   - Per-seed differences rank_matched − uniform: −0.08 to +0.29 PPL (unpolished), −0.09 to +0.12 PPL (polished). Effectively noise.
-   - Per-block recon error norms nearly identical: uniform {1:187.4, 4:189.1, 5:184.9, 7:182.5}, rank_matched {1:185.1, 4:189.9, 5:185.7, 7:183.3}.
-   - Key finding: rank variation of only 464→588 (ratio ~1.27) across these 4 blocks is too small to produce measurable benefit. The bottleneck is gradient polish quality, not channel allocation. Rank-matched allocation at this scale is indistinguishable from uniform.
-   - Outcome: REFUTED (rank_matched worse than uniform at both conditions; improvements in mean are sub-noise)
+84. **Rank-matched adaptive compression — GPT-2 FFN** *(INCONCLUSIVE — cycle 073, audit-corrected from REFUTED)*
+   - Budget: uniform={b:512}, rank_matched={7:481,5:479,4:477,1:611}. Both sum to 2048. Seeds [42,123,7].
+   - Unpolished: uniform +30.2%, rank_matched +30.3%. Polished: uniform +3.7%, rank_matched +3.8%. Per-seed diffs ±0.3 PPL (noise).
+   - ⚠ AUDIT: Rank variation only 1.27× across blocks [7,5,4,1] — hypothesis untestable in this regime. Not refuted, just uninformative. Would need blocks with rank ratio >2× or higher compression to differentiate.
+   - Outcome: INCONCLUSIVE (hypothesis untestable — rank variation too narrow)
    - Cycle: 073
    - Artifacts: `experiments/rank_matched_compression_gpt2.py`, `autoresearch/results/cycle_073_rank_matched_compression.json`, `autoresearch/results/cycle_073_rank_matched_compression.png`
 
