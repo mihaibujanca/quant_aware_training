@@ -1,0 +1,8 @@
+{
+  "verdict": "APPROVE",
+  "round": 2,
+  "issues": [],
+  "minor_observations": [
+    "SVD+lstsq (method c) uses 2x params vs topk+lstsq (method a) at eval: U_k + B vs B_topk only. SVD-only (method b) is the param-matched comparison. Note in analysis."
+  ]
+}

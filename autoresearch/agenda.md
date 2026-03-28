@@ -128,14 +128,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 071
 
-82. **Spectral compression (Jacobian SVD basis) vs channel selection (topk) — GPT-2 FFN** *(CONFIRMED — cycle 071)*
+82. **Spectral compression (Jacobian SVD basis) vs channel selection (topk) — GPT-2 FFN** *(CONFIRMED with caveat — cycle 071, audit-corrected)*
    - 4 methods at k=512 on blocks [1, 4, 7, 11], 3 seeds [42, 123, 7]. Baseline PPL: 121.5.
-   - SVD+lstsq: 121.69/121.90/121.52/122.24 (mean 121.84). topk+lstsq: 122.98/126.95/124.56/130.13 (mean 126.16).
-   - Relative PPL diffs (SVD+lstsq vs topk+lstsq): -1.1%, -4.0%, -2.4%, -6.1%. Wins by ≥3% in 2/4 blocks (blocks 4 and 11).
-   - SVD-only (no refit) also competitive: 128.28/121.73/119.07/122.54 (mean 122.90) — beats topk in 3/4 blocks.
-   - Random+lstsq: 121.87/122.22/122.05/123.11 (mean 122.31) — SVD+lstsq ≈ random+lstsq (tiny gap), suggesting the lstsq refit does the heavy lifting and the SVD basis provides only marginal benefit over random orthogonal.
-   - Key finding: SVD+lstsq slightly outperforms topk, but random+lstsq nearly matches SVD+lstsq — lstsq refit dominates; SVD basis advantage is modest. topk+lstsq underperforms because topk axis selection is not an optimal projection basis.
-   - Outcome: CONFIRMED — SVD+lstsq wins by ≥3% in 2/4 blocks. But near-equivalence to random+lstsq reveals refit quality matters more than basis choice.
+   - SVD+lstsq: mean 121.84. topk+lstsq: mean 126.16. Relative diffs: -1.1%, -4.0%, -2.4%, -6.1%. Wins ≥3% in 2/4 blocks.
+   - ⚠ AUDIT CAVEAT: Random+lstsq (122.31) ≈ SVD+lstsq (121.84). Jacobian SVD basis not special vs random at k/n=0.67. Real mechanism: "any rotation+refit >> axis-aligned topk", not "Jacobian directions are special." Rerun at k=128/256 needed to test if SVD basis matters at higher compression.
+   - Outcome: CONFIRMED (literal criterion met) but lstsq refit dominates basis choice at this retention ratio.
    - Cycle: 071
    - Artifacts: `experiments/ffn_jacobian_svd_compression.py`, `autoresearch/results/cycle_071_jacobian_svd_basis.json`, `autoresearch/results/cycle_071_jacobian_svd_basis.png`
 
