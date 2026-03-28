@@ -1,0 +1,6 @@
+item_number=91
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_079_subspace_alignment.json,autoresearch/results/cycle_079_subspace_alignment.png
+code_paths=experiments/ffn_subspace_alignment_v2.py
+final_commit_hash=1a73a89
+agenda_updated=yes
