@@ -44,13 +44,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-91. **Subspace alignment re-run with correct hooks — GPT-2 FFN**
-   - Item 81 (cycle 069) had an implementation bug: manual Jacobian computation from block-level hidden states missed attention + ln_2 preprocessing. Re-run using `register_forward_hook` on `mlp.c_fc` (as cycle 068 did) to capture the true FFN input. For each of 12 blocks, compute top-k right singular vectors of J(x) for 256 tokens (k=384). Report pairwise subspace alignment (mean principal-angle cosine) between tokens. This determines whether the low-rank basis is globally shared (supporting topk) or token-specific (motivating adaptive compression).
-   - Type: empirical
-   - Confirmed if: mean subspace alignment ≥ 0.8 for ≥ 10/12 blocks (globally shared spectral structure, topk is near-optimal).
-   - Refuted if: mean alignment < 0.5 for a majority of blocks (spectral structure is token-specific, contradicting the global low-rank picture).
-   - Inconclusive if: alignment is moderate (0.5–0.8) or varies widely within blocks.
-   - Depends on: 80
 
 
 ### P2 — Moonshots
@@ -113,6 +106,15 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 079
+
+91. **Subspace alignment re-run with correct hooks — GPT-2 FFN** *(INCONCLUSIVE — cycle 079)*
+   - Re-ran cycle 069 with the bug fixed: used `register_forward_hook` on `mlp.c_fc` to capture true FFN input (post-attention + ln_2). k=384, 256 tokens per seed, 3 seeds [42, 123, 7].
+   - Key numbers: all 12 blocks fall in the moderate range 0.74–0.79 (vs random baseline 0.637). Normalized excess 0.28–0.41 (all > 0.1, so non-trivial). Cross-seed std < 0.006 (stable).
+   - Interpretation: With correct hooks, subspace alignment drops from the buggy 0.8+ range to ~0.75. The low-rank basis is partially shared (non-trivial excess above random) but does NOT reach the 0.8 threshold for global sharing. The FFN input is more token-specific than cycle 069's (incorrect) results suggested. topk is approximately but not maximally near-optimal.
+   - Verdict: INCONCLUSIVE (alignment 0.74–0.79, threshold 0.8 for ≥10/12 blocks, actual: 0/12)
+   - Cycle: 079
 
 ### Cycle 078
 
