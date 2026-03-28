@@ -1,0 +1,14 @@
+{
+  "cycle": 78,
+  "item": 90,
+  "round": 1,
+  "verdict": "APPROVE",
+  "blocking_issues": 0,
+  "minor_issues": 1,
+  "minor_observations": [
+    "Condition A' uses collect_hidden_activations (separate pass) while atlas uses probe_ffn_geometry. Minor numerical differences possible vs cycle 044 baseline, but within-experiment comparison is unaffected."
+  ],
+  "pitfalls_checked": ["MP1", "MP2", "MP3", "MP4", "MP5", "MP6", "MP7", "MP8"],
+  "pitfalls_triggered": [],
+  "pitfall_mitigated": true
+}
