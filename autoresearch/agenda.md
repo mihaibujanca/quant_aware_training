@@ -27,13 +27,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: Jacobian SVD wins in some blocks but loses in others, or improvement is < 3%.
    - Depends on: 80
 
-83. **Stacking error spectral decomposition — GPT-2 FFN**
-   - Cascaded re-probing only saved 1.83pp (cycle 060), but 500 Adam steps reduce stacking from +30% to +4.9% (cycle 061). WHERE in the spectrum does the stacking error live? For k=4 blocks [7,5,4,1] at 6x (no gradient polish), compute per-block reconstruction error e_i = FFN_compressed(x) - FFN_float(x). Project each e_i onto the block's Jacobian singular vectors (from item 80). Report: fraction of error energy in the retained spectrum (top-k singular directions) vs discarded spectrum (bottom directions). If error is concentrated in discarded directions, the problem is information loss (and gradient polish succeeds by learning to route around the missing info). If error leaks into retained directions, the compression corrupts what it's trying to preserve (a harder problem). Also measure whether stacked error (through 4 blocks) shifts spectral profile vs single-block error.
-   - Type: analysis
-   - Confirmed if: ≥ 70% of stacking error energy is in the discarded spectral directions AND stacking shifts error into retained spectrum (explaining super-additivity).
-   - Refuted if: error is uniformly distributed across the spectrum (no spectral structure to the compression error).
-   - Inconclusive if: error is concentrated but stacking does not shift the profile (super-additivity has a different cause).
-   - Depends on: 80
+83. **Stacking error spectral decomposition — GPT-2 FFN** *(REFUTED — cycle 072)*
+   - Blocks [7,5,4,1] at 6x, 3 seeds [42,123,7], 512 probe tokens. rank_99 ≈ 481–640 (blocks 7/5/4 ~485, block 1=640).
+   - frac_retained (error in retained top-rank_99 directions): single-block 0.775–0.913, stacked 0.775–0.913.
+   - Null (random basis at same rank_99): 0.635–0.822.
+   - Key finding: compression error is concentrated in the RETAINED spectrum (75–91% in retained directions), NOT the discarded directions. Error lands in what the model is trying to preserve. Stacking does not shift the spectral profile vs single-block (difference < 0.01 across all blocks/seeds).
+   - Refuted: discarded fraction never reaches 70% threshold (retained fraction is 75–91%). Error is structured (above random null) but in the wrong direction — it corrupts retained subspace, not just the discarded one.
+   - Implication: gradient polish works not by routing around missing info but by correcting corruption of the retained subspace. The stacking problem is a retained-spectrum corruption problem.
+   - Outcome: REFUTED
+   - Cycle: 072
+   - Artifacts: `experiments/stacking_error_spectral_decomposition.py`, `autoresearch/results/cycle_072_stacking_error_spectrum.json`, `autoresearch/results/cycle_072_stacking_error_spectrum.png`
 
 84. **Rank-matched adaptive compression — GPT-2 FFN**
    - Instead of uniform 6x across all blocks, set per-block compression ratio to match measured effective rank from item 80. Block with rank 200 keeps ~250 channels (~12x), block with rank 500 keeps ~550 (~6x). Total budget is the same as uniform 6x across k blocks. Compare stacked k=4 PPL against uniform 6x baseline (both with and without gradient polish). This should be near-optimal per block while potentially reducing total params further or improving stacking quality.
@@ -125,6 +128,19 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 072
+
+83. **Stacking error spectral decomposition — GPT-2 FFN** *(REFUTED — cycle 072)*
+   - Blocks [7,5,4,1] at 6x, 3 seeds [42,123,7], 512 probe tokens. rank_99 ≈ 481–640 (blocks 7/5/4 ~485, block 1=640).
+   - frac_retained (error in retained top-rank_99 directions): single-block 0.775–0.913, stacked 0.775–0.913.
+   - Null (random basis at same rank_99): 0.635–0.822.
+   - Key finding: compression error is concentrated in the RETAINED spectrum (75–91% in retained directions), NOT the discarded directions. Error lands in what the model is trying to preserve. Stacking does not shift the spectral profile vs single-block (difference < 0.01 across all blocks/seeds).
+   - Refuted: discarded fraction never reaches 70% threshold (retained fraction is 75–91%). Error is structured (above random null) but in the wrong direction — it corrupts retained subspace, not just the discarded one.
+   - Implication: gradient polish works not by routing around missing info but by correcting corruption of the retained subspace. The stacking problem is a retained-spectrum corruption problem.
+   - Outcome: REFUTED
+   - Cycle: 072
+   - Artifacts: `experiments/stacking_error_spectral_decomposition.py`, `autoresearch/results/cycle_072_stacking_error_spectrum.json`, `autoresearch/results/cycle_072_stacking_error_spectrum.png`
 
 ### Cycle 071
 
