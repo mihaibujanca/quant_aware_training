@@ -6,13 +6,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0 — Geometric structure (the core question)
 
-97. **GELU activation pattern diversity — GPT-2 FFN**
+97. **GELU activation pattern diversity — GPT-2 FFN** *(REFUTED — cycle 085)*
    - The fundamental geometric question: how many distinct linear behaviors does a GPT-2 FFN block have on data? For each block, compute GELU'(z_j) for all 3072 channels on 2048 mixed-corpus tokens. This gives a 3072-dim "soft activation pattern" per token (values in [0,1]). Binarize at threshold 0.5 (GELU' > 0.5 = "active"). Count unique binary patterns. Measure Hamming distances. Also cluster the continuous GELU'(z) vectors with k-means, k in {8, 16, 32, 64, 128, 256}. For each k, compute within-cluster variance of the full affine map A = W_out @ diag(GELU'(z)) @ W_in. Key output: K* = minimum k such that centroid reconstruction error < 5% of block output norm.
    - Type: analysis
    - Confirmed if: K* <= 64 for >=6/12 blocks (FFN has manageable piecewise-linear complexity).
    - Refuted if: K* > 256 for majority of blocks (GELU patterns too continuous/diverse to cluster).
    - Inconclusive if: K* varies wildly across blocks.
    - Depends on: none
+   - Outcome: REFUTED. K* > 256 for all 12/12 blocks. Reconstruction error at k=256 remains 0.69–1.93 (far above 5% threshold). Binary patterns: 2045/2048 unique per block (near-maximum diversity), Hamming mean 0.13–0.29. Affine linearization around cluster centroids is a poor approximation — each token has a sufficiently distinct GELU pattern that 256 centroids cannot reconstruct FFN outputs. The centroid-affine compression approach (item 98) is not viable. Note: tanh-approx GELU' range is [-0.13, 1.13], wider than exact GELU.
+   - Cycle: 085
+   - Artifacts: `experiments/gelu_pattern_diversity.py`, `autoresearch/results/cycle_085_gelu_pattern_diversity.json`, `autoresearch/results/cycle_085_gelu_pattern_diversity.png`
 
 98. **Centroid affine map compression — GPT-2 FFN**
    - IF item 97 finds manageable K*: test actual compression via region merging. For block 7, take K* cluster centroids. Each centroid defines affine map A_k = W_out @ diag(centroid_GELU'_k) @ W_in + b. Replace FFN with: for input x, compute z = W_in @ x + b_in, find nearest cluster by GELU'(z), apply centroid map A_k. This is a lookup table of K* affine maps — genuinely geometric compression. At K*=32 raw: 18.9M params (more than original 4.7M), so test low-rank factorization of each A_k. At K*=32, rank-64 factorization: 3.2M params (32% reduction). Measure single-block swap PPL.
@@ -112,6 +115,15 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 085
+
+97. **GELU activation pattern diversity — GPT-2 FFN** *(REFUTED — cycle 085)*
+   - K-means on continuous GELU'(z) vectors (3072-dim) for all 12 blocks, k in {8,16,32,64,128,256}. Binary pattern analysis (binarize at 0.5). Centroid reconstruction using consistent affine linearization: d_c = GELU'(z_c) via autograd.
+   - Results: K* > 256 for all 12/12 blocks. Reconstruction error at k=256: range 0.69–1.93 (far above 5% threshold). Binary patterns: 2045/2048 unique per block (near-maximum diversity). Hamming mean 0.13–0.29. Jensen gap (mean ||d_c_recomputed - d_kmeans_centroid||₁/3072) mostly < 0.05, confirming the linearization itself is sound — the problem is that 256 clusters is simply insufficient for 3072-dim GELU patterns with near-maximum diversity.
+   - Verdict: REFUTED. GPT-2 FFN GELU patterns are too diverse to cluster: each token's activation pattern is distinct enough that centroid approximation fails badly even at k=256. Centroid affine map compression (item 98) is not viable via this route.
+   - Cycle: 085
+   - Artifacts: `experiments/gelu_pattern_diversity.py`, `autoresearch/results/cycle_085_gelu_pattern_diversity.json`, `autoresearch/results/cycle_085_gelu_pattern_diversity.png`
 
 ### Cycle 084
 
