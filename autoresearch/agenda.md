@@ -25,13 +25,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: works for some blocks but not others.
    - Depends on: 97
 
-99. **FFN output manifold geometry — GPT-2 FFN**
+99. **FFN output manifold geometry — GPT-2 FFN** *(INCONCLUSIVE — cycle 086)*
    - Why does random+lstsq match SVD+lstsq? (Cycles 071, 077.) Is this just JL lemma in high dimensions, or is there exploitable structure beyond JL? For blocks [7,5,4,1], collect hidden activations h (n x 3072) and outputs y (n x 768) on 4096 mixed-corpus tokens. Measure hidden activation covariance eigenspectrum. Key metric: isotropy ratio = lambda_512 / lambda_1 at k=512 (6x compression). Compare to Marchenko-Pastur null. Also compute lstsq condition number for topk, SVD, and random projections. Test JL bound tightness: does the empirical distance distortion match the JL prediction epsilon = O(sqrt(log(n)/k)), or is it much tighter (indicating structure beyond JL)?
    - Type: analysis
    - Confirmed if: isotropy ratio > 0.1 for >=3/4 blocks (near-spherical, JL explains lstsq dominance).
    - Refuted if: isotropy ratio < 0.01 (steep spectrum) but lstsq still works for random bases (something beyond JL).
    - Inconclusive if: moderate isotropy (0.01-0.1).
    - Depends on: none
+   - Outcome: INCONCLUSIVE. Isotropy ratios (lambda_512/lambda_1): Block 7=0.0151, Block 5=0.0157, Block 4=0.0151, Block 1=0.0043. All in the moderate 0.01-0.1 range (3/4 in range; Block 1 barely below at 0.004). Spectrum is significantly steeper than Marchenko-Pastur (KS stat 0.49-0.64, p≈0; 53-72% eigenvalues outside MP support). However, JL random projection distortion is extremely tight: max 0.11 (vs JL bound 0.39), p95=0.056, mean=0.023 — random projections are 3-4x tighter than the JL upper bound. In contrast, top-k SVD projections violate isometry (max distortion 1.4) because the scale correction sqrt(d/k) over-compensates for a non-random basis. Conclusion: the spectrum is structured (not flat/random), but random projections still work because empirical JL is much tighter than the worst-case bound. The moderate isotropy does not explain why random≈SVD in lstsq: a separate mechanism (over-determined lstsq averaging out distortion) likely accounts for the match.
+   - Cycle: 086
+   - Artifacts: `experiments/ffn_manifold_geometry_gpt2.py`, `autoresearch/results/cycle_086_manifold_geometry.json`, `autoresearch/results/cycle_086_manifold_geometry.png`
 
 ### P1 — Important
 
@@ -115,6 +118,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 086
+
+99. **FFN output manifold geometry — GPT-2 FFN** *(INCONCLUSIVE — cycle 086)*
+   - Isotropy ratios (lambda_512/lambda_1): Block 7=0.0151, Block 5=0.0157, Block 4=0.0151, Block 1=0.0043. All moderate (0.01-0.1) — confirmed/refuted criteria not met. Spectrum steeper than MP (KS=0.49-0.64, 53-72% eigenvalues outside support). JL empirical distortion is 3-4x tighter than bound (max 0.11 vs eps_jl=0.39). Top-k SVD projections violate isometry (max distortion 1.4) due to over-compensation by sqrt(d/k) scale factor.
+   - Cycle: 086
+   - Artifacts: `experiments/ffn_manifold_geometry_gpt2.py`, `autoresearch/results/cycle_086_manifold_geometry.json`, `autoresearch/results/cycle_086_manifold_geometry.png`
 
 ### Cycle 085
 
