@@ -1,0 +1,16 @@
+{
+  "cycle": 108,
+  "item": 119,
+  "round": 1,
+  "verdict": "APPROVE",
+  "blocking": [],
+  "advisory": [
+    {"id": "A1", "summary": "KS test at n=4096 will reject for every channel — report KS statistic D rather than p-values, or drop KS entirely in favor of zone-fraction comparison"},
+    {"id": "A2", "summary": "Spearman(σ_j, channel_scores) partially tautological since channel_scores includes post-GELU std_hidden which is driven by pre-activation σ_j; note interpretation caveat or add Spearman(σ_j, output_norms_j)"}
+  ],
+  "resolved": [],
+  "pitfalls_checked": ["MP1", "MP6", "MP7"],
+  "pitfalls_triggered": [],
+  "cost_ok": true,
+  "summary": "Clean deterministic analysis plan. Verdict logic uses zone-fraction excess (not KS p-values), avoiding the overpowered-test trap. Two advisory items: KS test will be uninformative at n=4096 (use D statistic instead of p-values), and importance correlation is partially tautological. Neither blocks execution."
+}
