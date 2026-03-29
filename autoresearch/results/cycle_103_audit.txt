@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=refuted
+new_outcome=refuted
+reason=Bump zone (|z|<2.5) holds 42.8% max disagreement energy (block 3) and masking changes 53.8% of predictions (block 0). Both clearly exceed refutation thresholds (20% energy, 10% predictions). Implementation verified: hooks on mlp.act capture correct pre-activations, MaskedGELU replaces GELU with ReLU in bump zone only, prediction change is top-1 mismatch fraction. Baseline PPL 25.1 is correct for GPT-2/OWT/seq_len=128.
+guardrail_flags=G2_seed_noop: 3 seeds produce identical results (std=0.0) because torch.manual_seed has no effect on deterministic masking with fixed data. Effectively single-run. Does not invalidate refutation given large effect sizes.
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=The bump zone IS the operating regime (94.6% of activations). Any piecewise-linear compression scheme must model the GELU transition explicitly, not approximate it as ReLU. The neg-side dominance (84-88% of disagreement energy) suggests a targeted correction: approximate GELU as ReLU for z>0 (cheap, low error) and use a learned correction for z in [-2.5, 0] (where the information lives). Fix the seed loop in future experiments to vary data, not just torch.manual_seed.
+interesting=true
+interesting_reason=Neg-side dominance: 84-88% of GELU-ReLU disagreement energy comes from z<0 (the "leak" where GELU passes small negative signals that ReLU kills). This asymmetry suggests a natural decomposition: ReLU + negative-side correction, rather than treating the bump symmetrically.
