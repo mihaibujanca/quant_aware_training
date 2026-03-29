@@ -1,35 +1,32 @@
-# Research Status — 94 Cycles (001–094)
+# Research Status — 95 Cycles (001–095)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 15 |
 | Refuted | 27 |
-| Inconclusive | 43 |
+| Inconclusive | 44 |
 | Crash | 1 |
 
 ## Latest Cycle
-- **Cycle 094** (item 110): Non-uniform compression allocation — REFUTED
-  - Non-uniform gives +0.24% vs uniform (below 3% threshold)
-  - Aggressive non-uniform is slightly WORSE than uniform
-  - Confirms: stacking problem is structural, not allocation-dependent
+- **Cycle 095** (item 109): Attention compression v2 — GPT-2 — INCONCLUSIVE
+  - 5/12 blocks tolerate 5.4× QKV compression at ≤+5% PPL (needed ≥6 for confirmed)
+  - Block 0 catastrophically sensitive (+102%) — early attention is critical
+  - rank-16 ≈ rank-11 in multi-block: same inter-block propagation bottleneck as FFN
+  - Attention compression is partially viable; needs block-0-skip strategy
 
-## Key Structural Finding (cycles 089, 093, 094)
-The ~41%/block stacking coefficient is:
-1. **Ratio-independent** (3×=4×=6×, cycle 093)
-2. **Allocation-independent** (uniform=non-uniform, cycle 094)
-3. **Order-independent** (forward=reverse, cycle 089)
+## Key Structural Finding (unified across FFN + attention)
+Inter-block error propagation dominates per-block approximation quality:
+- FFN: c≈0.41 ratio-independent (093), allocation-independent (094)
+- Attention: rank-16 ≈ rank-11 in stacking (095)
+- The compression ceiling is set by cascade dynamics, not per-block fidelity
 
-This is a fundamental property of inter-block error propagation in the residual stream, not a compression artifact.
-
-## The Recipe
-1. **Topk + lstsq** — basis, channel selection, and allocation all near-optimal
-2. **Stack k≤4 blocks** — structural ceiling, c≈0.41 regardless of configuration
-3. **500 Adam steps** → ~+5% PPL
-4. Stacking limit is the binding constraint; per-block improvements don't transfer
+## The Recipe (updated)
+1. **FFN**: Topk + lstsq + 500 Adam steps, k≤4 blocks at 6× → ~+5% PPL
+2. **Attention**: Per-head rank-11 SVD on QKV (skip block 0), 5/12 blocks viable
+3. Stacking limit is structural ~41%/block cascade amplification
 
 ## Remaining NEXT Items
 - **P0**: Item 103 (low-rank Jacobian)
-- **P1**: Item 109 (attention compression v2)
 - **P2**: Items 87-88 (Procrustes, learned bottleneck AE)
-- Only 4 items — refresh needed after next cycle
+- Only 3 items — agenda refresh required
