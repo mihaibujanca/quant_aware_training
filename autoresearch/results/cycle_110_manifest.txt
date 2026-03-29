@@ -1,0 +1,63 @@
+cycle: 110
+item: 121
+title: Channel-Level Bump Anatomy: Compression Relevance — GPT-2 FFN
+verdict: INCONCLUSIVE
+date: 2026-03-29
+
+KEY METRICS
+-----------
+baseline_ppl: 24.75
+bump_threshold: |z_j| < 1.0
+n_tokens: 4096
+n_blocks: 12
+
+Spearman rho_B (weight-only, verdict metric):
+  blocks_above_0.3: 0/12
+  blocks_near_zero: 2/12
+  mean: -0.282  std: 0.245  range: [-0.599, +0.243]
+
+Per-block rho_B:
+  block  0: +0.027   block  1: +0.243
+  block  2: -0.030   block  3: -0.360
+  block  4: -0.260   block  5: -0.267
+  block  6: -0.215   block  7: -0.367
+  block  8: -0.490   block  9: -0.599
+  block 10: -0.541   block 11: -0.519
+
+Spearman rho_A (full formula, tautological): mean +0.79, range [+0.66, +0.87]
+Spearman rho_C (activation-weight): mean +0.45, range [+0.18, +0.54]
+
+Bump-critical (top quartile bump AND top quartile importance_B):
+  block 0: 355 channels, agg_contrib=22.1%, median_var=0.0179
+  block 1: 299 channels, agg_contrib=10.7%, median_var=0.0136
+  ...
+  block 9:  38 channels, agg_contrib= 1.9%, median_var=0.0573
+  block 11: 58 channels, agg_contrib= 2.7%, median_var=0.0813
+
+INTERPRETATION
+--------------
+- Weight-only rho_B (the tautology-free measure) inverts sign with depth:
+  early blocks slightly positive, deeper blocks strongly negative (-0.36 to -0.60).
+- Bump channels are NOT compression-important in deeper blocks — they have low
+  weight output norms. The nonlinear zone geometry is orthogonal to (or
+  anti-correlated with) compression importance in layers 3-11.
+- The high rho_A (+0.66 to +0.87) is an artifact: importance_A includes
+  mean(|GELU'(z)|) which is mechanically coupled to bump_fraction.
+- Bump-critical channel count declines sharply with depth (355 → 38),
+  consistent with the negative rho_B: in deeper layers the few high-bump
+  channels don't overlap with high-weight-norm channels.
+- Per-token output variance of bump-critical channels is token-dependent
+  (median_var 0.018-0.081, well above 0.01 threshold) across all blocks —
+  these channels compute token-varying signals, not near-constant biases.
+
+VERDICT REASONING
+-----------------
+- CONFIRMED requires rho_B > 0.3 in >=8/12 blocks: 0 blocks pass.
+- REFUTED requires |rho_B| < 0.1 in >=8/12 blocks: 2 blocks pass.
+- Result is INCONCLUSIVE: sign-varying, depth-dependent, moderate magnitude.
+
+ARTIFACTS
+---------
+experiments/bump_compression_relevance_gpt2.py
+autoresearch/results/cycle_110_bump_relevance.json
+autoresearch/results/cycle_110_bump_relevance.png

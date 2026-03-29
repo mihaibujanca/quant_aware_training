@@ -4,9 +4,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## NEXT EXPERIMENTS
 
-### P0 — Interpretability: GELU nonlinear zone geometry
+### P0
 
-119. **Pre-activation distribution anatomy — GPT-2 FFN** [INTERPRETABILITY] — CYCLE 108: INCONCLUSIVE
+119. **Pre-activation distribution anatomy — GPT-2 FFN** [INTERPRETABILITY] *(INCONCLUSIVE — cycle 108)*
    - Cycle 103 found 22-52% of FFN pre-activations fall in |z| < 0.5 (the GELU nonlinear knee), with block 1 at 52%. This experiment characterizes the pre-activation distribution per block to determine whether this concentration is expected or structurally interesting.
    - For all 12 blocks on 4096 mixed-corpus tokens: (a) compute z = W_in @ x + b_in for all 3072 channels, (b) fit per-channel Gaussian N(μ_j, σ²_j) and report the fit quality (KS test), (c) compute the fraction of activations in |z| < T for T in {0.25, 0.5, 1.0, 1.5, 2.0} — compare to the Gaussian prediction Φ(T/σ) - Φ(-T/σ), (d) report per-block: mean(σ), std(σ), fraction of channels with σ < 0.5 (tightly concentrated around zero), fraction with |μ| > σ (biased away from zero).
    - **Key analysis outputs** (store ALL of these in the results JSON): per-block histograms of σ_j (channel-level pre-activation spread), per-block histograms of μ_j (channel-level bias), the empirical vs Gaussian predicted zone fractions at each T, identification of "bump-dominated channels" (σ < 0.5 AND |μ| < 0.5) — these are the channels whose computation lives almost entirely in the GELU nonlinear zone.
@@ -29,7 +29,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: roughly even split (30-70% each) or varies across blocks.
    - Depends on: none
 
-121. **Channel-level bump anatomy: compression relevance — GPT-2 FFN** [INTERPRETABILITY]
+121. **Channel-level bump anatomy: compression relevance — GPT-2 FFN** [INTERPRETABILITY] *(INCONCLUSIVE — cycle 110)*
    - Cycle 103's top-20 channels have 99%+ of activations in the bump zone. Are these the channels that matter for compression (high topk importance), or are they separate? This connects the nonlinear zone geometry to the compression pipeline.
    - For all 12 blocks on 4096 mixed-corpus tokens: (a) compute per-channel "bump fraction" = fraction of tokens with |z_j| < 1.0, (b) compute per-channel topk importance score (std(h_j) × ||W_out[:,j]|| × mean(|GELU'(z_j)|)), (c) compute Spearman correlation between bump fraction and importance score per block, (d) partition channels into quartiles by bump fraction. For each quartile, report: mean importance score, mean contribution to block output norm, mean |GELU'(z)| (activation sensitivity).
    - **Key analysis**: identify "bump-critical" channels (top quartile bump fraction AND top quartile importance). How many exist per block? What is their aggregate contribution to block output? These are the channels where GELU's nonlinearity is most computationally relevant.
@@ -39,6 +39,8 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Refuted if: |Spearman| < 0.1 in ≥8/12 blocks (bump zone and compression importance are orthogonal).
    - Inconclusive if: moderate or sign-varying correlation across blocks.
    - Depends on: none
+   - **Outcome: INCONCLUSIVE** — Weight-only Spearman rho_B is sign-varying and depth-dependent: early blocks (0-1) mildly positive (ρ≈+0.03, +0.24), later blocks strongly negative (ρ≈-0.36 to -0.60). Mean rho_B=-0.282 across 12 blocks; 0 blocks above +0.3, only 2 blocks near-zero. Tautological variant (rho_A) consistently strongly positive (0.66–0.87) — this is the artifact from importance formula coupling. Key structural finding: bump channels are NEGATIVELY correlated with weight norms in deeper blocks, meaning high-bump-fraction channels are low-weight-norm (low compression importance). Bump-critical n per block declines from 355 (block 0) to 38–58 (blocks 9-11) as correlation structure inverts with depth.
+   - Artifacts: experiments/bump_compression_relevance_gpt2.py, autoresearch/results/cycle_110_bump_relevance.json, autoresearch/results/cycle_110_bump_relevance.png
 
 122. **Depth gradient of GELU operating regime — GPT-2 FFN** [INTERPRETABILITY]
    - Cycle 103 shows the negative fraction of bump-zone activations increases from 54% (block 0) to 64% (block 11). This experiment maps the full depth trajectory of the GELU operating regime.
@@ -48,14 +50,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Confirmed if: negative fraction increases monotonically with depth (≤1 violation) AND slope is significant (>0.5% per block, R² > 0.7) — systematic depth-dependent gating.
    - Refuted if: no monotonic trend (≥4 violations) or slope < 0.2% per block — depth has no systematic effect.
    - Inconclusive if: trend exists but weak (R² 0.3-0.7) or non-monotonic with clear pattern (e.g., U-shaped).
-   - Depends on: none
-
-### P0 — Cascade mechanism and correction
-
-115. ~~**Cascade error source: residual-stream vs nonlinearity amplification — GPT-2 FFN**~~ *(CONFIRMED — cycle 104)*
-   - Confirmed if: one source (attention or GELU nonlinearity) accounts for ≥70% of cascade amplification in ≥8/11 block transitions (clear target for intervention).
-   - Refuted if: both sources contribute roughly equally (40-60% each) across all transitions (no single intervention target).
-   - Inconclusive if: dominant source varies by block position.
    - Depends on: none
 
 123. **GELU negative-leak aware compression (corrected) — GPT-2 FFN**
@@ -68,7 +62,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: 1-3% or block-dependent.
    - Depends on: none
 
-### P1 — Important
+### P1
 
 100. **Is FFN isotropy architectural or learned? — GPT-2 FFN**
    - Follow-up to item 99. If activations are isotropic, why? Test 1: random-init GPT-2 (no training) — same isotropy measurement. Test 2: replace GELU with ReLU in one block, measure isotropy (ReLU kills ~50% of channels with hard zeros — should break isotropy). Test 3: if training checkpoints available, measure isotropy vs training step.
@@ -88,7 +82,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: none
    - Result (cycle 107): CONFIRMED. Direct beats topk in 2/4 blocks (blocks 4 and 7, Δ up to -0.5%). Block 1 strongly favors topk (+26.8% at r=32, narrowing to +2.1% at r=384). Block 11 favors topk by 4-6%. Blocks 4 and 7 are near-neutral or slight wins for direct. Hidden-layer structure is beneficial in early/late blocks but marginal in middle blocks. Baseline PPL ~66.4 (100 eval seqs). Results: autoresearch/results/cycle_107_direct_regression.json
 
-### P2 — Moonshots
+### P2
 
 87. **Cross-block weight sharing via Procrustes alignment — GPT-2 FFN [MOONSHOT]**
    - If multiple blocks have similar Jacobian spectral structure (testable after item 80), their compressed W_down matrices might be related by a rotation. For each pair of compressed blocks (i, j), compute the Procrustes alignment: find orthogonal R that minimizes ||W_down_i − R · W_down_j||_F. If the residual is small (< 10% of ||W_down_i||_F), blocks i and j can share a single W_down with per-block rotation R_i — reducing total parameter count further. For k=4 compressed blocks: compute all 6 pairwise Procrustes distances. If any pairs are close, test shared-W_down + rotation vs independent W_down on stacked PPL. The extreme case: ONE shared W_down with 4 learned rotations (4 × 768 × 768 rotation params, but the rotation can be low-rank if spectral overlap is high).
@@ -117,8 +111,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: 10-30% reduction, or requires r>16.
    - Depends on: none
 
-### P1 — Attention-aware compression (new from cycles 104/107)
-
 124. **Attention-mediated cascade: per-head amplification census — GPT-2**
    - Cycle 104 showed attention dominates cascade (≥70% in 8/11 transitions), but treated attention as a monolithic block. Which heads amplify FFN error most? For each of the 12 attention layers, compress FFN block L at k=1 (6×), inject the resulting residual-stream error δ_L, and measure per-head output perturbation: for each head h, compute ||Attn_h(x + δ) - Attn_h(x)||₂ / ||δ||₂ (per-head amplification factor). Aggregate over 2048 OWT tokens. Report: (a) per-head amplification factor heatmap (12 layers × 12 heads), (b) top-5 amplifying heads across the model, (c) Spearman correlation between head amplification and head importance (measured by ablation PPL). If a small subset of heads dominates amplification, they are surgical targets for cascade suppression.
    - Type: analysis
@@ -134,8 +126,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Refuted if: uniform is within 1% of the best non-uniform allocation.
    - Inconclusive if: 1-3% or dependent on block selection.
    - Depends on: none
-
-### P2 — Joint attention+FFN (new from cycle 104)
 
 126. **Attention projection pruning on high-amplification heads — GPT-2**
    - Instead of compressing attention weights globally (cycle 095/098: marginal), target only the heads that amplify FFN compression error (from item 124, or use cycle 104's per-transition attention fractions as proxy). For each of the top-3 amplifying head positions identified in cycle 104 (transitions with attn_frac > 1.0, i.e., layers 0-6), apply rank-r SVD (r ∈ {8, 11, 16}) to the value+output projection W_V W_O of those heads only, while leaving all other heads untouched. Measure: (a) single-transition cascade amplification factor before/after pruning, (b) k=4 FFN stacking PPL with vs without head pruning. 3 seeds, 200 eval seqs.
