@@ -1,0 +1,17 @@
+{
+  "cycle": 106,
+  "item": 101,
+  "round": 2,
+  "verdict": "APPROVE",
+  "issues": {
+    "I1_corpus_calibration": "resolved",
+    "A1_wdown_only_caveat": "resolved",
+    "A2_overfitting_logging": "resolved"
+  },
+  "new_issues": [],
+  "pitfalls_checked": ["MP1", "MP2", "MP3", "MP4", "MP5", "MP6", "MP7", "MP8"],
+  "pitfalls_applicable": ["MP3"],
+  "pitfalls_mitigated": ["MP3"],
+  "cost_ok": true,
+  "notes": "All round 1 issues addressed. OWT calibration phase added, thresholds now relative, overfitting logging every 10 steps with held-out 50-seq probe, W_down-only caveat explicit."
+}

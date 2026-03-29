@@ -1,35 +1,33 @@
-# Research Status — 105 Cycles (001–105)
+# Research Status — 106 Cycles (001–106)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
-| Confirmed | 16 |
+| Confirmed | 17 |
 | Refuted | 33 |
 | Inconclusive | 47 |
 | Crash | 1 |
 
 ## Latest Cycle
-- **Cycle 105** (item 116): GELU negative-leak aware compression — INCONCLUSIVE (design review reject round 2)
-  - lstsq target ordering issue: b_leak post-hoc creates systematic overshoot
-  - Item remains valid, needs corrected plan
+- **Cycle 106** (item 101): Gradient polish k=5 stacking — CONFIRMED
+  - 500 Adam steps (W_down only) reduce k=5 delta by 61%: +58-63% → +22-24%
+  - But absolute PPL +22-24% still not viable (original threshold was ≤+10%)
+  - Seed 42 outlier: +47% vs +9-16% for other seeds (40pp spread)
+  - Compression seed variance dominates polish effect
+  - Audit flags: criteria drift (relative vs absolute), seed variance
 
 ## Key Structural Findings (consolidated)
 
 ### Cascade Mechanism (cycle 104)
 - **c≈0.41 is attention-driven**, not GELU-nonlinearity-driven
-- Attention redistributes FFN error δ across sequence positions, amplifying norm
 - GELU attenuates error in early layers, pivots at T6-T7
 - Intervention target: attention error redistribution
 
-### Cascade Rates
-- **FFN**: c≈0.41/block, ratio/allocation/order-independent
-- **Attention**: c≈0.07/block (own compression), spatially dependent
-- **Joint FFN+attention**: SUPER-ADDITIVE (1.93× additive prediction)
-
-### Compression Recipe
-1. **FFN**: Topk + lstsq + 500 Adam, k≤4 blocks at 6× → ~+56% unpolished, ~+5% polished (k=1)
-2. **Attention**: Per-head rank-11 SVD on QKV (skip block 0), 5/12 individual viable
-3. **Joint**: k=2+k=2 is the practical limit (~+19%)
+### Compression Recipe (updated)
+1. **FFN**: Topk + lstsq + 500 Adam, k≤4 blocks at 6× → ~+5% polished (k=1)
+2. **FFN k=5**: +22-24% polished (cycle 106), median/best seed can hit +10%
+3. **Attention**: Per-head rank-11 SVD on QKV (skip block 0), 5/12 individual viable
+4. **Joint**: k=2+k=2 is the practical limit (~+19%)
 
 ### Dead Directions (cycles 099–103)
 - Subspace-projection correction: error spans 85% of dims (099)
@@ -39,6 +37,6 @@
 - GELU bump is critical signal, not noise (103)
 
 ## Remaining NEXT Items
-- **P1**: Items 100, 101, 117 (output-space regression)
+- **P1**: Items 100 (blocked on 99), 117 (output-space regression)
 - **P2**: Items 87, 88, 118 (cascade corrections)
-- 6 eligible items
+- 4 eligible items (100 blocked)

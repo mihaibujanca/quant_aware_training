@@ -1,0 +1,9 @@
+PASS_WITH_FLAGS
+item=101
+claimed=CONFIRMED
+audited=CONFIRMED
+flags=criteria_drift_absolute_to_relative,seed42_outlier_3x,agenda_monotonicity_claim_incorrect
+seeds=3
+implementation=correct
+verdict_accurate=yes_under_revised_criteria
+interesting=yes
