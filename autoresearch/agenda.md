@@ -100,14 +100,10 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1 — Important (continued)
 
-104. **Compositional error accumulation curve — GPT-2 FFN**
-   - R4 (compositional validity) has zero data. Cycle 087 showed single-block gains attenuate in stacking, but we lack the curve. Compress blocks at 6× using the recipe (random+lstsq+500 Adam). Evaluate PPL with k=1,2,...,8 blocks compressed simultaneously, adding blocks in damage order (least-damage-first from cycle 005). Plot PPL vs k. Fit: is the curve additive (PPL(k) ≈ baseline + k·δ), multiplicative (PPL(k) ≈ baseline · (1+δ)^k), or worse? Also test reverse order (most-damage-first). This curve determines whether >4 block compression is structurally viable or if cross-block error interaction is super-additive.
+104. **Compositional error accumulation curve — GPT-2 FFN** *(REFUTED — cycle 089)*
+   - **Outcome: REFUTED** — Super-multiplicative error accumulation confirmed. Baseline PPL=51.66±5.49. Forward ordering (least-damage-first): k=4 +56%, k=5 +145%, k=8 +914%. Multiplicative fit R²=0.933, c=0.408 per block (40.8% growth per additional block). PPL(k=8)=524 vs predicted multiplicative 524 — the fit matches but c>>single-block-delta (single block: -3% to +7%), indicating strong super-block compounding. Reverse ordering identical at k=8 (both reach PPL=524). No ordering effect at k=8. A hard ceiling exists: >4 compressed blocks is unviable at 6×.
    - Type: empirical
-   - Confirmed if: error is sub-multiplicative (PPL(k) < baseline · (1+δ)^k) — stacking is viable beyond k=4.
-   - Refuted if: error is super-multiplicative (cross-block amplification) — hard ceiling exists.
-   - Inconclusive if: additive for k<=4 but regime changes at k>4.
-   - Depends on: none
-   - Cycle: 089 (planned)
+   - Cycle: 089
 
 105. **Attention block compression feasibility scan — GPT-2**
    - All 87 cycles have targeted FFN blocks only. Cycle 085 audit explicitly recommended pivoting to attention blocks. For all 12 attention blocks, measure: (a) per-head output rank (SVD of head output on 4096 tokens), (b) single-head ablation damage (zero one head, measure PPL), (c) single-attn-block random+lstsq compression at 6× (project V-projection from 768→128 per head, lstsq reconstruct). Report per-block feasibility score. This is the minimal scan to decide whether attention compression is worth a research direction.
@@ -161,6 +157,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 089
+
+104. **Compositional error accumulation curve — GPT-2 FFN** *(REFUTED — cycle 089)*
+   - **Outcome: REFUTED** — Super-multiplicative error accumulation. Baseline PPL=51.66±5.49. Forward k=4: +56%, k=5: +145%, k=8: +914%. Multiplicative fit R²=0.933, c=0.408/block. Reverse ordering reaches identical PPL=524 at k=8. Hard ceiling confirmed: >4 simultaneous compressed blocks at 6× is not viable. Key finding: errors compound at ~41% per block rather than summing.
+   - Artifacts: autoresearch/results/cycle_089_accumulation_curve.json, autoresearch/results/cycle_089_accumulation_curve.png
+   - Cycle: 089
 
 ### Cycle 088
 
