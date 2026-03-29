@@ -201,14 +201,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 093
    - Artifacts: experiments/lower_ratio_stacking_gpt2.py, autoresearch/results/cycle_093_lower_ratio_stacking.json, autoresearch/results/cycle_093_lower_ratio_stacking.png
 
-109. **Attention block compression feasibility scan v2 — GPT-2** — P1
-   - Item 105 was rejected twice for wrong compression ratios, not wrong concept. Corrected version: for each attention head (12 heads, each 64-dim), the QKV projections are [768→64] each (2304 params per projection). At true 6× compression, test rank-11 SVD per projection (768×11 + 11×64 = 9152 vs 49152 original per head = 5.4×). For each of the 12 heads in each of 12 layers, single-head swap PPL with rank-11 QKV. Identify least-damaged heads. Then test: disable bottom-3 heads per layer (set output to zero) + rank-16 SVD on remaining 9 heads. Stacked multi-layer evaluation on blocks where FFN compression is already viable. 3 seeds, OWT, 200 eval seqs.
-   - Type: empirical
-   - Confirmed if: rank-11 per-head swap PPL ≤ +5% for ≥ 6/12 heads in ≥ 6/12 layers.
-   - Refuted if: rank-11 swap PPL > +15% for majority of heads (attention matrices are not low-rank enough for 6× compression).
-   - Inconclusive if: works for some layers/heads but not others.
-   - Depends on: none
-
 ### Closed — OBSOLETE items (do not run)
 
 23. ~~**Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**~~ ⚠ OBSOLETE: Superseded by item 80 (Jacobian effective rank census).
@@ -224,6 +216,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 095
+
+109. **Attention block compression feasibility scan v2 — GPT-2** *(INCONCLUSIVE — cycle 095)*
+   - **Outcome: INCONCLUSIVE** — Block 0 is catastrophically sensitive (+102.4%); blocks 1,3,4,9,10 pass (≤+5%): pass_count=5/12, fail_count=1/12. Most blocks fall in the +5–15% range. Phase 2 (simultaneous rank-11 on top-3 blocks): +13.0% ± 1.4%. Rank-16 milder compression gives identical result (+13.0% ± 1.5%) — striking: rank-16 vs rank-11 makes no difference for simultaneous multi-block compression. QKV SVD compression is feasible for most blocks individually but not globally at 5.4×. Block 0 appears structurally dependent on full-rank attention. Baseline PPL=51.66.
+   - Artifacts: experiments/attention_compression_v2_gpt2.py, autoresearch/results/cycle_095_attention_compression_v2.json, autoresearch/results/cycle_095_attention_compression_v2_barchart.png
+   - Cycle: 095
 
 ### Cycle 094
 
