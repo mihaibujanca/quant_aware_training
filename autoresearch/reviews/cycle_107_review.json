@@ -1,0 +1,17 @@
+{
+  "cycle": 107,
+  "item": 117,
+  "round": 2,
+  "verdict": "APPROVE",
+  "blocking": [],
+  "advisory": [],
+  "resolved": [
+    {"id": "I1", "status": "fixed", "summary": "Rank-constrained lstsq via input SVD projection replaces post-hoc W truncation"},
+    {"id": "A1", "status": "addressed", "summary": "Reconstruction error recorded for both methods and plotted"},
+    {"id": "A2", "status": "addressed", "summary": "Seeds control probe token sampling, lstsq deterministic given data"}
+  ],
+  "pitfalls_checked": ["MP3", "MP6"],
+  "pitfalls_triggered": [],
+  "cost_ok": true,
+  "summary": "All round-1 issues resolved. Rank-constrained lstsq is now a fair comparison to topk+lstsq. Reconstruction error and seed semantics addressed. No new issues."
+}

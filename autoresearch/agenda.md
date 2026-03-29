@@ -80,7 +80,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 99
 
 
-117. **Output-space direct regression bypass — GPT-2 FFN** [CONFIRMED — cycle 107]
+117. **Output-space direct regression bypass — GPT-2 FFN** [INCONCLUSIVE — cycle 107, audit corrected from confirmed]
    - Every failed approach (Jacobian factorization, GELU clustering, subspace projection) tried to compress through the hidden layer. What if we bypass it entirely? For each FFN block, the function is f: R^768 → R^768. Fit a direct low-rank approximation f(x) ≈ A @ x + b where A = U @ S @ V^T with rank r, using lstsq on probe data (x→y pairs, no hidden activations at all). This is a pure input-output regression — no GELU, no hidden channels, no activation patterns. Sweep r in {32, 64, 128, 256, 384} on blocks [1, 4, 7, 11] with 4096 OWT tokens. Compare single-block swap PPL against topk+lstsq at matched parameter count (rank-r has 768×r×2 params vs topk at k channels has 768×k + k×768 params). If direct regression wins, the hidden-layer structure is a compression liability, not an asset.
    - Type: empirical
    - Confirmed if: direct rank-r regression matches or beats topk+lstsq at matched param count in ≥2/4 blocks, for any r.
@@ -1156,3 +1156,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Outcome: INCONCLUSIVE (design review reject)
    - Cycle: 105
    - Commit: NONE
+
+### Cycle 107
+
+117. **Output-space direct regression bypass — GPT-2 FFN** *(INCONCLUSIVE — cycle 107, audit corrected from confirmed)*
+   - Direct rank-r regression vs topk+lstsq at matched params on blocks [1,4,7,11]. Middle blocks (4, 7) show near-parity (direct wins by 0.1-0.5%), early/late blocks (1, 11) topk wins by 2-27%. Audit downgraded: topk baseline had pseudo-replication (identical across seeds), margins within noise. Key interpretability finding: block-dependent linearity gradient (middle blocks nearly linear, edges need nonlinearity).
+   - Outcome: INCONCLUSIVE (audit corrected — pseudo-replication, margins within noise)
+   - Cycle: 107
+   - Artifacts: `experiments/direct_regression_bypass_gpt2.py`, `autoresearch/results/cycle_107_direct_regression.json`, `autoresearch/results/cycle_107_direct_regression.png`

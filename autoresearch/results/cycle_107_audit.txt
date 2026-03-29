@@ -1,0 +1,9 @@
+DOWNGRADE
+item=117
+claimed=CONFIRMED
+audited=INCONCLUSIVE
+flags=topk_pseudo_replication_N1,wins_within_noise_0.1-0.5pct,unpaired_comparison_disguised_as_paired
+seeds=3_but_topk_deterministic
+implementation=correct
+verdict_accurate=no_should_be_inconclusive
+interesting=yes_block_linearity_gradient
