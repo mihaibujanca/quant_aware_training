@@ -50,13 +50,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Artifacts: `experiments/gelu_nearlinearity_census_v2.py`, `autoresearch/results/cycle_083_gelu_census_v2.json`, `autoresearch/results/cycle_083_gelu_census_v2.png`
 
 
-96. **Mixed-corpus stacking evaluation — GPT-2 FFN**
+96. **Mixed-corpus stacking evaluation — GPT-2 FFN** *(INCONCLUSIVE — cycle 087)*
    - Cycle 078 confirmed mixed-corpus lstsq refit gives +19.1% single-block improvement. Test whether this transfers to stacking: refit blocks [7,5,4,1] at 6x using mixed-corpus probe (512 tokens each from Shakespeare, WikiText-2, OWT, C4), stack, evaluate on both OWT and WikiText-2. Compare vs OWT-only refit. Include 500-step Adam polish for both.
    - Type: empirical
    - Confirmed if: mixed-corpus reduces stacked PPL by ≥10% relative vs OWT-only on WikiText-2, AND does not degrade OWT by >3%.
    - Refuted if: mixed-corpus degrades stacked OWT PPL by >5%.
    - Inconclusive if: helps WikiText-2 but degrades OWT by 3–5%.
    - Depends on: 90
+   - Outcome: INCONCLUSIVE. Polished (500 steps) results: A (OWT-only) → OWT=55.24±0.16, Wiki=111.13±1.20; B (mixed) → OWT=56.23±0.52, Wiki=102.74±1.81. Wiki improvement: +7.5% relative (below 10% threshold). OWT degradation: +1.8% (within 3% limit). Mixed-corpus refit does improve generalization to WikiText-2 but falls short of the 10% threshold. The single-block benefit (cycle 078: +19% single block) does not stack up to meet criteria across 4 simultaneous blocks.
+   - Cycle: 087
+   - Artifacts: `experiments/mixed_corpus_stacking_gpt2.py`, `autoresearch/results/cycle_087_mixed_stacking.json`, `autoresearch/results/cycle_087_mixed_stacking.png`
 
 100. **Is FFN isotropy architectural or learned? — GPT-2 FFN**
    - Follow-up to item 99. If activations are isotropic, why? Test 1: random-init GPT-2 (no training) — same isotropy measurement. Test 2: replace GELU with ReLU in one block, measure isotropy (ReLU kills ~50% of channels with hard zeros — should break isotropy). Test 3: if training checkpoints available, measure isotropy vs training step.
@@ -118,6 +121,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 087
+
+96. **Mixed-corpus stacking evaluation — GPT-2 FFN** *(INCONCLUSIVE — cycle 087)*
+   - Polished (500 steps) results: A (OWT-only) → OWT=55.24±0.16, Wiki=111.13±1.20; B (mixed) → OWT=56.23±0.52, Wiki=102.74±1.81. Baseline (uncompressed): OWT=45.84, Wiki=70.13. Wiki improvement B vs A: +7.5% relative. OWT degradation B vs A: +1.8%. Neither confirmed (needs ≥10% Wiki improvement) nor refuted (needs >5% OWT degradation).
+   - Cycle: 087
+   - Artifacts: `experiments/mixed_corpus_stacking_gpt2.py`, `autoresearch/results/cycle_087_mixed_stacking.json`, `autoresearch/results/cycle_087_mixed_stacking.png`
 
 ### Cycle 086
 
