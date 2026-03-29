@@ -1,0 +1,30 @@
+{
+  "cycle": 94,
+  "item": 110,
+  "round": 1,
+  "verdict": "APPROVE",
+  "issues_total": 0,
+  "advisory_total": 3,
+  "fixes_verified": [],
+  "issues": [],
+  "advisory": [
+    {
+      "id": "A1",
+      "detail": "Damage ordering [7<5<4<1] inherited from cycles 005/007, not individually measured in cycle 089. Allocation strategy depends on this being correct. Add 4 single-block evals per seed (~2 min extra) to verify rank order."
+    },
+    {
+      "id": "A2",
+      "detail": "Aggressive allocation gives block 1 2.5x more W_down params than block 7 under same 500 polish steps. Conservative bias (hurts non-uniform). Log final polish loss per block per allocation."
+    },
+    {
+      "id": "A3",
+      "detail": "Cycle 093 showed c is ratio-independent under uniform allocation, suggesting cascade dynamics are the bottleneck, not per-block error. Strong prior against confirmation. Note in interpretation."
+    }
+  ],
+  "notes": [
+    "per_layer_hidden correctly supported: CompressionBudgetSpec.per_layer_hidden maps layer_id (int) to channel count, used by _layer_target_hidden.",
+    "Budget arithmetic verified: all 3 allocations sum to exactly 2048 channels.",
+    "Statistical power at 3 seeds is marginal: 10% effect ~1 SE at k=4. Sufficient for directional probe but inconclusive zone is noise-dominated.",
+    "Atlas reuse across allocations within a seed is correct and efficient."
+  ]
+}
