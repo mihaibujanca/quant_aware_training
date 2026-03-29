@@ -107,6 +107,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Refuted if: error is super-multiplicative (cross-block amplification) — hard ceiling exists.
    - Inconclusive if: additive for k<=4 but regime changes at k>4.
    - Depends on: none
+   - Cycle: 089 (planned)
 
 105. **Attention block compression feasibility scan — GPT-2**
    - All 87 cycles have targeted FFN blocks only. Cycle 085 audit explicitly recommended pivoting to attention blocks. For all 12 attention blocks, measure: (a) per-head output rank (SVD of head output on 4096 tokens), (b) single-head ablation damage (zero one head, measure PPL), (c) single-attn-block random+lstsq compression at 6× (project V-projection from 768→128 per head, lstsq reconstruct). Report per-block feasibility score. This is the minimal scan to decide whether attention compression is worth a research direction.
