@@ -1,0 +1,25 @@
+{
+  "cycle": 93,
+  "item": 108,
+  "round": 1,
+  "verdict": "APPROVE",
+  "issues_total": 0,
+  "advisory_total": 2,
+  "fixes_verified": [],
+  "issues": [],
+  "advisory": [
+    {
+      "id": "A1",
+      "detail": "Block damage ordering derived from 6x may not hold at 3x. Fixed order is correct for controlled comparison, but log single-block deltas per ratio and check rank correlation. Costs no extra compute."
+    },
+    {
+      "id": "A2",
+      "detail": "W_down at 3x has 2x more parameters than 6x; 500 Adam steps may leave 3x less converged, inflating c_3x. Conservative bias (against confirmation). Log final polish loss per ratio for post-hoc convergence check."
+    }
+  ],
+  "notes": [
+    "6x replication serves as built-in sanity check against cycle 089 (c~0.41).",
+    "Cost estimate 15-20 min is slightly optimistic; 20-25 min more realistic given 72 polishes.",
+    "Monotonicity check (c_3x <= c_4x <= c_6x) is a good self-diagnostic."
+  ]
+}

@@ -1,41 +1,38 @@
-# Research Status — 92 Cycles (001–092)
+# Research Status — 93 Cycles (001–093)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 15 |
-| Refuted | 25 |
+| Refuted | 26 |
 | Inconclusive | 43 |
 | Crash | 1 |
 
 ## Latest Cycle
-- **Cycle 092** (item 107): Adam polish dissection — GPT-2 FFN — INCONCLUSIVE (audit: UNCERTAIN)
-  - rank95(delta) ~390/768, but audit flagged sigma vs sigma² issue (rank may be much lower on energy)
-  - residual_frac ~0.60 but confounded by truncation (random baseline ~0.51)
-  - PPL: step-0 ~72.6 → step-500 ~58.1 (teacher 57.65)
-  - Metrics unreliable; re-run with energy-based rank needed for definitive answer
+- **Cycle 093** (item 108): Lower compression ratio stacking — GPT-2 FFN — REFUTED
+  - Compounding rate c≈0.41 is RATIO-INDEPENDENT: 3×=0.406, 4×=0.404, 6×=0.408
+  - Single-block PPL improves at lower ratios (3×: −5.5% vs 6×: −3.0%) but washes out in stacking
+  - The ~41%/block cascade is structural, not a compression-depth effect
+  - Bottleneck is inter-block error propagation dynamics, not per-block quality
 
-## Final Answer (consolidated through cycle 092)
+## Final Answer (consolidated through cycle 093)
 
 ### The Recipe
-1. **Topk channel selection + lstsq** on probe data — MI-optimal is equivalent (091)
-2. **Stack k≤4 blocks at 6×** — multiplicative error compounding ~41%/block (089)
-3. **500 Adam steps** (lr=1e-4, W_down only) → ~+5% PPL
-4. Polish mechanism unclear — dissection inconclusive (092)
+1. **Topk + lstsq** on probe data — basis and channel selection heuristic both sufficient
+2. **Stack k≤4 blocks** — ceiling is STRUCTURAL (c≈0.41 regardless of compression ratio)
+3. **500 Adam steps** → ~+5% PPL
+4. Lower compression ratios help per-block but not in stacking
 
-### Definitive Findings
-- **Basis irrelevant**: SVD = random (071, 077)
-- **Channel selection heuristic sufficient**: MI ≈ topk (091)
-- **Piecewise-linear dead**: patterns diverse (085), Jacobians full-rank (088)
-- **Error compounds multiplicatively**: ~41%/block, k≤4 ceiling (089)
-- **GELU fully nonlinear**: no pruning headroom (083)
+### Key Structural Finding
+The ~41%/block stacking coefficient is a **network constant**, not compression-dependent. Per-block error is compression-dependent, but the cascade amplification factor is identical at 3×, 4×, and 6×. This cleanly separates the problem: the bottleneck is **inter-block error propagation**, not per-block approximation quality.
 
 ### Dead Directions
-- Topology, Jacobian SVD, rank-matching, analytic stacking correction
-- GELU pruning/clustering, centroid affine, mixed-corpus stacking
-- MI channel selection, piecewise-linear compression
+- All piecewise-linear approaches (085, 088)
+- Analytic stacking correction (080-082)
+- GELU pruning (083), MI channel selection (091)
+- Lower compression ratios for better stacking (093)
 
 ## Remaining NEXT Items
-- **P0**: Items 103 (low-rank Jacobian), 108 (lower compression ratio stacking)
+- **P0**: Item 103 (low-rank Jacobian)
 - **P1**: Items 109 (attention compression v2), 110 (non-uniform compression)
 - **P2**: Items 87-88 (Procrustes, learned bottleneck AE)
