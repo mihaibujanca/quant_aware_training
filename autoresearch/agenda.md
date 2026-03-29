@@ -6,7 +6,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0 — Interpretability: GELU nonlinear zone geometry
 
-119. **Pre-activation distribution anatomy — GPT-2 FFN** [INTERPRETABILITY]
+119. **Pre-activation distribution anatomy — GPT-2 FFN** [INTERPRETABILITY] — CYCLE 108: INCONCLUSIVE
    - Cycle 103 found 22-52% of FFN pre-activations fall in |z| < 0.5 (the GELU nonlinear knee), with block 1 at 52%. This experiment characterizes the pre-activation distribution per block to determine whether this concentration is expected or structurally interesting.
    - For all 12 blocks on 4096 mixed-corpus tokens: (a) compute z = W_in @ x + b_in for all 3072 channels, (b) fit per-channel Gaussian N(μ_j, σ²_j) and report the fit quality (KS test), (c) compute the fraction of activations in |z| < T for T in {0.25, 0.5, 1.0, 1.5, 2.0} — compare to the Gaussian prediction Φ(T/σ) - Φ(-T/σ), (d) report per-block: mean(σ), std(σ), fraction of channels with σ < 0.5 (tightly concentrated around zero), fraction with |μ| > σ (biased away from zero).
    - **Key analysis outputs** (store ALL of these in the results JSON): per-block histograms of σ_j (channel-level pre-activation spread), per-block histograms of μ_j (channel-level bias), the empirical vs Gaussian predicted zone fractions at each T, identification of "bump-dominated channels" (σ < 0.5 AND |μ| < 0.5) — these are the channels whose computation lives almost entirely in the GELU nonlinear zone.
@@ -51,9 +51,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0 — Cascade mechanism and correction
 
-115. **Cascade error source: residual-stream vs nonlinearity amplification — GPT-2 FFN**
-   - The 41%/block cascade rate (c≈0.41) is the binding constraint on stacking. It is ratio-independent (cycle 093) and ordering-independent (cycle 089), so it is not a simple single-block-error problem — it is an inter-block amplification phenomenon. But WHERE does the amplification happen? When block L is compressed and its output error δ_L enters the residual stream, the next FFN block L+1 sees input x_{L+1} + δ_L. The amplification could come from: (a) GELU nonlinearity in block L+1 mapping δ_L into a different activation region (cycle 103 shows 94.6% of activations are in the GELU bump zone where sensitivity is highest), or (b) attention heads between L and L+1 redistributing the error across sequence positions. Measure both. For k=1 compressed blocks individually at each position, capture: (1) the FFN input error δ at the next block, (2) the FFN output error at the next block with/without attention between them, (3) the GELU derivative at the perturbed vs unperturbed pre-activations (does δ push activations across the bump?). Decompose the cascade into attention-mediated vs FFN-nonlinearity-mediated fractions per block pair.
-   - Type: analysis
+115. ~~**Cascade error source: residual-stream vs nonlinearity amplification — GPT-2 FFN**~~ *(CONFIRMED — cycle 104)*
    - Confirmed if: one source (attention or GELU nonlinearity) accounts for ≥70% of cascade amplification in ≥8/11 block transitions (clear target for intervention).
    - Refuted if: both sources contribute roughly equally (40-60% each) across all transitions (no single intervention target).
    - Inconclusive if: dominant source varies by block position.
