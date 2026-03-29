@@ -201,6 +201,34 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 093
    - Artifacts: experiments/lower_ratio_stacking_gpt2.py, autoresearch/results/cycle_093_lower_ratio_stacking.json, autoresearch/results/cycle_093_lower_ratio_stacking.png
 
+### P0 — Cascade mechanism and inter-block correction
+
+111. **Cascade attribution: FFN vs attention — GPT-2** *(moved to PAST — cycle 096, plan REJECT round 2)*
+
+112. **Inter-block error correction via residual-stream projection — GPT-2 FFN**
+   - Per-block polish (500 Adam steps) reduces single-block error but does not reduce the c≈0.41 cascade rate (093, 094). Hypothesis: the cascade compounds because each block's error lies in the subspace that downstream blocks amplify. Test an inter-block correction: after each compressed FFN, project the residual stream error (compressed_output − float_output on calibration data) onto the top-r singular vectors of the downstream block's input Jacobian, and subtract that component. This is a no-training correction: r singular vectors per block, computed once on calibration data. At r=16, cost is 16×768 = 12K params per block (vs 4.7M FFN). Run k=4 and k=8 stacking with inter-block projection at r ∈ {4, 8, 16, 32}. Measure PPL and refit c.
+   - Type: implementation + empirical
+   - Confirmed if: c drops to ≤0.25 at r≤16, enabling k=8 at ≤+30% PPL (vs current +914%).
+   - Refuted if: c ≥0.35 at all r (error is not concentrated in a low-rank subspace of the downstream input).
+   - Inconclusive if: c drops modestly (0.25-0.35) — helps but doesn't break the wall.
+   - Depends on: none
+
+113. **Joint FFN+attention compression on viable blocks — GPT-2**
+   - Cycles 089-095 established: FFN 6× works on k≤4 blocks, attention rank-11 SVD works on 5/12 blocks (skip block 0). But these were tested independently. Test joint compression: for the 4 best FFN blocks AND the 5 viable attention blocks (intersection and union), apply FFN topk+lstsq+polish AND attention QKV SVD simultaneously. Measure: (a) joint single-block PPL (FFN+attn compressed together), (b) stacked PPL for joint-compressed blocks, (c) whether joint c is additive (c_joint ≈ c_ffn + c_attn) or sub-additive. Use 500 Adam steps on FFN W_down only (attention SVD is fixed). 3 seeds, OWT, 200 eval seqs.
+   - Type: empirical
+   - Confirmed if: joint compression on k=4 blocks achieves ≤+20% PPL (FFN-only was +5%, so attention adds ≤+15%).
+   - Refuted if: joint k=2 already >+20% (joint compression is strictly worse than sum of parts).
+   - Inconclusive if: joint k=4 is +20-40% (viable but cascade worsens).
+   - Depends on: none
+
+114. **Block-0-skip attention compression — GPT-2**
+   - Cycle 095 found block 0 is catastrophically sensitive (+102% PPL for attention SVD) while blocks 1,3,4,9,10 pass at ≤+5%. Test the explicit block-0-skip strategy: compress attention in the 5 viable blocks (rank-11 QKV SVD) while leaving block 0 untouched. Measure: (a) 5-block simultaneous attention compression PPL (vs cycle 095's 3-block +13%), (b) add block-0-skip + FFN compression on the same blocks (joint from item 113), (c) does skipping block 0 reduce the attention cascade rate below the FFN c≈0.41? Also test: is block 0 sensitivity due to position embeddings? Measure attention output delta when compressing block 0 separately on tokens at position 0 vs position 512.
+   - Type: empirical
+   - Confirmed if: 5-block attention-only (skip block 0) achieves ≤+10% PPL.
+   - Refuted if: 5-block attention-only (skip block 0) >+20% PPL (block 0 isn't the only bottleneck).
+   - Inconclusive if: +10-20%.
+   - Depends on: none
+
 ### Closed — OBSOLETE items (do not run)
 
 23. ~~**Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**~~ ⚠ OBSOLETE: Superseded by item 80 (Jacobian effective rank census).
@@ -216,6 +244,14 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 096
+
+111. **Cascade attribution: FFN vs attention — GPT-2** *(inconclusive — cycle 096, design review REJECT round 2)*
+   - Plan rejected: verdict logic applied thresholds to raw fractions including interaction term, inconsistent with the clean decomposition. Also undefined variable reference.
+   - Item valid, needs cleaner verdict logic using interaction-corrected quantities.
+   - Outcome: inconclusive (plan rejected, not executed)
+   - Commit: NONE
 
 ### Cycle 095
 

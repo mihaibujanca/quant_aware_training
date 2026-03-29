@@ -1,32 +1,33 @@
-# Research Status — 95 Cycles (001–095)
+# Research Status — 96 Cycles (001–096)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 15 |
 | Refuted | 27 |
-| Inconclusive | 44 |
+| Inconclusive | 45 |
 | Crash | 1 |
 
 ## Latest Cycle
-- **Cycle 095** (item 109): Attention compression v2 — GPT-2 — INCONCLUSIVE
-  - 5/12 blocks tolerate 5.4× QKV compression at ≤+5% PPL (needed ≥6 for confirmed)
-  - Block 0 catastrophically sensitive (+102%) — early attention is critical
-  - rank-16 ≈ rank-11 in multi-block: same inter-block propagation bottleneck as FFN
-  - Attention compression is partially viable; needs block-0-skip strategy
+- **Cycle 096** (item 111): Cascade attribution — plan rejected (verdict logic issue)
 
-## Key Structural Finding (unified across FFN + attention)
-Inter-block error propagation dominates per-block approximation quality:
-- FFN: c≈0.41 ratio-independent (093), allocation-independent (094)
-- Attention: rank-16 ≈ rank-11 in stacking (095)
-- The compression ceiling is set by cascade dynamics, not per-block fidelity
+## Key Findings Summary
 
-## The Recipe (updated)
-1. **FFN**: Topk + lstsq + 500 Adam steps, k≤4 blocks at 6× → ~+5% PPL
-2. **Attention**: Per-head rank-11 SVD on QKV (skip block 0), 5/12 blocks viable
-3. Stacking limit is structural ~41%/block cascade amplification
+### Structural Stacking Limit
+- c≈0.41/block cascade rate is ratio/allocation/order-independent (089, 093, 094)
+- Same pattern in attention: rank-16 ≈ rank-11 in multi-block (095)
+- Bottleneck = inter-block error propagation, not per-block quality
+
+### FFN Compression
+- Topk + lstsq + 500 Adam → ~+5% PPL at k≤4 blocks 6×
+- Basis irrelevant, channel heuristic sufficient, GELU fully active
+- Piecewise-linear dead (both input and output space)
+
+### Attention Compression
+- 5/12 blocks viable at 5.4× QKV SVD (skip block 0)
+- Block 0 catastrophically sensitive (+102%)
 
 ## Remaining NEXT Items
-- **P0**: Item 103 (low-rank Jacobian)
+- **P0**: Items 103 (low-rank Jacobian), 112 (inter-block residual correction)
+- **P1**: Items 113 (joint FFN+attention), 114 (block-0-skip stacking)
 - **P2**: Items 87-88 (Procrustes, learned bottleneck AE)
-- Only 3 items — agenda refresh required

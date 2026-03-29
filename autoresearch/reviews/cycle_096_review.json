@@ -1,0 +1,26 @@
+{
+  "cycle": 96,
+  "item": 111,
+  "round": 2,
+  "verdict": "REJECT",
+  "issues_total": 2,
+  "advisory_total": 0,
+  "fixes_verified": ["I1: freeze-both ablation added", "A2: descriptive vs causal labels added", "A1: no sum-to-100% assumption"],
+  "issues": [
+    {
+      "id": "I2",
+      "severity": "blocking",
+      "summary": "Verdict logic applies 70% threshold to raw attn_frac/ffn_frac which still conflate each sub-block's error with the interaction term. Step 5 computes the clean decomposition but step 6 ignores it. Must threshold on interaction-corrected quantities (e.g. Shapley values) or add an INCONCLUSIVE clause when |interaction/D| > 0.15."
+    },
+    {
+      "id": "I3",
+      "severity": "blocking",
+      "summary": "per_block_dominant[L] referenced in verdict consistency check but never defined. Either specify how it is computed from per-block ablation PPLs or remove from verdict logic."
+    }
+  ],
+  "advisory": [],
+  "notes": [
+    "All three round-1 issues (I1, A1, A2) were addressed correctly in the revision.",
+    "The interaction decomposition math in step 5 is correct; the problem is that step 6 does not use it."
+  ]
+}
