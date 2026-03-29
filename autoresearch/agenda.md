@@ -37,27 +37,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0 — Geometric structure (the core question)
 
-106. **GELU output clustering (corrected) — GPT-2 FFN**
-   - Cycle 085 (item 97) was REFUTED but used Taylor linearization for reconstruction: `y ≈ gelu(z_c) + gelu'(z_c) * (z - z_c)`. This tests whether GELU is locally linear around centroids — which trivially fails for a smooth nonlinearity at large displacements. The correct question is: do tokens assigned to the same cluster produce similar **actual FFN outputs**?
-   - ⚠ **Implementation requirement**: reconstruction MUST apply actual GELU per token, NOT linearize around centroids. Specifically:
-     ```
-     # WRONG (cycle 085): Taylor linearization
-     y_approx = (gelu(z_c) + gelu_prime(z_c) * (z - z_c)) @ W_out + b_out
-
-     # CORRECT: actual GELU applied to each token's pre-activations
-     # Cluster on GELU'(z) patterns (3072-dim), assign token to cluster k
-     # For each cluster k, compute mean output: y_c = mean(W_out @ gelu(z_i) + b_out) for i in cluster k
-     # Reconstruction error = ||W_out @ gelu(z_i) + b_out - y_c|| / ||W_out @ gelu(z_i) + b_out||
-     ```
-   - Cluster on continuous GELU'(z) vectors (3072-dim) with k-means, k in {8, 16, 32, 64, 128, 256}. For each k: (a) compute within-cluster output variance (actual FFN outputs, not linearized), (b) K* = min k such that mean within-cluster reconstruction error < 5% of output norm. Also report: within-cluster vs between-cluster output variance ratio (cluster quality metric).
-   - If K* is low, item 98 (centroid compression) is back on the table — but using cluster-mean outputs as the centroid representation, not affine maps.
-   - Type: analysis
-   - Confirmed if: K* <= 64 for >=6/12 blocks (tokens in same GELU' cluster DO produce similar outputs).
-   - Refuted if: K* > 256 for majority of blocks (even with correct reconstruction, outputs are too diverse).
-   - Inconclusive if: K* varies wildly across blocks.
-   - Depends on: none (supersedes item 97)
-
-97. **GELU activation pattern diversity — GPT-2 FFN** *(REFUTED — cycle 085, but see item 106)*
+97. **GELU activation pattern diversity — GPT-2 FFN** *(REFUTED — cycle 085; confirmed by item 106, cycle 101)*
    - The fundamental geometric question: how many distinct linear behaviors does a GPT-2 FFN block have on data? For each block, compute GELU'(z_j) for all 3072 channels on 2048 mixed-corpus tokens. This gives a 3072-dim "soft activation pattern" per token (values in [0,1]). Binarize at threshold 0.5 (GELU' > 0.5 = "active"). Count unique binary patterns. Measure Hamming distances. Also cluster the continuous GELU'(z) vectors with k-means, k in {8, 16, 32, 64, 128, 256}. For each k, compute within-cluster variance of the full affine map A = W_out @ diag(GELU'(z)) @ W_in. Key output: K* = minimum k such that centroid reconstruction error < 5% of block output norm.
    - Type: analysis
    - Confirmed if: K* <= 64 for >=6/12 blocks (FFN has manageable piecewise-linear complexity).
@@ -68,13 +48,8 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 085
    - Artifacts: `experiments/gelu_pattern_diversity.py`, `autoresearch/results/cycle_085_gelu_pattern_diversity.json`, `autoresearch/results/cycle_085_gelu_pattern_diversity.png`
 
-98. **Centroid affine map compression — GPT-2 FFN** *(blocked pending item 106 — item 97 refutation used wrong reconstruction)*
-   - IF item 97 finds manageable K*: test actual compression via region merging. For block 7, take K* cluster centroids. Each centroid defines affine map A_k = W_out @ diag(centroid_GELU'_k) @ W_in + b. Replace FFN with: for input x, compute z = W_in @ x + b_in, find nearest cluster by GELU'(z), apply centroid map A_k. This is a lookup table of K* affine maps — genuinely geometric compression. At K*=32 raw: 18.9M params (more than original 4.7M), so test low-rank factorization of each A_k. At K*=32, rank-64 factorization: 3.2M params (32% reduction). Measure single-block swap PPL.
-   - Type: implementation + empirical
-   - Confirmed if: centroid-affine compression achieves <= +10% PPL at >= 20% parameter reduction.
-   - Refuted if: centroid-affine always > +20% PPL OR requires more params than original.
-   - Inconclusive if: works for some blocks but not others.
-   - Depends on: 97
+98. **Centroid affine map compression — GPT-2 FFN** *(OBSOLETE — blocked by item 106 REFUTED)*
+   - Item 106 (cycle 101) confirmed that GELU' cluster membership does not predict FFN output similarity even with correct reconstruction. K* > 256 for all 12/12 blocks. The centroid-affine approach is not viable. Do not run.
 
 99. **FFN output manifold geometry — GPT-2 FFN** *(INCONCLUSIVE — cycle 086)*
    - Why does random+lstsq match SVD+lstsq? (Cycles 071, 077.) Is this just JL lemma in high dimensions, or is there exploitable structure beyond JL? For blocks [7,5,4,1], collect hidden activations h (n x 3072) and outputs y (n x 768) on 4096 mixed-corpus tokens. Measure hidden activation covariance eigenspectrum. Key metric: isotropy ratio = lambda_512 / lambda_1 at k=512 (6x compression). Compare to Marchenko-Pastur null. Also compute lstsq condition number for topk, SVD, and random projections. Test JL bound tightness: does the empirical distance distortion match the JL prediction epsilon = O(sqrt(log(n)/k)), or is it much tighter (indicating structure beyond JL)?
@@ -222,6 +197,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 101
+
+106. **GELU output clustering (corrected) — GPT-2 FFN** *(REFUTED — cycle 101)*
+   - **Outcome: REFUTED** — K* > 256 for all 12/12 blocks. Even with correct methodology (cluster-mean of actual FFN outputs, no linearization), tokens in the same GELU' cluster do NOT produce similar outputs. Mean reconstruction error at k=256 remains 0.67–1.02 (far above 5% threshold). Between-cluster variance ratio is low (<1 in most cases), confirming GELU' cluster membership provides essentially no predictive power for FFN output. This definitively closes the GELU clustering approach.
+   - Artifacts: experiments/gelu_output_clustering_corrected.py, autoresearch/results/cycle_101_gelu_output_clustering.json, autoresearch/results/cycle_101_gelu_output_clustering.png
 
 ### Cycle 100
 
