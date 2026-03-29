@@ -1,0 +1,6 @@
+cycle: 111
+item: 122
+audit_status: PASS
+verdict_confirmed: REFUTED
+flags: quantity_mismatch_g6
+interesting: block_1_anomaly, depth_invariant_gelu_regime
