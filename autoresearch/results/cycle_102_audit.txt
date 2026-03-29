@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=refuted
+new_outcome=refuted
+reason=Full-model GELU→ReLU swap: baseline PPL 22.26 → 1874.11 (+8320%). Implementation verified correct (swaps self.act attribute used by forward(), 3 seeds CV=1.1%, per-block restore works, baseline PPL 22.26 is correct for seq_len=1024). The GELU bump is not dispensable at inference without finetuning.
+guardrail_flags=none
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Do not pursue zero-shot activation swaps. If GELU→ReLU is needed for piecewise-linear compression, use lightweight finetuning (ReluLLM-style, ~200 steps). The per-block sensitivity data (blocks 9-10 at +5-7%) could guide a block-wise incremental swap schedule. High post-ReLU sparsity (56-98%) motivates this path if the finetuning cost is acceptable.
+interesting=true
+interesting_reason=Block 0 is catastrophically sensitive (+2664% alone vs +8.7% for block 1), and post-ReLU sparsity reaches 98% in late blocks. The non-uniform sensitivity profile (U-shaped: high at block 0, low in 7-10, spike at 11) provides a natural ordering for incremental swap-and-finetune strategies.

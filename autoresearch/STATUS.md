@@ -1,20 +1,20 @@
-# Research Status — 101 Cycles (001–101)
+# Research Status — 102 Cycles (001–102)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 15 |
-| Refuted | 31 |
+| Refuted | 32 |
 | Inconclusive | 46 |
 | Crash | 1 |
 
 ## Latest Cycle
-- **Cycle 101** (item 106): GELU output clustering (corrected) — REFUTED
-  - K* > 256 for all 12/12 blocks (threshold: K* <= 64 for >=6 blocks)
-  - k=256 reconstruction error: 0.67–1.02 (far above 5% threshold)
-  - Error increases with k in blocks 3–10 (GELU' clustering actively misleads)
-  - Corrected methodology confirms cycle 085 conclusion, closes centroid-output path
-  - Item 98 (centroid affine compression) now obsolete
+- **Cycle 102** (item 107): Zero-shot GELU→ReLU swap — REFUTED
+  - Full-model swap: +8320% PPL (catastrophic)
+  - Block 0: +2664% alone (embedding-to-representation transition most sensitive)
+  - Late blocks (9-10): +5-7% (locally tolerable)
+  - Post-ReLU sparsity: 56-98% zeros
+  - Zero-shot swap is dead; piecewise-linear theory requires finetuning after swap
 
 ## Key Structural Findings (consolidated)
 
@@ -30,15 +30,14 @@
 3. **Joint**: k=2+k=2 is the practical limit (~+19%)
 4. Stacking limit is structural cascade amplification
 
-### Error/Factorization Structure (cycles 099–101)
-- FFN compression error spans ~85% of residual-stream dims (cycle 099)
-- Per-token Jacobians nearly full-rank, J(x)@x ≠ FFN(x) for GELU (cycle 100)
-- GELU' clustering: K* > 256 all blocks, error increases with k (cycle 101)
-- Random bases ≥ SVD bases (JL effect at high effective dim)
-- Subspace-projection corrections, Jacobian factorization, AND centroid clustering all ruled out
+### Dead Directions (cycles 099–102)
+- Subspace-projection correction: error spans 85% of dims (099)
+- Jacobian factorization: J(x) nearly full-rank, J(x)@x ≠ FFN(x) for GELU (100)
+- GELU' output clustering: K*>256 all blocks, error increases with k (101)
+- Zero-shot GELU→ReLU: +8320% PPL, block 0 catastrophic (102)
 
 ## Remaining NEXT Items
-- **P0**: Items 107, 108, 109
+- **P0**: Items 108, 109 (109 depends on 107 — now blocked/skipped since 107 refuted)
 - **P1**: Items 100, 101
 - **P2**: Items 87, 88
-- 7 items total
+- 6 items (minus 109 blocked) = 5 eligible items — may need agenda refresh soon
