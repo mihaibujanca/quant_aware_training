@@ -1,0 +1,18 @@
+{
+  "cycle": 84,
+  "item": 95,
+  "round": 2,
+  "verdict": "REJECT",
+  "issues_total": 1,
+  "issues": [
+    {
+      "id": 3,
+      "severity": "blocking",
+      "axis": "R2",
+      "title": "d_c and z_c independently computed — inconsistent linearization",
+      "description": "k-means centroid d_c = mean(GELU'(z_i)) != GELU'(z_c) where z_c = mean(z_i). The affine reconstruction assumes d_c = GELU'(z_c). Mismatch biases K* via systematic Jensen-gap artifact.",
+      "fix": "After computing z_c per cluster, override d_c = GELU'(z_c). Add diagnostic: ||d_c_kmeans - d_c_recomputed|| per cluster."
+    }
+  ],
+  "round1_resolved": [1, 2]
+}

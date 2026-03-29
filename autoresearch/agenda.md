@@ -43,13 +43,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 083
    - Artifacts: `experiments/gelu_nearlinearity_census_v2.py`, `autoresearch/results/cycle_083_gelu_census_v2.json`, `autoresearch/results/cycle_083_gelu_census_v2.png`
 
-95. **Data-conditioned Jacobian clustering for merge candidates — GPT-2 FFN**
-   - Probe FFN input-output behavior to find mergeable structure. For block 7, compute per-token diagonal GELU'(z) patterns on 1024 mixed-corpus tokens. Cluster with k-means, k in {8, 16, 32, 64}. Within each cluster, tokens share a similar effective linear map. Measure: (a) cluster-centroid reconstruction MSE vs full-precision output, (b) K* for <5% output norm error, (c) whether centroid Jacobians are low-rank. Builds on item 97's pattern diversity analysis with explicit merge-candidate identification.
-   - Type: analysis + empirical
-   - Confirmed if: K* ≤ 32 centroids achieve <5% output norm reconstruction error on held-out tokens.
-   - Refuted if: K* > 128 needed for <5% error.
-   - Inconclusive if: K* in 32–128 range.
-   - Depends on: 97
 
 96. **Mixed-corpus stacking evaluation — GPT-2 FFN**
    - Cycle 078 confirmed mixed-corpus lstsq refit gives +19.1% single-block improvement. Test whether this transfers to stacking: refit blocks [7,5,4,1] at 6x using mixed-corpus probe (512 tokens each from Shakespeare, WikiText-2, OWT, C4), stack, evaluate on both OWT and WikiText-2. Compare vs OWT-only refit. Include 500-step Adam polish for both.
@@ -119,6 +112,14 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 084
+
+95. **Data-conditioned Jacobian clustering for merge candidates — GPT-2 FFN** *(inconclusive — cycle 084, design review REJECT round 2)*
+   - Plan rejected: affine linearization inconsistency — k-means centroid d_c = mean(GELU'(z_i)) ≠ GELU'(z_c) due to Jensen's inequality. Reconstruction formula unsound without overriding d_c = GELU'(z_c).
+   - Item is valid but needs a corrected plan. Can be re-proposed with consistent linearization.
+   - Outcome: inconclusive (plan rejected, not executed)
+   - Commit: NONE
 
 ### Cycle 083
 
