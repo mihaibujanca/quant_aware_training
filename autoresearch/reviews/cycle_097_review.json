@@ -1,0 +1,22 @@
+{
+  "cycle": 97,
+  "item": 114,
+  "round": 1,
+  "verdict": "APPROVE",
+  "issues_total": 0,
+  "advisory_total": 1,
+  "fixes_verified": [],
+  "issues": [],
+  "advisory": [
+    {
+      "id": "A1",
+      "severity": "advisory",
+      "summary": "Plan assumes cycle 095 3-block test used blocks [1,3,4]. Verify from cycle_095 results JSON before hardcoding — if different blocks were used, Condition B control comparison is invalid."
+    }
+  ],
+  "notes": [
+    "Clean design: single PPL threshold on one primary condition, no decomposition ambiguity.",
+    "Reuses cycle 095 infra (_compress_attn_block_inplace), minimal new code.",
+    "Position probe (Condition C) is a nice secondary diagnostic but correctly excluded from verdict."
+  ]
+}
