@@ -6,7 +6,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0 — GELU→ReLU swap and piecewise-linear recovery
 
-107. **Zero-shot GELU→ReLU swap — GPT-2**
+107. **Zero-shot GELU→ReLU swap — GPT-2** *(REFUTED — cycle 102)*
    - The unmeasured experiment: load pretrained GPT-2, replace every `nn.GELU()` with `nn.ReLU()`, evaluate PPL on OWT and WikiText-2 with zero finetuning. This has never been published (every paper finetunes after swapping). If the gap is small (<+10% PPL), MASO piecewise-linear theory applies directly and the geometric compression thesis is back. If the gap is large (>+20%), the GELU bump carries task-relevant information at inference.
    - Also measure per-block: swap GELU→ReLU in one FFN at a time, measure single-block PPL. Identify which blocks are most/least sensitive to the swap. Correlate with compression difficulty from cycle 048 (P1_frob_std).
    - Also report: activation sparsity per block after ReLU swap (fraction of ReLU outputs = 0). High sparsity = free compression via pruning dead activations.
@@ -16,6 +16,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Refuted if: full-model swap PPL degradation > +30% relative (GELU bump is critical at inference).
    - Inconclusive if: +10-30% (some blocks tolerate swap, others don't).
    - Depends on: none
+   - **Outcome: REFUTED** — Full-model swap: baseline PPL 22.26 → 1874.11 (+8320% relative). The GELU bump is not dispensable. Per-block sensitivity reveals block 0 is catastrophically sensitive (+2664% alone), middle blocks (3-6) moderately sensitive (+22-57%), late blocks (9-11) surprisingly tolerant (block 9: +6.7%, block 10: +5.3%). Post-ReLU sparsity: 56-98% zeros per block (high, but irrelevant given the PPL collapse). Spearman rho with p1_frob_std = -0.24 (no correlation). Geometric compression via GELU→ReLU zero-shot swap is not viable.
+   - Cycle: 102
+   - Artifacts: experiments/gelu_relu_swap_gpt2.py, autoresearch/results/cycle_102_gelu_relu_swap.json, autoresearch/results/cycle_102_gelu_relu_swap.png
 
 108. **GELU-ReLU disagreement anatomy — GPT-2 FFN**
    - Interpretability experiment: where exactly does GELU differ from ReLU, and what is happening there? For each FFN block on 4096 mixed-corpus tokens, compute pre-activation z = W_in @ x + b_in. Partition channels×tokens into 3 zones: (a) z >> 0 where GELU(z) ≈ ReLU(z) ≈ z, (b) z << 0 where GELU(z) ≈ ReLU(z) ≈ 0, (c) z ≈ 0 ("the bump") where |GELU(z) - ReLU(z)| > threshold.
@@ -197,6 +200,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 102
+
+107. **Zero-shot GELU→ReLU swap — GPT-2** *(REFUTED — cycle 102)*
+   - **Outcome: REFUTED** — Full-model swap: baseline PPL 22.26 → 1874.11 (+8320% relative). Block 0 alone: +2664%. Late blocks (9, 10) tolerate swap (+6.7%, +5.3%). Sparsity 56-98% post-ReLU but PPL is unusable. GELU bump is critical at inference.
+   - Artifacts: experiments/gelu_relu_swap_gpt2.py, autoresearch/results/cycle_102_gelu_relu_swap.json, autoresearch/results/cycle_102_gelu_relu_swap.png
 
 ### Cycle 101
 
