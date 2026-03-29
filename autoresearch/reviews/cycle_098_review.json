@@ -1,0 +1,27 @@
+{
+  "cycle": 98,
+  "item": 113,
+  "round": 1,
+  "verdict": "APPROVE",
+  "issues_total": 0,
+  "advisory_total": 2,
+  "fixes_verified": [],
+  "issues": [],
+  "advisory": [
+    {
+      "id": "A1",
+      "severity": "advisory",
+      "summary": "FFN polish in Condition C runs with attention already SVD-compressed, so polish may partially adapt to attention artifacts. Note this asymmetry when reporting (Condition A polish is attention-free, Condition C is not)."
+    },
+    {
+      "id": "A2",
+      "severity": "advisory",
+      "summary": "Plan uses attention blocks [1,4,9] (cycle 095 top-3, +13%). Verify from cycle_095 results JSON — cycle 097 used [1,3,4] and got +25%. Using spread blocks [1,4,9] is the stronger baseline."
+    }
+  ],
+  "notes": [
+    "Clean factorial design: FFN-only x attention-only x joint, with additive prediction as diagnostic.",
+    "Reuses both cycle 089 (FFN) and cycle 095 (attention) infrastructure. Minimal new code.",
+    "Block overlap (1, 4) is acknowledged and is the realistic deployment scenario."
+  ]
+}

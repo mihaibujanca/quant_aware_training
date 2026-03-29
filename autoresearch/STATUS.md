@@ -1,37 +1,34 @@
-# Research Status — 97 Cycles (001–097)
+# Research Status — 98 Cycles (001–098)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 15 |
 | Refuted | 28 |
-| Inconclusive | 45 |
+| Inconclusive | 46 |
 | Crash | 1 |
 
 ## Latest Cycle
-- **Cycle 097** (item 114): Block-0-skip attention stacking — REFUTED
-  - 5-block skip-0: +43% PPL (above +20% threshold)
-  - BUT attention cascade rate c≈0.07/block — 6× weaker than FFN c≈0.41
-  - Block proximity drives 2× penalty: [1,3,4]=+25% vs spread [1,4,9]=+13%
-  - Attention errors are spatial; FFN errors are position-independent
+- **Cycle 098** (item 113): Joint FFN+attention compression — INCONCLUSIVE
+  - Joint k=4 FFN + k=3 attn: +134% PPL (super-additive, 1.93× additive prediction)
+  - Joint k=2+k=2: +19% (viable boundary)
+  - Cross-modality cascade: compressed attention cannot correct FFN errors in residual stream
 
-## Key Structural Findings
+## Key Structural Findings (consolidated)
 
 ### Cascade Rates
-- **FFN**: c≈0.41/block — ratio, allocation, order independent (089, 093, 094)
-- **Attention**: c≈0.07/block — much weaker but spatially dependent (097)
-- Single-block ≤+5% threshold does NOT predict stackability
+- **FFN**: c≈0.41/block, ratio/allocation/order-independent
+- **Attention**: c≈0.07/block, spatially dependent (proximity penalty)
+- **Joint FFN+attention**: SUPER-ADDITIVE (1.93× additive prediction)
+- **Viable joint boundary**: k=2 FFN + k=2 attn ≈ +19% PPL
 
-### FFN Compression
-- Topk + lstsq + 500 Adam → ~+5% PPL at k≤4 blocks 6×
-- All optimization directions exhausted (basis, channels, allocation, Newton, piecewise-linear)
-
-### Attention Compression
-- 5/12 blocks viable at 5.4× individually (095)
-- Stacking at 5 blocks: +43% — too much, but mechanism is different from FFN
-- Spatial interaction: adjacent compressed blocks amplify each other
+### Compression Recipe
+1. **FFN**: Topk + lstsq + 500 Adam, k≤4 blocks at 6× → ~+56% unpolished, ~+5% polished (k=1)
+2. **Attention**: Per-head rank-11 SVD on QKV (skip block 0), 5/12 individual viable
+3. **Joint**: k=2+k=2 is the practical limit (~+19%)
+4. Stacking limit is structural cascade amplification
 
 ## Remaining NEXT Items
-- **P0**: Items 103 (low-rank Jacobian), 112 (inter-block residual correction)
-- **P1**: Item 113 (joint FFN+attention compression)
-- **P2**: Items 87-88 (Procrustes, learned bottleneck AE)
+- **P0**: Items 103, 112
+- **P2**: Items 87-88
+- Only 4 items
