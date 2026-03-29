@@ -129,14 +129,14 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2 — Moonshots
 
-86. **Mutual information bottleneck channel selection — GPT-2 FFN [MOONSHOT]** *(REFUTED — cycle 091)*
+86. **Mutual information bottleneck channel selection — GPT-2 FFN [MOONSHOT]** *(inconclusive — cycle 091, audit corrected from refuted)*
    - Current topk selects channels by activation magnitude × output weight norm — a heuristic proxy. The information-theoretic optimum: select the k channels that maximize mutual information I(h_selected; y_block) where y_block is the full block output. Exact MI is intractable in 768D, but we can use the MINE estimator (Belghazi et al. 2018) or a simpler Gaussian MI approximation: I ≈ 0.5 · log det(Σ_full) − 0.5 · log det(Σ_residual), where Σ_residual is the covariance of y_block conditioned on the selected channels. This reduces to a greedy forward selection: at each step, add the channel that maximally reduces det(Σ_residual). For blocks [1, 4, 7, 11] at 6×, compare MI-greedy channel selection + lstsq vs topk + lstsq on single-block swap PPL. If MI selection finds channels that topk misses (high MI but low magnitude), the compression ceiling is higher than topk suggests.
    - Type: empirical
    - Confirmed if: MI-greedy + lstsq outperforms topk + lstsq by ≥ 5% relative PPL in ≥ 2/4 blocks.
    - Refuted if: MI-greedy selects ≥ 90% the same channels as topk (the heuristic is already near-optimal).
    - Inconclusive if: MI-greedy selects different channels but PPL improvement is < 3%.
    - Depends on: none
-   - Outcome: REFUTED (second criterion). MI-greedy selects substantially different channels from topk (overlap 35-61% across blocks, well below 90%), but PPL improvement is negligible (max +0.64% relative, all blocks <1%). Column subset selection via Gaussian MI adds no practical value over the topk heuristic for lstsq reconstruction. Block 11 shows MI marginally better (+0.64%), blocks 1/4/7 show MI marginally worse (-0.5% to -1.1%). Both methods vastly outperform random baseline. Topk heuristic is sufficient for channel selection.
+   - Outcome: INCONCLUSIVE (audit corrected). MI-greedy selects different channels (35-61% overlap, not ≥90% → refutation criterion unmet), but PPL improvement <1% (not ≥5% → confirmation criterion unmet). Matches inconclusive criterion: "different channels but PPL improvement <3%". Topk heuristic is practically sufficient.
    - Cycle: 091
    - Artifacts: `experiments/mi_channel_selection.py`, `autoresearch/results/cycle_091_mi_channel.json`, `autoresearch/results/cycle_091_mi_channel.png`
 

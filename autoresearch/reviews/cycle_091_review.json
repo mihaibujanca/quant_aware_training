@@ -1,0 +1,37 @@
+{
+  "cycle": 91,
+  "item": 86,
+  "round": 2,
+  "verdict": "APPROVE",
+  "issues_total": 0,
+  "advisory_total": 1,
+  "fixes_verified": [
+    {
+      "id": "I1",
+      "status": "fixed",
+      "detail": "Covariance probe increased to 8192 tokens (N/D=2.67). Lstsq uses separate 4096-token pass. P7 updated."
+    },
+    {
+      "id": "I2",
+      "status": "fixed",
+      "detail": "Schur complement recompute every 50 channels is now default behavior in Step 4. Fallback is recompute-every-step."
+    },
+    {
+      "id": "I3",
+      "status": "fixed",
+      "detail": "P6 now explicitly states Gaussian MI-greedy = column subset selection for linear regression."
+    }
+  ],
+  "issues": [],
+  "advisory": [
+    {
+      "id": "A1",
+      "title": "Cycle 077 dependency not discussed in P2",
+      "detail": "R1 flagged that cycle 077 showed SVD~random at k/n=0.67. Plan does not note this as motivation for testing at k/n=0.17. Hypothesis criteria handle verdict classification correctly, so not a design flaw."
+    }
+  ],
+  "notes": [
+    "N/D=2.67 is the bare minimum from R1 (recommended 16384). Viable with regularization guard.",
+    "No pitfalls triggered. MP3/MP6/MP7/MP8 all addressed."
+  ]
+}
