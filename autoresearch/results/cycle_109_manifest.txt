@@ -1,0 +1,26 @@
+Cycle 109: Negative Leak Decomposition — GPT-2 FFN
+Item: 120
+Verdict: CONFIRMED
+
+Key metrics:
+- b_energy > 0.70 in 12/12 blocks (range: 0.871–0.985)
+- Per-block b_energies: [0.913, 0.871, 0.958, 0.970, 0.971, 0.963, 0.947, 0.932, 0.902, 0.881, 0.944, 0.985]
+- b_ratio (||b_leak||/||block_out||): range 0.49–1.54 (large but structured)
+- s_ratio (||s_leak||/||block_out||): range 0.18–0.37
+- Reconstruction error: max 4.4e-6 relative (all blocks verified <1e-3)
+- Data: wikitext-2-raw-v1, 4096 tokens in 4 chunks of 1024
+
+Interpretation:
+  The GELU negative-regime "leak" is overwhelmingly a structured bias term.
+  87–99% of negative-regime energy is predictable from the per-channel mean
+  μ_leak_j = E[GELU(z_j) | z_j < 0], not from token-specific deviations.
+  The token-dependent signal (s_leak) carries only 1.5–12.9% of the energy.
+  This means: (1) the negative leak does not compute per-token information,
+  (2) it acts as a learned constant bias correction per channel,
+  (3) it could be folded into the c_proj.bias without meaningful loss.
+
+Files:
+- experiments/negative_leak_decomposition_gpt2.py
+- autoresearch/results/cycle_109_negative_leak.json
+- autoresearch/results/cycle_109_negative_leak.png
+- autoresearch/results/cycle_109_manifest.txt

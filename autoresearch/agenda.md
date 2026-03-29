@@ -17,7 +17,8 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: mixed across blocks or moderate excess (5-20%).
    - Depends on: none
 
-120. **Negative leak decomposition — GPT-2 FFN** [INTERPRETABILITY]
+120. **Negative leak decomposition — GPT-2 FFN** [INTERPRETABILITY] *(CONFIRMED — cycle 109)*
+   - b_energy > 0.70 in all 12/12 blocks (range 0.871–0.985). The GELU negative-regime leak is overwhelmingly a structured bias term. Token-dependent signal (s_leak) accounts for only 1.5–12.9% of negative-regime energy.
    - Cycle 103 shows 53-64% of bump-zone activations are z < 0, increasing with depth. For z < 0, GELU(z) produces a small signed output (the "leak") that ReLU would zero. This experiment decomposes what the negative leak computes.
    - For all 12 blocks on 4096 mixed-corpus tokens, for each hidden channel j: (a) partition tokens into z_j > 0 ("positive regime") and z_j < 0 ("negative regime"), (b) compute the mean negative-regime output: μ_leak_j = mean(W_out[:,j] · GELU(z_j) | z_j < 0), (c) compute the variance of the leak: Var(W_out[:,j] · GELU(z_j) | z_j < 0), (d) measure what fraction of the total channel output energy comes from the negative regime: E_neg / (E_neg + E_pos).
    - **Key analysis**: decompose the aggregate negative leak per block into (i) a constant bias term b_leak = Σ_j μ_leak_j (the mean contribution — a systematic shift), (ii) a token-dependent signal s_leak(x) = Σ_j W_out[:,j] · (GELU(z_j) - μ_leak_j) for z_j < 0. Report ||b_leak|| / ||mean_block_output|| (how large is the systematic shift?) and ||s_leak|| / ||block_output|| per token (how much token-dependent signal is in the leak?).
