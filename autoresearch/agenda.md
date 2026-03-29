@@ -213,13 +213,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: c drops modestly (0.25-0.35) — helps but doesn't break the wall.
    - Depends on: none
 
-113. **Joint FFN+attention compression on viable blocks — GPT-2**
-   - Cycles 089-095 established: FFN 6× works on k≤4 blocks, attention rank-11 SVD works on 5/12 blocks (skip block 0). But these were tested independently. Test joint compression: for the 4 best FFN blocks AND the 5 viable attention blocks (intersection and union), apply FFN topk+lstsq+polish AND attention QKV SVD simultaneously. Measure: (a) joint single-block PPL (FFN+attn compressed together), (b) stacked PPL for joint-compressed blocks, (c) whether joint c is additive (c_joint ≈ c_ffn + c_attn) or sub-additive. Use 500 Adam steps on FFN W_down only (attention SVD is fixed). 3 seeds, OWT, 200 eval seqs.
-   - Type: empirical
-   - Confirmed if: joint compression on k=4 blocks achieves ≤+20% PPL (FFN-only was +5%, so attention adds ≤+15%).
-   - Refuted if: joint k=2 already >+20% (joint compression is strictly worse than sum of parts).
-   - Inconclusive if: joint k=4 is +20-40% (viable but cascade worsens).
-   - Depends on: none
+113. ~~**Joint FFN+attention compression on viable blocks — GPT-2**~~ *(INCONCLUSIVE — cycle 098)*
 
 114. ~~**Block-0-skip attention compression — GPT-2**~~ *(REFUTED — cycle 097)*
 
@@ -238,6 +232,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 098
+
+113. **Joint FFN+attention compression on viable blocks — GPT-2** *(INCONCLUSIVE — cycle 098)*
+   - **Outcome: INCONCLUSIVE** — Joint k=4 blocks achieved +133.55% PPL (far above +20% confirmed threshold, but also above +40% inconclusive ceiling). However, joint k=2 (FFN blocks [7,5] + attn blocks [1,4]) achieved +19.38% — just under the +20% refutation threshold. Key findings: (1) FFN-only k=4 = +56.18% (matches cycle 089 exactly, not +5% as plan misstated — that was single-block); (2) Attn-only k=3 = +13.08% (matches cycle 095); (3) Interaction is strongly super-additive: +64.29% above additive prediction — joint damage is not the sum of parts, it amplifies. (4) k=2 joint is viable at +19.38%. The confirmed criterion was miscalibrated (assumed FFN k=4 = +5% single-block result, but actual accumulated is +56%). The core finding: FFN and attention errors interact super-additively through the shared residual stream, amplifying by ~64% above additive. Compression must target k≤2 blocks per modality for joint viability.
+   - Artifacts: experiments/joint_ffn_attn_compression_gpt2.py, autoresearch/results/cycle_098_joint_compression.json, autoresearch/results/cycle_098_joint_compression.png
 
 ### Cycle 097
 

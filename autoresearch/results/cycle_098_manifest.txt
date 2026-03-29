@@ -1,0 +1,36 @@
+Cycle 098 — Joint FFN+Attention Compression (GPT-2)
+Item: 113
+Verdict: INCONCLUSIVE
+Date: 2026-03-29
+
+== Key Metrics ==
+Baseline PPL:       51.66 ± 4.48
+A FFN k=4:          80.68 ± 10.83  (+56.18%)
+B Attn k=3:         58.42 ± 5.71   (+13.08%)
+C Joint k=4+k=3:   120.66 ± 26.72  (+133.55%)
+A_k2 FFN:           55.47 ± 6.49   (+7.37%)
+C_k2 Joint k=2+k=2: 61.68 ± 7.76  (+19.38%)
+Additive prediction: 87.44          (+69.26%)
+Interaction:        +33.21 PPL      (+64.29%) → super_additive
+
+== Verdict Rationale ==
+CONFIRMED requires joint k=4 ≤ +20%: FAILED (actual +133.55%)
+REFUTED requires joint k=2 > +20%: FAILED (actual +19.38%, just under threshold)
+→ INCONCLUSIVE
+
+Note: Plan's "FFN-only was +5%" was miscalibrated — that was single-block (k=1) result.
+k=4 accumulated FFN damage was already +56.18% (matches cycle 089 exactly).
+The core finding stands: FFN and attention errors interact super-additively (+64.29%
+above additive prediction), amplifying through the shared residual stream.
+k=2 joint (2 FFN + 2 attn blocks) is the viable boundary at ~+19%.
+
+== Per-Seed Raw PPLs ==
+seed 42:  baseline=57.65  A=95.95  B=66.22  C=158.15  A_k2=64.54  C_k2=72.56
+seed 123: baseline=46.88  A=72.03  B=52.69  C=97.84   A_k2=49.71  C_k2=55.01
+seed 7:   baseline=50.45  A=74.08  B=56.35  C=105.98  A_k2=52.16  C_k2=57.46
+
+== Files ==
+experiments/joint_ffn_attn_compression_gpt2.py
+autoresearch/results/cycle_098_joint_compression.json
+autoresearch/results/cycle_098_joint_compression.png
+autoresearch/results/cycle_098_manifest.txt
