@@ -1,0 +1,27 @@
+{
+  "cycle": 92,
+  "item": 107,
+  "round": 2,
+  "verdict": "APPROVE",
+  "issues_total": 0,
+  "advisory_total": 0,
+  "fixes_verified": [
+    {
+      "id": "I1",
+      "status": "fixed",
+      "detail": "P4b adds random-matrix null baseline (10 repeats, same shape/norm). P6 thresholds calibrated relative to null_rank95 (0.5x confirmed, 1.0x refuted)."
+    },
+    {
+      "id": "I2",
+      "status": "fixed",
+      "detail": "P5 uses 8192 tokens (max_tokens_per_layer override). N/d=10.7 for d_model=768, adequate for top-16 principal direction estimation."
+    }
+  ],
+  "issues": [],
+  "advisory": [],
+  "notes": [
+    "A1 from round 1 (GELU stratification) explicitly deferred with justification. No longer advisory.",
+    "R1-R5 all pass. No pitfalls triggered.",
+    "Random-matrix null is sufficient; converged-teacher control would add information but is not required."
+  ]
+}

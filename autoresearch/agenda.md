@@ -201,8 +201,8 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 092
 
-107. **Adam polish dissection — GPT-2 FFN** *(INCONCLUSIVE — cycle 092)*
-   - **Outcome: INCONCLUSIVE** — Delta is NOT low-rank (rank95≈390/768, ratio≈0.89× null); residual_frac≈0.58-0.62 (mixed subspace, neither residual-dominated nor orthogonal). PPL improves steadily: seed-averaged step-0 PPL ~72 → step-500 PPL ~58 (vs teacher ~45). Polish is neither simple lstsq correction nor discovering wholly new structure — the update is nearly full-rank and half in each subspace.
+107. **Adam polish dissection — GPT-2 FFN** *(INCONCLUSIVE — cycle 092, audit: UNCERTAIN — metric issues)*
+   - **Outcome: INCONCLUSIVE** — Delta rank95≈390/768 (ratio≈0.89× null); residual_frac≈0.58-0.62. Audit flagged: rank95 used sigma not sigma², compressing ratios toward 1.0. Energy-based rank could be much lower. Residual projection confounded by truncation to rank95 dims (random baseline ~50.8%). Results unreliable but directionally suggestive of diffuse update.
    - Artifacts: autoresearch/results/cycle_092_polish_dissection.json, autoresearch/results/cycle_092_convergence.png
    - Cycle: 092
 
