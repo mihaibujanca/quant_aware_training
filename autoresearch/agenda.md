@@ -141,13 +141,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 088
    - Artifacts: `experiments/input_space_jacobian_clustering_gpt2.py`, `autoresearch/results/cycle_088_input_jacobian_clustering.json`, `autoresearch/results/cycle_088_input_jacobian_clustering.png`
 
-103. **Low-rank Jacobian factorization for FFN compression — GPT-2 FFN**
-   - Cycle 085 audit recommended low-rank Jacobian approximation as alternative to piecewise-constant. For blocks [1, 4, 7, 11], compute per-token Jacobian J(x) (768x768) on 2048 tokens. SVD each J(x) and measure effective rank (rank at 95% energy). Then test a *global* low-rank approximation: J(x) ≈ U @ S(x) @ V^T where U, V are shared across tokens and only the diagonal S(x) varies. Fit U, V via joint SVD of stacked Jacobians. Compressed block: f(x) ≈ U @ S_pred(x) @ V^T @ x + b, where S_pred is a small network (768 → r → r). At rank r=64, this is 2 × 768 × 64 + small_net ≈ 100K params vs 4.7M original. Single-block swap PPL.
-   - Type: implementation + empirical
-   - Confirmed if: rank-64 factorization achieves <= +15% single-block PPL for >= 2/4 blocks.
-   - Refuted if: per-token Jacobian effective rank > 200 (Jacobian not low-rank) OR rank-64 > +30% PPL everywhere.
-   - Inconclusive if: rank varies wildly across blocks or tokens.
-   - Depends on: none
+103. **Low-rank Jacobian factorization for FFN compression — GPT-2 FFN** *(REFUTED — cycle 100)*
+   - **Outcome: REFUTED** — Mean-Jacobian SVD factorization U@diag(S(x))@V^T fails: median relative Frobenius error at r=128 = 0.809 (threshold: >0.5 = refuted). Per-block errors at r=128: Block 1=0.809, Block 4=0.848, Block 7=0.883, Block 11=0.718. Even r=256 gives 0.69-0.85. This is because the per-token Jacobians J(x) = W_out@diag(GELU'(z))@W_in are rank-768 (full rank) but vary enormously across tokens — their mean J_bar is low-rank but individual J(x) are not well-approximated by the mean's singular vectors. PPL confirms: oracle S(x) (exact diagonal) still gives +13.7% to +74.0% PPL degradation; predicted S(x) nearly identical. Random null (random U,V) is *better* than SVD U,V for 3/4 blocks (random: +3-12%; SVD oracle: +13-74%). The factored linear form f(x)=U@diag(S(x))@V^T@x fundamentally cannot represent the nonlinear FFN even with oracle S. Ridge predictor rel_MSE is tiny (0.06-0.51% of ||S||^2), so prediction is accurate — the factorization itself is the failure, not the predictor.
+   - Artifacts: experiments/jacobian_lowrank_factorization_gpt2.py, autoresearch/results/cycle_100_jacobian_factorization.json, autoresearch/results/cycle_100_jacobian_factorization.png
 
 ### P1 — Important (continued)
 
@@ -226,6 +222,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 100
+
+103. **Low-rank Jacobian factorization for FFN compression — GPT-2 FFN** *(REFUTED — cycle 100)*
+   - **Outcome: REFUTED** — Mean-Jacobian SVD factorization U@diag(S(x))@V^T fails at r=128 (median rel. error 0.809 > threshold 0.5). Per-token Jacobians have full rank (~720-730 at 95% energy) and vary enormously across tokens; their mean's singular vectors do not span the individual J(x). Oracle PPL: +13.7% to +74.0%. Random U,V beats SVD U,V in 3/4 blocks — the SVD basis provides no advantage. TopK+lstsq (k=96) achieves near-baseline PPL (−1.8% to +6.3%). The factored linear form cannot represent the nonlinear FFN even with exact S(x).
+   - Artifacts: experiments/jacobian_lowrank_factorization_gpt2.py, autoresearch/results/cycle_100_jacobian_factorization.json, autoresearch/results/cycle_100_jacobian_factorization.png
 
 ### Cycle 098
 
