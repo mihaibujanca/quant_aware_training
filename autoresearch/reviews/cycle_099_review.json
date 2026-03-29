@@ -1,0 +1,27 @@
+{
+  "cycle": 99,
+  "item": 112,
+  "round": 1,
+  "verdict": "APPROVE",
+  "issues_total": 0,
+  "advisory_total": 2,
+  "fixes_verified": [],
+  "issues": [],
+  "advisory": [
+    {
+      "id": "A1",
+      "severity": "advisory",
+      "summary": "Projection vectors computed from same 200 seqs used for eval. Acceptable for no-training SVD, but consider 100/100 cal/eval split if results are borderline."
+    },
+    {
+      "id": "A2",
+      "severity": "advisory",
+      "summary": "GPT-2 is pre-norm: LN at block input. Verify projection is inserted after residual addition (x + FFN(LN(x))), before next block's input LN. Wrong insertion point would be undone by LN."
+    }
+  ],
+  "notes": [
+    "No-training correction: SVD + projection, zero learned params. Clean experimental design.",
+    "Error rank analysis (step 3) provides early diagnostic — if rank_95 > 32, expect refutation.",
+    "Cascade refit (step 6) directly measures whether the correction changes the structural constant c."
+  ]
+}

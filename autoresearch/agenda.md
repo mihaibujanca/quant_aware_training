@@ -205,13 +205,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 111. **Cascade attribution: FFN vs attention — GPT-2** *(moved to PAST — cycle 096, plan REJECT round 2)*
 
-112. **Inter-block error correction via residual-stream projection — GPT-2 FFN**
-   - Per-block polish (500 Adam steps) reduces single-block error but does not reduce the c≈0.41 cascade rate (093, 094). Hypothesis: the cascade compounds because each block's error lies in the subspace that downstream blocks amplify. Test an inter-block correction: after each compressed FFN, project the residual stream error (compressed_output − float_output on calibration data) onto the top-r singular vectors of the downstream block's input Jacobian, and subtract that component. This is a no-training correction: r singular vectors per block, computed once on calibration data. At r=16, cost is 16×768 = 12K params per block (vs 4.7M FFN). Run k=4 and k=8 stacking with inter-block projection at r ∈ {4, 8, 16, 32}. Measure PPL and refit c.
-   - Type: implementation + empirical
-   - Confirmed if: c drops to ≤0.25 at r≤16, enabling k=8 at ≤+30% PPL (vs current +914%).
-   - Refuted if: c ≥0.35 at all r (error is not concentrated in a low-rank subspace of the downstream input).
-   - Inconclusive if: c drops modestly (0.25-0.35) — helps but doesn't break the wall.
-   - Depends on: none
+112. ~~**Inter-block error correction via residual-stream projection — GPT-2 FFN**~~ *(REFUTED — cycle 099)*
 
 113. ~~**Joint FFN+attention compression on viable blocks — GPT-2**~~ *(INCONCLUSIVE — cycle 098)*
 
@@ -1209,3 +1203,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Outcome: INCONCLUSIVE (design review reject — MP6 uninformative metric)
    - Cycle: 052
    - Commit: NONE
+
+### Cycle 099
+
+112. **Inter-block error correction via residual-stream projection — GPT-2 FFN** *(REFUTED — cycle 099)*
+   - Residual-stream error after compressed FFN blocks is diffuse, NOT low-rank. rank_95 ≈ 500–636 (out of 768 dims). Projecting out top-r error directions causes catastrophic signal destruction: k=4 PPL goes from ~70 to ~33k (r=4), k=8 from ~199 to ~184k. Error subspace overlaps heavily with useful-signal subspace. Even Adam polish on top of projection can't recover (PPL ~200 vs uncorrected ~70). Corrected cascade rate is nonsensical (c ≈ 4.7 vs uncorrected c ≈ 0.06). The inter-block projection correction approach is fundamentally flawed for this architecture.
+   - Outcome: REFUTED
+   - Cycle: 099
+   - Artifacts: `experiments/residual_projection_correction_gpt2.py`, `autoresearch/results/cycle_099_residual_projection.json`, `autoresearch/results/cycle_099_residual_projection_spectra.png`, `autoresearch/results/cycle_099_residual_projection.png`
