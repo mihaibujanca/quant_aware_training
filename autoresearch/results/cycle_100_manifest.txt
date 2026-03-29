@@ -1,0 +1,6 @@
+item_number=103
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_100_jacobian_factorization.json,autoresearch/results/cycle_100_jacobian_factorization.png
+code_paths=experiments/jacobian_lowrank_factorization_gpt2.py
+final_commit_hash=13450cf
+agenda_updated=yes
