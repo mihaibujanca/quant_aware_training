@@ -4,91 +4,25 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## NEXT EXPERIMENTS
 
-### P0 — GELU→ReLU swap and piecewise-linear recovery
+### P0 — Cascade mechanism and correction
 
-107. **Zero-shot GELU→ReLU swap — GPT-2** *(REFUTED — cycle 102)*
-   - The unmeasured experiment: load pretrained GPT-2, replace every `nn.GELU()` with `nn.ReLU()`, evaluate PPL on OWT and WikiText-2 with zero finetuning. This has never been published (every paper finetunes after swapping). If the gap is small (<+10% PPL), MASO piecewise-linear theory applies directly and the geometric compression thesis is back. If the gap is large (>+20%), the GELU bump carries task-relevant information at inference.
-   - Also measure per-block: swap GELU→ReLU in one FFN at a time, measure single-block PPL. Identify which blocks are most/least sensitive to the swap. Correlate with compression difficulty from cycle 048 (P1_frob_std).
-   - Also report: activation sparsity per block after ReLU swap (fraction of ReLU outputs = 0). High sparsity = free compression via pruning dead activations.
-   - Survey: `autoresearch/surveys/gelu_relu_inference.md`
+115. **Cascade error source: residual-stream vs nonlinearity amplification — GPT-2 FFN**
+   - The 41%/block cascade rate (c≈0.41) is the binding constraint on stacking. It is ratio-independent (cycle 093) and ordering-independent (cycle 089), so it is not a simple single-block-error problem — it is an inter-block amplification phenomenon. But WHERE does the amplification happen? When block L is compressed and its output error δ_L enters the residual stream, the next FFN block L+1 sees input x_{L+1} + δ_L. The amplification could come from: (a) GELU nonlinearity in block L+1 mapping δ_L into a different activation region (cycle 103 shows 94.6% of activations are in the GELU bump zone where sensitivity is highest), or (b) attention heads between L and L+1 redistributing the error across sequence positions. Measure both. For k=1 compressed blocks individually at each position, capture: (1) the FFN input error δ at the next block, (2) the FFN output error at the next block with/without attention between them, (3) the GELU derivative at the perturbed vs unperturbed pre-activations (does δ push activations across the bump?). Decompose the cascade into attention-mediated vs FFN-nonlinearity-mediated fractions per block pair.
+   - Type: analysis
+   - Confirmed if: one source (attention or GELU nonlinearity) accounts for ≥70% of cascade amplification in ≥8/11 block transitions (clear target for intervention).
+   - Refuted if: both sources contribute roughly equally (40-60% each) across all transitions (no single intervention target).
+   - Inconclusive if: dominant source varies by block position.
+   - Depends on: none
+
+116. **GELU negative-leak aware compression — GPT-2 FFN**
+   - Cycle 103 shows 84-88% of GELU-ReLU disagreement energy comes from z<0 (the negative leak). Standard topk+lstsq treats all hidden channels uniformly. What if we exploit the asymmetry? For each hidden channel j, compute the empirical fraction of probe tokens where z_j < 0. Channels with z_j < 0 on most tokens contribute GELU(z_j) ≈ z·σ(1.702z) ≈ small negative leak — a correction term, not a main signal. Strategy: partition channels into "positive-dominated" (z>0 on ≥50% tokens) and "negative-dominated" (z<0 on ≥50% tokens). For negative-dominated channels, their contribution to block output is small but nonzero (the leak). Approximate the aggregate leak as a low-rank bias correction b_leak = W_out @ mean(GELU(z_neg)) computed on probe data, and drop those channels from topk selection entirely. Then run topk+lstsq on the remaining positive-dominated channels only, adding b_leak as a constant offset. Compare vs standard topk+lstsq at matched effective k. Blocks [1, 4, 7, 11], 6× compression, 3 seeds.
    - Type: empirical
-   - Confirmed if: full-model swap PPL degradation <= +10% relative (GELU bump is dispensable at inference).
-   - Refuted if: full-model swap PPL degradation > +30% relative (GELU bump is critical at inference).
-   - Inconclusive if: +10-30% (some blocks tolerate swap, others don't).
+   - Confirmed if: leak-aware selection outperforms standard topk+lstsq by ≥3% relative PPL in ≥2/4 blocks at matched k.
+   - Refuted if: leak-aware selection performs within 1% of standard topk+lstsq (channel sign statistics don't improve selection).
+   - Inconclusive if: improvement is 1-3% or block-dependent.
    - Depends on: none
-   - **Outcome: REFUTED** — Full-model swap: baseline PPL 22.26 → 1874.11 (+8320% relative). The GELU bump is not dispensable. Per-block sensitivity reveals block 0 is catastrophically sensitive (+2664% alone), middle blocks (3-6) moderately sensitive (+22-57%), late blocks (9-11) surprisingly tolerant (block 9: +6.7%, block 10: +5.3%). Post-ReLU sparsity: 56-98% zeros per block (high, but irrelevant given the PPL collapse). Spearman rho with p1_frob_std = -0.24 (no correlation). Geometric compression via GELU→ReLU zero-shot swap is not viable.
-   - Cycle: 102
-   - Artifacts: experiments/gelu_relu_swap_gpt2.py, autoresearch/results/cycle_102_gelu_relu_swap.json, autoresearch/results/cycle_102_gelu_relu_swap.png
-
-108. **GELU-ReLU disagreement anatomy — GPT-2 FFN** *(REFUTED — cycle 103)*
-   - Interpretability experiment: where exactly does GELU differ from ReLU, and what is happening there? For each FFN block on 4096 mixed-corpus tokens, compute pre-activation z = W_in @ x + b_in. Partition channels×tokens into 3 zones: (a) z >> 0 where GELU(z) ≈ ReLU(z) ≈ z, (b) z << 0 where GELU(z) ≈ ReLU(z) ≈ 0, (c) z ≈ 0 ("the bump") where |GELU(z) - ReLU(z)| > threshold.
-   - For zone (c) measure: (1) what fraction of channel×token pairs live here, (2) the magnitude of |GELU(z) - ReLU(z)| relative to block output norm, (3) which tokens trigger the most bump activations (is it specific token types — rare words, punctuation, BOS?), (4) which channels have the highest fraction of bump activations (are these the "interesting" channels?), (5) downstream effect: does masking the GELU-ReLU difference (setting GELU output = ReLU output for bump-zone entries only) change next-token predictions? On which tokens?
-   - Type: analysis
-   - Confirmed if: bump zone accounts for <5% of total activation energy AND masking it changes <1% of top-1 predictions (bump is noise).
-   - Refuted if: bump zone accounts for >20% of activation energy OR masking changes >10% of predictions (bump carries signal).
-   - Inconclusive if: moderate energy (5-20%) or heterogeneous across blocks.
-   - Depends on: none (but interpretation benefits from item 107 results)
-   - **Outcome: REFUTED** — Bump zone (|z|<2.5) holds 94.6% of activations and 31.5% of disagreement energy (mean across blocks; max 42.8%). Masking bump zone to ReLU changes 53.8% of top-1 predictions in the most sensitive block (block 0: +81.7 PPL). Even at T=0.5, mean energy fraction is 7.1% — above the confirmed threshold. All-blocks masking: +1318 PPL, 91.2% pred change. The GELU bump is not noise; it carries substantial task-critical signal that cannot be selectively zeroed.
-   - Cycle: 103
-   - Artifacts: experiments/gelu_relu_anatomy_gpt2.py, autoresearch/results/cycle_103_gelu_relu_anatomy.json, autoresearch/results/cycle_103_gelu_relu_anatomy.png
-
-109. ~~**ReLU-swapped GPT-2: activation pattern census — GPT-2 FFN**~~ *(BLOCKED — item 107 refuted, swap gap +8320% PPL >> 15% threshold)*
-   - Confirmed if: K* <= 64 for >=6/12 blocks (ReLU patterns are clusterable — piecewise-linear compression viable).
-   - Refuted if: K* > 256 for majority of blocks (even with ReLU, patterns too diverse).
-   - Inconclusive if: K* varies wildly across blocks.
-   - Depends on: 107 (only run if swap gap < +15% PPL)
-
-### P0 — Geometric structure (the core question)
-
-97. **GELU activation pattern diversity — GPT-2 FFN** *(REFUTED — cycle 085; confirmed by item 106, cycle 101)*
-   - The fundamental geometric question: how many distinct linear behaviors does a GPT-2 FFN block have on data? For each block, compute GELU'(z_j) for all 3072 channels on 2048 mixed-corpus tokens. This gives a 3072-dim "soft activation pattern" per token (values in [0,1]). Binarize at threshold 0.5 (GELU' > 0.5 = "active"). Count unique binary patterns. Measure Hamming distances. Also cluster the continuous GELU'(z) vectors with k-means, k in {8, 16, 32, 64, 128, 256}. For each k, compute within-cluster variance of the full affine map A = W_out @ diag(GELU'(z)) @ W_in. Key output: K* = minimum k such that centroid reconstruction error < 5% of block output norm.
-   - Type: analysis
-   - Confirmed if: K* <= 64 for >=6/12 blocks (FFN has manageable piecewise-linear complexity).
-   - Refuted if: K* > 256 for majority of blocks (GELU patterns too continuous/diverse to cluster).
-   - Inconclusive if: K* varies wildly across blocks.
-   - Depends on: none
-   - Outcome: REFUTED. K* > 256 for all 12/12 blocks. Reconstruction error at k=256 remains 0.69–1.93 (far above 5% threshold). Binary patterns: 2045/2048 unique per block (near-maximum diversity), Hamming mean 0.13–0.29. Affine linearization around cluster centroids is a poor approximation — each token has a sufficiently distinct GELU pattern that 256 centroids cannot reconstruct FFN outputs. The centroid-affine compression approach (item 98) is not viable. Note: tanh-approx GELU' range is [-0.13, 1.13], wider than exact GELU.
-   - Cycle: 085
-   - Artifacts: `experiments/gelu_pattern_diversity.py`, `autoresearch/results/cycle_085_gelu_pattern_diversity.json`, `autoresearch/results/cycle_085_gelu_pattern_diversity.png`
-
-98. **Centroid affine map compression — GPT-2 FFN** *(OBSOLETE — blocked by item 106 REFUTED)*
-   - Item 106 (cycle 101) confirmed that GELU' cluster membership does not predict FFN output similarity even with correct reconstruction. K* > 256 for all 12/12 blocks. The centroid-affine approach is not viable. Do not run.
-
-99. **FFN output manifold geometry — GPT-2 FFN** *(INCONCLUSIVE — cycle 086)*
-   - Why does random+lstsq match SVD+lstsq? (Cycles 071, 077.) Is this just JL lemma in high dimensions, or is there exploitable structure beyond JL? For blocks [7,5,4,1], collect hidden activations h (n x 3072) and outputs y (n x 768) on 4096 mixed-corpus tokens. Measure hidden activation covariance eigenspectrum. Key metric: isotropy ratio = lambda_512 / lambda_1 at k=512 (6x compression). Compare to Marchenko-Pastur null. Also compute lstsq condition number for topk, SVD, and random projections. Test JL bound tightness: does the empirical distance distortion match the JL prediction epsilon = O(sqrt(log(n)/k)), or is it much tighter (indicating structure beyond JL)?
-   - Type: analysis
-   - Confirmed if: isotropy ratio > 0.1 for >=3/4 blocks (near-spherical, JL explains lstsq dominance).
-   - Refuted if: isotropy ratio < 0.01 (steep spectrum) but lstsq still works for random bases (something beyond JL).
-   - Inconclusive if: moderate isotropy (0.01-0.1).
-   - Depends on: none
-   - Outcome: INCONCLUSIVE. Isotropy ratios (lambda_512/lambda_1): Block 7=0.0151, Block 5=0.0157, Block 4=0.0151, Block 1=0.0043. All in the moderate 0.01-0.1 range (3/4 in range; Block 1 barely below at 0.004). Spectrum is significantly steeper than Marchenko-Pastur (KS stat 0.49-0.64, p≈0; 53-72% eigenvalues outside MP support). However, JL random projection distortion is extremely tight: max 0.11 (vs JL bound 0.39), p95=0.056, mean=0.023 — random projections are 3-4x tighter than the JL upper bound. In contrast, top-k SVD projections violate isometry (max distortion 1.4) because the scale correction sqrt(d/k) over-compensates for a non-random basis. Conclusion: the spectrum is structured (not flat/random), but random projections still work because empirical JL is much tighter than the worst-case bound. The moderate isotropy does not explain why random≈SVD in lstsq: a separate mechanism (over-determined lstsq averaging out distortion) likely accounts for the match.
-   - Cycle: 086
-   - Artifacts: `experiments/ffn_manifold_geometry_gpt2.py`, `autoresearch/results/cycle_086_manifold_geometry.json`, `autoresearch/results/cycle_086_manifold_geometry.png`
 
 ### P1 — Important
-
-94. **GELU near-linearity census v2 — GPT-2 FFN (corrected methodology)** *(REFUTED — cycle 083)*
-   - Item 47 (cycle 032) was flawed (MP2: detection method mismatched to GELU). Redo with correct GELU-aware methodology. For each FFN hidden channel j in each block, compute fraction of probe tokens where |GELU'(z_j)| < 0.01 (dead) or |GELU'(z_j) - 1| < 0.05 (near-linear). Use 4096 mixed-corpus probe tokens. Report per-block: (a) fraction dead on >95% of tokens, (b) fraction near-linear on >80% of tokens, (c) remaining "genuinely nonlinear" fraction. Complements item 97 (per-channel vs per-token pattern analysis).
-   - Type: analysis
-   - Confirmed if: ≥10% dead OR ≥20% near-linear in ≥6/12 blocks.
-   - Refuted if: <5% dead AND <10% near-linear across all blocks (GELU nonlinearity fully utilized).
-   - Inconclusive if: significant but uneven across blocks (<6/12).
-   - Depends on: none
-   - Outcome: REFUTED. Total dead: 14/36864 (0.04%), near-linear: 3/36864 (0.01%) across all 12 blocks. 0/12 blocks meet threshold. GELU nonlinearity is fully utilized in GPT-2 FFN — no idle channels at per-channel level. Note: tanh-approx GELU' can be slightly negative at x≪0 (range −0.012 at x=−3), and the null N(0,1) baseline itself shows only 1.5% dead/8.2% near-linear (not the 0.3%/28% from exact GELU) — empirical results are far below null, confirming GPT-2 activations are in the active nonlinear regime.
-   - Cycle: 083
-   - Artifacts: `experiments/gelu_nearlinearity_census_v2.py`, `autoresearch/results/cycle_083_gelu_census_v2.json`, `autoresearch/results/cycle_083_gelu_census_v2.png`
-
-
-96. **Mixed-corpus stacking evaluation — GPT-2 FFN** *(INCONCLUSIVE — cycle 087)*
-   - Cycle 078 confirmed mixed-corpus lstsq refit gives +19.1% single-block improvement. Test whether this transfers to stacking: refit blocks [7,5,4,1] at 6x using mixed-corpus probe (512 tokens each from Shakespeare, WikiText-2, OWT, C4), stack, evaluate on both OWT and WikiText-2. Compare vs OWT-only refit. Include 500-step Adam polish for both.
-   - Type: empirical
-   - Confirmed if: mixed-corpus reduces stacked PPL by ≥10% relative vs OWT-only on WikiText-2, AND does not degrade OWT by >3%.
-   - Refuted if: mixed-corpus degrades stacked OWT PPL by >5%.
-   - Inconclusive if: helps WikiText-2 but degrades OWT by 3–5%.
-   - Depends on: 90
-   - Outcome: INCONCLUSIVE. Polished (500 steps) results: A (OWT-only) → OWT=55.24±0.16, Wiki=111.13±1.20; B (mixed) → OWT=56.23±0.52, Wiki=102.74±1.81. Wiki improvement: +7.5% relative (below 10% threshold). OWT degradation: +1.8% (within 3% limit). Mixed-corpus refit does improve generalization to WikiText-2 but falls short of the 10% threshold. The single-block benefit (cycle 078: +19% single block) does not stack up to meet criteria across 4 simultaneous blocks.
-   - Cycle: 087
-   - Artifacts: `experiments/mixed_corpus_stacking_gpt2.py`, `autoresearch/results/cycle_087_mixed_stacking.json`, `autoresearch/results/cycle_087_mixed_stacking.png`
 
 100. **Is FFN isotropy architectural or learned? — GPT-2 FFN**
    - Follow-up to item 99. If activations are isotropic, why? Test 1: random-init GPT-2 (no training) — same isotropy measurement. Test 2: replace GELU with ReLU in one block, measure isotropy (ReLU kills ~50% of channels with hard zeros — should break isotropy). Test 3: if training checkpoints available, measure isotropy vs training step.
@@ -106,44 +40,15 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: +10-15%.
    - Depends on: none
 
-### P0 — Geometric structure (continued — post-pivot)
-
-102. **Input-space token clustering for local Jacobian approximation — GPT-2 FFN** *(REFUTED — cycle 088)*
-   - Cycle 085 showed per-token GELU patterns are maximally diverse (2045/2048 unique), killing output-space clustering. Pivot: cluster in *input* space instead. For blocks [1, 4, 7, 11], collect FFN inputs x (n=4096 tokens, dim=768). Run k-means on x with k in {16, 32, 64, 128}. For each cluster, compute mean Jacobian J_k = mean_i(J(x_i)) over cluster members (via `torch.func.jacrev`). Reconstruct block outputs as y_approx = J_k @ (x - x_bar_k) + f(x_bar_k). Measure per-token reconstruction error ||y - y_approx||/||y||. Key question: does clustering inputs (where geometry is lower-dimensional) yield tractable K* even though output-space patterns are maximally diverse?
-   - Type: analysis
-   - Confirmed if: K* <= 64 achieves < 5% reconstruction error for >= 3/4 blocks.
-   - Refuted if: K* > 128 still > 10% error for majority of blocks (input space also too continuous).
-   - Inconclusive if: works for some blocks but not others.
-   - Depends on: none
-   - Outcome: REFUTED. K* > 64 for all 4/4 blocks (blocks [7, 5, 4, 1]). Reconstruction errors at K=64 are 1.53–2.13 (153–213%) — far above the 5% threshold. Even K=1 null baseline is already 1.93–2.68 (193–268%), and clustering in input space provides only marginal improvement: from K=4 to K=64, error drops ~10–15% relative but stays >100%. Root cause: local Jacobians at centroids are nearly full-rank (rank95: 319–478, rank99: 473–621 out of 768), meaning the FFN is not piecewise-linear in any tractable sense — each token activates a genuinely distinct linear regime. Input-space clustering is no more helpful than output-space clustering (cycle 085). The linearization y_approx = J_c @ (x - x_c) + f(x_c) fails not because centroids are wrong but because the function's nonlinearity scale is comparable to the data spread. K=1 baseline errors > 5% confirm the experiment is informative (not trivially linear), but the nonlinearity is too uniform to partition.
-   - Cycle: 088
-   - Artifacts: `experiments/input_space_jacobian_clustering_gpt2.py`, `autoresearch/results/cycle_088_input_jacobian_clustering.json`, `autoresearch/results/cycle_088_input_jacobian_clustering.png`
-
-103. **Low-rank Jacobian factorization for FFN compression — GPT-2 FFN** *(REFUTED — cycle 100)*
-   - **Outcome: REFUTED** — Mean-Jacobian SVD factorization U@diag(S(x))@V^T fails: median relative Frobenius error at r=128 = 0.809 (threshold: >0.5 = refuted). Per-block errors at r=128: Block 1=0.809, Block 4=0.848, Block 7=0.883, Block 11=0.718. Even r=256 gives 0.69-0.85. This is because the per-token Jacobians J(x) = W_out@diag(GELU'(z))@W_in are rank-768 (full rank) but vary enormously across tokens — their mean J_bar is low-rank but individual J(x) are not well-approximated by the mean's singular vectors. PPL confirms: oracle S(x) (exact diagonal) still gives +13.7% to +74.0% PPL degradation; predicted S(x) nearly identical. Random null (random U,V) is *better* than SVD U,V for 3/4 blocks (random: +3-12%; SVD oracle: +13-74%). The factored linear form f(x)=U@diag(S(x))@V^T@x fundamentally cannot represent the nonlinear FFN even with oracle S. Ridge predictor rel_MSE is tiny (0.06-0.51% of ||S||^2), so prediction is accurate — the factorization itself is the failure, not the predictor.
-   - Artifacts: experiments/jacobian_lowrank_factorization_gpt2.py, autoresearch/results/cycle_100_jacobian_factorization.json, autoresearch/results/cycle_100_jacobian_factorization.png
-
-### P1 — Important (continued)
-
-104. **Compositional error accumulation curve — GPT-2 FFN** *(REFUTED — cycle 089)*
-   - **Outcome: REFUTED** — Super-multiplicative error accumulation confirmed. Baseline PPL=51.66±5.49. Forward ordering (least-damage-first): k=4 +56%, k=5 +145%, k=8 +914%. Multiplicative fit R²=0.933, c=0.408 per block (40.8% growth per additional block). PPL(k=8)=524 vs predicted multiplicative 524 — the fit matches but c>>single-block-delta (single block: -3% to +7%), indicating strong super-block compounding. Reverse ordering identical at k=8 (both reach PPL=524). No ordering effect at k=8. A hard ceiling exists: >4 compressed blocks is unviable at 6×.
+117. **Output-space direct regression bypass — GPT-2 FFN**
+   - Every failed approach (Jacobian factorization, GELU clustering, subspace projection) tried to compress through the hidden layer. What if we bypass it entirely? For each FFN block, the function is f: R^768 → R^768. Fit a direct low-rank approximation f(x) ≈ A @ x + b where A = U @ S @ V^T with rank r, using lstsq on probe data (x→y pairs, no hidden activations at all). This is a pure input-output regression — no GELU, no hidden channels, no activation patterns. Sweep r in {32, 64, 128, 256, 384} on blocks [1, 4, 7, 11] with 4096 OWT tokens. Compare single-block swap PPL against topk+lstsq at matched parameter count (rank-r has 768×r×2 params vs topk at k channels has 768×k + k×768 params). If direct regression wins, the hidden-layer structure is a compression liability, not an asset.
    - Type: empirical
-   - Cycle: 089
-
-105. **Attention block compression feasibility scan — GPT-2** *(moved to PAST — cycle 090, plan REJECT round 2)*
+   - Confirmed if: direct rank-r regression matches or beats topk+lstsq at matched param count in ≥2/4 blocks, for any r.
+   - Refuted if: topk+lstsq outperforms direct regression by ≥5% PPL at all matched comparisons (hidden-layer structure helps compression).
+   - Inconclusive if: results are block-dependent or within 5%.
+   - Depends on: none
 
 ### P2 — Moonshots
-
-86. **Mutual information bottleneck channel selection — GPT-2 FFN [MOONSHOT]** *(inconclusive — cycle 091, audit corrected from refuted)*
-   - Current topk selects channels by activation magnitude × output weight norm — a heuristic proxy. The information-theoretic optimum: select the k channels that maximize mutual information I(h_selected; y_block) where y_block is the full block output. Exact MI is intractable in 768D, but we can use the MINE estimator (Belghazi et al. 2018) or a simpler Gaussian MI approximation: I ≈ 0.5 · log det(Σ_full) − 0.5 · log det(Σ_residual), where Σ_residual is the covariance of y_block conditioned on the selected channels. This reduces to a greedy forward selection: at each step, add the channel that maximally reduces det(Σ_residual). For blocks [1, 4, 7, 11] at 6×, compare MI-greedy channel selection + lstsq vs topk + lstsq on single-block swap PPL. If MI selection finds channels that topk misses (high MI but low magnitude), the compression ceiling is higher than topk suggests.
-   - Type: empirical
-   - Confirmed if: MI-greedy + lstsq outperforms topk + lstsq by ≥ 5% relative PPL in ≥ 2/4 blocks.
-   - Refuted if: MI-greedy selects ≥ 90% the same channels as topk (the heuristic is already near-optimal).
-   - Inconclusive if: MI-greedy selects different channels but PPL improvement is < 3%.
-   - Depends on: none
-   - Outcome: INCONCLUSIVE (audit corrected). MI-greedy selects different channels (35-61% overlap, not ≥90% → refutation criterion unmet), but PPL improvement <1% (not ≥5% → confirmation criterion unmet). Matches inconclusive criterion: "different channels but PPL improvement <3%". Topk heuristic is practically sufficient.
-   - Cycle: 091
-   - Artifacts: `experiments/mi_channel_selection.py`, `autoresearch/results/cycle_091_mi_channel.json`, `autoresearch/results/cycle_091_mi_channel.png`
 
 87. **Cross-block weight sharing via Procrustes alignment — GPT-2 FFN [MOONSHOT]**
    - If multiple blocks have similar Jacobian spectral structure (testable after item 80), their compressed W_down matrices might be related by a rotation. For each pair of compressed blocks (i, j), compute the Procrustes alignment: find orthogonal R that minimizes ||W_down_i − R · W_down_j||_F. If the residual is small (< 10% of ||W_down_i||_F), blocks i and j can share a single W_down with per-block rotation R_i — reducing total parameter count further. For k=4 compressed blocks: compute all 6 pairwise Procrustes distances. If any pairs are close, test shared-W_down + rotation vs independent W_down on stacked PPL. The extreme case: ONE shared W_down with 4 learned rotations (4 × 768 × 768 rotation params, but the rotation can be low-rank if spectral overlap is high).
@@ -164,36 +69,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: AE outperforms at some k but not others, or encoder is nonlinear but the PPL gain is small (< 3%).
    - Depends on: none
 
-108. **Lower compression ratio stacking — GPT-2 FFN** *(REFUTED — cycle 093)*
-   - Error compounds at 41%/block at 6× (cycle 089), capping useful compression at k≤4 blocks. Does lowering per-block compression to 3× or 4× reduce the compounding rate enough to compress more blocks? For compression ratios {3×, 4×, 6×}, run ordered accumulation curves (blocks added in damage order) with topk+lstsq + 500 Adam steps (lr=1e-4, W_down only). For each ratio, measure: (a) single-block PPL delta for blocks [1-11], (b) stacked PPL at k={4,6,8}, (c) fit multiplicative compounding coefficient c per ratio. 3 seeds, OWT, 200 eval seqs. The key tradeoff: 4× on 8 blocks = 2× total params vs 6× on 4 blocks = 1.5× total params — which achieves lower PPL?
-   - **Outcome: REFUTED** — c is ratio-independent: c_3x=0.406, c_4x=0.404, c_6x=0.408 (all ~0.41). k=8 PPL delta: +916% (3x), +896% (4x), +914% (6x). Null hypothesis confirmed: the ~41%/block compounding rate is intrinsic to the topk+lstsq+polish pipeline and does not decrease with less compression. Single-block PPL even improves slightly at lower ratios (3x: ~-5.9%, 6x: ~-3.0%) — individual blocks get better, but stacking cascades identically. 6x sanity check passed (c=0.408 vs cycle 089 c~0.41). Monotonicity violated by only Δ0.002 (within noise).
-   - Type: empirical
-   - Confirmed if: c drops to ≤0.20 at 3× AND k=8 stacked PPL ≤ +20% (doubling viable block count).
-   - Refuted if: c ≥ 0.30 at 3× (compounding barely improves with weaker compression).
-   - Inconclusive if: c drops but k=8 PPL still > +30%.
-   - Depends on: none
-   - Cycle: 093
-   - Artifacts: experiments/lower_ratio_stacking_gpt2.py, autoresearch/results/cycle_093_lower_ratio_stacking.json, autoresearch/results/cycle_093_lower_ratio_stacking.png
-
-### P0 — Cascade mechanism and inter-block correction
-
-111. **Cascade attribution: FFN vs attention — GPT-2** *(moved to PAST — cycle 096, plan REJECT round 2)*
-
-112. ~~**Inter-block error correction via residual-stream projection — GPT-2 FFN**~~ *(REFUTED — cycle 099)*
-
-113. ~~**Joint FFN+attention compression on viable blocks — GPT-2**~~ *(INCONCLUSIVE — cycle 098)*
-
-114. ~~**Block-0-skip attention compression — GPT-2**~~ *(REFUTED — cycle 097)*
-
-### P0 — Cascade mechanism (new)
-
-115. **Cascade error source: residual-stream vs nonlinearity amplification — GPT-2 FFN**
-   - The 41%/block cascade rate (c≈0.41) is the binding constraint on stacking. It is ratio-independent (cycle 093) and ordering-independent (cycle 089), so it is not a simple single-block-error problem — it is an inter-block amplification phenomenon. But WHERE does the amplification happen? When block L is compressed and its output error δ_L enters the residual stream, the next FFN block L+1 sees input x_{L+1} + δ_L. The amplification could come from: (a) GELU nonlinearity in block L+1 mapping δ_L into a different activation region (cycle 103 shows 94.6% of activations are in the GELU bump zone where sensitivity is highest), or (b) attention heads between L and L+1 redistributing the error across sequence positions. Measure both. For k=1 compressed blocks individually at each position, capture: (1) the FFN input error δ at the next block, (2) the FFN output error at the next block with/without attention between them, (3) the GELU derivative at the perturbed vs unperturbed pre-activations (does δ push activations across the bump?). Decompose the cascade into attention-mediated vs FFN-nonlinearity-mediated fractions per block pair.
-   - Type: analysis
-   - Confirmed if: one source (attention or GELU nonlinearity) accounts for ≥70% of cascade amplification in ≥8/11 block transitions (clear target for intervention).
-   - Refuted if: both sources contribute roughly equally (40-60% each) across all transitions (no single intervention target).
-   - Inconclusive if: dominant source varies by block position.
-   - Depends on: none
+### P0 — Cascade mechanism
 
 116. **GELU negative-leak aware compression — GPT-2 FFN**
    - Cycle 103 shows 84-88% of GELU-ReLU disagreement energy comes from z<0 (the negative leak). Standard topk+lstsq treats all hidden channels uniformly. What if we exploit the asymmetry? For each hidden channel j, compute the empirical fraction of probe tokens where z_j < 0. Channels with z_j < 0 on most tokens contribute GELU(z_j) ≈ z·σ(1.702z) ≈ small negative leak — a correction term, not a main signal. Strategy: partition channels into "positive-dominated" (z>0 on ≥50% tokens) and "negative-dominated" (z<0 on ≥50% tokens). For negative-dominated channels, their contribution to block output is small but nonzero (the leak). Approximate the aggregate leak as a low-rank bias correction b_leak = W_out @ mean(GELU(z_neg)) computed on probe data, and drop those channels from topk selection entirely. Then run topk+lstsq on the remaining positive-dominated channels only, adding b_leak as a constant offset. Compare vs standard topk+lstsq at matched effective k. Blocks [1, 4, 7, 11], 6× compression, 3 seeds.
@@ -238,6 +114,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 104
+
+115. **Cascade error source: residual-stream vs nonlinearity amplification — GPT-2 FFN** *(CONFIRMED — cycle 104)*
+   - **Outcome: CONFIRMED_ATTN** — Attention dominates (≥70%) in 8/11 transitions. Early layers (0→6): attn_frac > 1.0, gelu_frac < 0 (attention hyperamplifies, GELU attenuates). Transition 6→7 is the pivot: attn drops to 0.88, GELU turns positive. Layers 8→10: attn_frac ~0.5, gelu_frac ~0.5–0.63 (balanced). LN passthrough ratio = 1.000 everywhere (LayerNorm is neutral). Dominant source is attention, particularly self-attention redistribution of error across sequence positions. The cascade is primarily an attention-mediated phenomenon, not GELU nonlinearity. Intervention target: attention suppression or error-orthogonalization before attention sub-layer.
+   - Artifacts: experiments/cascade_error_source_gpt2.py, autoresearch/results/cycle_104_cascade_source.json, autoresearch/results/cycle_104_cascade_source.png
 
 ### Cycle 102
 
