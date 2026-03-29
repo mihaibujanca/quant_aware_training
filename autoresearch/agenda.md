@@ -77,6 +77,43 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: +10-15%.
    - Depends on: none
 
+### P0 — Geometric structure (continued — post-pivot)
+
+102. **Input-space token clustering for local Jacobian approximation — GPT-2 FFN**
+   - Cycle 085 showed per-token GELU patterns are maximally diverse (2045/2048 unique), killing output-space clustering. Pivot: cluster in *input* space instead. For blocks [1, 4, 7, 11], collect FFN inputs x (n=4096 tokens, dim=768). Run k-means on x with k in {16, 32, 64, 128}. For each cluster, compute mean Jacobian J_k = mean_i(J(x_i)) over cluster members (via `torch.func.jacrev`). Reconstruct block outputs as y_approx = J_k @ (x - x_bar_k) + f(x_bar_k). Measure per-token reconstruction error ||y - y_approx||/||y||. Key question: does clustering inputs (where geometry is lower-dimensional) yield tractable K* even though output-space patterns are maximally diverse?
+   - Type: analysis
+   - Confirmed if: K* <= 64 achieves < 5% reconstruction error for >= 3/4 blocks.
+   - Refuted if: K* > 128 still > 10% error for majority of blocks (input space also too continuous).
+   - Inconclusive if: works for some blocks but not others.
+   - Depends on: none
+   - Cycle: 088
+
+103. **Low-rank Jacobian factorization for FFN compression — GPT-2 FFN**
+   - Cycle 085 audit recommended low-rank Jacobian approximation as alternative to piecewise-constant. For blocks [1, 4, 7, 11], compute per-token Jacobian J(x) (768x768) on 2048 tokens. SVD each J(x) and measure effective rank (rank at 95% energy). Then test a *global* low-rank approximation: J(x) ≈ U @ S(x) @ V^T where U, V are shared across tokens and only the diagonal S(x) varies. Fit U, V via joint SVD of stacked Jacobians. Compressed block: f(x) ≈ U @ S_pred(x) @ V^T @ x + b, where S_pred is a small network (768 → r → r). At rank r=64, this is 2 × 768 × 64 + small_net ≈ 100K params vs 4.7M original. Single-block swap PPL.
+   - Type: implementation + empirical
+   - Confirmed if: rank-64 factorization achieves <= +15% single-block PPL for >= 2/4 blocks.
+   - Refuted if: per-token Jacobian effective rank > 200 (Jacobian not low-rank) OR rank-64 > +30% PPL everywhere.
+   - Inconclusive if: rank varies wildly across blocks or tokens.
+   - Depends on: none
+
+### P1 — Important (continued)
+
+104. **Compositional error accumulation curve — GPT-2 FFN**
+   - R4 (compositional validity) has zero data. Cycle 087 showed single-block gains attenuate in stacking, but we lack the curve. Compress blocks at 6× using the recipe (random+lstsq+500 Adam). Evaluate PPL with k=1,2,...,8 blocks compressed simultaneously, adding blocks in damage order (least-damage-first from cycle 005). Plot PPL vs k. Fit: is the curve additive (PPL(k) ≈ baseline + k·δ), multiplicative (PPL(k) ≈ baseline · (1+δ)^k), or worse? Also test reverse order (most-damage-first). This curve determines whether >4 block compression is structurally viable or if cross-block error interaction is super-additive.
+   - Type: empirical
+   - Confirmed if: error is sub-multiplicative (PPL(k) < baseline · (1+δ)^k) — stacking is viable beyond k=4.
+   - Refuted if: error is super-multiplicative (cross-block amplification) — hard ceiling exists.
+   - Inconclusive if: additive for k<=4 but regime changes at k>4.
+   - Depends on: none
+
+105. **Attention block compression feasibility scan — GPT-2**
+   - All 87 cycles have targeted FFN blocks only. Cycle 085 audit explicitly recommended pivoting to attention blocks. For all 12 attention blocks, measure: (a) per-head output rank (SVD of head output on 4096 tokens), (b) single-head ablation damage (zero one head, measure PPL), (c) single-attn-block random+lstsq compression at 6× (project V-projection from 768→128 per head, lstsq reconstruct). Report per-block feasibility score. This is the minimal scan to decide whether attention compression is worth a research direction.
+   - Type: analysis
+   - Confirmed if: >= 3/12 attention blocks achieve <= +5% single-block swap PPL at 6× (attention is compressible).
+   - Refuted if: all blocks > +15% PPL (attention resists projection-based compression).
+   - Inconclusive if: 1-2 blocks compressible but most are not.
+   - Depends on: none
+
 ### P2 — Moonshots
 
 86. **Mutual information bottleneck channel selection — GPT-2 FFN [MOONSHOT]**
