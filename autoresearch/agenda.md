@@ -79,14 +79,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0 — Geometric structure (continued — post-pivot)
 
-102. **Input-space token clustering for local Jacobian approximation — GPT-2 FFN**
+102. **Input-space token clustering for local Jacobian approximation — GPT-2 FFN** *(REFUTED — cycle 088)*
    - Cycle 085 showed per-token GELU patterns are maximally diverse (2045/2048 unique), killing output-space clustering. Pivot: cluster in *input* space instead. For blocks [1, 4, 7, 11], collect FFN inputs x (n=4096 tokens, dim=768). Run k-means on x with k in {16, 32, 64, 128}. For each cluster, compute mean Jacobian J_k = mean_i(J(x_i)) over cluster members (via `torch.func.jacrev`). Reconstruct block outputs as y_approx = J_k @ (x - x_bar_k) + f(x_bar_k). Measure per-token reconstruction error ||y - y_approx||/||y||. Key question: does clustering inputs (where geometry is lower-dimensional) yield tractable K* even though output-space patterns are maximally diverse?
    - Type: analysis
    - Confirmed if: K* <= 64 achieves < 5% reconstruction error for >= 3/4 blocks.
    - Refuted if: K* > 128 still > 10% error for majority of blocks (input space also too continuous).
    - Inconclusive if: works for some blocks but not others.
    - Depends on: none
+   - Outcome: REFUTED. K* > 64 for all 4/4 blocks (blocks [7, 5, 4, 1]). Reconstruction errors at K=64 are 1.53–2.13 (153–213%) — far above the 5% threshold. Even K=1 null baseline is already 1.93–2.68 (193–268%), and clustering in input space provides only marginal improvement: from K=4 to K=64, error drops ~10–15% relative but stays >100%. Root cause: local Jacobians at centroids are nearly full-rank (rank95: 319–478, rank99: 473–621 out of 768), meaning the FFN is not piecewise-linear in any tractable sense — each token activates a genuinely distinct linear regime. Input-space clustering is no more helpful than output-space clustering (cycle 085). The linearization y_approx = J_c @ (x - x_c) + f(x_c) fails not because centroids are wrong but because the function's nonlinearity scale is comparable to the data spread. K=1 baseline errors > 5% confirm the experiment is informative (not trivially linear), but the nonlinearity is too uniform to partition.
    - Cycle: 088
+   - Artifacts: `experiments/input_space_jacobian_clustering_gpt2.py`, `autoresearch/results/cycle_088_input_jacobian_clustering.json`, `autoresearch/results/cycle_088_input_jacobian_clustering.png`
 
 103. **Low-rank Jacobian factorization for FFN compression — GPT-2 FFN**
    - Cycle 085 audit recommended low-rank Jacobian approximation as alternative to piecewise-constant. For blocks [1, 4, 7, 11], compute per-token Jacobian J(x) (768x768) on 2048 tokens. SVD each J(x) and measure effective rank (rank at 95% energy). Then test a *global* low-rank approximation: J(x) ≈ U @ S(x) @ V^T where U, V are shared across tokens and only the diagonal S(x) varies. Fit U, V via joint SVD of stacked Jacobians. Compressed block: f(x) ≈ U @ S_pred(x) @ V^T @ x + b, where S_pred is a small network (768 → r → r). At rank r=64, this is 2 × 768 × 64 + small_net ≈ 100K params vs 4.7M original. Single-block swap PPL.
@@ -158,6 +160,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 088
+
+102. **Input-space token clustering for local Jacobian approximation — GPT-2 FFN** *(REFUTED — cycle 088)*
+   - K* > 64 for all 4/4 blocks [7, 5, 4, 1]. Reconstruction errors at K=64: Block 7=1.53, Block 5=1.90, Block 4=2.13, Block 1=1.82 (far above 5% threshold). K=1 null baseline: 1.93–2.68 — clustering barely helps. Local Jacobians are nearly full-rank (rank95: 319–478, rank99: 473–621 out of 768). The FFN behaves in a continuously distinct linear regime per token; input-space clustering is no more helpful than output-space clustering (cycle 085).
+   - Cycle: 088
+   - Artifacts: `experiments/input_space_jacobian_clustering_gpt2.py`, `autoresearch/results/cycle_088_input_jacobian_clustering.json`, `autoresearch/results/cycle_088_input_jacobian_clustering.png`
 
 ### Cycle 087
 
