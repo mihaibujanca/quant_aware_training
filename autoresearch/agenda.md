@@ -6,7 +6,27 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0 — Geometric structure (the core question)
 
-97. **GELU activation pattern diversity — GPT-2 FFN** *(REFUTED — cycle 085)*
+106. **GELU output clustering (corrected) — GPT-2 FFN**
+   - Cycle 085 (item 97) was REFUTED but used Taylor linearization for reconstruction: `y ≈ gelu(z_c) + gelu'(z_c) * (z - z_c)`. This tests whether GELU is locally linear around centroids — which trivially fails for a smooth nonlinearity at large displacements. The correct question is: do tokens assigned to the same cluster produce similar **actual FFN outputs**?
+   - ⚠ **Implementation requirement**: reconstruction MUST apply actual GELU per token, NOT linearize around centroids. Specifically:
+     ```
+     # WRONG (cycle 085): Taylor linearization
+     y_approx = (gelu(z_c) + gelu_prime(z_c) * (z - z_c)) @ W_out + b_out
+
+     # CORRECT: actual GELU applied to each token's pre-activations
+     # Cluster on GELU'(z) patterns (3072-dim), assign token to cluster k
+     # For each cluster k, compute mean output: y_c = mean(W_out @ gelu(z_i) + b_out) for i in cluster k
+     # Reconstruction error = ||W_out @ gelu(z_i) + b_out - y_c|| / ||W_out @ gelu(z_i) + b_out||
+     ```
+   - Cluster on continuous GELU'(z) vectors (3072-dim) with k-means, k in {8, 16, 32, 64, 128, 256}. For each k: (a) compute within-cluster output variance (actual FFN outputs, not linearized), (b) K* = min k such that mean within-cluster reconstruction error < 5% of output norm. Also report: within-cluster vs between-cluster output variance ratio (cluster quality metric).
+   - If K* is low, item 98 (centroid compression) is back on the table — but using cluster-mean outputs as the centroid representation, not affine maps.
+   - Type: analysis
+   - Confirmed if: K* <= 64 for >=6/12 blocks (tokens in same GELU' cluster DO produce similar outputs).
+   - Refuted if: K* > 256 for majority of blocks (even with correct reconstruction, outputs are too diverse).
+   - Inconclusive if: K* varies wildly across blocks.
+   - Depends on: none (supersedes item 97)
+
+97. **GELU activation pattern diversity — GPT-2 FFN** *(REFUTED — cycle 085, but see item 106)*
    - The fundamental geometric question: how many distinct linear behaviors does a GPT-2 FFN block have on data? For each block, compute GELU'(z_j) for all 3072 channels on 2048 mixed-corpus tokens. This gives a 3072-dim "soft activation pattern" per token (values in [0,1]). Binarize at threshold 0.5 (GELU' > 0.5 = "active"). Count unique binary patterns. Measure Hamming distances. Also cluster the continuous GELU'(z) vectors with k-means, k in {8, 16, 32, 64, 128, 256}. For each k, compute within-cluster variance of the full affine map A = W_out @ diag(GELU'(z)) @ W_in. Key output: K* = minimum k such that centroid reconstruction error < 5% of block output norm.
    - Type: analysis
    - Confirmed if: K* <= 64 for >=6/12 blocks (FFN has manageable piecewise-linear complexity).
@@ -17,7 +37,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 085
    - Artifacts: `experiments/gelu_pattern_diversity.py`, `autoresearch/results/cycle_085_gelu_pattern_diversity.json`, `autoresearch/results/cycle_085_gelu_pattern_diversity.png`
 
-98. ~~**Centroid affine map compression — GPT-2 FFN**~~ ⚠ OBSOLETE: Depends on item 97 (REFUTED — K* > 256, patterns too diverse).
+98. **Centroid affine map compression — GPT-2 FFN** *(blocked pending item 106 — item 97 refutation used wrong reconstruction)*
    - IF item 97 finds manageable K*: test actual compression via region merging. For block 7, take K* cluster centroids. Each centroid defines affine map A_k = W_out @ diag(centroid_GELU'_k) @ W_in + b. Replace FFN with: for input x, compute z = W_in @ x + b_in, find nearest cluster by GELU'(z), apply centroid map A_k. This is a lookup table of K* affine maps — genuinely geometric compression. At K*=32 raw: 18.9M params (more than original 4.7M), so test low-rank factorization of each A_k. At K*=32, rank-64 factorization: 3.2M params (32% reduction). Measure single-block swap PPL.
    - Type: implementation + empirical
    - Confirmed if: centroid-affine compression achieves <= +10% PPL at >= 20% parameter reduction.
@@ -109,13 +129,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2 — Moonshots
 
-86. **Mutual information bottleneck channel selection — GPT-2 FFN [MOONSHOT]**
+86. **Mutual information bottleneck channel selection — GPT-2 FFN [MOONSHOT]** *(REFUTED — cycle 091)*
    - Current topk selects channels by activation magnitude × output weight norm — a heuristic proxy. The information-theoretic optimum: select the k channels that maximize mutual information I(h_selected; y_block) where y_block is the full block output. Exact MI is intractable in 768D, but we can use the MINE estimator (Belghazi et al. 2018) or a simpler Gaussian MI approximation: I ≈ 0.5 · log det(Σ_full) − 0.5 · log det(Σ_residual), where Σ_residual is the covariance of y_block conditioned on the selected channels. This reduces to a greedy forward selection: at each step, add the channel that maximally reduces det(Σ_residual). For blocks [1, 4, 7, 11] at 6×, compare MI-greedy channel selection + lstsq vs topk + lstsq on single-block swap PPL. If MI selection finds channels that topk misses (high MI but low magnitude), the compression ceiling is higher than topk suggests.
    - Type: empirical
    - Confirmed if: MI-greedy + lstsq outperforms topk + lstsq by ≥ 5% relative PPL in ≥ 2/4 blocks.
    - Refuted if: MI-greedy selects ≥ 90% the same channels as topk (the heuristic is already near-optimal).
    - Inconclusive if: MI-greedy selects different channels but PPL improvement is < 3%.
    - Depends on: none
+   - Outcome: REFUTED (second criterion). MI-greedy selects substantially different channels from topk (overlap 35-61% across blocks, well below 90%), but PPL improvement is negligible (max +0.64% relative, all blocks <1%). Column subset selection via Gaussian MI adds no practical value over the topk heuristic for lstsq reconstruction. Block 11 shows MI marginally better (+0.64%), blocks 1/4/7 show MI marginally worse (-0.5% to -1.1%). Both methods vastly outperform random baseline. Topk heuristic is sufficient for channel selection.
+   - Cycle: 091
+   - Artifacts: `experiments/mi_channel_selection.py`, `autoresearch/results/cycle_091_mi_channel.json`, `autoresearch/results/cycle_091_mi_channel.png`
 
 87. **Cross-block weight sharing via Procrustes alignment — GPT-2 FFN [MOONSHOT]**
    - If multiple blocks have similar Jacobian spectral structure (testable after item 80), their compressed W_down matrices might be related by a rotation. For each pair of compressed blocks (i, j), compute the Procrustes alignment: find orthogonal R that minimizes ||W_down_i − R · W_down_j||_F. If the residual is small (< 10% of ||W_down_i||_F), blocks i and j can share a single W_down with per-block rotation R_i — reducing total parameter count further. For k=4 compressed blocks: compute all 6 pairwise Procrustes distances. If any pairs are close, test shared-W_down + rotation vs independent W_down on stacked PPL. The extreme case: ONE shared W_down with 4 learned rotations (4 × 768 × 768 rotation params, but the rotation can be low-rank if spectral overlap is high).
