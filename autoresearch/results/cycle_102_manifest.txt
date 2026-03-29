@@ -1,0 +1,6 @@
+item_number=107
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_102_gelu_relu_swap.json,autoresearch/results/cycle_102_gelu_relu_swap.png
+code_paths=experiments/gelu_relu_swap_gpt2.py
+final_commit_hash=f3cc742
+agenda_updated=yes
