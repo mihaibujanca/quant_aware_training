@@ -1,0 +1,6 @@
+item_number=108
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_103_gelu_relu_anatomy.json,autoresearch/results/cycle_103_gelu_relu_anatomy.png
+code_paths=experiments/gelu_relu_anatomy_gpt2.py
+final_commit_hash=TBD
+agenda_updated=yes

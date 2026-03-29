@@ -20,7 +20,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 102
    - Artifacts: experiments/gelu_relu_swap_gpt2.py, autoresearch/results/cycle_102_gelu_relu_swap.json, autoresearch/results/cycle_102_gelu_relu_swap.png
 
-108. **GELU-ReLU disagreement anatomy — GPT-2 FFN**
+108. **GELU-ReLU disagreement anatomy — GPT-2 FFN** *(REFUTED — cycle 103)*
    - Interpretability experiment: where exactly does GELU differ from ReLU, and what is happening there? For each FFN block on 4096 mixed-corpus tokens, compute pre-activation z = W_in @ x + b_in. Partition channels×tokens into 3 zones: (a) z >> 0 where GELU(z) ≈ ReLU(z) ≈ z, (b) z << 0 where GELU(z) ≈ ReLU(z) ≈ 0, (c) z ≈ 0 ("the bump") where |GELU(z) - ReLU(z)| > threshold.
    - For zone (c) measure: (1) what fraction of channel×token pairs live here, (2) the magnitude of |GELU(z) - ReLU(z)| relative to block output norm, (3) which tokens trigger the most bump activations (is it specific token types — rare words, punctuation, BOS?), (4) which channels have the highest fraction of bump activations (are these the "interesting" channels?), (5) downstream effect: does masking the GELU-ReLU difference (setting GELU output = ReLU output for bump-zone entries only) change next-token predictions? On which tokens?
    - Type: analysis
@@ -28,6 +28,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Refuted if: bump zone accounts for >20% of activation energy OR masking changes >10% of predictions (bump carries signal).
    - Inconclusive if: moderate energy (5-20%) or heterogeneous across blocks.
    - Depends on: none (but interpretation benefits from item 107 results)
+   - **Outcome: REFUTED** — Bump zone (|z|<2.5) holds 94.6% of activations and 31.5% of disagreement energy (mean across blocks; max 42.8%). Masking bump zone to ReLU changes 53.8% of top-1 predictions in the most sensitive block (block 0: +81.7 PPL). Even at T=0.5, mean energy fraction is 7.1% — above the confirmed threshold. All-blocks masking: +1318 PPL, 91.2% pred change. The GELU bump is not noise; it carries substantial task-critical signal that cannot be selectively zeroed.
+   - Cycle: 103
+   - Artifacts: experiments/gelu_relu_anatomy_gpt2.py, autoresearch/results/cycle_103_gelu_relu_anatomy.json, autoresearch/results/cycle_103_gelu_relu_anatomy.png
 
 109. **ReLU-swapped GPT-2: activation pattern census — GPT-2 FFN**
    - IF item 107 shows small gap: re-run item 97's core question on the ReLU-swapped model. With ReLU, activation patterns are binary (neuron on/off). Count unique binary patterns per block on 4096 mixed-corpus tokens. Measure: (a) number of unique patterns vs theoretical max 2^3072, (b) Hamming distances between patterns, (c) cluster patterns with k-means on binary vectors, k in {8, 16, 32, 64, 128, 256}, (d) K* = min k for <5% within-cluster output variance.
