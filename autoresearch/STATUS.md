@@ -1,21 +1,22 @@
-# Research Status — 81 Cycles (001–081)
+# Research Status — 82 Cycles (001–082)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 15 |
 | Refuted | 21 |
-| Inconclusive | 36 |
+| Inconclusive | 37 |
 | Crash | 1 |
 
 ## Latest Cycle
-- **Cycle 081** (item 85): Analytic Newton correction via Jacobian chain rule — GPT-2 FFN — INCONCLUSIVE (audit: UNCERTAIN — method failure)
-  - Implementation used finite-diff full-Hessian (indefinite) instead of true Gauss-Newton J^T J
-  - Newton step diverged +902%, but steepest descent +14.3% shows gradient signal is valid
-  - Audit downgraded from REFUTED: wrong Hv approximation, 10 CG iters on 98K params, damping ~1e-10
-  - Not evidence against the hypothesis — implementation was inadequate
+- **Cycle 082** (item 93): True Gauss-Newton correction retry — GPT-2 FFN — INCONCLUSIVE
+  - True GN J^T J via jvp+vjp correctly implemented (CG residuals monotone-decreasing, confirming PSD)
+  - GN +21.5% ≈ steepest descent +21.6% ≈ unpolished +21.7% — no improvement
+  - Root cause: severely underdetermined (1016 tokens << 98K params), ~97K-dim null space
+  - Adam 500 still dominates at +7.7% by iteratively exploring the null space
+  - Closes single-step Newton line for GPT-2 FFN compression
 
-## Final Answer (consolidated through cycle 081)
+## Final Answer (consolidated through cycle 082)
 
 ### The Recipe
 1. **Random projection + lstsq** on **mixed-corpus probe data** (2048+ tokens, diverse sources)
@@ -29,12 +30,14 @@
 - **FFN spectral structure partially shared**: alignment 0.74-0.79 (cycle 079)
 - **Stacking error = retained-spectrum corruption** (cycle 072), but analytic correction doesn't work (cycle 080)
 - **Single-block metrics misleading**: lstsq domain adaptation inflates quality
+- **Single-step Newton fundamentally limited**: n_tokens << n_params makes GN ≈ steepest descent (cycle 082)
 
 ### Dead Directions
 - Topology (5 experiments), Jacobian SVD basis, rank-matching
 - Learned compressors, cascaded re-probing
 - Analytic stacking correction via retained-spectrum projection (cycle 080)
+- Single-step Newton/Gauss-Newton correction (cycles 081, 082)
 
 ## Remaining NEXT Items
-- **P2**: Items 86-88 (moonshots: MI channel selection, Procrustes sharing, learned bottleneck AE)
-- Item 85 (Newton correction) remains inconclusive — could be revisited with correct GN implementation
+- **P1**: Item 94 (GELU near-linearity census v2)
+- **P2**: Items 86-88, 95-96 (MI channel selection, Procrustes sharing, learned bottleneck AE, Jacobian clustering, mixed-corpus stacking)
