@@ -1,0 +1,9 @@
+PASS
+item=115
+claimed=CONFIRMED_ATTN
+audited=CONFIRMED_ATTN
+flags=T10_interaction_large,gelu_attenuation_novel
+seeds=3
+implementation=correct
+verdict_accurate=yes
+interesting=yes

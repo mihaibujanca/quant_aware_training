@@ -1,0 +1,17 @@
+{
+  "cycle": 104,
+  "item": 115,
+  "round": 2,
+  "verdict": "ACCEPT",
+  "blocking_issues": [],
+  "resolved": ["I1", "I2"],
+  "advisory": [
+    "A1: per-variant cosines would strengthen rotation analysis (partially addressed, not blocking)",
+    "A2: LayerNorm passthrough ratio reported (addressed)",
+    "A3: guard fraction computation against negative amp_full (attenuation transitions)"
+  ],
+  "pitfalls_checked": ["MP6", "MP7"],
+  "pitfalls_applicable": [],
+  "cost_ok": true,
+  "notes": "Decomposition algebraically sound. Both blocking issues from round 1 resolved. New advisory A3 for edge case where sub-layers attenuate rather than amplify error."
+}
