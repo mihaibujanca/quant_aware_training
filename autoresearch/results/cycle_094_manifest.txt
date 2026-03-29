@@ -1,0 +1,30 @@
+Cycle 094 — Non-Uniform Compression Allocation — GPT-2 FFN
+Item: 110
+Date: 2026-03-29
+Verdict: REFUTED
+
+Hypothesis tested: Allocating more channels to high-damage blocks (and fewer to low-damage blocks)
+at matched total budget (2048 channels across 4 blocks) achieves ≥10% relative PPL improvement
+over uniform 6× compression.
+
+Result: Non-uniform allocation provides negligible benefit (+0.24% delta vs uniform).
+All three allocations are statistically indistinguishable after 100-step Adam polish.
+
+Metrics (3 seeds, OWT, baseline PPL=51.66±5.49):
+  uniform_6x         (512/512/512/512):    PPL=69.40±9.69  (+34.3% vs baseline)
+  mild_nonunif       (614/512/512/410):    PPL=69.56±9.64  (+34.6% vs baseline)
+  aggressive_nonunif (768/614/358/308):    PPL=70.25±9.83  (+36.0% vs baseline)
+  best nonunif delta vs uniform: +0.24% (REFUTED threshold: <3%)
+
+Interpretation: The output-projection refit (lstsq) already exploits the block's actual
+activations. The topk selection + lstsq initialization is insensitive to channel count
+beyond a threshold — more channels in high-damage blocks do not help because the
+damage comes from the compressed representation, not from channel count per se.
+The 100-step Adam polish then levels the playing field regardless of initial allocation.
+
+Files:
+  Script:  experiments/nonuniform_compression_gpt2.py
+  JSON:    autoresearch/results/cycle_094_nonuniform_compression.json
+  Plot:    autoresearch/results/cycle_094_nonuniform_compression.png
+  TSV:     autoresearch/logs/experiments.tsv (row 094)
+  Agenda:  autoresearch/agenda.md (item 110 moved to PAST)

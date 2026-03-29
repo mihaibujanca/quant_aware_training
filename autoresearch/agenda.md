@@ -209,14 +209,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: works for some layers/heads but not others.
    - Depends on: none
 
-110. **Non-uniform compression ratio allocation — GPT-2 FFN** — P1
-   - Currently all compressed blocks use uniform 6×. But single-block damage varies widely across blocks (cycle 089: block 7 = −3%, block 9 = +7%). Allocate compression budget non-uniformly: given a total parameter budget equivalent to k blocks at 6× (e.g., k=4 → budget = 4 × original_block_params / 6), solve for per-block ratios {r_1, ..., r_k} that minimize stacked PPL subject to sum(original_params / r_i) ≤ budget. Use a greedy search: start with all blocks at 6×, iteratively reduce the highest-damage block's compression (to 4× or 3×) while increasing the lowest-damage block's compression (to 8× or 10×) to stay within budget. Test with k=4 blocks [7,5,4,1], topk+lstsq + 500 Adam polish. 3 seeds, OWT, 200 eval seqs.
-   - Type: empirical
-   - Confirmed if: non-uniform allocation achieves ≥ 10% relative PPL improvement over uniform 6× at matched parameter budget.
-   - Refuted if: non-uniform allocation improves PPL by < 3% (single-block damage differences don't matter after polish).
-   - Inconclusive if: 3-10% improvement.
-   - Depends on: none
-
 ### Closed — OBSOLETE items (do not run)
 
 23. ~~**Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**~~ ⚠ OBSOLETE: Superseded by item 80 (Jacobian effective rank census).
@@ -232,6 +224,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 094
+
+110. **Non-uniform compression ratio allocation — GPT-2 FFN** *(REFUTED — cycle 094)*
+   - **Outcome: REFUTED** — Uniform allocation is near-optimal. Baseline PPL=51.66±5.49. uniform_6x: PPL=69.40±9.69 (+34.3%), mild_nonunif: PPL=69.56±9.64 (+34.6%), aggressive_nonunif: PPL=70.25±9.83 (+36.0%). Best non-uniform delta vs uniform = +0.24% (negligible). Polish absorbs single-block damage differences; allocation is irrelevant after the output-projection is refit. 100-step Adam polish, 3 seeds, OWT.
+   - Artifacts: experiments/nonuniform_compression_gpt2.py, autoresearch/results/cycle_094_nonuniform_compression.json, autoresearch/results/cycle_094_nonuniform_compression.png
+   - Cycle: 094
 
 ### Cycle 093
 

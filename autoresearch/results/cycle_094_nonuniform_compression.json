@@ -1,0 +1,81 @@
+{
+  "experiment": "cycle_094_nonuniform_compression",
+  "item": 110,
+  "blocks": [
+    7,
+    5,
+    4,
+    1
+  ],
+  "allocations": {
+    "uniform_6x": {
+      "7": 512,
+      "5": 512,
+      "4": 512,
+      "1": 512
+    },
+    "mild_nonunif": {
+      "7": 410,
+      "5": 512,
+      "4": 512,
+      "1": 614
+    },
+    "aggressive_nonunif": {
+      "7": 308,
+      "5": 358,
+      "4": 614,
+      "1": 768
+    }
+  },
+  "total_budget": 2048,
+  "polish_steps": 100,
+  "polish_lr": 0.0001,
+  "seeds": [
+    42,
+    123,
+    7
+  ],
+  "baseline_ppl_mean": 51.660945892333984,
+  "baseline_ppl_std": 5.487211227416992,
+  "baseline_ppl_per_seed": {
+    "42": 57.65287371228062,
+    "123": 46.88114352847142,
+    "7": 50.44882078139756
+  },
+  "results": {
+    "uniform_6x": {
+      "mean_ppl": 69.39517974853516,
+      "std_ppl": 9.694723129272461,
+      "delta_pct": 34.32812456272267,
+      "per_seed": {
+        "42": 80.40224954957338,
+        "123": 62.12501859196419,
+        "7": 65.6582771412681
+      }
+    },
+    "mild_nonunif": {
+      "mean_ppl": 69.56109619140625,
+      "std_ppl": 9.641765594482422,
+      "delta_pct": 34.64928872262187,
+      "per_seed": {
+        "42": 80.4830991193625,
+        "123": 62.2303304850284,
+        "7": 65.96985391637888
+      }
+    },
+    "aggressive_nonunif": {
+      "mean_ppl": 70.25198364257812,
+      "std_ppl": 9.834809303283691,
+      "delta_pct": 35.986638318604385,
+      "per_seed": {
+        "42": 81.37066837817909,
+        "123": 62.691486713374665,
+        "7": 66.69379361727175
+      }
+    }
+  },
+  "best_nonunif_name": "mild_nonunif",
+  "best_nonunif_delta_vs_uniform": 0.2390892904555032,
+  "verdict": "REFUTED",
+  "verdict_note": "Non-uniform allocation improves PPL by <3% \u2014 allocation irrelevant after polish."
+}
