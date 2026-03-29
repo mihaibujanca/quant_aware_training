@@ -1,29 +1,25 @@
-# Research Status — 104 Cycles (001–104)
+# Research Status — 105 Cycles (001–105)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 16 |
 | Refuted | 33 |
-| Inconclusive | 46 |
+| Inconclusive | 47 |
 | Crash | 1 |
 
 ## Latest Cycle
-- **Cycle 104** (item 115): Cascade error source attribution — CONFIRMED
-  - Attention dominates cascade amplification: ≥70% in 8/11 block transitions
-  - GELU actually ATTENUATES error in early layers (T0–T5: gelu_frac < 0)
-  - Pivot at T6–T7: GELU contribution rises, attention share drops
-  - LN passthrough ratio = 1.000 everywhere (neutral)
-  - Intervention target: attention error redistribution, not FFN nonlinearity
+- **Cycle 105** (item 116): GELU negative-leak aware compression — INCONCLUSIVE (design review reject round 2)
+  - lstsq target ordering issue: b_leak post-hoc creates systematic overshoot
+  - Item remains valid, needs corrected plan
 
 ## Key Structural Findings (consolidated)
 
-### Cascade Mechanism (NEW — cycle 104)
+### Cascade Mechanism (cycle 104)
 - **c≈0.41 is attention-driven**, not GELU-nonlinearity-driven
 - Attention redistributes FFN error δ across sequence positions, amplifying norm
-- GELU attenuates error in early layers (compressive), pivots to amplification at T6-T7
-- LayerNorm is neutral (ratio 1.000)
-- Intervention: suppress attention's response to FFN error
+- GELU attenuates error in early layers, pivots at T6-T7
+- Intervention target: attention error redistribution
 
 ### Cascade Rates
 - **FFN**: c≈0.41/block, ratio/allocation/order-independent
@@ -43,7 +39,6 @@
 - GELU bump is critical signal, not noise (103)
 
 ## Remaining NEXT Items
-- **P0**: Item 116 (GELU negative-leak compression)
 - **P1**: Items 100, 101, 117 (output-space regression)
 - **P2**: Items 87, 88, 118 (cascade corrections)
-- 7 eligible items
+- 6 eligible items

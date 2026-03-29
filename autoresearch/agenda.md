@@ -4,6 +4,51 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## NEXT EXPERIMENTS
 
+### P0 — Interpretability: GELU nonlinear zone geometry
+
+119. **Pre-activation distribution anatomy — GPT-2 FFN** [INTERPRETABILITY]
+   - Cycle 103 found 22-52% of FFN pre-activations fall in |z| < 0.5 (the GELU nonlinear knee), with block 1 at 52%. This experiment characterizes the pre-activation distribution per block to determine whether this concentration is expected or structurally interesting.
+   - For all 12 blocks on 4096 mixed-corpus tokens: (a) compute z = W_in @ x + b_in for all 3072 channels, (b) fit per-channel Gaussian N(μ_j, σ²_j) and report the fit quality (KS test), (c) compute the fraction of activations in |z| < T for T in {0.25, 0.5, 1.0, 1.5, 2.0} — compare to the Gaussian prediction Φ(T/σ) - Φ(-T/σ), (d) report per-block: mean(σ), std(σ), fraction of channels with σ < 0.5 (tightly concentrated around zero), fraction with |μ| > σ (biased away from zero).
+   - **Key analysis outputs** (store ALL of these in the results JSON): per-block histograms of σ_j (channel-level pre-activation spread), per-block histograms of μ_j (channel-level bias), the empirical vs Gaussian predicted zone fractions at each T, identification of "bump-dominated channels" (σ < 0.5 AND |μ| < 0.5) — these are the channels whose computation lives almost entirely in the GELU nonlinear zone.
+   - Also compute: Spearman correlation between per-channel σ_j and topk importance score (from compression pipeline). Do bump-dominated channels tend to be high-importance or low-importance for compression?
+   - Type: analysis (interpretability)
+   - Confirmed if: empirical zone fractions match Gaussian prediction within 5% relative for ≥10/12 blocks (concentration is explained by pre-activation variance, not unexpected).
+   - Refuted if: empirical zone fractions exceed Gaussian prediction by >20% relative for ≥6/12 blocks (network places more computation in the nonlinear knee than the variance alone predicts — active concentration).
+   - Inconclusive if: mixed across blocks or moderate excess (5-20%).
+   - Depends on: none
+
+120. **Negative leak decomposition — GPT-2 FFN** [INTERPRETABILITY]
+   - Cycle 103 shows 53-64% of bump-zone activations are z < 0, increasing with depth. For z < 0, GELU(z) produces a small signed output (the "leak") that ReLU would zero. This experiment decomposes what the negative leak computes.
+   - For all 12 blocks on 4096 mixed-corpus tokens, for each hidden channel j: (a) partition tokens into z_j > 0 ("positive regime") and z_j < 0 ("negative regime"), (b) compute the mean negative-regime output: μ_leak_j = mean(W_out[:,j] · GELU(z_j) | z_j < 0), (c) compute the variance of the leak: Var(W_out[:,j] · GELU(z_j) | z_j < 0), (d) measure what fraction of the total channel output energy comes from the negative regime: E_neg / (E_neg + E_pos).
+   - **Key analysis**: decompose the aggregate negative leak per block into (i) a constant bias term b_leak = Σ_j μ_leak_j (the mean contribution — a systematic shift), (ii) a token-dependent signal s_leak(x) = Σ_j W_out[:,j] · (GELU(z_j) - μ_leak_j) for z_j < 0. Report ||b_leak|| / ||mean_block_output|| (how large is the systematic shift?) and ||s_leak|| / ||block_output|| per token (how much token-dependent signal is in the leak?).
+   - Also: for the top-20 highest-variance leak channels, what tokens produce the largest leak outputs? Is there a semantic pattern (function words, rare tokens, positional)?
+   - Type: analysis (interpretability)
+   - Confirmed if: bias term ||b_leak|| accounts for >70% of total negative-regime energy in ≥8/12 blocks (leak is mostly a constant correction, token-independent).
+   - Refuted if: token-dependent signal ||s_leak|| accounts for >70% of negative-regime energy in ≥8/12 blocks (leak carries per-token computation, not just a bias).
+   - Inconclusive if: roughly even split (30-70% each) or varies across blocks.
+   - Depends on: none
+
+121. **Channel-level bump anatomy: compression relevance — GPT-2 FFN** [INTERPRETABILITY]
+   - Cycle 103's top-20 channels have 99%+ of activations in the bump zone. Are these the channels that matter for compression (high topk importance), or are they separate? This connects the nonlinear zone geometry to the compression pipeline.
+   - For all 12 blocks on 4096 mixed-corpus tokens: (a) compute per-channel "bump fraction" = fraction of tokens with |z_j| < 1.0, (b) compute per-channel topk importance score (std(h_j) × ||W_out[:,j]|| × mean(|GELU'(z_j)|)), (c) compute Spearman correlation between bump fraction and importance score per block, (d) partition channels into quartiles by bump fraction. For each quartile, report: mean importance score, mean contribution to block output norm, mean |GELU'(z)| (activation sensitivity).
+   - **Key analysis**: identify "bump-critical" channels (top quartile bump fraction AND top quartile importance). How many exist per block? What is their aggregate contribution to block output? These are the channels where GELU's nonlinearity is most computationally relevant.
+   - Also: for bump-critical channels, measure the per-token output variance. If high, these channels compute different things for different tokens via GELU's smooth gating. If low, they compute a near-constant (and could be replaced by a bias).
+   - Type: analysis (interpretability)
+   - Confirmed if: Spearman(bump_fraction, importance) > 0.3 in ≥8/12 blocks (bump channels are compression-relevant — the nonlinear zone is where the important computation happens).
+   - Refuted if: |Spearman| < 0.1 in ≥8/12 blocks (bump zone and compression importance are orthogonal).
+   - Inconclusive if: moderate or sign-varying correlation across blocks.
+   - Depends on: none
+
+122. **Depth gradient of GELU operating regime — GPT-2 FFN** [INTERPRETABILITY]
+   - Cycle 103 shows the negative fraction of bump-zone activations increases from 54% (block 0) to 64% (block 11). This experiment maps the full depth trajectory of the GELU operating regime.
+   - For all 12 blocks on 4096 mixed-corpus tokens: (a) compute the full pre-activation CDF per block (aggregate over all channels and tokens), (b) compute per-block: mean(z), std(z), skewness(z), fraction z < -2, fraction -2 < z < 0, fraction 0 < z < 2, fraction z > 2, (c) compute per-block: mean GELU derivative E[GELU'(z)] (= effective linearity — 1.0 means fully linear, 0.5 means half-gated), (d) measure how the distribution shifts with depth: fit a linear model of mean(z) vs block index, std(z) vs block index, negative_fraction vs block index.
+   - **Key analysis**: is there a systematic drift toward the negative regime with depth? If so, deeper blocks are progressively more "gated" — GELU acts increasingly like a soft binary mask rather than an identity. Report the slope of negative_fraction vs depth and its R². Also: does attention contribute to the drift? Measure the pre-activation distribution before vs after the attention+layernorm that precedes each FFN. Does attention shift the distribution toward zero (into the bump)?
+   - Type: analysis (interpretability)
+   - Confirmed if: negative fraction increases monotonically with depth (≤1 violation) AND slope is significant (>0.5% per block, R² > 0.7) — systematic depth-dependent gating.
+   - Refuted if: no monotonic trend (≥4 violations) or slope < 0.2% per block — depth has no systematic effect.
+   - Inconclusive if: trend exists but weak (R² 0.3-0.7) or non-monotonic with clear pattern (e.g., U-shaped).
+   - Depends on: none
+
 ### P0 — Cascade mechanism and correction
 
 115. **Cascade error source: residual-stream vs nonlinearity amplification — GPT-2 FFN**
@@ -14,13 +59,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: dominant source varies by block position.
    - Depends on: none
 
-116. **GELU negative-leak aware compression — GPT-2 FFN**
-   - Cycle 103 shows 84-88% of GELU-ReLU disagreement energy comes from z<0 (the negative leak). Standard topk+lstsq treats all hidden channels uniformly. What if we exploit the asymmetry? For each hidden channel j, compute the empirical fraction of probe tokens where z_j < 0. Channels with z_j < 0 on most tokens contribute GELU(z_j) ≈ z·σ(1.702z) ≈ small negative leak — a correction term, not a main signal. Strategy: partition channels into "positive-dominated" (z>0 on ≥50% tokens) and "negative-dominated" (z<0 on ≥50% tokens). For negative-dominated channels, their contribution to block output is small but nonzero (the leak). Approximate the aggregate leak as a low-rank bias correction b_leak = W_out @ mean(GELU(z_neg)) computed on probe data, and drop those channels from topk selection entirely. Then run topk+lstsq on the remaining positive-dominated channels only, adding b_leak as a constant offset. Compare vs standard topk+lstsq at matched effective k. Blocks [1, 4, 7, 11], 6× compression, 3 seeds.
-   - Type: empirical
-   - Confirmed if: leak-aware selection outperforms standard topk+lstsq by ≥3% relative PPL in ≥2/4 blocks at matched k.
-   - Refuted if: leak-aware selection performs within 1% of standard topk+lstsq (channel sign statistics don't improve selection).
-   - Inconclusive if: improvement is 1-3% or block-dependent.
-   - Depends on: none
+116. ~~**GELU negative-leak aware compression — GPT-2 FFN**~~ *(INCONCLUSIVE — cycle 105, design review REJECT round 2: lstsq target ordering issue unresolvable in 2 rounds)*
 
 ### P1 — Important
 
@@ -69,34 +108,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: AE outperforms at some k but not others, or encoder is nonlinear but the PPL gain is small (< 3%).
    - Depends on: none
 
-### P0 — Cascade mechanism
-
-116. **GELU negative-leak aware compression — GPT-2 FFN**
-   - Cycle 103 shows 84-88% of GELU-ReLU disagreement energy comes from z<0 (the negative leak). Standard topk+lstsq treats all hidden channels uniformly. What if we exploit the asymmetry? For each hidden channel j, compute the empirical fraction of probe tokens where z_j < 0. Channels with z_j < 0 on most tokens contribute GELU(z_j) ≈ z·σ(1.702z) ≈ small negative leak — a correction term, not a main signal. Strategy: partition channels into "positive-dominated" (z>0 on ≥50% tokens) and "negative-dominated" (z<0 on ≥50% tokens). For negative-dominated channels, their contribution to block output is small but nonzero (the leak). Approximate the aggregate leak as a low-rank bias correction b_leak = W_out @ mean(GELU(z_neg)) computed on probe data, and drop those channels from topk selection entirely. Then run topk+lstsq on the remaining positive-dominated channels only, adding b_leak as a constant offset. Compare vs standard topk+lstsq at matched effective k. Blocks [1, 4, 7, 11], 6× compression, 3 seeds.
-   - Type: empirical
-   - Confirmed if: leak-aware selection outperforms standard topk+lstsq by ≥3% relative PPL in ≥2/4 blocks at matched k.
-   - Refuted if: leak-aware selection performs within 1% of standard topk+lstsq (channel sign statistics don't improve selection).
-   - Inconclusive if: improvement is 1-3% or block-dependent.
-   - Depends on: none
-
-### P1 — Important (new)
-
-117. **Output-space direct regression bypass — GPT-2 FFN**
-   - Every failed approach (Jacobian factorization, GELU clustering, subspace projection) tried to compress through the hidden layer. What if we bypass it entirely? For each FFN block, the function is f: R^768 → R^768. Fit a direct low-rank approximation f(x) ≈ A @ x + b where A = U @ S @ V^T with rank r, using lstsq on probe data (x→y pairs, no hidden activations at all). This is a pure input-output regression — no GELU, no hidden channels, no activation patterns. Sweep r in {32, 64, 128, 256, 384} on blocks [1, 4, 7, 11] with 4096 OWT tokens. Compare single-block swap PPL against topk+lstsq at matched parameter count (rank-r has 768×r×2 params vs topk at k channels has 768×k + k×768 params). If direct regression wins, the hidden-layer structure is a compression liability, not an asset.
-   - Type: empirical
-   - Confirmed if: direct rank-r regression matches or beats topk+lstsq at matched param count in ≥2/4 blocks, for any r.
-   - Refuted if: topk+lstsq outperforms direct regression by ≥5% PPL at all matched comparisons (hidden-layer structure helps compression).
-   - Inconclusive if: results are block-dependent or within 5%.
-   - Depends on: none
-
-### P2 — Moonshots (new)
-
 118. **Compositional stacking with per-block cascade correction — GPT-2 FFN**
-   - The cascade rate c≈0.41 compounds multiplicatively. What if we add a tiny per-block correction that absorbs the cascade? After compressing k blocks, insert a learned linear correction C_l = I + ΔW_l (rank-r, r in {4, 8, 16}) applied to the residual stream AFTER each compressed block l. Train all k corrections jointly under model loss (next-token CE), freezing everything else. The corrections only need to fix the cascade interaction — not the single-block error. Total added params: k × 2 × 768 × r. At k=4, r=8: 49K params (0.04% of GPT-2). Compare: (a) k=4 topk+lstsq+Adam with no correction, (b) same + rank-8 cascade corrections, (c) same + rank-16 corrections. 3 seeds, OWT, 200 eval seqs. This tests whether the cascade is low-rank correctable even though the compression error itself is high-dimensional (cycle 099: error spans 85% of dims).
+   - The cascade rate c≈0.41 compounds multiplicatively. What if we add a tiny per-block correction that absorbs the cascade? After compressing k blocks, insert a learned linear correction C_l = I + ΔW_l (rank-r, r in {4, 8, 16}) applied to the residual stream AFTER each compressed block l. Train all k corrections jointly under model loss (next-token CE), freezing everything else. Total added params: k × 2 × 768 × r. At k=4, r=8: 49K params (0.04% of GPT-2). Compare: (a) k=4 topk+lstsq+Adam with no correction, (b) same + rank-8 cascade corrections, (c) same + rank-16 corrections. 3 seeds, OWT, 200 eval seqs.
    - Type: empirical
-   - Confirmed if: cascade corrections reduce stacked PPL degradation by ≥30% relative at k=4 with r≤16 (cascade is low-rank correctable).
-   - Refuted if: corrections reduce degradation by <10% even at r=16 (cascade is high-rank and uncorrectable with small interventions).
-   - Inconclusive if: 10-30% reduction, or requires r>16 to see benefit.
+   - Confirmed if: cascade corrections reduce stacked PPL degradation by ≥30% relative at k=4 with r≤16.
+   - Refuted if: corrections reduce degradation by <10% even at r=16.
+   - Inconclusive if: 10-30% reduction, or requires r>16.
    - Depends on: none
 
 ### Closed — OBSOLETE items (do not run)
@@ -1123,3 +1140,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Outcome: REFUTED
    - Cycle: 099
    - Artifacts: `experiments/residual_projection_correction_gpt2.py`, `autoresearch/results/cycle_099_residual_projection.json`, `autoresearch/results/cycle_099_residual_projection_spectra.png`, `autoresearch/results/cycle_099_residual_projection.png`
+
+### Cycle 105
+
+116. **GELU negative-leak aware compression — GPT-2 FFN** *(INCONCLUSIVE — cycle 105)*
+   - Design review REJECT round 2: lstsq target ordering issue (b_leak added post-hoc to lstsq creates systematic overshoot; target should be y - b_leak). Item remains scientifically valid and can be retried with corrected methodology.
+   - Outcome: INCONCLUSIVE (design review reject)
+   - Cycle: 105
+   - Commit: NONE

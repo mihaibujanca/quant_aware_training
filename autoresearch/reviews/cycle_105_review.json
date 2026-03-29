@@ -1,0 +1,10 @@
+{
+  "cycle": 105,
+  "item": 116,
+  "round": 2,
+  "verdict": "REVISE",
+  "blocking": ["I4"],
+  "resolved": ["I1", "I2", "I3", "A1", "A2"],
+  "advisory": ["A3"],
+  "summary": "Round 1 issues I1-I3 and advisories A1-A2 all addressed. New blocking issue I4: Condition B adds b_leak post-hoc to an lstsq reconstruction that already targets y, causing systematic overshoot. Fix: set lstsq target to y - b_leak so b_leak acts as intended correction, not additive noise."
+}
