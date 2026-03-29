@@ -1,0 +1,9 @@
+cycle: 113
+item: 124
+audit_status: ACCEPTED
+verdict: REFUTED
+flags: none
+g1_code: OK — per-head amplification metric, Conv1D indexing, ablation all correct
+g3_verdict: OK — 8/11 layers have max_frac<=0.15, meets refuted threshold exactly
+g6_method: OK — non-trivial deltas (11-44), adequate samples, established compression recipe
+note: block 10->11 outlier (top3=0.722) — sole exception, worth future investigation

@@ -1,0 +1,27 @@
+{
+  "cycle": 113,
+  "item": 124,
+  "round": 1,
+  "verdict": "APPROVE",
+  "issues_total": 0,
+  "advisory_total": 2,
+  "fixes_verified": [],
+  "issues": [],
+  "advisory": [
+    {
+      "id": "A1",
+      "severity": "advisory",
+      "summary": "Measured per-head amplification includes LayerNorm effect (LN+head, not head alone). Correct for real-forward-pass measurement but worth noting in results interpretation."
+    },
+    {
+      "id": "A2",
+      "severity": "advisory",
+      "summary": "Single FFN compression seed per block. Acceptable for structural census; if borderline, re-run with 3 seeds."
+    }
+  ],
+  "resolved": [],
+  "pitfalls_checked": ["MP1", "MP2", "MP3", "MP4", "MP5", "MP6", "MP7", "MP8"],
+  "pitfalls_triggered": [],
+  "cost_ok": true,
+  "summary": "Clean analysis plan. Per-head amplification is the right metric (functional, not representational). Thresholds well-separated from uniform null (25% top-3 vs 70% confirmed). LN is part of measured function, not a confound. No fitting or detection thresholds involved. Two advisories: LN included in measurement (desired), single compression seed (acceptable for census)."
+}
