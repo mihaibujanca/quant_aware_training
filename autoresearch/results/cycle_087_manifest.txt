@@ -1,0 +1,6 @@
+item_number=96
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_087_mixed_stacking.json,autoresearch/results/cycle_087_mixed_stacking.png
+code_paths=experiments/mixed_corpus_stacking_gpt2.py
+final_commit_hash=36e5102a76c8882329614495c4b00536fbe24444
+agenda_updated=yes

@@ -1,20 +1,20 @@
-# Research Status — 86 Cycles (001–086)
+# Research Status — 87 Cycles (001–087)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 15 |
 | Refuted | 23 |
-| Inconclusive | 39 |
+| Inconclusive | 40 |
 | Crash | 1 |
 
 ## Latest Cycle
-- **Cycle 086** (item 99): FFN output manifold geometry — GPT-2 FFN — INCONCLUSIVE
-  - Isotropy ratios 0.004-0.016 (moderate, in inconclusive band [0.01, 0.1])
-  - Spectrum structured (steeper than MP), but JL distortion 3-4× tighter than bound
-  - Random≈SVD in lstsq not explained by isotropy alone; low discriminative value
+- **Cycle 087** (item 96): Mixed-corpus stacking eval — GPT-2 FFN — INCONCLUSIVE
+  - Mixed-corpus refit improves WikiText-2 by +7.5% relative (below +10% threshold)
+  - OWT degradation +1.8% (within 3% limit)
+  - Single-block benefit (+19%, cycle 078) attenuates in stacking — cross-block error accumulation
 
-## Final Answer (consolidated through cycle 086)
+## Final Answer (consolidated through cycle 087)
 
 ### The Recipe
 1. **Random projection + lstsq** on **mixed-corpus probe data** (2048+ tokens, diverse sources)
@@ -24,20 +24,17 @@
 
 ### Definitive Findings
 - **Basis is irrelevant**: SVD = random at all compression ratios (cycles 071, 077)
-- **Corpus diversity matters**: 19.1% improvement from mixed refit (cycle 078)
+- **Corpus diversity matters at single-block**: +19.1% (cycle 078), but attenuates to +7.5% in stacking (cycle 087)
 - **Single-step Newton fundamentally limited**: n_tokens << n_params (cycle 082)
-- **GELU nonlinearity fully utilized**: 0.04% dead, 0.01% near-linear (cycle 083)
-- **GELU patterns maximally diverse**: K* > 256 all blocks (cycle 085)
-- **FFN manifold moderately isotropic**: not enough to explain lstsq robustness (cycle 086)
+- **GELU fully nonlinear**: 0.04% dead channels (083), K* > 256 patterns (085)
+- **FFN manifold moderately isotropic**: doesn't explain lstsq robustness (cycle 086)
 
 ### Dead Directions
-- Topology, Jacobian SVD basis, rank-matching
+- Topology, Jacobian SVD basis, rank-matching, learned compressors
 - Analytic stacking correction (cycles 080-082)
-- Dead/near-linear GELU pruning (cycle 083)
-- Piecewise-linear via GELU clustering (cycle 085), centroid affine (item 98)
-- FFN manifold isotropy as explanation for random≈SVD (cycle 086)
+- GELU pruning (083), GELU clustering (085), centroid affine (098)
+- Mixed-corpus stacking (modest effect, cycle 087)
 
 ## Remaining NEXT Items
-- **P1**: Item 96 (mixed-corpus stacking)
 - **P2**: Items 86-88 (MI channel selection, Procrustes sharing, learned bottleneck AE)
-- Only 4 eligible items — refresh needed after next cycle
+- Only 3 items remain — agenda refresh required

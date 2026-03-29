@@ -1,0 +1,13 @@
+{
+  "cycle": 87,
+  "item": 96,
+  "round": 1,
+  "verdict": "APPROVE",
+  "issues_total": 0,
+  "issues": [],
+  "notes": [
+    "Baseline OWT PPL sanity check says 29-31 but cycle 061 measured 57.653. Wrong reference value (canonical Wikitext-103 number, not this pipeline's OWT eval).",
+    "WikiText-2 refit/eval partition overlap ~0.5% due to different shuffle seeds. Negligible.",
+    "Polish on OWT-only for both conditions slightly favors condition A. Consider mixed-corpus polish as sensitivity check."
+  ]
+}
