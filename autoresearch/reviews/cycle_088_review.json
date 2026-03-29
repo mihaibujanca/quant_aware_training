@@ -1,0 +1,12 @@
+{
+  "cycle": 88,
+  "item": 102,
+  "round": 1,
+  "verdict": "APPROVE",
+  "issues_total": 0,
+  "issues": [],
+  "notes": [
+    "GELU curvature varies across blocks (peaks near z=0). Different blocks may need very different K. Per-block K* reporting will capture this, but a partial result (e.g. 2/4 blocks pass) may still be informative even if it triggers INCONCLUSIVE.",
+    "Relative error metric ||y_approx - y_true|| / ||y_true|| can blow up if ||y_true|| is near zero. Plan reports mean + p95, which partially mitigates. Consider median or trimmed mean."
+  ]
+}
