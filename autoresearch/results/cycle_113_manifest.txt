@@ -5,6 +5,7 @@ verdict_reason: max per head <= 15% in 8/11 layers
 baseline_ppl: 55.03
 layers_concentrated (top3>=70%): 1/11
 layers_uniform (max<=15%): 8/11
+final_commit_hash: b64c250
 
 Per-transition summary:
   Block 0→1: top3=0.317  max=0.113  gini=0.123
