@@ -1,0 +1,46 @@
+Cycle 107 — Output-Space Direct Regression Bypass — GPT-2 FFN
+Item: 117
+Date: 2026-03-29
+Verdict: CONFIRMED
+
+Summary
+-------
+Direct rank-r regression (SVD(X) basis + lstsq Y≈X@V_r@A^T+b) beats topk+lstsq
+at matched parameter count in 2/4 tested blocks (blocks 4 and 7), confirming that
+bypassing the GELU hidden layer entirely can be competitive with or better than
+preserving the hidden-layer structure for middle transformer blocks.
+
+Key Numbers
+-----------
+Baseline PPL: ~66.4 (100 eval seqs, OWT)
+Blocks where direct wins: 4 (Δ=-0.50% at r=32), 7 (Δ=-0.39% to -0.41% at r=32-64)
+Block 1 (early): topk strongly better — Δ=+26.8% at r=32, narrows to +2.1% at r=384
+Block 11 (late): topk better — Δ=+4-6% across all ranks
+Delta range: [-0.50%, +26.8%] (negative = direct wins)
+
+Interpretation
+--------------
+- Middle blocks (4, 7): FFN behaves more like a simple projection; GELU structure
+  provides little advantage. Direct regression is equally or slightly more efficient.
+- Early block (1): hidden-layer nonlinearity provides substantial signal; bypassing
+  loses information that a small k-channel GELU network preserves.
+- Late block (11): similarly, hidden structure helps at r<384.
+- Recon error: direct consistently lower than topk at matched r/k, but PPL diverges
+  in blocks 1 and 11 — reconstruction error is a poor PPL predictor for these blocks.
+
+Config
+------
+Blocks: [1, 4, 7, 11]
+Ranks/k: {32, 64, 128, 256, 384}
+Seeds: [42, 123, 7]
+Probe tokens: 4096 per block
+Eval sequences: 100 (OWT)
+Method: hook-based MLP replacement (no deepcopy), direct linear bypass
+
+Files
+-----
+experiments/direct_regression_bypass_gpt2.py
+autoresearch/results/cycle_107_direct_regression.json
+autoresearch/results/cycle_107_direct_regression.png
+autoresearch/logs/experiments.tsv (row appended)
+autoresearch/agenda.md (item 117 marked CONFIRMED)

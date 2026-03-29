@@ -59,7 +59,15 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: dominant source varies by block position.
    - Depends on: none
 
-116. ~~**GELU negative-leak aware compression — GPT-2 FFN**~~ *(INCONCLUSIVE — cycle 105, design review REJECT round 2: lstsq target ordering issue unresolvable in 2 rounds)*
+123. **GELU negative-leak aware compression (corrected) — GPT-2 FFN**
+   - Re-run of item 116 (cycle 105, plan rejected due to lstsq target bug). The fix is one line: Condition B lstsq target must be `y - b_leak` (not `y`), so the final reconstruction `lstsq_approx(y - b_leak) + b_leak ≈ y` doesn't overshoot.
+   - ⚠ **Implementation requirement**: Condition B lstsq target = `y - b_leak`. Condition A and C use target = `y` as before. All else identical to cycle 105 plan R1.
+   - Partition channels into positive-dominated (neg_frac < 0.5) and negative-dominated (neg_frac ≥ 0.5). Compute b_leak = W_out[:,neg_ch] @ mean(GELU(z)|z<0) on probe split. Condition A: standard topk+lstsq (k=512 from all 3072). Condition B: topk from positive-dominated only + lstsq(target=y-b_leak) + b_leak offset. Condition C: topk from positive-dominated only, no b_leak (isolates filtering effect). All conditions: +500 Adam steps, 3 seeds, blocks [1,4,7,11] at 6x.
+   - Type: empirical
+   - Confirmed if: leak-aware (B) outperforms standard (A) by ≥3% relative PPL in ≥2/4 blocks.
+   - Refuted if: leak-aware within 1% of standard in all blocks.
+   - Inconclusive if: 1-3% or block-dependent.
+   - Depends on: none
 
 ### P1 — Important
 
@@ -72,13 +80,14 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 99
 
 
-117. **Output-space direct regression bypass — GPT-2 FFN**
+117. **Output-space direct regression bypass — GPT-2 FFN** [CONFIRMED — cycle 107]
    - Every failed approach (Jacobian factorization, GELU clustering, subspace projection) tried to compress through the hidden layer. What if we bypass it entirely? For each FFN block, the function is f: R^768 → R^768. Fit a direct low-rank approximation f(x) ≈ A @ x + b where A = U @ S @ V^T with rank r, using lstsq on probe data (x→y pairs, no hidden activations at all). This is a pure input-output regression — no GELU, no hidden channels, no activation patterns. Sweep r in {32, 64, 128, 256, 384} on blocks [1, 4, 7, 11] with 4096 OWT tokens. Compare single-block swap PPL against topk+lstsq at matched parameter count (rank-r has 768×r×2 params vs topk at k channels has 768×k + k×768 params). If direct regression wins, the hidden-layer structure is a compression liability, not an asset.
    - Type: empirical
    - Confirmed if: direct rank-r regression matches or beats topk+lstsq at matched param count in ≥2/4 blocks, for any r.
    - Refuted if: topk+lstsq outperforms direct regression by ≥5% PPL at all matched comparisons (hidden-layer structure helps compression).
    - Inconclusive if: results are block-dependent or within 5%.
    - Depends on: none
+   - Result (cycle 107): CONFIRMED. Direct beats topk in 2/4 blocks (blocks 4 and 7, Δ up to -0.5%). Block 1 strongly favors topk (+26.8% at r=32, narrowing to +2.1% at r=384). Block 11 favors topk by 4-6%. Blocks 4 and 7 are near-neutral or slight wins for direct. Hidden-layer structure is beneficial in early/late blocks but marginal in middle blocks. Baseline PPL ~66.4 (100 eval seqs). Results: autoresearch/results/cycle_107_direct_regression.json
 
 ### P2 — Moonshots
 
