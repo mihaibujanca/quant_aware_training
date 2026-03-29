@@ -159,6 +159,30 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: AE outperforms at some k but not others, or encoder is nonlinear but the PPL gain is small (< 3%).
    - Depends on: none
 
+108. **Lower compression ratio stacking — GPT-2 FFN** — P0
+   - Error compounds at 41%/block at 6× (cycle 089), capping useful compression at k≤4 blocks. Does lowering per-block compression to 3× or 4× reduce the compounding rate enough to compress more blocks? For compression ratios {3×, 4×, 6×}, run ordered accumulation curves (blocks added in damage order) with topk+lstsq + 500 Adam steps (lr=1e-4, W_down only). For each ratio, measure: (a) single-block PPL delta for blocks [1-11], (b) stacked PPL at k={4,6,8}, (c) fit multiplicative compounding coefficient c per ratio. 3 seeds, OWT, 200 eval seqs. The key tradeoff: 4× on 8 blocks = 2× total params vs 6× on 4 blocks = 1.5× total params — which achieves lower PPL?
+   - Type: empirical
+   - Confirmed if: c drops to ≤0.20 at 3× AND k=8 stacked PPL ≤ +20% (doubling viable block count).
+   - Refuted if: c ≥ 0.30 at 3× (compounding barely improves with weaker compression).
+   - Inconclusive if: c drops but k=8 PPL still > +30%.
+   - Depends on: none
+
+109. **Attention block compression feasibility scan v2 — GPT-2** — P1
+   - Item 105 was rejected twice for wrong compression ratios, not wrong concept. Corrected version: for each attention head (12 heads, each 64-dim), the QKV projections are [768→64] each (2304 params per projection). At true 6× compression, test rank-11 SVD per projection (768×11 + 11×64 = 9152 vs 49152 original per head = 5.4×). For each of the 12 heads in each of 12 layers, single-head swap PPL with rank-11 QKV. Identify least-damaged heads. Then test: disable bottom-3 heads per layer (set output to zero) + rank-16 SVD on remaining 9 heads. Stacked multi-layer evaluation on blocks where FFN compression is already viable. 3 seeds, OWT, 200 eval seqs.
+   - Type: empirical
+   - Confirmed if: rank-11 per-head swap PPL ≤ +5% for ≥ 6/12 heads in ≥ 6/12 layers.
+   - Refuted if: rank-11 swap PPL > +15% for majority of heads (attention matrices are not low-rank enough for 6× compression).
+   - Inconclusive if: works for some layers/heads but not others.
+   - Depends on: none
+
+110. **Non-uniform compression ratio allocation — GPT-2 FFN** — P1
+   - Currently all compressed blocks use uniform 6×. But single-block damage varies widely across blocks (cycle 089: block 7 = −3%, block 9 = +7%). Allocate compression budget non-uniformly: given a total parameter budget equivalent to k blocks at 6× (e.g., k=4 → budget = 4 × original_block_params / 6), solve for per-block ratios {r_1, ..., r_k} that minimize stacked PPL subject to sum(original_params / r_i) ≤ budget. Use a greedy search: start with all blocks at 6×, iteratively reduce the highest-damage block's compression (to 4× or 3×) while increasing the lowest-damage block's compression (to 8× or 10×) to stay within budget. Test with k=4 blocks [7,5,4,1], topk+lstsq + 500 Adam polish. 3 seeds, OWT, 200 eval seqs.
+   - Type: empirical
+   - Confirmed if: non-uniform allocation achieves ≥ 10% relative PPL improvement over uniform 6× at matched parameter budget.
+   - Refuted if: non-uniform allocation improves PPL by < 3% (single-block damage differences don't matter after polish).
+   - Inconclusive if: 3-10% improvement.
+   - Depends on: none
+
 ### Closed — OBSOLETE items (do not run)
 
 23. ~~**Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**~~ ⚠ OBSOLETE: Superseded by item 80 (Jacobian effective rank census).
@@ -174,6 +198,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 092
+
+107. **Adam polish dissection — GPT-2 FFN** *(INCONCLUSIVE — cycle 092)*
+   - **Outcome: INCONCLUSIVE** — Delta is NOT low-rank (rank95≈390/768, ratio≈0.89× null); residual_frac≈0.58-0.62 (mixed subspace, neither residual-dominated nor orthogonal). PPL improves steadily: seed-averaged step-0 PPL ~72 → step-500 PPL ~58 (vs teacher ~45). Polish is neither simple lstsq correction nor discovering wholly new structure — the update is nearly full-rank and half in each subspace.
+   - Artifacts: autoresearch/results/cycle_092_polish_dissection.json, autoresearch/results/cycle_092_convergence.png
+   - Cycle: 092
 
 ### Cycle 090
 
