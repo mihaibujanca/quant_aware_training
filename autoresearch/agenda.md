@@ -26,6 +26,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Refuted if: leak-aware within 1% of standard in all blocks.
    - Inconclusive if: 1-3% or block-dependent.
    - Depends on: none
+   - **Result (cycle 112):** INCONCLUSIVE (design failure). N_pos << 512 for blocks 4, 7, 11 (53–71 channels, < 3% of 3072). The neg_frac < 0.5 partition is near-vacuous for deep blocks: with mean_z ≈ -1 throughout the network, nearly all channels have majority-negative tokens. Fair comparison forces k_eff = N_pos ≈ 66 for blocks 4/7/11, giving ~46× compression (not 6×) — catastrophically bad for all conditions. B and C identical in PPL (b_leak correction irrelevant when channel count is the bottleneck). Only block 1 is eligible (N_pos=546), but 1/4 eligible blocks means wins≥2 is unreachable. ROOT CAUSE: Cycle 111 neg_frac measured per-token-average, not per-channel. A revised test should either (a) use continuous weighting (not hard partition), or (b) apply b_leak on top of standard topk without positive-only restriction.
 
 ### P1
 

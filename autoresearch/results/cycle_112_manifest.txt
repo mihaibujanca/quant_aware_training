@@ -1,0 +1,51 @@
+Cycle 112: GELU Negative-Leak Aware Compression (Corrected) — GPT-2 FFN
+Item: 123
+Date: 2026-03-29
+Verdict: INCONCLUSIVE (design failure: positive-channel partition vacuous)
+
+=== KEY METRICS ===
+Baseline PPL:      55.34 ± 7.91
+A (standard):      88.52 ± 21.81  (+60% vs baseline)
+B (leak-aware):   208.74 ± 52.68  (+235% vs baseline)
+C (pos-only):     208.74 ± 52.68  (+235% vs baseline)
+
+gain_B (B vs A):  -135.83% (B catastrophically WORSE than A)
+gain_C (C vs A):  -135.83% (identical to B — bias correction adds nothing)
+
+=== CHANNEL PARTITION STATS ===
+Block  1: N_pos=546 (17.8%), N_neg=2526 — eligible
+Block  4: N_pos= 66  (2.1%), N_neg=3006 — EXCLUDED (N_pos < 256)
+Block  7: N_pos= 53  (1.7%), N_neg=3019 — EXCLUDED (N_pos < 256)
+Block 11: N_pos= 71  (2.3%), N_neg=3001 — EXCLUDED (N_pos < 256)
+
+Only block 1 is eligible per abort guard (N_pos < 256 → exclude).
+With only 1 eligible block, wins >= 2 is unreachable → INCONCLUSIVE by construction.
+
+=== ROOT CAUSE ===
+Hypothesis failure: The plan assumed N_pos ≈ 1000+ channels per block (based on
+cycle 111's neg_frac ~73-87%). But cycle 111 measured neg_frac per-token-average,
+not per-channel. In reality:
+  - neg_frac[j] = fraction of TOKENS where channel j is negative
+  - Threshold neg_frac < 0.5 selects channels positive in majority of tokens
+  - With mean_z ≈ -1 (all blocks), nearly all channels are negative-majority
+  - Blocks 4, 7, 11: only 53-71 positive channels out of 3072 (< 3%)
+
+When k_eff = min(512, N_pos) = 53-71, compression ratio ≈ 46x (not 6x).
+This destroys PPL for blocks 4, 7, 11 regardless of leak correction.
+
+B and C are identical in PPL — confirming the b_leak correction has zero effect
+when channel selection is the bottleneck. The bias is irrelevant once
+the channel count is this low.
+
+=== WHAT THIS MEANS ===
+The leak-aware compression idea (cycle 105's fix) cannot be evaluated with
+a hard pos/neg channel partition. A revised experiment would need to either:
+  (a) Use a continuous weighting scheme (weight channels by their positive fraction)
+  (b) Apply leak correction on top of standard topk (no partitioning)
+  (c) Test on block 1 only where N_pos ≈ 546 and the partition is meaningful
+
+=== FILES ===
+Script:   experiments/gelu_leak_aware_compression_corrected_gpt2.py
+Results:  autoresearch/results/cycle_112_leak_aware.json
+Plot:     autoresearch/results/cycle_112_leak_aware.png
+Manifest: autoresearch/results/cycle_112_manifest.txt
