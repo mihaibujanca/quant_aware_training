@@ -1,0 +1,7 @@
+cycle: 112
+item: 123
+verdict: INCONCLUSIVE
+audit: PASS
+flags: G1_BUG, G6_DESIGN_FAILURE
+note: k_eff bug (line 385) cripples Condition A to n_pos channels instead of k=512. All 3 conditions equally destroyed in blocks 4/7/11. Near-vacuous partition (neg_frac < 0.5 threshold on distribution centered at 0.83) compounds the issue. Hypothesis untested.
+recommendation: Fix k_A=512 for Condition A. Replace hard partition with continuous weighting or apply leak correction atop standard topk.

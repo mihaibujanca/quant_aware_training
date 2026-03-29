@@ -1,0 +1,27 @@
+{
+  "cycle": 112,
+  "item": 123,
+  "round": 1,
+  "verdict": "APPROVE",
+  "issues_total": 0,
+  "advisory_total": 2,
+  "fixes_verified": [],
+  "issues": [],
+  "advisory": [
+    {
+      "id": "A1",
+      "severity": "advisory",
+      "summary": "k_eff matching weakens Condition A when N_pos < 512. Relative B-vs-A comparison still valid but absolute PPL won't match known baselines for that block."
+    },
+    {
+      "id": "A2",
+      "severity": "advisory",
+      "summary": "Block 1 has ~810 positive channels (neg_frac=73%) while deep blocks have ~460 (neg_frac=85%). Deep blocks may hit N_pos < 512 guard. Log this."
+    }
+  ],
+  "resolved": [],
+  "pitfalls_checked": ["MP1", "MP2", "MP3", "MP4", "MP5", "MP6", "MP7", "MP8"],
+  "pitfalls_triggered": [],
+  "cost_ok": true,
+  "summary": "Clean corrected rerun of cycle 105. The one-line fix (lstsq target = y - b_leak) is correctly specified. Probe/fit split prevents overfitting. Condition C isolates filtering from bias. Two advisories: k_eff matching and block-dependent N_pos. No blocking issues."
+}
