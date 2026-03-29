@@ -4,6 +4,37 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## NEXT EXPERIMENTS
 
+### P0 — GELU→ReLU swap and piecewise-linear recovery
+
+107. **Zero-shot GELU→ReLU swap — GPT-2**
+   - The unmeasured experiment: load pretrained GPT-2, replace every `nn.GELU()` with `nn.ReLU()`, evaluate PPL on OWT and WikiText-2 with zero finetuning. This has never been published (every paper finetunes after swapping). If the gap is small (<+10% PPL), MASO piecewise-linear theory applies directly and the geometric compression thesis is back. If the gap is large (>+20%), the GELU bump carries task-relevant information at inference.
+   - Also measure per-block: swap GELU→ReLU in one FFN at a time, measure single-block PPL. Identify which blocks are most/least sensitive to the swap. Correlate with compression difficulty from cycle 048 (P1_frob_std).
+   - Also report: activation sparsity per block after ReLU swap (fraction of ReLU outputs = 0). High sparsity = free compression via pruning dead activations.
+   - Survey: `autoresearch/surveys/gelu_relu_inference.md`
+   - Type: empirical
+   - Confirmed if: full-model swap PPL degradation <= +10% relative (GELU bump is dispensable at inference).
+   - Refuted if: full-model swap PPL degradation > +30% relative (GELU bump is critical at inference).
+   - Inconclusive if: +10-30% (some blocks tolerate swap, others don't).
+   - Depends on: none
+
+108. **GELU-ReLU disagreement anatomy — GPT-2 FFN**
+   - Interpretability experiment: where exactly does GELU differ from ReLU, and what is happening there? For each FFN block on 4096 mixed-corpus tokens, compute pre-activation z = W_in @ x + b_in. Partition channels×tokens into 3 zones: (a) z >> 0 where GELU(z) ≈ ReLU(z) ≈ z, (b) z << 0 where GELU(z) ≈ ReLU(z) ≈ 0, (c) z ≈ 0 ("the bump") where |GELU(z) - ReLU(z)| > threshold.
+   - For zone (c) measure: (1) what fraction of channel×token pairs live here, (2) the magnitude of |GELU(z) - ReLU(z)| relative to block output norm, (3) which tokens trigger the most bump activations (is it specific token types — rare words, punctuation, BOS?), (4) which channels have the highest fraction of bump activations (are these the "interesting" channels?), (5) downstream effect: does masking the GELU-ReLU difference (setting GELU output = ReLU output for bump-zone entries only) change next-token predictions? On which tokens?
+   - Type: analysis
+   - Confirmed if: bump zone accounts for <5% of total activation energy AND masking it changes <1% of top-1 predictions (bump is noise).
+   - Refuted if: bump zone accounts for >20% of activation energy OR masking changes >10% of predictions (bump carries signal).
+   - Inconclusive if: moderate energy (5-20%) or heterogeneous across blocks.
+   - Depends on: none (but interpretation benefits from item 107 results)
+
+109. **ReLU-swapped GPT-2: activation pattern census — GPT-2 FFN**
+   - IF item 107 shows small gap: re-run item 97's core question on the ReLU-swapped model. With ReLU, activation patterns are binary (neuron on/off). Count unique binary patterns per block on 4096 mixed-corpus tokens. Measure: (a) number of unique patterns vs theoretical max 2^3072, (b) Hamming distances between patterns, (c) cluster patterns with k-means on binary vectors, k in {8, 16, 32, 64, 128, 256}, (d) K* = min k for <5% within-cluster output variance.
+   - This directly tests whether MASO theory's prediction holds: trained networks should have far fewer active patterns than theoretical max (Hanin & Rolnick 2019: at most N^d observed patterns).
+   - Type: analysis
+   - Confirmed if: K* <= 64 for >=6/12 blocks (ReLU patterns are clusterable — piecewise-linear compression viable).
+   - Refuted if: K* > 256 for majority of blocks (even with ReLU, patterns too diverse).
+   - Inconclusive if: K* varies wildly across blocks.
+   - Depends on: 107 (only run if swap gap < +15% PPL)
+
 ### P0 — Geometric structure (the core question)
 
 106. **GELU output clustering (corrected) — GPT-2 FFN**
@@ -159,13 +190,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: AE outperforms at some k but not others, or encoder is nonlinear but the PPL gain is small (< 3%).
    - Depends on: none
 
-108. **Lower compression ratio stacking — GPT-2 FFN** — P0
+108. **Lower compression ratio stacking — GPT-2 FFN** *(REFUTED — cycle 093)*
    - Error compounds at 41%/block at 6× (cycle 089), capping useful compression at k≤4 blocks. Does lowering per-block compression to 3× or 4× reduce the compounding rate enough to compress more blocks? For compression ratios {3×, 4×, 6×}, run ordered accumulation curves (blocks added in damage order) with topk+lstsq + 500 Adam steps (lr=1e-4, W_down only). For each ratio, measure: (a) single-block PPL delta for blocks [1-11], (b) stacked PPL at k={4,6,8}, (c) fit multiplicative compounding coefficient c per ratio. 3 seeds, OWT, 200 eval seqs. The key tradeoff: 4× on 8 blocks = 2× total params vs 6× on 4 blocks = 1.5× total params — which achieves lower PPL?
+   - **Outcome: REFUTED** — c is ratio-independent: c_3x=0.406, c_4x=0.404, c_6x=0.408 (all ~0.41). k=8 PPL delta: +916% (3x), +896% (4x), +914% (6x). Null hypothesis confirmed: the ~41%/block compounding rate is intrinsic to the topk+lstsq+polish pipeline and does not decrease with less compression. Single-block PPL even improves slightly at lower ratios (3x: ~-5.9%, 6x: ~-3.0%) — individual blocks get better, but stacking cascades identically. 6x sanity check passed (c=0.408 vs cycle 089 c~0.41). Monotonicity violated by only Δ0.002 (within noise).
    - Type: empirical
    - Confirmed if: c drops to ≤0.20 at 3× AND k=8 stacked PPL ≤ +20% (doubling viable block count).
    - Refuted if: c ≥ 0.30 at 3× (compounding barely improves with weaker compression).
    - Inconclusive if: c drops but k=8 PPL still > +30%.
    - Depends on: none
+   - Cycle: 093
+   - Artifacts: experiments/lower_ratio_stacking_gpt2.py, autoresearch/results/cycle_093_lower_ratio_stacking.json, autoresearch/results/cycle_093_lower_ratio_stacking.png
 
 109. **Attention block compression feasibility scan v2 — GPT-2** — P1
    - Item 105 was rejected twice for wrong compression ratios, not wrong concept. Corrected version: for each attention head (12 heads, each 64-dim), the QKV projections are [768→64] each (2304 params per projection). At true 6× compression, test rank-11 SVD per projection (768×11 + 11×64 = 9152 vs 49152 original per head = 5.4×). For each of the 12 heads in each of 12 layers, single-head swap PPL with rank-11 QKV. Identify least-damaged heads. Then test: disable bottom-3 heads per layer (set output to zero) + rank-16 SVD on remaining 9 heads. Stacked multi-layer evaluation on blocks where FFN compression is already viable. 3 seeds, OWT, 200 eval seqs.
@@ -198,6 +232,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 093
+
+108. **Lower compression ratio stacking — GPT-2 FFN** *(REFUTED — cycle 093)*
+   - **Outcome: REFUTED** — c is ratio-independent: c_3x=0.406, c_4x=0.404, c_6x=0.408 (all ~0.41). k=8 PPL delta: +916% (3x), +896% (4x), +914% (6x). The ~41%/block compounding rate does not decrease with lower compression. Single-block PPL improves slightly at lower ratios but stacking cascades identically. 6x sanity check passed (c=0.408 ≈ cycle 089 c~0.41).
+   - Artifacts: experiments/lower_ratio_stacking_gpt2.py, autoresearch/results/cycle_093_lower_ratio_stacking.json, autoresearch/results/cycle_093_lower_ratio_stacking.png
+   - Cycle: 093
 
 ### Cycle 092
 

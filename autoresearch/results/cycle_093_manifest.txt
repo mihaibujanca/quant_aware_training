@@ -1,0 +1,63 @@
+Cycle 093: Lower Compression Ratio Stacking — GPT-2 FFN
+Item: 108
+Date: 2026-03-29
+Verdict: REFUTED
+
+## Summary
+
+Tested whether reducing compression ratio (3× vs 4× vs 6×) lowers the per-block
+compounding coefficient c in the multiplicative PPL model PPL(k) = a*(1+c)^k.
+
+Result: c is ratio-independent. All three ratios converge to c≈0.41:
+  - 3× (k=1024): c=0.406, R²=0.921
+  - 4× (k=768):  c=0.404, R²=0.932
+  - 6× (k=512):  c=0.408, R²=0.933
+
+The null hypothesis is confirmed: the ~41%/block error compounding rate is intrinsic
+to the topk+lstsq+polish pipeline and does not depend on compression ratio.
+
+## Key Metrics
+
+Baseline PPL (OWT, 3 seeds): 51.66 ± 5.49
+
+k=1 PPL (single block):
+  - 3×: 48.80 (-5.5%)
+  - 4×: 49.35 (-4.5%)
+  - 6×: 50.10 (-3.0%)
+
+k=4 PPL (4 blocks):
+  - 3×: 81.79 (+58.3%)
+  - 4×: 81.94 (+58.6%)
+  - 6×: 80.68 (+56.2%)
+
+k=8 PPL (8 blocks):
+  - 3×: 524.95 (+916.1%)
+  - 4×: 514.73 (+896.4%)
+  - 6×: 523.74 (+913.8%)
+
+## Interpretation
+
+Single-block compression quality does improve at lower ratios (better PPL at k=1), but
+the improvement vanishes entirely when blocks are stacked. The compounding rate c≈0.41
+is invariant across compression levels. This implies the bottleneck is not the
+per-block output approximation error, but rather the cascade dynamics of stacking.
+The stacking catastrophe is structural, not a function of compression depth.
+
+6× sanity check passed: c=0.408 (cycle 089 reference: c≈0.41). ✓
+
+Monotonicity (c_3x ≤ c_4x ≤ c_6x) is violated by Δ≈0.002 (0.406 vs 0.404 at 3×/4×),
+within noise — not a bug.
+
+## Artifacts
+
+experiments/lower_ratio_stacking_gpt2.py
+autoresearch/results/cycle_093_lower_ratio_stacking.json
+autoresearch/results/cycle_093_lower_ratio_stacking.png
+autoresearch/plans/cycle_093.md
+
+## Config
+
+SEEDS = [42, 123, 7]
+FORWARD_ORDER = [7, 5, 4, 1, 3, 6, 8, 9]
+POLISH_STEPS = 500, POLISH_LR = 1e-4 (W_down only)
+EVAL: 200 OWT sequences, seq_len=128
