@@ -32,13 +32,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1 — Important
 
-94. **GELU near-linearity census v2 — GPT-2 FFN (corrected methodology)**
+94. **GELU near-linearity census v2 — GPT-2 FFN (corrected methodology)** *(REFUTED — cycle 083)*
    - Item 47 (cycle 032) was flawed (MP2: detection method mismatched to GELU). Redo with correct GELU-aware methodology. For each FFN hidden channel j in each block, compute fraction of probe tokens where |GELU'(z_j)| < 0.01 (dead) or |GELU'(z_j) - 1| < 0.05 (near-linear). Use 4096 mixed-corpus probe tokens. Report per-block: (a) fraction dead on >95% of tokens, (b) fraction near-linear on >80% of tokens, (c) remaining "genuinely nonlinear" fraction. Complements item 97 (per-channel vs per-token pattern analysis).
    - Type: analysis
    - Confirmed if: ≥10% dead OR ≥20% near-linear in ≥6/12 blocks.
    - Refuted if: <5% dead AND <10% near-linear across all blocks (GELU nonlinearity fully utilized).
    - Inconclusive if: significant but uneven across blocks (<6/12).
    - Depends on: none
+   - Outcome: REFUTED. Total dead: 14/36864 (0.04%), near-linear: 3/36864 (0.01%) across all 12 blocks. 0/12 blocks meet threshold. GELU nonlinearity is fully utilized in GPT-2 FFN — no idle channels at per-channel level. Note: tanh-approx GELU' can be slightly negative at x≪0 (range −0.012 at x=−3), and the null N(0,1) baseline itself shows only 1.5% dead/8.2% near-linear (not the 0.3%/28% from exact GELU) — empirical results are far below null, confirming GPT-2 activations are in the active nonlinear regime.
+   - Cycle: 083
+   - Artifacts: `experiments/gelu_nearlinearity_census_v2.py`, `autoresearch/results/cycle_083_gelu_census_v2.json`, `autoresearch/results/cycle_083_gelu_census_v2.png`
 
 95. **Data-conditioned Jacobian clustering for merge candidates — GPT-2 FFN**
    - Probe FFN input-output behavior to find mergeable structure. For block 7, compute per-token diagonal GELU'(z) patterns on 1024 mixed-corpus tokens. Cluster with k-means, k in {8, 16, 32, 64}. Within each cluster, tokens share a similar effective linear map. Measure: (a) cluster-centroid reconstruction MSE vs full-precision output, (b) K* for <5% output norm error, (c) whether centroid Jacobians are low-rank. Builds on item 97's pattern diversity analysis with explicit merge-candidate identification.
@@ -116,6 +119,17 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 083
+
+94. **GELU near-linearity census v2 — GPT-2 FFN (corrected methodology)** *(REFUTED — cycle 083)*
+   - Correct GELU-derivative methodology (GELU'(z) via autograd, tanh-approx) on 4128 mixed-corpus tokens (4×8×129), 12 blocks × 3072 channels.
+   - Results: Total dead: 14/36864 (0.04%), near-linear: 3/36864 (0.01%). 0/12 blocks meet threshold.
+   - GELU nonlinearity is fully utilized. GPT-2 activations occupy the nonlinear regime — no per-channel dead or near-linear structure exploitable for compression.
+   - Note: tanh-approx GELU' is slightly negative at x≪0, unlike exact GELU. Null N(0,1) baseline: dead=1.54%, linear=8.15%.
+   - Verdict: REFUTED — GELU nonlinearity fully utilized.
+   - Cycle: 083
+   - Artifacts: `experiments/gelu_nearlinearity_census_v2.py`, `autoresearch/results/cycle_083_gelu_census_v2.json`, `autoresearch/results/cycle_083_gelu_census_v2.png`
 
 ### Cycle 082
 
