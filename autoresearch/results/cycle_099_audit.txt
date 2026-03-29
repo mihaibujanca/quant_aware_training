@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=refuted
+new_outcome=refuted
+reason=Error is genuinely diffuse (rank_95=500-650/768). Projection destroys signal catastrophically (PPL 70->33k at r=4). Code is correct — no bugs explain the result. The hypothesis that error lives in a low-rank subspace is decisively falsified.
+guardrail_flags=none
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Abandon subspace-projection error correction for GPT-2 FFN. The error-signal overlap is near-total. Learned corrections (distillation, low-rank adapters) remain viable but must touch most dimensions, limiting compression savings. Consider whether the diffuse error structure is specific to lstsq refit (which distributes error across all output dims) or also present with simpler compression (pure topk without refit).
+interesting=true
+interesting_reason=First quantitative evidence that GPT-2 FFN compression error is near-full-rank (rank_95 ~85% of ambient dim). This rules out a broad class of cheap correction approaches and constrains what correction architectures are viable. The finding that even 4/768 projected dimensions cause 500x PPL increase demonstrates extreme error-signal entanglement.

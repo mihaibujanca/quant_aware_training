@@ -1,0 +1,5 @@
+item_number=112
+outcome=refuted
+key_metric=rank95=500-636/768, proj_r4_k4_PPL=33k (+57000%), signal_destruction
+commit=79298cb
+paths=experiments/residual_projection_correction_gpt2.py,autoresearch/results/cycle_099_residual_projection.json,autoresearch/results/cycle_099_residual_projection_spectra.png,autoresearch/results/cycle_099_residual_projection.png
