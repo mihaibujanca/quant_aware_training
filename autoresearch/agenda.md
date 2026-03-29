@@ -105,13 +105,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Type: empirical
    - Cycle: 089
 
-105. **Attention block compression feasibility scan — GPT-2**
-   - All 87 cycles have targeted FFN blocks only. Cycle 085 audit explicitly recommended pivoting to attention blocks. For all 12 attention blocks, measure: (a) per-head output rank (SVD of head output on 4096 tokens), (b) single-head ablation damage (zero one head, measure PPL), (c) single-attn-block random+lstsq compression at 6× (project V-projection from 768→128 per head, lstsq reconstruct). Report per-block feasibility score. This is the minimal scan to decide whether attention compression is worth a research direction.
-   - Type: analysis
-   - Confirmed if: >= 3/12 attention blocks achieve <= +5% single-block swap PPL at 6× (attention is compressible).
-   - Refuted if: all blocks > +15% PPL (attention resists projection-based compression).
-   - Inconclusive if: 1-2 blocks compressible but most are not.
-   - Depends on: none
+105. **Attention block compression feasibility scan — GPT-2** *(moved to PAST — cycle 090, plan REJECT round 2)*
 
 ### P2 — Moonshots
 
@@ -157,6 +151,14 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 090
+
+105. **Attention block compression feasibility scan — GPT-2** *(inconclusive — cycle 090, design review REJECT round 2)*
+   - Plan rejected: rank-128 SVD on [768,768] attention matrix = 3× compression, not 6×. Thresholds calibrated to wrong compression ratio.
+   - Item is valid but needs corrected compression calculation (rank-64 for true 6×, or adjusted thresholds for 3×).
+   - Outcome: inconclusive (plan rejected, not executed)
+   - Commit: NONE
 
 ### Cycle 089
 

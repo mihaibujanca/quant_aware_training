@@ -1,0 +1,22 @@
+{
+  "cycle": 90,
+  "item": 105,
+  "round": 2,
+  "verdict": "REJECT",
+  "issues_total": 1,
+  "r1_fixes": {
+    "I1_blocking_vprojection_ambiguity": "FIXED — Step 4 now specifies full-block rank-128 SVD on concatenated [768,768] matrices",
+    "I2_nonblocking_ablation_redundancy": "FIXED — Step 3 now does 12-block ablation instead of 144-head"
+  },
+  "issues": [
+    {
+      "id": "I1",
+      "severity": "blocking",
+      "title": "6x compression claim is wrong: rank-128 SVD on [768,768] gives 3x param compression, not 6x",
+      "detail": "768/128=6 is the rank reduction ratio, not parameter compression. Low-rank factors U[768,128]+V[128,768] = 196K params vs original 590K = 3.0x. Hypothesis thresholds (+5% PPL at '6x') are calibrated to the wrong compression ratio. Must choose: 6x params (rank ~64) or 3x params (rank 128), and recalibrate criteria accordingly."
+    }
+  ],
+  "notes": [
+    "P5 null baseline text still references 'random V-projection + lstsq' but Step 4 now uses truncated SVD on all four attention matrices. Should update P5 to match."
+  ]
+}
