@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=refuted
+new_outcome=refuted
+reason=Correct GELU-derivative methodology via autograd on tanh-approx GELU. 0.04% dead, 0.01% near-linear across 12 blocks (36864 channels, 4128 tokens). Well below refutation thresholds. Null N(0,1) baseline confirms GPT-2 activations are MORE nonlinear than random — network learned to use the nonlinear regime. Clean negative result closing the dead/near-linear GELU compression avenue.
+guardrail_flags=none
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Dead/near-linear GELU pruning is a dead end for GPT-2. Compression should target functional redundancy (Jacobian clustering, item 95) rather than activation-level sparsity. Consider whether the same holds for larger models (GPT-2 medium/large) where overparameterization may create more near-linear channels.
+interesting=false
+interesting_reason=

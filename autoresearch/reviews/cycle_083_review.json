@@ -1,0 +1,13 @@
+{
+  "cycle": 83,
+  "item": 94,
+  "round": 2,
+  "verdict": "APPROVE",
+  "issues": 0,
+  "r1_premise": "pass",
+  "r2_measurement": "pass",
+  "r3_capacity": "pass",
+  "r4_alignment": "pass",
+  "r5_pitfalls": "pass",
+  "issue_list": []
+}
