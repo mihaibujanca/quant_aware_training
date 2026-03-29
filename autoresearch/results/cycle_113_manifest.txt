@@ -1,0 +1,29 @@
+cycle_113_manifest.txt
+item: 124
+verdict: REFUTED
+verdict_reason: max per head <= 15% in 8/11 layers
+baseline_ppl: 55.03
+layers_concentrated (top3>=70%): 1/11
+layers_uniform (max<=15%): 8/11
+
+Per-transition summary:
+  Block 0→1: top3=0.317  max=0.113  gini=0.123
+  Block 1→2: top3=0.366  max=0.144  gini=0.166
+  Block 2→3: top3=0.292  max=0.103  gini=0.059
+  Block 3→4: top3=0.293  max=0.103  gini=0.080
+  Block 4→5: top3=0.339  max=0.121  gini=0.168
+  Block 5→6: top3=0.316  max=0.109  gini=0.148
+  Block 6→7: top3=0.393  max=0.152  gini=0.276
+  Block 7→8: top3=0.369  max=0.147  gini=0.193
+  Block 8→9: top3=0.378  max=0.156  gini=0.211
+  Block 9→10: top3=0.329  max=0.119  gini=0.130
+  Block 10→11: top3=0.722  max=0.352  gini=0.541
+
+Ablation block 6 spearman_rho: {'rho': 0.6363636363636365, 'p': 0.026096891052703144}
+
+Files:
+  /Users/mihai/Projects/quant_aware_training/autoresearch/results/cycle_113_head_amplification.json
+  /Users/mihai/Projects/quant_aware_training/autoresearch/results/cycle_113_heatmap.png
+  /Users/mihai/Projects/quant_aware_training/autoresearch/results/cycle_113_summary.png
+  /Users/mihai/Projects/quant_aware_training/autoresearch/results/cycle_113_top10_heads.png
+  experiments/per_head_amplification_census_gpt2.py

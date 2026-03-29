@@ -68,7 +68,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: 10-30% reduction, or requires r>16.
    - Depends on: none
 
-124. **Attention-mediated cascade: per-head amplification census — GPT-2**
+124. **Attention-mediated cascade: per-head amplification census — GPT-2** *(REFUTED — cycle 113)*
    - Cycle 104 showed attention dominates cascade (≥70% in 8/11 transitions), but treated attention as a monolithic block. Which heads amplify FFN error most? For each of the 12 attention layers, compress FFN block L at k=1 (6×), inject the resulting residual-stream error δ_L, and measure per-head output perturbation: for each head h, compute ||Attn_h(x + δ) - Attn_h(x)||₂ / ||δ||₂ (per-head amplification factor). Aggregate over 2048 OWT tokens. Report: (a) per-head amplification factor heatmap (12 layers × 12 heads), (b) top-5 amplifying heads across the model, (c) Spearman correlation between head amplification and head importance (measured by ablation PPL). If a small subset of heads dominates amplification, they are surgical targets for cascade suppression.
    - Type: analysis
    - Confirmed if: top 3 heads per layer account for ≥70% of total attention-mediated amplification in ≥8/12 layers (concentrated, targetable).
@@ -121,6 +121,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 101. **Gradient polish on k=5 stacking — GPT-2 FFN** *(CONFIRMED — cycle 106)*
    - **Outcome: CONFIRMED** — Joint W_down polish (500 Adam steps, lr=1e-4) reduces k=5 stacking PPL delta by ~61% relative for both configs. Config [7,5,1,3,6]: 0-step +62.8% → 500-step +24.3% (61.3% reduction). Config [7,5,4,1,6]: 0-step +57.7% → 500-step +22.4% (61.2% reduction). Baseline GPT-2 PPL 57.65. At 200 steps: ~52% reduction already achieved. No overfitting flagged. Train loss monotonically decreasing (minor non-monotonicity in 1 run first 10 steps only).
    - Artifacts: experiments/gradient_polish_k5_stacking_gpt2.py, autoresearch/results/cycle_106_k5_polish.json, autoresearch/results/cycle_106_k5_polish.png
+
+### Cycle 113
+
+124. **Attention-mediated cascade: per-head amplification census — GPT-2** *(REFUTED — cycle 113)*
+   - **Outcome: REFUTED** — Amplification is near-uniform across heads in 8/11 layers (max per head ≤15%). top3_frac ranges 0.29–0.39 in 10/11 transitions (far below 70% confirmed threshold). One exception: Block 10→11, top3_frac=0.722, max_frac=0.352 (only layer). Gini coefficients low (0.06–0.28) confirming near-uniform spread. The cascade error induced by FFN compression propagates roughly equally through all 12 attention heads — no surgical target heads exist. Ablation PPL deltas (block 6): 0.04–0.59, Spearman rho=0.636 (p=0.026) — moderate correlation between amplification and importance, but amplification is too diffuse for targeted suppression.
+   - Artifacts: experiments/per_head_amplification_census_gpt2.py, autoresearch/results/cycle_113_head_amplification.json, autoresearch/results/cycle_113_heatmap.png, autoresearch/results/cycle_113_summary.png, autoresearch/results/cycle_113_top10_heads.png
 
 ### Cycle 104
 
