@@ -221,13 +221,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: joint k=4 is +20-40% (viable but cascade worsens).
    - Depends on: none
 
-114. **Block-0-skip attention compression — GPT-2**
-   - Cycle 095 found block 0 is catastrophically sensitive (+102% PPL for attention SVD) while blocks 1,3,4,9,10 pass at ≤+5%. Test the explicit block-0-skip strategy: compress attention in the 5 viable blocks (rank-11 QKV SVD) while leaving block 0 untouched. Measure: (a) 5-block simultaneous attention compression PPL (vs cycle 095's 3-block +13%), (b) add block-0-skip + FFN compression on the same blocks (joint from item 113), (c) does skipping block 0 reduce the attention cascade rate below the FFN c≈0.41? Also test: is block 0 sensitivity due to position embeddings? Measure attention output delta when compressing block 0 separately on tokens at position 0 vs position 512.
-   - Type: empirical
-   - Confirmed if: 5-block attention-only (skip block 0) achieves ≤+10% PPL.
-   - Refuted if: 5-block attention-only (skip block 0) >+20% PPL (block 0 isn't the only bottleneck).
-   - Inconclusive if: +10-20%.
-   - Depends on: none
+114. ~~**Block-0-skip attention compression — GPT-2**~~ *(REFUTED — cycle 097)*
 
 ### Closed — OBSOLETE items (do not run)
 
@@ -244,6 +238,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 097
+
+114. **Block-0-skip attention stacking — GPT-2** *(REFUTED — cycle 097)*
+   - **Outcome: REFUTED** — 5-block simultaneous attention compression (blocks [1,3,4,9,10], skip block 0) achieved +42.93% ± 1.57% PPL degradation (threshold: >+20% = refuted). Cascade dominates regardless of block-0 exclusion. 3-block control [1,3,4] also worsened: +25.05% ± 0.20% (vs cycle 095 top-3 [1,4,9] = +12.98%). Position probe on block 0: early (pos 0-16) L2 ratio=0.727, late (pos 112-128) L2 ratio=0.703, late/early=0.968 — no evidence of position-embedding-driven sensitivity (ratios nearly equal). Block 0 sensitivity appears intrinsic, not positional. Adding 2 more blocks to the viable set increases cascade substantially; the +5% single-block threshold does not predict stackability.
+   - Artifacts: experiments/block0_skip_attention_gpt2.py, autoresearch/results/cycle_097_block0_skip_attention.json, autoresearch/results/cycle_097_block0_skip.png
 
 ### Cycle 096
 

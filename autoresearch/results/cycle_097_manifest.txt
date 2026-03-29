@@ -1,0 +1,32 @@
+Cycle 097 — Block-0-Skip Attention Stacking (GPT-2)
+Item: 114
+Verdict: REFUTED
+
+Key metrics:
+  Baseline PPL: 51.66
+  Condition A — 5-block skip-0 [1,3,4,9,10]: +42.93% ± 1.57%  (threshold >+20% = REFUTED)
+  Condition B — 3-block control [1,3,4]:       +25.05% ± 0.20%
+  Cycle 095 reference (3-block [1,4,9]):        +12.98%
+  Condition C — position probe (late/early L2): 0.968  (no positional bias)
+
+Interpretation:
+  Skipping block 0 does not prevent cascade from dominating. 5-block simultaneous
+  compression is firmly refuted at +42.93%. Even the 3-block control (different
+  block selection from cycle 095's top-3) worsened to +25.05% vs +12.98% —
+  suggesting cycle 095's blocks [1,4,9] were the best possible 3-block combination,
+  not a baseline for improvement.
+
+  Position probe: block-0's L2 output distortion is nearly uniform across early
+  (pos 0-16) and late (pos 112-128) positions (ratio 0.968 ≈ 1). Block-0 sensitivity
+  is intrinsic to its weight structure, not driven by position embeddings.
+
+  The +5% single-block tolerance threshold does not predict stackability. Adding
+  blocks 3 and 10 (both ≤+5% individually) to the 3-block set more than doubled
+  the cascade effect.
+
+Artifacts:
+  experiments/block0_skip_attention_gpt2.py
+  autoresearch/results/cycle_097_block0_skip_attention.json
+  autoresearch/results/cycle_097_block0_skip.png
+  autoresearch/logs/experiments.tsv  (row appended)
+  autoresearch/agenda.md             (item 114 moved to PAST)
