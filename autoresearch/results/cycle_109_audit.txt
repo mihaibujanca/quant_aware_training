@@ -1,0 +1,6 @@
+cycle: 109
+item: 120
+verdict: CONFIRMED
+audit: PASS
+flags: audit-spec-criteria-mismatch
+notes: b_energy > 0.70 in 12/12 blocks (0.871-0.985). GELU negative leak is 87-99% structured bias per channel. Audit-spec criteria (b_ratio<5%, s_ratio<2%) test a different hypothesis (leak negligibility) than the agenda (leak structure); script correctly uses the agenda criterion. b_ratio 0.49-2.42 means the leak is large but bias-dominated, not small.
