@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=refuted
+new_outcome=refuted
+reason=K* > 256 for 12/12 blocks. Even with correct methodology (cluster-mean of actual outputs, not Taylor linearization), GELU' cluster membership does not predict output similarity. For blocks 3-10, clustering actively hurts vs global mean — overfitting at high k but fundamental failure even at k=8.
+guardrail_flags=G4_non_monotone_expected_overfitting
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Do not pursue GELU'-based clustering for compression. Item 99 (FFN output manifold geometry via clustering on y directly) remains the viable path to test whether FFN outputs have low intrinsic complexity independent of the clustering feature.
+interesting=true
+interesting_reason=Blocks 3-10 show error INCREASING with k (clustering hurts vs global mean), confirming GELU' is not just a weak signal but an actively misleading clustering feature for FFN output prediction.
