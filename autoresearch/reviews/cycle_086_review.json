@@ -1,0 +1,13 @@
+{
+  "cycle": 86,
+  "item": 99,
+  "round": 2,
+  "verdict": "PASS",
+  "issues_total": 0,
+  "notes": 1,
+  "r1_fixes_verified": {
+    "R2": "n=16384 default, gamma=0.19 — sample inflation addressed",
+    "R4": "x_ln hook + isotropy diagnostic in step 3, 5th comparison panel in step 8"
+  },
+  "note": "P5 null baseline text has arithmetic error (claims isotropy ratio ~ n/d = 5.3, exceeds [0,1] bound). Non-blocking."
+}
