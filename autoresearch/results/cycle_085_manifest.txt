@@ -1,0 +1,6 @@
+item_number=97
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_085_gelu_pattern_diversity.json,autoresearch/results/cycle_085_gelu_pattern_diversity.png
+code_paths=experiments/gelu_pattern_diversity.py
+final_commit_hash=597b4ad
+agenda_updated=yes

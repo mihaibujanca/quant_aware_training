@@ -17,7 +17,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 085
    - Artifacts: `experiments/gelu_pattern_diversity.py`, `autoresearch/results/cycle_085_gelu_pattern_diversity.json`, `autoresearch/results/cycle_085_gelu_pattern_diversity.png`
 
-98. **Centroid affine map compression — GPT-2 FFN**
+98. ~~**Centroid affine map compression — GPT-2 FFN**~~ ⚠ OBSOLETE: Depends on item 97 (REFUTED — K* > 256, patterns too diverse).
    - IF item 97 finds manageable K*: test actual compression via region merging. For block 7, take K* cluster centroids. Each centroid defines affine map A_k = W_out @ diag(centroid_GELU'_k) @ W_in + b. Replace FFN with: for input x, compute z = W_in @ x + b_in, find nearest cluster by GELU'(z), apply centroid map A_k. This is a lookup table of K* affine maps — genuinely geometric compression. At K*=32 raw: 18.9M params (more than original 4.7M), so test low-rank factorization of each A_k. At K*=32, rank-64 factorization: 3.2M params (32% reduction). Measure single-block swap PPL.
    - Type: implementation + empirical
    - Confirmed if: centroid-affine compression achieves <= +10% PPL at >= 20% parameter reduction.
