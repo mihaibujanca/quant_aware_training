@@ -1,0 +1,11 @@
+{
+  "cycle": 100,
+  "item": 103,
+  "round": 2,
+  "verdict": "APPROVE",
+  "blocking_issues": [],
+  "advisory": [],
+  "pitfalls_checked": ["MP1", "MP2", "MP3", "MP4", "MP5", "MP6", "MP7", "MP8"],
+  "pitfalls_triggered": [],
+  "round1_resolved": ["I1", "I2", "I3", "I4", "A1", "A2"]
+}
