@@ -4,8 +4,75 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## NEXT EXPERIMENTS
 
-### P2 — Moonshots
+### P0 — Geometric structure (the core question)
 
+97. **GELU activation pattern diversity — GPT-2 FFN**
+   - The fundamental geometric question: how many distinct linear behaviors does a GPT-2 FFN block have on data? For each block, compute GELU'(z_j) for all 3072 channels on 2048 mixed-corpus tokens. This gives a 3072-dim "soft activation pattern" per token (values in [0,1]). Binarize at threshold 0.5 (GELU' > 0.5 = "active"). Count unique binary patterns. Measure Hamming distances. Also cluster the continuous GELU'(z) vectors with k-means, k in {8, 16, 32, 64, 128, 256}. For each k, compute within-cluster variance of the full affine map A = W_out @ diag(GELU'(z)) @ W_in. Key output: K* = minimum k such that centroid reconstruction error < 5% of block output norm.
+   - Type: analysis
+   - Confirmed if: K* <= 64 for >=6/12 blocks (FFN has manageable piecewise-linear complexity).
+   - Refuted if: K* > 256 for majority of blocks (GELU patterns too continuous/diverse to cluster).
+   - Inconclusive if: K* varies wildly across blocks.
+   - Depends on: none
+
+98. **Centroid affine map compression — GPT-2 FFN**
+   - IF item 97 finds manageable K*: test actual compression via region merging. For block 7, take K* cluster centroids. Each centroid defines affine map A_k = W_out @ diag(centroid_GELU'_k) @ W_in + b. Replace FFN with: for input x, compute z = W_in @ x + b_in, find nearest cluster by GELU'(z), apply centroid map A_k. This is a lookup table of K* affine maps — genuinely geometric compression. At K*=32 raw: 18.9M params (more than original 4.7M), so test low-rank factorization of each A_k. At K*=32, rank-64 factorization: 3.2M params (32% reduction). Measure single-block swap PPL.
+   - Type: implementation + empirical
+   - Confirmed if: centroid-affine compression achieves <= +10% PPL at >= 20% parameter reduction.
+   - Refuted if: centroid-affine always > +20% PPL OR requires more params than original.
+   - Inconclusive if: works for some blocks but not others.
+   - Depends on: 97
+
+99. **FFN output manifold geometry — GPT-2 FFN**
+   - Why does random+lstsq match SVD+lstsq? (Cycles 071, 077.) Is this just JL lemma in high dimensions, or is there exploitable structure beyond JL? For blocks [7,5,4,1], collect hidden activations h (n x 3072) and outputs y (n x 768) on 4096 mixed-corpus tokens. Measure hidden activation covariance eigenspectrum. Key metric: isotropy ratio = lambda_512 / lambda_1 at k=512 (6x compression). Compare to Marchenko-Pastur null. Also compute lstsq condition number for topk, SVD, and random projections. Test JL bound tightness: does the empirical distance distortion match the JL prediction epsilon = O(sqrt(log(n)/k)), or is it much tighter (indicating structure beyond JL)?
+   - Type: analysis
+   - Confirmed if: isotropy ratio > 0.1 for >=3/4 blocks (near-spherical, JL explains lstsq dominance).
+   - Refuted if: isotropy ratio < 0.01 (steep spectrum) but lstsq still works for random bases (something beyond JL).
+   - Inconclusive if: moderate isotropy (0.01-0.1).
+   - Depends on: none
+
+### P1 — Important
+
+94. **GELU near-linearity census v2 — GPT-2 FFN (corrected methodology)**
+   - Item 47 (cycle 032) was flawed (MP2: detection method mismatched to GELU). Redo with correct GELU-aware methodology. For each FFN hidden channel j in each block, compute fraction of probe tokens where |GELU'(z_j)| < 0.01 (dead) or |GELU'(z_j) - 1| < 0.05 (near-linear). Use 4096 mixed-corpus probe tokens. Report per-block: (a) fraction dead on >95% of tokens, (b) fraction near-linear on >80% of tokens, (c) remaining "genuinely nonlinear" fraction. Complements item 97 (per-channel vs per-token pattern analysis).
+   - Type: analysis
+   - Confirmed if: ≥10% dead OR ≥20% near-linear in ≥6/12 blocks.
+   - Refuted if: <5% dead AND <10% near-linear across all blocks (GELU nonlinearity fully utilized).
+   - Inconclusive if: significant but uneven across blocks (<6/12).
+   - Depends on: none
+
+95. **Data-conditioned Jacobian clustering for merge candidates — GPT-2 FFN**
+   - Probe FFN input-output behavior to find mergeable structure. For block 7, compute per-token diagonal GELU'(z) patterns on 1024 mixed-corpus tokens. Cluster with k-means, k in {8, 16, 32, 64}. Within each cluster, tokens share a similar effective linear map. Measure: (a) cluster-centroid reconstruction MSE vs full-precision output, (b) K* for <5% output norm error, (c) whether centroid Jacobians are low-rank. Builds on item 97's pattern diversity analysis with explicit merge-candidate identification.
+   - Type: analysis + empirical
+   - Confirmed if: K* ≤ 32 centroids achieve <5% output norm reconstruction error on held-out tokens.
+   - Refuted if: K* > 128 needed for <5% error.
+   - Inconclusive if: K* in 32–128 range.
+   - Depends on: 97
+
+96. **Mixed-corpus stacking evaluation — GPT-2 FFN**
+   - Cycle 078 confirmed mixed-corpus lstsq refit gives +19.1% single-block improvement. Test whether this transfers to stacking: refit blocks [7,5,4,1] at 6x using mixed-corpus probe (512 tokens each from Shakespeare, WikiText-2, OWT, C4), stack, evaluate on both OWT and WikiText-2. Compare vs OWT-only refit. Include 500-step Adam polish for both.
+   - Type: empirical
+   - Confirmed if: mixed-corpus reduces stacked PPL by ≥10% relative vs OWT-only on WikiText-2, AND does not degrade OWT by >3%.
+   - Refuted if: mixed-corpus degrades stacked OWT PPL by >5%.
+   - Inconclusive if: helps WikiText-2 but degrades OWT by 3–5%.
+   - Depends on: 90
+
+100. **Is FFN isotropy architectural or learned? — GPT-2 FFN**
+   - Follow-up to item 99. If activations are isotropic, why? Test 1: random-init GPT-2 (no training) — same isotropy measurement. Test 2: replace GELU with ReLU in one block, measure isotropy (ReLU kills ~50% of channels with hard zeros — should break isotropy). Test 3: if training checkpoints available, measure isotropy vs training step.
+   - Type: analysis
+   - Confirmed if: random-init is NOT isotropic AND trained model IS (isotropy emerges from training).
+   - Refuted if: random-init is already isotropic (architectural, not learned).
+   - Inconclusive if: both moderately isotropic.
+   - Depends on: 99
+
+101. **Gradient polish on k=5 stacking — GPT-2 FFN**
+   - k=5 unpolished is +17% (cycles 033-038). Has never been tested with gradient polish. 500 Adam steps reduce k=4 from +30% to +5%. Use best k=5 configs from cycle 038: [7,5,1,3,6] and [7,5,4,1,6] at 6x. Apply {0, 50, 200, 500} joint Adam steps, lr=1e-4, W_down only. 3 seeds, OWT, 200 eval seqs.
+   - Type: empirical
+   - Confirmed if: polished k=5 <= +10% PPL for at least 1 config.
+   - Refuted if: polished k=5 > +15% for both configs (wall is structural).
+   - Inconclusive if: +10-15%.
+   - Depends on: none
+
+### P2 — Moonshots
 
 86. **Mutual information bottleneck channel selection — GPT-2 FFN [MOONSHOT]**
    - Current topk selects channels by activation magnitude × output weight norm — a heuristic proxy. The information-theoretic optimum: select the k channels that maximize mutual information I(h_selected; y_block) where y_block is the full block output. Exact MI is intractable in 768D, but we can use the MINE estimator (Belghazi et al. 2018) or a simpler Gaussian MI approximation: I ≈ 0.5 · log det(Σ_full) − 0.5 · log det(Σ_residual), where Σ_residual is the covariance of y_block conditioned on the selected channels. This reduces to a greedy forward selection: at each step, add the channel that maximally reduces det(Σ_residual). For blocks [1, 4, 7, 11] at 6×, compare MI-greedy channel selection + lstsq vs topk + lstsq on single-block swap PPL. If MI selection finds channels that topk misses (high MI but low magnitude), the compression ceiling is higher than topk suggests.
@@ -49,6 +116,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 082
+
+93. **Gauss-Newton correction retry with true J^T J — GPT-2 FFN** *(INCONCLUSIVE — cycle 082)*
+   - Retry of item 85 using true GN Hv via jvp+vjp (flash attn disabled for forward-mode AD). CG residuals monotonically decrease (0.12→0.004 at iter 30) confirming correct PSD J^T J. However, the system is severely underdetermined: 8 seqs × 127 tokens = 1016 tokens < 98K params. The Tikhonov solution is close to zero correction in the null space.
+   - Results (3 seeds, blocks [7,5,4,1], 6× compression): GN +21.5±23.7% PPL vs unpolished +21.7±23.7% vs steepest descent +21.6% vs Adam 500 +7.7%. GN and steepest descent are essentially identical — single Newton step cannot overcome the underdetermined system's null space.
+   - Key finding: With only 1016 tokens and 98K parameters, J^T J has effective rank ≤ 1016 << 98K. The Tikhonov correction is essentially zero in the 97K-dim null space. More data or per-block linearization needed to make GN viable.
+   - Verdict: INCONCLUSIVE (+21.5% PPL, between +12% and +25% threshold). GN step helps marginally (0.2pp) but is far from Adam's +7.7%.
+   - Cycle: 082
+   - Artifacts: `experiments/gauss_newton_true_gpt2.py`, `autoresearch/results/cycle_082_gauss_newton_true.json`, `autoresearch/results/cycle_082_gauss_newton_true.png`
 
 ### Cycle 081
 

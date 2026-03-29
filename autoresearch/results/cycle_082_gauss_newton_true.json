@@ -1,0 +1,491 @@
+{
+  "baseline_ppl": 66.44869836375663,
+  "target_blocks": [
+    7,
+    5,
+    4,
+    1
+  ],
+  "hidden_fraction": 0.16666666666666666,
+  "seeds": [
+    42,
+    123,
+    7
+  ],
+  "best_lambda": 0.001,
+  "lambda_sweep": [
+    0.001,
+    0.01
+  ],
+  "hv_method": "jvp_vjp",
+  "cg_max_iter": 30,
+  "cg_tol": 1e-05,
+  "hv_seqs": 8,
+  "agg": {
+    "unpolished": {
+      "ppl_mean": 80.87517547607422,
+      "ppl_std": 15.77474594116211,
+      "delta_pct_mean": 21.710691452026367,
+      "delta_pct_std": 23.73973274230957,
+      "per_seed": {
+        "42": 98.98846312468544,
+        "123": 70.15297635590309,
+        "7": 73.4840731759159
+      }
+    },
+    "steepest_descent": {
+      "ppl_mean": 80.81995391845703,
+      "ppl_std": 15.776737213134766,
+      "delta_pct_mean": 21.627588272094727,
+      "delta_pct_std": 23.74273681640625,
+      "per_seed": {
+        "42": 98.93629764002604,
+        "123": 70.10226876664942,
+        "7": 73.42128322209179
+      }
+    },
+    "gn": {
+      "ppl_mean": 80.74901580810547,
+      "ppl_std": 15.75985336303711,
+      "delta_pct_mean": 21.520845413208008,
+      "delta_pct_std": 23.717329025268555,
+      "per_seed": {
+        "42": 98.8453558021636,
+        "123": 70.03801473129471,
+        "7": 73.36368917254921
+      }
+    },
+    "adam_500": {
+      "ppl_mean": 71.53609466552734,
+      "ppl_std": 19.637224197387695,
+      "delta_pct_mean": 7.656128406524658,
+      "delta_pct_std": 29.552453994750977,
+      "per_seed": {
+        "42": 94.17886821454078,
+        "123": 59.166312539182556,
+        "7": 61.26310898214845
+      }
+    }
+  },
+  "per_seed": {
+    "42": {
+      "unpolished_ppl": 98.98846312468544,
+      "unpolished_delta_pct": 48.96975495712207,
+      "per_block_ppl_gn": [
+        98.94759328314426,
+        98.90856174473659,
+        98.87148043929223,
+        98.8453558021636
+      ],
+      "gn_cg_info": [
+        {
+          "block_id": 7,
+          "converged": false,
+          "n_iter": 30,
+          "residual": 0.00422479616595772,
+          "grad_norm": 0.12281878292560577,
+          "dw_norm": 0.034400712698698044,
+          "hv_method": "jvp_vjp",
+          "fallback": false,
+          "lambda": 0.001,
+          "hv_seqs_used": 8,
+          "residual_log": [
+            {
+              "iter": 0,
+              "residual": 0.12282068413359794
+            },
+            {
+              "iter": 10,
+              "residual": 0.015671088374373865
+            },
+            {
+              "iter": 20,
+              "residual": 0.007000300012419481
+            },
+            {
+              "iter": 30,
+              "residual": 0.00422479616595772
+            }
+          ]
+        },
+        {
+          "block_id": 5,
+          "converged": false,
+          "n_iter": 30,
+          "residual": 0.007372132183014423,
+          "grad_norm": 0.17226411402225494,
+          "dw_norm": 0.028951730579137802,
+          "hv_method": "jvp_vjp",
+          "fallback": false,
+          "lambda": 0.001,
+          "hv_seqs_used": 8,
+          "residual_log": [
+            {
+              "iter": 0,
+              "residual": 0.17226717920099616
+            },
+            {
+              "iter": 10,
+              "residual": 0.026004262725486303
+            },
+            {
+              "iter": 20,
+              "residual": 0.013076368812783089
+            },
+            {
+              "iter": 30,
+              "residual": 0.007372132183014423
+            }
+          ]
+        },
+        {
+          "block_id": 4,
+          "converged": false,
+          "n_iter": 30,
+          "residual": 0.008158956163096611,
+          "grad_norm": 0.17357681691646576,
+          "dw_norm": 0.0276944562792778,
+          "hv_method": "jvp_vjp",
+          "fallback": false,
+          "lambda": 0.001,
+          "hv_seqs_used": 8,
+          "residual_log": [
+            {
+              "iter": 0,
+              "residual": 0.1735796921168512
+            },
+            {
+              "iter": 10,
+              "residual": 0.026155428335926628
+            },
+            {
+              "iter": 20,
+              "residual": 0.012733605751399627
+            },
+            {
+              "iter": 30,
+              "residual": 0.008158956163096611
+            }
+          ]
+        },
+        {
+          "block_id": 1,
+          "converged": false,
+          "n_iter": 30,
+          "residual": 0.009268583613373564,
+          "grad_norm": 0.14516036212444305,
+          "dw_norm": 0.03333797678351402,
+          "hv_method": "jvp_vjp",
+          "fallback": false,
+          "lambda": 0.001,
+          "hv_seqs_used": 8,
+          "residual_log": [
+            {
+              "iter": 0,
+              "residual": 0.14516192808019693
+            },
+            {
+              "iter": 10,
+              "residual": 0.02881447885499616
+            },
+            {
+              "iter": 20,
+              "residual": 0.013785475687875082
+            },
+            {
+              "iter": 30,
+              "residual": 0.009268583613373564
+            }
+          ]
+        }
+      ],
+      "gn_ppl": 98.8453558021636,
+      "gn_delta_pct": 48.75438983177614,
+      "steepest_descent_ppl": 98.93629764002604,
+      "steepest_descent_delta_pct": 48.89125005643337,
+      "adam_500_ppl": 94.17886821454078,
+      "adam_500_delta_pct": 41.731697585680806
+    },
+    "123": {
+      "unpolished_ppl": 70.15297635590309,
+      "unpolished_delta_pct": 5.574643421709065,
+      "per_block_ppl_gn": [
+        70.1222912753751,
+        70.09144381555697,
+        70.06222085410167,
+        70.03801473129471
+      ],
+      "gn_cg_info": [
+        {
+          "block_id": 7,
+          "converged": false,
+          "n_iter": 30,
+          "residual": 0.005192766023177283,
+          "grad_norm": 0.1189357191324234,
+          "dw_norm": 0.03380075842142105,
+          "hv_method": "jvp_vjp",
+          "fallback": false,
+          "lambda": 0.001,
+          "hv_seqs_used": 8,
+          "residual_log": [
+            {
+              "iter": 0,
+              "residual": 0.11893767910220703
+            },
+            {
+              "iter": 10,
+              "residual": 0.017448026638372412
+            },
+            {
+              "iter": 20,
+              "residual": 0.009867021425739014
+            },
+            {
+              "iter": 30,
+              "residual": 0.005192766023177283
+            }
+          ]
+        },
+        {
+          "block_id": 5,
+          "converged": false,
+          "n_iter": 30,
+          "residual": 0.006673451991980018,
+          "grad_norm": 0.15911488234996796,
+          "dw_norm": 0.028792252764105797,
+          "hv_method": "jvp_vjp",
+          "fallback": false,
+          "lambda": 0.001,
+          "hv_seqs_used": 8,
+          "residual_log": [
+            {
+              "iter": 0,
+              "residual": 0.1591173939422843
+            },
+            {
+              "iter": 10,
+              "residual": 0.030144392396022048
+            },
+            {
+              "iter": 20,
+              "residual": 0.011416157006953786
+            },
+            {
+              "iter": 30,
+              "residual": 0.006673451991980018
+            }
+          ]
+        },
+        {
+          "block_id": 4,
+          "converged": false,
+          "n_iter": 30,
+          "residual": 0.007636919125686754,
+          "grad_norm": 0.16155146062374115,
+          "dw_norm": 0.027206867933273315,
+          "hv_method": "jvp_vjp",
+          "fallback": false,
+          "lambda": 0.001,
+          "hv_seqs_used": 8,
+          "residual_log": [
+            {
+              "iter": 0,
+              "residual": 0.1615537232186152
+            },
+            {
+              "iter": 10,
+              "residual": 0.03523885439948006
+            },
+            {
+              "iter": 20,
+              "residual": 0.012501259410639174
+            },
+            {
+              "iter": 30,
+              "residual": 0.007636919125686754
+            }
+          ]
+        },
+        {
+          "block_id": 1,
+          "converged": false,
+          "n_iter": 30,
+          "residual": 0.009522063974321421,
+          "grad_norm": 0.1419212818145752,
+          "dw_norm": 0.033233437687158585,
+          "hv_method": "jvp_vjp",
+          "fallback": false,
+          "lambda": 0.001,
+          "hv_seqs_used": 8,
+          "residual_log": [
+            {
+              "iter": 0,
+              "residual": 0.1419229149570852
+            },
+            {
+              "iter": 10,
+              "residual": 0.03315229065714298
+            },
+            {
+              "iter": 20,
+              "residual": 0.013077471591401331
+            },
+            {
+              "iter": 30,
+              "residual": 0.009522063974321421
+            }
+          ]
+        }
+      ],
+      "gn_ppl": 70.03801473129471,
+      "gn_delta_pct": 5.4016353305963465,
+      "steepest_descent_ppl": 70.10226876664942,
+      "steepest_descent_delta_pct": 5.4983325375197465,
+      "adam_500_ppl": 59.166312539182556,
+      "adam_500_delta_pct": -10.95941079945388
+    },
+    "7": {
+      "unpolished_ppl": 73.4840731759159,
+      "unpolished_delta_pct": 10.587678894243913,
+      "per_block_ppl_gn": [
+        73.44958095189094,
+        73.41664874508977,
+        73.38642504445014,
+        73.36368917254921
+      ],
+      "gn_cg_info": [
+        {
+          "block_id": 7,
+          "converged": false,
+          "n_iter": 30,
+          "residual": 0.0036998962443417485,
+          "grad_norm": 0.1206807941198349,
+          "dw_norm": 0.03289710730314255,
+          "hv_method": "jvp_vjp",
+          "fallback": false,
+          "lambda": 0.001,
+          "hv_seqs_used": 8,
+          "residual_log": [
+            {
+              "iter": 0,
+              "residual": 0.12068261447576475
+            },
+            {
+              "iter": 10,
+              "residual": 0.02528064203717514
+            },
+            {
+              "iter": 20,
+              "residual": 0.0065621539020916655
+            },
+            {
+              "iter": 30,
+              "residual": 0.0036998962443417485
+            }
+          ]
+        },
+        {
+          "block_id": 5,
+          "converged": false,
+          "n_iter": 30,
+          "residual": 0.008040662928807339,
+          "grad_norm": 0.15581969916820526,
+          "dw_norm": 0.02713209018111229,
+          "hv_method": "jvp_vjp",
+          "fallback": false,
+          "lambda": 0.001,
+          "hv_seqs_used": 8,
+          "residual_log": [
+            {
+              "iter": 0,
+              "residual": 0.15582210840972352
+            },
+            {
+              "iter": 10,
+              "residual": 0.031913012250337006
+            },
+            {
+              "iter": 20,
+              "residual": 0.011392112305372019
+            },
+            {
+              "iter": 30,
+              "residual": 0.008040662928807339
+            }
+          ]
+        },
+        {
+          "block_id": 4,
+          "converged": false,
+          "n_iter": 30,
+          "residual": 0.00716547448124143,
+          "grad_norm": 0.1590927243232727,
+          "dw_norm": 0.025717241689562798,
+          "hv_method": "jvp_vjp",
+          "fallback": false,
+          "lambda": 0.001,
+          "hv_seqs_used": 8,
+          "residual_log": [
+            {
+              "iter": 0,
+              "residual": 0.15909489906868668
+            },
+            {
+              "iter": 10,
+              "residual": 0.028735831677194425
+            },
+            {
+              "iter": 20,
+              "residual": 0.013389819977308141
+            },
+            {
+              "iter": 30,
+              "residual": 0.00716547448124143
+            }
+          ]
+        },
+        {
+          "block_id": 1,
+          "converged": false,
+          "n_iter": 30,
+          "residual": 0.008456843140879933,
+          "grad_norm": 0.1392684280872345,
+          "dw_norm": 0.03222719952464104,
+          "hv_method": "jvp_vjp",
+          "fallback": false,
+          "lambda": 0.001,
+          "hv_seqs_used": 8,
+          "residual_log": [
+            {
+              "iter": 0,
+              "residual": 0.1392698558291833
+            },
+            {
+              "iter": 10,
+              "residual": 0.033177928971485506
+            },
+            {
+              "iter": 20,
+              "residual": 0.012692057898465071
+            },
+            {
+              "iter": 30,
+              "residual": 0.008456843140879933
+            }
+          ]
+        }
+      ],
+      "gn_ppl": 73.36368917254921,
+      "gn_delta_pct": 10.40651055486175,
+      "steepest_descent_ppl": 73.42128322209179,
+      "steepest_descent_delta_pct": 10.493185013445254,
+      "adam_500_ppl": 61.26310898214845,
+      "adam_500_delta_pct": -7.80389911209544
+    }
+  },
+  "verdict": "INCONCLUSIVE",
+  "verdict_reason": "True GN step gives 21.5% PPL degradation (between +12% and +25%). Helps vs unpolished but doesn't match Adam.",
+  "cg_convergence": "0/12",
+  "reference_adam500_delta_pct": 4.9,
+  "reference_unpolished_delta_pct": 30.2
+}
