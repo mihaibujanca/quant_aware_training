@@ -1,0 +1,281 @@
+{
+  "cycle": 111,
+  "item": 122,
+  "n_tokens": 4096,
+  "baseline_ppl": 17.37,
+  "per_block": [
+    {
+      "block": 0,
+      "neg_frac": 0.86943,
+      "mean_gelu_prime": 0.07466,
+      "mean_z": -1.1223,
+      "std_z": 0.8907,
+      "skewness": 0.1719,
+      "cdf_bins": {
+        "z<-2": 0.14577,
+        "-2<z<-1": 0.44553,
+        "-1<z<0": 0.27812,
+        "0<z<1": 0.12436,
+        "1<z<2": 0.0048,
+        "z>2": 0.00141
+      },
+      "attention_effect": {
+        "block": 0,
+        "nf_actual": 0.86943,
+        "nf_no_attn": 0.82664,
+        "delta": 0.04278
+      }
+    },
+    {
+      "block": 1,
+      "neg_frac": 0.72778,
+      "mean_gelu_prime": 0.23843,
+      "mean_z": -0.7114,
+      "std_z": 0.9482,
+      "skewness": -1.3014,
+      "cdf_bins": {
+        "z<-2": 0.09978,
+        "-2<z<-1": 0.25298,
+        "-1<z<0": 0.37502,
+        "0<z<1": 0.26938,
+        "1<z<2": 0.00215,
+        "z>2": 0.00069
+      },
+      "attention_effect": {
+        "block": 1,
+        "nf_actual": 0.72778,
+        "nf_no_attn": 0.73224,
+        "delta": -0.00446
+      }
+    },
+    {
+      "block": 2,
+      "neg_frac": 0.82842,
+      "mean_gelu_prime": 0.13622,
+      "mean_z": -1.0547,
+      "std_z": 1.0504,
+      "skewness": -1.3602,
+      "cdf_bins": {
+        "z<-2": 0.18877,
+        "-2<z<-1": 0.31245,
+        "-1<z<0": 0.3272,
+        "0<z<1": 0.16806,
+        "1<z<2": 0.0031,
+        "z>2": 0.00043
+      },
+      "attention_effect": {
+        "block": 2,
+        "nf_actual": 0.82842,
+        "nf_no_attn": 0.83858,
+        "delta": -0.01016
+      }
+    },
+    {
+      "block": 3,
+      "neg_frac": 0.87516,
+      "mean_gelu_prime": 0.09246,
+      "mean_z": -1.1759,
+      "std_z": 0.9958,
+      "skewness": -0.2887,
+      "cdf_bins": {
+        "z<-2": 0.21342,
+        "-2<z<-1": 0.34066,
+        "-1<z<0": 0.32108,
+        "0<z<1": 0.12007,
+        "1<z<2": 0.0044,
+        "z>2": 0.00037
+      },
+      "attention_effect": {
+        "block": 3,
+        "nf_actual": 0.87516,
+        "nf_no_attn": 0.88703,
+        "delta": -0.01187
+      }
+    },
+    {
+      "block": 4,
+      "neg_frac": 0.84883,
+      "mean_gelu_prime": 0.12888,
+      "mean_z": -0.9858,
+      "std_z": 0.945,
+      "skewness": -0.379,
+      "cdf_bins": {
+        "z<-2": 0.15343,
+        "-2<z<-1": 0.31194,
+        "-1<z<0": 0.38347,
+        "0<z<1": 0.14578,
+        "1<z<2": 0.00514,
+        "z>2": 0.00025
+      },
+      "attention_effect": {
+        "block": 4,
+        "nf_actual": 0.84883,
+        "nf_no_attn": 0.86256,
+        "delta": -0.01373
+      }
+    },
+    {
+      "block": 5,
+      "neg_frac": 0.84784,
+      "mean_gelu_prime": 0.12369,
+      "mean_z": -1.0286,
+      "std_z": 0.9714,
+      "skewness": -0.255,
+      "cdf_bins": {
+        "z<-2": 0.16755,
+        "-2<z<-1": 0.32626,
+        "-1<z<0": 0.35404,
+        "0<z<1": 0.14508,
+        "1<z<2": 0.00653,
+        "z>2": 0.00054
+      },
+      "attention_effect": {
+        "block": 5,
+        "nf_actual": 0.84784,
+        "nf_no_attn": 0.85941,
+        "delta": -0.01157
+      }
+    },
+    {
+      "block": 6,
+      "neg_frac": 0.83698,
+      "mean_gelu_prime": 0.13513,
+      "mean_z": -0.9481,
+      "std_z": 0.9291,
+      "skewness": -0.1779,
+      "cdf_bins": {
+        "z<-2": 0.13635,
+        "-2<z<-1": 0.3312,
+        "-1<z<0": 0.36944,
+        "0<z<1": 0.15423,
+        "1<z<2": 0.00827,
+        "z>2": 0.00052
+      },
+      "attention_effect": {
+        "block": 6,
+        "nf_actual": 0.83698,
+        "nf_no_attn": 0.84811,
+        "delta": -0.01113
+      }
+    },
+    {
+      "block": 7,
+      "neg_frac": 0.84973,
+      "mean_gelu_prime": 0.12244,
+      "mean_z": -0.9517,
+      "std_z": 0.9033,
+      "skewness": -0.1377,
+      "cdf_bins": {
+        "z<-2": 0.1243,
+        "-2<z<-1": 0.34969,
+        "-1<z<0": 0.37573,
+        "0<z<1": 0.14051,
+        "1<z<2": 0.00903,
+        "z>2": 0.00073
+      },
+      "attention_effect": {
+        "block": 7,
+        "nf_actual": 0.84973,
+        "nf_no_attn": 0.85981,
+        "delta": -0.01008
+      }
+    },
+    {
+      "block": 8,
+      "neg_frac": 0.85466,
+      "mean_gelu_prime": 0.11685,
+      "mean_z": -0.963,
+      "std_z": 0.9044,
+      "skewness": -0.0475,
+      "cdf_bins": {
+        "z<-2": 0.1248,
+        "-2<z<-1": 0.35744,
+        "-1<z<0": 0.37241,
+        "0<z<1": 0.1337,
+        "1<z<2": 0.01068,
+        "z>2": 0.00097
+      },
+      "attention_effect": {
+        "block": 8,
+        "nf_actual": 0.85466,
+        "nf_no_attn": 0.85856,
+        "delta": -0.0039
+      }
+    },
+    {
+      "block": 9,
+      "neg_frac": 0.86155,
+      "mean_gelu_prime": 0.10867,
+      "mean_z": -0.9961,
+      "std_z": 0.9248,
+      "skewness": -0.0121,
+      "cdf_bins": {
+        "z<-2": 0.13261,
+        "-2<z<-1": 0.36732,
+        "-1<z<0": 0.36162,
+        "0<z<1": 0.12398,
+        "1<z<2": 0.01318,
+        "z>2": 0.0013
+      },
+      "attention_effect": {
+        "block": 9,
+        "nf_actual": 0.86155,
+        "nf_no_attn": 0.86492,
+        "delta": -0.00337
+      }
+    },
+    {
+      "block": 10,
+      "neg_frac": 0.8535,
+      "mean_gelu_prime": 0.11878,
+      "mean_z": -0.9683,
+      "std_z": 0.9561,
+      "skewness": 0.0168,
+      "cdf_bins": {
+        "z<-2": 0.12814,
+        "-2<z<-1": 0.35951,
+        "-1<z<0": 0.36584,
+        "0<z<1": 0.12615,
+        "1<z<2": 0.01805,
+        "z>2": 0.00231
+      },
+      "attention_effect": {
+        "block": 10,
+        "nf_actual": 0.8535,
+        "nf_no_attn": 0.85773,
+        "delta": -0.00423
+      }
+    },
+    {
+      "block": 11,
+      "neg_frac": 0.83459,
+      "mean_gelu_prime": 0.14113,
+      "mean_z": -0.9056,
+      "std_z": 1.0186,
+      "skewness": -0.2285,
+      "cdf_bins": {
+        "z<-2": 0.11761,
+        "-2<z<-1": 0.34257,
+        "-1<z<0": 0.37441,
+        "0<z<1": 0.13764,
+        "1<z<2": 0.02362,
+        "z>2": 0.00414
+      },
+      "attention_effect": {
+        "block": 11,
+        "nf_actual": 0.83459,
+        "nf_no_attn": 0.83368,
+        "delta": 0.00092
+      }
+    }
+  ],
+  "regression": {
+    "slope": 0.0030404,
+    "slope_pct_per_block": 0.30404,
+    "intercept": 0.82398,
+    "r2": 0.08284,
+    "p_value": 0.364322229748749
+  },
+  "monotonicity_violations": 6,
+  "verdict": "REFUTED"
+}

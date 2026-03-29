@@ -1,0 +1,22 @@
+{
+  "cycle": 111,
+  "item": 122,
+  "round": 1,
+  "verdict": "APPROVE",
+  "issues_total": 0,
+  "advisory_total": 1,
+  "fixes_verified": [],
+  "issues": [],
+  "advisory": [
+    {
+      "id": "A1",
+      "severity": "advisory",
+      "summary": "Attention-effect measurement (step 8) conflates attention and LN contributions. Acceptable as exploratory but should not be over-interpreted."
+    }
+  ],
+  "resolved": [],
+  "pitfalls_checked": ["MP1", "MP2", "MP3", "MP5", "MP6", "MP7", "MP8"],
+  "pitfalls_triggered": [],
+  "cost_ok": true,
+  "summary": "Straightforward deterministic analysis. Criteria map cleanly to monotonicity count + OLS regression. No circularity, no pitfall triggers. One advisory: the attention-effect measurement is approximate (conflates LN) but is secondary to the verdict."
+}

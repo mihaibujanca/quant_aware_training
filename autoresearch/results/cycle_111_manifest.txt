@@ -1,0 +1,31 @@
+Cycle 111 — GELU Depth Gradient (Item 122)
+==========================================
+
+Verdict: REFUTED
+
+Key metrics:
+  violations       : 6/11 (monotonicity breaks)
+  OLS slope        : +0.304%/block
+  R²               : 0.083
+  p-value          : 0.364
+  neg_frac range   : [0.728, 0.875] across 12 blocks
+  E[GELU'] range   : [0.075, 0.238] across 12 blocks
+  attn delta range : [-0.014, +0.043]
+  baseline PPL     : 17.37 (GPT-2 on OWT, in-distribution)
+
+Summary:
+  GELU negative fraction is broadly stable across depth (73–87%), not
+  monotonically increasing. 6 of 11 block transitions violate monotonicity.
+  OLS slope is weak (+0.30%/block) with near-zero fit (R²=0.083, p=0.36).
+  Block 1 is anomalously low (neg_frac=0.728, E[GELU']=0.238) — the model
+  operates more linearly there. Deep blocks (7-11) cluster stably around
+  85–86%. Attention contribution to neg_frac shift is small.
+  Conclusion: depth has no systematic effect on the GELU operating regime.
+
+Files:
+  experiments/gelu_depth_gradient_gpt2.py
+  autoresearch/results/cycle_111_gelu_depth_gradient.json
+  autoresearch/results/cycle_111_gelu_depth_gradient.png
+  autoresearch/results/cycle_111_manifest.txt
+  autoresearch/logs/experiments.tsv  (appended row)
+  autoresearch/agenda.md             (item 122 marked REFUTED)
