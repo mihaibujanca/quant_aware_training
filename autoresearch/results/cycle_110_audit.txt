@@ -1,0 +1,8 @@
+cycle: 110
+item: 121
+audit: PASS
+verdict_check: INCONCLUSIVE correctly applied (0/12 above 0.3, 2/12 near zero)
+flags: anti-correlation undersold by INCONCLUSIVE label; rho_C has residual tautological coupling
+code: Conv1D correct, GELU correct, 3 importance variants clean, deterministic
+interesting: depth-dependent sign flip (rho_B: +0.03 at block 0 to -0.60 at block 9)
+recommendation: actual output contribution (mean|h_j|*||w_j||) as non-tautological proxy; anti-correlation worth a dedicated follow-up item

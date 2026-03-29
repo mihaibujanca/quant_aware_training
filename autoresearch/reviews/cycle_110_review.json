@@ -1,0 +1,22 @@
+{
+  "cycle": 110,
+  "item": 121,
+  "round": 1,
+  "verdict": "APPROVE",
+  "issues_total": 0,
+  "advisory_total": 1,
+  "fixes_verified": [],
+  "issues": [],
+  "advisory": [
+    {
+      "id": "A1",
+      "severity": "advisory",
+      "summary": "Bump fraction is clustered near 0.95 for most channels (cycle 103). Spearman on near-identical values may be noisy. Consider also reporting on fraction-outside-bump for robustness."
+    }
+  ],
+  "resolved": [],
+  "pitfalls_checked": ["MP1", "MP2", "MP6", "MP7", "MP8"],
+  "pitfalls_triggered": [],
+  "cost_ok": true,
+  "summary": "Circularity concern (cycle 108 A2) is the main risk. Plan addresses it correctly by decomposing importance into three variants (full/activation-weight/weight-only) and applying verdict criteria to the weight-only variant (zero tautology). If only the full formula shows correlation, that's an artifact. Clean design."
+}
