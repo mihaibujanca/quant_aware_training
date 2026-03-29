@@ -32,10 +32,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle: 103
    - Artifacts: experiments/gelu_relu_anatomy_gpt2.py, autoresearch/results/cycle_103_gelu_relu_anatomy.json, autoresearch/results/cycle_103_gelu_relu_anatomy.png
 
-109. **ReLU-swapped GPT-2: activation pattern census — GPT-2 FFN**
-   - IF item 107 shows small gap: re-run item 97's core question on the ReLU-swapped model. With ReLU, activation patterns are binary (neuron on/off). Count unique binary patterns per block on 4096 mixed-corpus tokens. Measure: (a) number of unique patterns vs theoretical max 2^3072, (b) Hamming distances between patterns, (c) cluster patterns with k-means on binary vectors, k in {8, 16, 32, 64, 128, 256}, (d) K* = min k for <5% within-cluster output variance.
-   - This directly tests whether MASO theory's prediction holds: trained networks should have far fewer active patterns than theoretical max (Hanin & Rolnick 2019: at most N^d observed patterns).
-   - Type: analysis
+109. ~~**ReLU-swapped GPT-2: activation pattern census — GPT-2 FFN**~~ *(BLOCKED — item 107 refuted, swap gap +8320% PPL >> 15% threshold)*
    - Confirmed if: K* <= 64 for >=6/12 blocks (ReLU patterns are clusterable — piecewise-linear compression viable).
    - Refuted if: K* > 256 for majority of blocks (even with ReLU, patterns too diverse).
    - Inconclusive if: K* varies wildly across blocks.
@@ -187,6 +184,44 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 113. ~~**Joint FFN+attention compression on viable blocks — GPT-2**~~ *(INCONCLUSIVE — cycle 098)*
 
 114. ~~**Block-0-skip attention compression — GPT-2**~~ *(REFUTED — cycle 097)*
+
+### P0 — Cascade mechanism (new)
+
+115. **Cascade error source: residual-stream vs nonlinearity amplification — GPT-2 FFN**
+   - The 41%/block cascade rate (c≈0.41) is the binding constraint on stacking. It is ratio-independent (cycle 093) and ordering-independent (cycle 089), so it is not a simple single-block-error problem — it is an inter-block amplification phenomenon. But WHERE does the amplification happen? When block L is compressed and its output error δ_L enters the residual stream, the next FFN block L+1 sees input x_{L+1} + δ_L. The amplification could come from: (a) GELU nonlinearity in block L+1 mapping δ_L into a different activation region (cycle 103 shows 94.6% of activations are in the GELU bump zone where sensitivity is highest), or (b) attention heads between L and L+1 redistributing the error across sequence positions. Measure both. For k=1 compressed blocks individually at each position, capture: (1) the FFN input error δ at the next block, (2) the FFN output error at the next block with/without attention between them, (3) the GELU derivative at the perturbed vs unperturbed pre-activations (does δ push activations across the bump?). Decompose the cascade into attention-mediated vs FFN-nonlinearity-mediated fractions per block pair.
+   - Type: analysis
+   - Confirmed if: one source (attention or GELU nonlinearity) accounts for ≥70% of cascade amplification in ≥8/11 block transitions (clear target for intervention).
+   - Refuted if: both sources contribute roughly equally (40-60% each) across all transitions (no single intervention target).
+   - Inconclusive if: dominant source varies by block position.
+   - Depends on: none
+
+116. **GELU negative-leak aware compression — GPT-2 FFN**
+   - Cycle 103 shows 84-88% of GELU-ReLU disagreement energy comes from z<0 (the negative leak). Standard topk+lstsq treats all hidden channels uniformly. What if we exploit the asymmetry? For each hidden channel j, compute the empirical fraction of probe tokens where z_j < 0. Channels with z_j < 0 on most tokens contribute GELU(z_j) ≈ z·σ(1.702z) ≈ small negative leak — a correction term, not a main signal. Strategy: partition channels into "positive-dominated" (z>0 on ≥50% tokens) and "negative-dominated" (z<0 on ≥50% tokens). For negative-dominated channels, their contribution to block output is small but nonzero (the leak). Approximate the aggregate leak as a low-rank bias correction b_leak = W_out @ mean(GELU(z_neg)) computed on probe data, and drop those channels from topk selection entirely. Then run topk+lstsq on the remaining positive-dominated channels only, adding b_leak as a constant offset. Compare vs standard topk+lstsq at matched effective k. Blocks [1, 4, 7, 11], 6× compression, 3 seeds.
+   - Type: empirical
+   - Confirmed if: leak-aware selection outperforms standard topk+lstsq by ≥3% relative PPL in ≥2/4 blocks at matched k.
+   - Refuted if: leak-aware selection performs within 1% of standard topk+lstsq (channel sign statistics don't improve selection).
+   - Inconclusive if: improvement is 1-3% or block-dependent.
+   - Depends on: none
+
+### P1 — Important (new)
+
+117. **Output-space direct regression bypass — GPT-2 FFN**
+   - Every failed approach (Jacobian factorization, GELU clustering, subspace projection) tried to compress through the hidden layer. What if we bypass it entirely? For each FFN block, the function is f: R^768 → R^768. Fit a direct low-rank approximation f(x) ≈ A @ x + b where A = U @ S @ V^T with rank r, using lstsq on probe data (x→y pairs, no hidden activations at all). This is a pure input-output regression — no GELU, no hidden channels, no activation patterns. Sweep r in {32, 64, 128, 256, 384} on blocks [1, 4, 7, 11] with 4096 OWT tokens. Compare single-block swap PPL against topk+lstsq at matched parameter count (rank-r has 768×r×2 params vs topk at k channels has 768×k + k×768 params). If direct regression wins, the hidden-layer structure is a compression liability, not an asset.
+   - Type: empirical
+   - Confirmed if: direct rank-r regression matches or beats topk+lstsq at matched param count in ≥2/4 blocks, for any r.
+   - Refuted if: topk+lstsq outperforms direct regression by ≥5% PPL at all matched comparisons (hidden-layer structure helps compression).
+   - Inconclusive if: results are block-dependent or within 5%.
+   - Depends on: none
+
+### P2 — Moonshots (new)
+
+118. **Compositional stacking with per-block cascade correction — GPT-2 FFN**
+   - The cascade rate c≈0.41 compounds multiplicatively. What if we add a tiny per-block correction that absorbs the cascade? After compressing k blocks, insert a learned linear correction C_l = I + ΔW_l (rank-r, r in {4, 8, 16}) applied to the residual stream AFTER each compressed block l. Train all k corrections jointly under model loss (next-token CE), freezing everything else. The corrections only need to fix the cascade interaction — not the single-block error. Total added params: k × 2 × 768 × r. At k=4, r=8: 49K params (0.04% of GPT-2). Compare: (a) k=4 topk+lstsq+Adam with no correction, (b) same + rank-8 cascade corrections, (c) same + rank-16 corrections. 3 seeds, OWT, 200 eval seqs. This tests whether the cascade is low-rank correctable even though the compression error itself is high-dimensional (cycle 099: error spans 85% of dims).
+   - Type: empirical
+   - Confirmed if: cascade corrections reduce stacked PPL degradation by ≥30% relative at k=4 with r≤16 (cascade is low-rank correctable).
+   - Refuted if: corrections reduce degradation by <10% even at r=16 (cascade is high-rank and uncorrectable with small interventions).
+   - Inconclusive if: 10-30% reduction, or requires r>16 to see benefit.
+   - Depends on: none
 
 ### Closed — OBSOLETE items (do not run)
 

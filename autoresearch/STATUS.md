@@ -44,7 +44,7 @@
 - GELU bump is critical signal, not noise (103)
 
 ## Remaining NEXT Items
-- **P0**: Item 109 (BLOCKED — depends on 107 refuted, swap gap >>15%)
-- **P1**: Items 100, 101
-- **P2**: Items 87, 88
-- 4 eligible items — at threshold for agenda refresh
+- **P0**: Item 109 (BLOCKED), 115 (cascade source attribution), 116 (GELU negative-leak compression)
+- **P1**: Items 100, 101, 117 (output-space direct regression)
+- **P2**: Items 87, 88, 118 (per-block cascade correction)
+- 8 eligible items (4 new from agenda refresh)
