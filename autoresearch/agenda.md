@@ -118,6 +118,42 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: 10-30% reduction, or requires r>16.
    - Depends on: none
 
+### P1 — Attention-aware compression (new from cycles 104/107)
+
+124. **Attention-mediated cascade: per-head amplification census — GPT-2**
+   - Cycle 104 showed attention dominates cascade (≥70% in 8/11 transitions), but treated attention as a monolithic block. Which heads amplify FFN error most? For each of the 12 attention layers, compress FFN block L at k=1 (6×), inject the resulting residual-stream error δ_L, and measure per-head output perturbation: for each head h, compute ||Attn_h(x + δ) - Attn_h(x)||₂ / ||δ||₂ (per-head amplification factor). Aggregate over 2048 OWT tokens. Report: (a) per-head amplification factor heatmap (12 layers × 12 heads), (b) top-5 amplifying heads across the model, (c) Spearman correlation between head amplification and head importance (measured by ablation PPL). If a small subset of heads dominates amplification, they are surgical targets for cascade suppression.
+   - Type: analysis
+   - Confirmed if: top 3 heads per layer account for ≥70% of total attention-mediated amplification in ≥8/12 layers (concentrated, targetable).
+   - Refuted if: amplification is uniformly distributed across heads (≤15% max per head) in ≥8/12 layers.
+   - Inconclusive if: concentrated in some layers but not others, or top-3 account for 40-70%.
+   - Depends on: none
+
+125. **Linearity-adaptive compression ratio allocation — GPT-2 FFN**
+   - Cycle 107 found a block linearity gradient: middle blocks (4, 7) are nearly linear (direct regression ≈ topk), while early (1) and late (11) are strongly nonlinear. Exploit this: compress linear blocks more aggressively, allocate more capacity to nonlinear blocks, keeping total params fixed. Sweep: for k=4 block stacking, test (a) uniform 6× everywhere (baseline), (b) middle-heavy: blocks 4,7 at 8×, blocks 1,11 at 4× (matched total params), (c) edge-heavy: blocks 1,11 at 8×, blocks 4,7 at 4×. All with topk+lstsq+500 Adam, 3 seeds, 200 eval seqs OWT.
+   - Type: empirical
+   - Confirmed if: non-uniform allocation (b) outperforms uniform (a) by ≥3% relative PPL at matched total params.
+   - Refuted if: uniform is within 1% of the best non-uniform allocation.
+   - Inconclusive if: 1-3% or dependent on block selection.
+   - Depends on: none
+
+### P2 — Joint attention+FFN (new from cycle 104)
+
+126. **Attention projection pruning on high-amplification heads — GPT-2**
+   - Instead of compressing attention weights globally (cycle 095/098: marginal), target only the heads that amplify FFN compression error (from item 124, or use cycle 104's per-transition attention fractions as proxy). For each of the top-3 amplifying head positions identified in cycle 104 (transitions with attn_frac > 1.0, i.e., layers 0-6), apply rank-r SVD (r ∈ {8, 11, 16}) to the value+output projection W_V W_O of those heads only, while leaving all other heads untouched. Measure: (a) single-transition cascade amplification factor before/after pruning, (b) k=4 FFN stacking PPL with vs without head pruning. 3 seeds, 200 eval seqs.
+   - Type: empirical
+   - Confirmed if: targeted head pruning reduces cascade amplification by ≥20% relative AND stacked PPL improves by ≥2% absolute over FFN-only compression.
+   - Refuted if: head pruning degrades stacked PPL (attention heads that amplify error also carry essential information).
+   - Inconclusive if: amplification reduced but PPL unchanged (cascade reduction offset by information loss).
+   - Depends on: 124 (or can use cycle 104 data as proxy)
+
+127. **Direct regression for middle blocks + topk for edge blocks — GPT-2 FFN** [HYBRID]
+   - Cycle 107 showed direct regression matches topk in middle blocks but loses badly in early/late blocks. Test a hybrid: use direct rank-r regression (r=256) for blocks 4,7 and topk+lstsq (k=512) for blocks 1,11. Compare k=4 stacking PPL against all-topk and all-direct baselines. The hypothesis: direct regression's lack of hidden-layer inductive bias is fine when the block is near-linear but harmful when it's nonlinear. +500 Adam polish for both methods. 3 seeds, 200 eval seqs OWT.
+   - Type: empirical
+   - Confirmed if: hybrid outperforms both all-topk and all-direct by ≥2% relative PPL at k=4 stacking.
+   - Refuted if: all-topk matches or beats hybrid (topk is robust enough that block-adaptive method selection doesn't help).
+   - Inconclusive if: hybrid beats one baseline but not the other, or <2% difference.
+   - Depends on: none
+
 ### Closed — OBSOLETE items (do not run)
 
 23. ~~**Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**~~ ⚠ OBSOLETE: Superseded by item 80 (Jacobian effective rank census).

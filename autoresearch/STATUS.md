@@ -37,6 +37,7 @@
 - Subspace-projection correction, Jacobian factorization, GELU' clustering, zero-shot GELU→ReLU, GELU bump masking — all ruled out
 
 ## Remaining NEXT Items
-- **P1**: Item 100 (blocked on 99)
-- **P2**: Items 87, 88, 118 (cascade corrections)
-- 3 eligible items — AGENDA REFRESH NEEDED
+- **P0**: Items 115, 119-123 (interpretability, cascade, GELU-leak)
+- **P1**: Items 100 (blocked on 99), 117, 124, 125
+- **P2**: Items 87, 88, 118, 126, 127
+- 7 eligible items (4 new from agenda refresh: 124-127)
