@@ -1,0 +1,19 @@
+{
+  "cycle": 89,
+  "item": 104,
+  "round": 1,
+  "verdict": "APPROVE",
+  "issues_total": 1,
+  "issues": [
+    {
+      "id": "I1",
+      "severity": "non-blocking",
+      "title": "Selection mode mismatch: agenda says 'random', plan uses 'topk'",
+      "detail": "Agenda item 104 specifies 'random+lstsq+500 Adam' but plan and all referenced scripts use topk. topk is correct for consistency with cycle 059/061 calibration data that the null prediction relies on. Recommend updating agenda item text to 'topk+lstsq+500 Adam'."
+    }
+  ],
+  "notes": [
+    "Monotonicity validation (PPL non-decreasing with k) may fail at individual seeds due to beneficial error cancellation — treat as characterizable phenomenon, not just noise.",
+    "Forward <= reverse ordering assumption is testable, not load-bearing. Cross-block interaction structure could violate it."
+  ]
+}
