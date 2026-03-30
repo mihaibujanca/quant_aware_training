@@ -8,14 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-134. **Dead/always-active neuron census + exact pruning — GPT-2 FFN (GELU-correct)**
-   - R2 requires exact white-box compression as a mandatory baseline, but the only prior attempt (item 47, cycle 032) was flawed (MP1: detection threshold above trivial baseline, and it targeted dead channels only). This corrects both issues for GELU networks. For each of GPT-2's 12 FFN blocks, compute per-neuron activation statistics over 256 OWT sequences (seq_len=256): (a) **dead neurons**: hidden units where |GELU(W_up @ x + b)_i| < 1e-6 for ALL tokens (these can be removed with zero error). (b) **always-active neurons**: units where GELU(z_i) ≈ z_i for all tokens, i.e., z_i > 4.0 for all tokens (GELU saturates to identity; these can be folded into a single linear map W_down[:, i] @ W_up[i, :] + bias adjustment). (c) **near-linear neurons**: units where max|GELU(z_i) - z_i| < 0.01 over all tokens (z_i always in the near-linear regime z > 2). Report per-block counts for each category. Then construct the exact-pruned model: remove dead neurons, fold always-active neurons into a bias correction, and measure single-block and k=4 stacked PPL. This is the zero-error-budget compression floor — the free compression we get before any approximation.
-   - Type: analysis + empirical
-   - Confirmed if: ≥5% of neurons per block are dead or always-active on average, AND exact pruning introduces <0.1% PPL change at single-block level.
-   - Refuted if: <1% of neurons fall in any exact-removal category (GELU networks have no free compression from stable channels).
-   - Inconclusive if: 1-5% removable but PPL changes by >0.1% (implementation error likely).
-   - Depends on: none
-
 100. **Is FFN isotropy architectural or learned? — GPT-2 FFN**
    - Follow-up to item 99. If activations are isotropic, why? Test 1: random-init GPT-2 (no training) — same isotropy measurement. Test 2: replace GELU with ReLU in one block, measure isotropy (ReLU kills ~50% of channels with hard zeros — should break isotropy). Test 3: if training checkpoints available, measure isotropy vs training step.
    - Type: analysis
@@ -93,6 +85,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 128
+
+134. **Dead/always-active neuron census + exact pruning — GPT-2 FFN** *(INCONCLUSIVE — cycle 128)*
+   - **Outcome: INCONCLUSIVE** — 0/36864 strict-removable (0.00%). No dead, always-active, or near-linear neurons under universal thresholds. Soft census: 14 channels in blocks 0-4 have >95% tokens in dead zone (z<-3), consistent across 3 seeds. These are approximate pruning candidates but too few (<0.5%) for meaningful compression. GELU networks have no free compression from stable channels.
+   - Commit: PENDING
+   - Artifacts: experiments/dead_neuron_census_gpt2_cycle128.py, autoresearch/results/cycle_128_census.json, autoresearch/results/cycle_128_census.png
 
 ### Cycle 127
 
