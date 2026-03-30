@@ -1,24 +1,24 @@
-# Research Status — 118 Cycles (001–118)
+# Research Status — 119 Cycles (001–119)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
-| Confirmed | 21 |
+| Confirmed | 22 |
 | Refuted | 36 |
 | Inconclusive | 52 |
 | Crash | 1 |
 
 ## Latest Cycle
-- **Cycle 118** (item 128): MoE REAP pruning baseline — INCONCLUSIVE
-  - Tiny Mixtral (15.5M, 4-layer) trained 20M tokens WikiText-2, final PPL=78.65 (>50 threshold)
-  - REAP saliency scoring works: Gini [0.481, 0.351, 0.345, 0.377], monotone degradation
-  - REAP 50% = 103.25 PPL vs random 50% = 299.58±57.65 (>3σ better)
-  - Outcome: under-training, but infrastructure confirmed working for follow-on studies (items 129-131)
+- **Cycle 119** (item 136): Cascade corrections k=5 — CONFIRMED
+  - Blocks [7,5,4,1,6] at 6× (topk+lstsq+500 Adam), r=8 LoRA corrections 2000 CE steps
+  - Recovery: 73.8% ± varied (seeds 42/123/7: 72.9/73.9/75.2%), matches k=4 baseline 74.3%
+  - Corrections scale gracefully 4→5 blocks, 61K params, stable recovery despite 70% more degradation
+  - **Key finding**: k-scaling is robust; corrections preserve efficiency across compression depth
 
 ## Previous Cycle
-- **Cycle 117** (item 133): Cascade corrections k=5+k=8 — CRASH
-  - Killed after 140+ min (exceeded 30-min cap)
-  - Superseded by split items 136 (k=5) and 137 (k=8)
+- **Cycle 118** (item 128): MoE REAP pruning baseline — INCONCLUSIVE
+  - Tiny Mixtral (15.5M, 4-layer) trained 20M tokens WikiText-2, final PPL=78.65 (>50 threshold)
+  - REAP infrastructure confirmed; under-training responsible for PPL threshold miss
 
 ## Key Results (consolidated)
 
