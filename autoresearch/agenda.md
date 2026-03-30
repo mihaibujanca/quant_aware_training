@@ -98,7 +98,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 144. **SVD of learned corrections: geometric alignment — GPT-2** *(INCONCLUSIVE — cycle 127)*
    - **Outcome: INCONCLUSIVE** — Corrections don't strongly align with either compression error or attention amplification directions. Max alignment with error: 0.46 (block 5), 0.44 (block 4) — above null p99 (0.13) but below 0.5 threshold. Attention alignment weak (max 0.25). Block 1 attention delta is zero (no upstream compressed blocks to perturb). Corrections learn a partially novel subspace; moderate overlap with error directions in middle blocks.
-   - Commit: PENDING
+   - Commit: f41a7e7
    - Artifacts: experiments/svd_alignment_cycle127.py, autoresearch/results/cycle_127_svd_alignment.json, autoresearch/results/cycle_127_alignment_heatmap.png
 
 ### Cycle 126
