@@ -1,0 +1,7 @@
+item_number=100
+outcome=confirmed
+key_metric=random_ratio=0.002 trained_ratio=0.015(B4-7) factor=7-8x block1_anomalous(1.5x)
+commit=PENDING
+paths=experiments/ffn_isotropy_architectural_gpt2.py,autoresearch/results/cycle_129_isotropy_architectural.json,autoresearch/results/cycle_129_isotropy_comparison.png
+learned=FFN isotropy is predominantly learned, not architectural. Random-init GPT-2 has uniform low isotropy (ratio~0.002) across all blocks and seeds. Training increases isotropy 7-8x in blocks 4-7. Block 1 is anomalous (only 1.5x increase), suggesting partial architectural bias in early layers. ReLU→GELU swap has negligible effect on isotropy — activation function is not the driver.
+next=Isotropy being learned means compression methods should respect the learned isotropy structure. The uniform random-init spectrum suggests that the trained model's non-uniform eigenspectrum is information-bearing. This supports topk selection (which implicitly picks directions of highest variance) but suggests more sophisticated PCA-like selection could capture the learned structure better.

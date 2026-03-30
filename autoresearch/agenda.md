@@ -8,15 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-100. **Is FFN isotropy architectural or learned? — GPT-2 FFN**
-   - Follow-up to item 99. If activations are isotropic, why? Test 1: random-init GPT-2 (no training) — same isotropy measurement. Test 2: replace GELU with ReLU in one block, measure isotropy (ReLU kills ~50% of channels with hard zeros — should break isotropy). Test 3: if training checkpoints available, measure isotropy vs training step.
-   - Type: analysis
-   - Confirmed if: random-init is NOT isotropic AND trained model IS (isotropy emerges from training).
-   - Refuted if: random-init is already isotropic (architectural, not learned).
-   - Inconclusive if: both moderately isotropic.
-   - Depends on: 99
-
-
 ### P2
 
 87. **Cross-block weight sharing via Procrustes alignment — GPT-2 FFN [MOONSHOT]**
@@ -85,6 +76,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 129
+
+100. **Is FFN isotropy architectural or learned? — GPT-2 FFN** *(CONFIRMED — cycle 129)*
+   - **Outcome: CONFIRMED** — Random-init GPT-2 has isotropy ratio 0.002 across all blocks (3 seeds, std<0.0002). Trained GPT-2: block 1=0.004, blocks 4-7=0.015. Training increases isotropy 7-8x in blocks 4-7 (learned). Block 1 is anomalous (only 1.5x increase — partially architectural). ReLU swap (qualitative): 0.014 vs GELU 0.015, negligible change — activation function doesn't drive isotropy.
+   - Commit: PENDING
+   - Artifacts: experiments/ffn_isotropy_architectural_gpt2.py, autoresearch/results/cycle_129_isotropy_architectural.json, autoresearch/results/cycle_129_isotropy_comparison.png
 
 ### Cycle 128
 
