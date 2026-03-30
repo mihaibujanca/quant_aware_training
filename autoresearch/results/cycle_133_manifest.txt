@@ -1,7 +1,7 @@
 item_number=127
 outcome=refuted
 key_metric=all_topk=70.12±0.05 hybrid=70.49±0.02 all_direct=72.84±0.09 topk_beats_hybrid
-commit=PENDING
+commit=83098db
 paths=experiments/hybrid_regression_topk_cycle133.py,autoresearch/results/cycle_133_hybrid_regression.json
 learned=Polish erases pre-polish method differences (hybrid wins pre-polish 83.6 vs 84.9 but converges post-polish). Topk+lstsq is robust to block-level differences. Direct regression consistently worse than topk even for middle blocks after polish. The GELU hidden layer provides real value even where the block appears "near-linear" — topk preserves this nonlinear structure.
 next=NEXT items are nearly exhausted. Only item 135 (affine map extraction) remains in P2. After that, agenda refresh is needed. The bottleneck AE (cycle 131 INCONCLUSIVE) is the most promising open direction — needs follow-up at lower k values.

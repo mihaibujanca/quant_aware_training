@@ -46,7 +46,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 127. **Direct regression hybrid — GPT-2 FFN** *(REFUTED — cycle 133)*
    - **Outcome: REFUTED** — All-topk (70.12±0.05) beats hybrid (70.49±0.02) post-polish. All-direct worst (72.84±0.09). Hybrid wins pre-polish (83.6 vs 84.9) but polish erases the difference. Topk is robust enough that block-adaptive method selection doesn't help. Very low seed variance (~0.05 PPL) confirms the result.
-   - Commit: PENDING
+   - Commit: 83098db
    - Artifacts: experiments/hybrid_regression_topk_cycle133.py, autoresearch/results/cycle_133_hybrid_regression.json
 
 ### Cycle 132
