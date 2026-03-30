@@ -6,6 +6,14 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+132. **Extended-polish ablation for cascade corrections — GPT-2 FFN**
+   - Cycle 115 showed LoRA-style corrections (I + UV, r=8) recover 74% of k=4 stacking degradation (PPL 80.7→59.1). But the audit flagged a critical confound: is this recovery due to the correction structure, or would simply running 2000 more Adam polish steps on W_down alone achieve the same thing? This ablation resolves it. Setup: k=4 blocks [1,4,7,11], topk+lstsq, OWT, 3 seeds, 200 eval seqs. Conditions: (A) baseline: 500 Adam steps on W_down, no corrections (the current recipe, PPL ~80.7). (B) extended polish: 2500 Adam steps on W_down only, no corrections. (C) correction: 500 Adam on W_down + r=8 cascade corrections trained 2000 steps (cycle 115 recipe, PPL ~59.1). (D) matched-budget: 500 Adam on W_down + 2000 more Adam steps on W_down only (same total optimization budget as C but no correction params). Track PPL at steps {500, 1000, 1500, 2000, 2500} for conditions B and D to see the learning curve. Also report: total trainable params for each condition (C has 49K extra correction params; D has 0 extra).
+   - Type: empirical
+   - Confirmed if: condition C (corrections) outperforms both B and D by ≥5% relative PPL — corrections provide structure beyond what extended polish captures.
+   - Refuted if: condition B or D reaches within 2% of condition C — corrections are just extra optimization budget, equivalent to LoRA fine-tuning.
+   - Inconclusive if: 2-5% gap, or D converges to C given enough steps.
+   - Depends on: none (reuses cycle 115 setup)
+
 128. **Train MoE testbed + REAP expert pruning baseline — Tiny Mixtral**
    - Train a tiny Mixtral-architecture MoE from scratch on WikiText-2, then establish the expert pruning error landscape. Use `from transformers import MixtralConfig, MixtralForCausalLM` with config: `MixtralConfig(hidden_size=256, intermediate_size=512, num_hidden_layers=4, num_attention_heads=4, num_key_value_heads=2, num_local_experts=8, num_experts_per_tok=2, max_position_embeddings=512, vocab_size=4096, router_aux_loss_coef=0.001)` — 15.5M params, structurally identical to production Mixtral (SiLU-gated FFN experts, learned softmax router with top-2 selection, RMSNorm, RoPE, GQA). **Run on CPU** (MPS hits a `histogram_mps` bug on int tensors with MoE grouped_mm dispatch; eager fallback is 8x slower than CPU at this model size). Train on WikiText-2 train split for 10M tokens (~14 min on CPU), batch=4, seq_len=256, AdamW lr=1e-4. Confirm model reaches reasonable validation PPL (should be <50 on WikiText-2 val; if not, increase tokens to 20M). Save trained checkpoint. Then implement REAP saliency scoring per expert: `score(expert_k, layer_l) = mean over 256 calibration sequences of: gate_weight_k(x) × ||expert_k(x)||_2` (REAP = Router-weighted Expert Activation Pruning, arXiv:2510.13999 — the dominant MoE pruning method used in production). Access router logits via `model(x, output_router_logits=True).router_logits` (list of `(batch*seq, num_experts)` tensors per layer). Calibration data: 256 sequences from WikiText-2 validation split, seq_len=256. Compute per-layer saliency distributions: Gini coefficient, top-4 vs bottom-4 spread, cross-layer correlation of expert rankings. Then prune at 3 levels: 25% (2/8 experts), 50% (4/8), 75% (6/8) per layer, using global saliency ranking (rank all layer×expert pairs, prune lowest). After pruning, zero out pruned expert logits before softmax so remaining experts receive renormalized gate weights. Measure: (a) baseline PPL on WikiText-2 val (256 seqs, seq_len=256), (b) PPL at each pruning level, (c) per-layer contribution to total PPL degradation (ablation: prune only layer l while keeping all others full, measure PPL delta, for each of the 4 layers). Report saliency heatmap (4 layers × 8 experts), PPL degradation curve, and per-layer damage profile.
    - Type: implementation + empirical
@@ -39,6 +47,22 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 130
 
 ### P1
+
+133. **Cascade corrections at k=5 and k=8 stacking — GPT-2 FFN**
+   - Cycle 115 showed corrections work at k=4 (74% recovery). Does the correction mechanism scale to deeper stacking where compositional error is worse? Test r=8 corrections on k=5 (blocks [1,3,4,7,11]) and k=8 (blocks [1,2,3,4,5,7,9,11]). Use the same recipe: topk+lstsq+500 Adam on W_down, then train r=8 cascade corrections under model loss. At k=5 the uncorrected PPL is ~+60% over float (from cycle 106); at k=8 it may be much worse. Report: (a) uncorrected stacked PPL, (b) corrected stacked PPL, (c) recovery fraction, (d) total correction params. If recovery fraction drops substantially at k=8, the cascade is outrunning what rank-8 can absorb — test r=16 and r=32 as fallback. 3 seeds, 200 eval seqs OWT.
+   - Type: empirical
+   - Confirmed if: corrections recover ≥30% of degradation at k=5 AND ≥20% at k=8 with r≤16.
+   - Refuted if: corrections recover <10% at k=5 (cascade outpaces correction capacity even one block deeper).
+   - Inconclusive if: works at k=5 but fails at k=8, or requires r>16.
+   - Depends on: none (reuses cycle 115 infrastructure)
+
+134. **Dead/always-active neuron census + exact pruning — GPT-2 FFN (GELU-correct)**
+   - R2 requires exact white-box compression as a mandatory baseline, but the only prior attempt (item 47, cycle 032) was flawed (MP1: detection threshold above trivial baseline, and it targeted dead channels only). This corrects both issues for GELU networks. For each of GPT-2's 12 FFN blocks, compute per-neuron activation statistics over 256 OWT sequences (seq_len=256): (a) **dead neurons**: hidden units where |GELU(W_up @ x + b)_i| < 1e-6 for ALL tokens (these can be removed with zero error). (b) **always-active neurons**: units where GELU(z_i) ≈ z_i for all tokens, i.e., z_i > 4.0 for all tokens (GELU saturates to identity; these can be folded into a single linear map W_down[:, i] @ W_up[i, :] + bias adjustment). (c) **near-linear neurons**: units where max|GELU(z_i) - z_i| < 0.01 over all tokens (z_i always in the near-linear regime z > 2). Report per-block counts for each category. Then construct the exact-pruned model: remove dead neurons, fold always-active neurons into a bias correction, and measure single-block and k=4 stacked PPL. This is the zero-error-budget compression floor — the free compression we get before any approximation.
+   - Type: analysis + empirical
+   - Confirmed if: ≥5% of neurons per block are dead or always-active on average, AND exact pruning introduces <0.1% PPL change at single-block level.
+   - Refuted if: <1% of neurons fall in any exact-removal category (GELU networks have no free compression from stable channels).
+   - Inconclusive if: 1-5% removable but PPL changes by >0.1% (implementation error likely).
+   - Depends on: none
 
 100. **Is FFN isotropy architectural or learned? — GPT-2 FFN**
    - Follow-up to item 99. If activations are isotropic, why? Test 1: random-init GPT-2 (no training) — same isotropy measurement. Test 2: replace GELU with ReLU in one block, measure isotropy (ReLU kills ~50% of channels with hard zeros — should break isotropy). Test 3: if training checkpoints available, measure isotropy vs training step.
@@ -97,6 +121,14 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Refuted if: head pruning degrades stacked PPL (attention heads that amplify error also carry essential information).
    - Inconclusive if: amplification reduced but PPL unchanged (cascade reduction offset by information loss).
    - Depends on: 124 (or can use cycle 104 data as proxy)
+
+135. **Data-conditioned local affine map extraction for FFN merge candidates — GPT-2 FFN**
+   - R3 direction: use the MASO/spline viewpoint to extract per-token local affine maps and find merge-able groups. For each of blocks {1, 4, 7, 11}, compute per-token Jacobians J_l(x) = d(FFN_l(x))/dx ∈ R^{768×768} via `torch.func.jacrev` over 1024 tokens from OWT. Then: (1) compute pairwise cosine similarity of flattened Jacobians and report the effective number of distinct affine behaviors (spectral gap of the similarity matrix). (2) For each pair of tokens (i, j) with cos(J_i, J_j) > 0.95, verify that the affine maps are functionally interchangeable: ||J_i @ x_j + b_i - FFN(x_j)|| / ||FFN(x_j)|| < 0.05 (i.e., token j's output is well-approximated by token i's local map). (3) Report: per-block count of distinct functional groups, group sizes, and the compression ratio achievable by replacing each group with its centroid affine map. Compare centroid-affine compression quality against topk+lstsq at matched parameter count. This directly tests Walker et al. 2025's centroid affinity signal on GPT-2 FFNs.
+   - Type: analysis
+   - Confirmed if: ≤50 distinct affine groups cover ≥90% of tokens in ≥2/4 blocks AND centroid-affine compression matches topk+lstsq single-block PPL within 5%.
+   - Refuted if: >200 distinct groups needed for 90% coverage (local maps are too diverse for merging).
+   - Inconclusive if: few groups but centroid-affine PPL is >10% worse than topk (merging is possible but the centroid map is a poor representative).
+   - Depends on: none
 
 127. **Direct regression for middle blocks + topk for edge blocks — GPT-2 FFN** [HYBRID]
    - Cycle 107 showed direct regression matches topk in middle blocks but loses badly in early/late blocks. Test a hybrid: use direct rank-r regression (r=256) for blocks 4,7 and topk+lstsq (k=512) for blocks 1,11. Compare k=4 stacking PPL against all-topk and all-direct baselines. The hypothesis: direct regression's lack of hidden-layer inductive bias is fine when the block is near-linear but harmful when it's nonlinear. +500 Adam polish for both methods. 3 seeds, 200 eval seqs OWT.
