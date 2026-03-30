@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-146. **Pullback-metric error measurement — GPT-2 FFN**
-   - For each of 12 blocks, compress FFN at 6x via topk+lstsq (standard pipeline). For each compressed block, collect the FFN output error e_l = FFN_compressed(x) - FFN_teacher(x) over 200+ OWT tokens. Measure error in two norms: (1) Frobenius: ||e_l||_F (mean over tokens). (2) G-weighted: ||U e_l||_2 (mean over tokens, U = unembedding matrix). For each block, record single-block swap PPL delta. Then compute: (a) Spearman(Frobenius_error, PPL_delta) across 12 blocks. (b) Spearman(G_weighted_error, PPL_delta) across 12 blocks. Also compute ratio G_error / Frob_error per block to identify which blocks have semantically misaligned error. Use `aleph.pullback_geometry.pullback_norm` for G-weighted measurement. 3 seeds, 200 OWT eval sequences.
-   - Type: empirical
-   - Confirmed if: G-weighted Spearman |rho| exceeds Frobenius Spearman |rho| by >= 0.15, and G-weighted |rho| >= 0.6.
-   - Refuted if: Frobenius |rho| >= G-weighted |rho| (Frobenius is already sufficient).
-   - Inconclusive if: G-weighted marginally better (<0.15 improvement) or both correlations weak (|rho| < 0.4).
-   - Depends on: 145 (census validates pullback metric exists on GPT-2)
-
 151. **Bottleneck AE at k=512 (6x) — param-matched comparison — GPT-2 FFN**
    - Cycle 131 showed AE beats topk by 2-3.4% at k=384 (8x) but with 2.5x more params (1.48M vs ~0.59M). This confounds the comparison. Test at k=512 (6x, the standard working recipe compression ratio) with TWO AE configs: (a) full AE: E(h)=ReLU(W_enc @ h + b_enc), D(z)=W_dec @ z + b_dec, same as cycle 131 (3072->512->3072, ~3.15M params). (b) param-matched AE: reduce bottleneck to d_bn such that total AE params = topk+lstsq params (512*768 = 393K). d_bn ~ 64 (3072*64 + 64 + 64*3072 + 3072 = 396K). Compare single-block swap PPL on blocks [1, 4, 7, 11]. Also add 500-step Adam polish to both AE and topk baselines — cycle 133 showed polish erases pre-polish differences, so critical to check if AE advantage survives polish. 3 seeds, 200 OWT eval sequences.
    - Type: empirical
@@ -137,6 +129,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 136
+
+146. **Pullback-metric error measurement — GPT-2 FFN** *(REFUTED — cycle 136)*
+   - **Outcome: REFUTED** — Frobenius (rho=0.797) beats G-weighted (rho=0.734) for predicting PPL damage. G/Frob ratio is nearly constant (~34-35) across blocks 0-10, meaning pullback metric is a constant rescaling at FFN output level. Block 11 anomalous (60x ratio) but this outlier hurts G-weighted correlation. Frobenius is already sufficient as per-block error metric.
+   - Commit: PENDING
+   - Artifacts: experiments/pullback_error_cycle136.py, autoresearch/results/cycle_136_pullback_error.json, autoresearch/results/cycle_136_scatter.png
 
 ### Cycle 135
 
