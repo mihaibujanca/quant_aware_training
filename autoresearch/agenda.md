@@ -6,7 +6,21 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-128. *(moved to PAST — cycle 118)*
+138. **Train MoE testbed — Tiny Mixtral**
+   - Get a working trained model. This is infrastructure, not a hypothesis test — failure means bad training policy, not a scientific finding. Cycle 118 reached PPL 78.6 after 10M tokens with lr=1e-4. Fix: train for 30M tokens, sweep lr in {1e-4, 3e-4, 5e-4} (pick best by val PPL at 5M tokens, then train to 30M with that lr). Use cycle 118's MixtralConfig (hidden_size=256, 4 layers, 8 experts, top-2, ~15.5M params). Save best checkpoint. ⚠ If PPL > 50 at 30M tokens with best lr: double to 60M tokens before reporting failure. CPU training, ~15 min per 10M tokens.
+   - Type: implementation
+   - Confirmed if: model reaches val PPL < 50 on WikiText-2. Save checkpoint path in results JSON.
+   - Refuted if: PPL > 50 even at 60M tokens with lr sweep (model architecture is insufficient — would need to increase hidden_size or num_layers). This is unexpected and should be investigated before moving on.
+   - Inconclusive if: N/A — keep training until confirmed or refuted. Do not stop early.
+   - Depends on: none
+
+139. **REAP expert pruning baseline — Tiny Mixtral**
+   - Using the trained model from item 138, establish the expert pruning error landscape. Compute REAP saliency scores: `score(expert_k, layer_l) = mean over 256 calibration sequences of: gate_weight_k(x) × ||expert_k(x)||_2`. Prune at 25%/50%/75% (2/4/6 of 8 experts) using global saliency ranking. Measure: baseline PPL, PPL at each pruning level, per-layer damage ablation, saliency heatmap (4 layers × 8 experts), Gini coefficient of saliency per layer.
+   - Type: empirical
+   - Confirmed if: REAP pruning shows graded monotonic degradation (25% < 50% < 75%) AND saliency scores have meaningful spread (Gini > 0.3 in ≥2/4 layers).
+   - Refuted if: PPL insensitive to which experts are pruned (random ≈ REAP).
+   - Inconclusive if: graded degradation but some layers insensitive (flat saliency).
+   - Depends on: 138
 
 129. **Geometric decomposition of expert pruning error — Tiny Mixtral**
    - The central scientific question: is MoE expert pruning error geometric (low-rank, metric-dominated, linearly correctable) — or is it fundamentally different from weight quantization error? Using the 50%-pruned model from item 128 (4/8 experts removed per layer), collect per-layer pruning error tensors over calibration data. **Run on CPU** (same histogram_mps constraint as item 128). At each MoE layer l, the pruning error per token is: `error_l(x) = y_full(x) - y_pruned(x)` where y_full runs all 8 experts (top-2 selected) and y_pruned runs the 4 surviving experts (top-2 selected from survivors, renormalized gates). Collect errors for 256 calibration sequences × 256 tokens = 65536 error vectors of dim 256 per layer. Decompose: (1) **SVD analysis**: compute SVD of the error matrix `E_l ∈ R^{65536 × 256}` for each layer. Report effective rank (number of singular values capturing 95% of Frobenius norm). If rank_95 ≪ 256 (hidden dim), the error is low-rank and a compact correction is feasible. (2) **Metric vs topological split**: for each token, check whether the top-2 expert routing decisions change at downstream layers when using pruned vs full model. Run both full and pruned forward passes, record per-layer routing decisions (which 2 experts selected). Metric error = same routing at downstream layers (linear distortion only). Topological error = different routing (nonlinear, harder to correct). Report metric fraction per layer. (3) **Per-layer attribution**: local error (this layer's pruned experts contributed to output) vs propagated error (upstream pruning changed the activations reaching this layer). Compute local as: error with only layer l pruned (all others full). Propagated = total - local. Report local vs propagated fraction per layer. (4) **Compare pruning levels**: repeat SVD analysis at 25% and 75% pruning. Does error rank scale with number of pruned experts?
@@ -14,7 +28,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Confirmed if: pruning error is low-rank (rank_95 < 32, i.e., <12.5% of hidden dim) in ≥ 3/4 layers AND metric-dominated (>70% of tokens preserve downstream routing).
    - Refuted if: pruning error is approximately full-rank (rank_95 > 128) OR topological-dominated (>50% of tokens change downstream routing).
    - Inconclusive if: low-rank but topological fraction is 30-50%, or rank varies wildly across layers.
-   - Depends on: 128
+   - Depends on: 139
 
 130. **Low-rank linear correction for expert pruning error — Tiny Mixtral**
    - If item 129 shows pruning error is low-rank and metric-dominated, test whether a lightweight learned correction can recover PPL. **Run on CPU.** For each MoE layer l, train a low-rank correction: `C_l(x) = B_l @ (A_l @ h_l)` where h_l ∈ R^256 is the MoE layer input (the residual stream vector that enters both the router and the experts), A_l ∈ R^{r × 256}, B_l ∈ R^{256 × r}, so C_l has `2 × 256 × r` parameters per layer. The correction is added to the MoE layer output: `y_corrected = y_pruned + C_l(h_l)`. Training: for each layer independently, minimize MSE `||y_full - y_pruned - C_l(h_l)||²` over 256 calibration sequences (same as items 128-129) using AdamW (lr=1e-3, 500 steps, batch=32 sequences). Then evaluate end-to-end PPL with all 4 layer corrections applied simultaneously. Sweep: (a) rank r ∈ {4, 8, 16, 32, 64}, (b) pruning level ∈ {25%, 50%}, (c) 3 random seeds for calibration data order. Report: PPL recovery fraction = `(PPL_pruned - PPL_corrected) / (PPL_pruned - PPL_float)` at each (r, pruning_level). Total correction params at each rank: `4 layers × 2 × 256 × r` (e.g., rank-16 = 32K params = 0.2% of 15.5M model). Also compare against the parameter cost of simply keeping more experts: e.g., 50% pruned + rank-16 correction (32K correction params) vs 25% pruned with no correction (keeping 2 extra experts = ~0.5M extra expert params). Which is cheaper for the same PPL? Report ceiling: oracle correction (store exact per-token error, add it back) to verify it recovers float PPL exactly.
@@ -34,13 +48,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 136. *(moved to PAST — cycle 119)*
 
-137. **Cascade corrections at k=8 stacking — GPT-2 FFN**
-   - Second half of item 133 split. Test r=8 and r=16 corrections on k=8 (blocks [1,2,3,4,5,7,9,11]). Single seed (42) only — k=8 is expensive (8 blocks). If r=8 gives <10% recovery, skip r=16. Compute budget: ~20 min for 1 seed.
-   - Type: empirical
-   - Confirmed if: corrections recover ≥20% of k=8 degradation with r≤16.
-   - Refuted if: corrections recover <10% at r=16 (cascade is uncorrectable at this depth).
-   - Inconclusive if: 10-20% recovery, or r=16 needed but r=8 fails.
-   - Depends on: 136 (run 136 first to validate the approach scales beyond k=4)
+137. *(moved to PAST — cycle 120)*
 
 ### P1
 
@@ -121,6 +129,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 120
+
+137. **Cascade corrections at k=8 stacking — GPT-2 FFN** *(CONFIRMED — cycle 120)*
+   - **Outcome: CONFIRMED** — r=8 corrections on k=8 blocks [1,2,3,4,5,6,7,9] at 6x recovered 91.4% of degradation (seed 42). Baseline ~57.65 PPL (note: seed 42 gives higher baseline than 3-seed average of 51.7 used in cycles 115/119). Uncorrected PPL 1055.3 (degradation 997.7 — catastrophic at k=8), corrected PPL 143.6. Recovery 91.4% far exceeds 20% CONFIRMED threshold. 98,304 correction params. Severe uncorrected degradation (1055 vs k=5's 122) is expected with 3 additional blocks; corrections are remarkably effective.
+   - Artifacts: experiments/cascade_correction_k8_cycle120.py, autoresearch/results/cycle_120_cascade_correction_k8.json, autoresearch/results/cycle_120_cascade_correction_k8.png
 
 ### Cycle 119
 

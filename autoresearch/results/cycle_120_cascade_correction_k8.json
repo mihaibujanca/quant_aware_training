@@ -1,0 +1,75 @@
+{
+  "cycle": 120,
+  "item": 137,
+  "seeds": [
+    42
+  ],
+  "valid_seeds": [
+    42
+  ],
+  "ffn_blocks": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    9
+  ],
+  "hidden_fraction": 0.16666666666666666,
+  "polish_steps": 500,
+  "correction_rank_primary": 8,
+  "correction_rank_fallback": 16,
+  "correction_train_steps": 2000,
+  "correction_lr": 0.0001,
+  "d_model": 768,
+  "baseline_ppl": {
+    "mean": 57.65287371228062,
+    "std": 0.0
+  },
+  "uncorrected_ppl": {
+    "mean": 1055.3025024273616,
+    "std": 0.0
+  },
+  "degradation": 997.6496287150809,
+  "corrected_r8_ppl": {
+    "mean": 143.6439797461676,
+    "std": 0.0
+  },
+  "recovery_r8_pct": 91.38063067846386,
+  "correction_params_r8": 98304,
+  "corrected_r16_ppl": null,
+  "recovery_r16_pct": null,
+  "correction_params_r16": null,
+  "verdict": "CONFIRMED",
+  "best_recovery_pct": 91.38063067846386,
+  "best_rank": 8,
+  "per_seed": {
+    "42": {
+      "baseline": 57.65287371228062,
+      "uncorrected": 1055.3025024273616,
+      "corrected_r8": 143.6439797461676,
+      "recovery_r8": 91.38063067846386,
+      "corrected_r16": null,
+      "recovery_r16": null,
+      "aborted": false
+    }
+  },
+  "reference": {
+    "k4_cycle115": {
+      "baseline": 51.7,
+      "uncorrected": 80.7,
+      "corrected": 59.1,
+      "recovery": 74.3,
+      "rank": 8
+    },
+    "k5_cycle119": {
+      "baseline": 51.7,
+      "uncorrected": 122.1,
+      "corrected": 70.1,
+      "recovery": 73.8,
+      "rank": 8
+    }
+  }
+}
