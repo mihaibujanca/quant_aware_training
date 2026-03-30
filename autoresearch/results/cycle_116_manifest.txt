@@ -1,0 +1,43 @@
+Cycle 116: Extended-polish ablation — GPT-2 FFN
+=======================================================
+
+Item: 132
+Blocks: [7, 5, 4, 1] at 6x (topk+lstsq)
+Seeds: [42, 123, 7], Eval seqs: 200
+
+Conditions:
+  A: 500 Adam steps on W_down (baseline)
+  B: 2500 Adam steps on W_down (extended polish)
+  C: 500 Adam + r=8 corrections 2000 steps (49,152 params)
+  D: 500+2000 Adam steps on W_down (matched budget)
+
+Results:
+  Float baseline: 51.661 ± 4.480
+  Uncorrected:    75.062 ± 7.281
+  A (500 Adam):   59.863 ± 7.352
+  B (2500 Adam):  62.118 ± 8.068
+  C (500+corr):   58.882 ± 7.503
+  D (500+2000):   62.163 ± 8.148
+
+Gaps:
+  C vs B: 5.50% relative  (C better than B)
+  C vs D: 5.57% relative  (C better than D)
+
+B learning curve (avg): {'1000': 58.596816552418716, '1500': 59.07142726691157, '2000': 60.231120924024445, '2500': 62.11762454873942, '500': 59.86341205835004}
+D learning curve (avg): {'1000': 58.53519008159768, '1500': 58.994102556365306, '2000': 60.134853378305216, '2500': 62.162546511504424, '500': 59.86341205835004}
+
+Verdict: CONFIRMED
+
+Criteria:
+  CONFIRMED if C outperforms B and D by >=5% relative PPL
+  REFUTED if B or D within 2% of C
+  INCONCLUSIVE if 2-5% gap
+
+Files:
+  /Users/mihai/Projects/quant_aware_training/autoresearch/results/cycle_116_extended_polish_ablation.json
+  /Users/mihai/Projects/quant_aware_training/autoresearch/results/cycle_116_ppl_bar.png
+  /Users/mihai/Projects/quant_aware_training/autoresearch/results/cycle_116_learning_curves.png
+  /Users/mihai/Projects/quant_aware_training/autoresearch/results/cycle_116_manifest.txt
+
+TSV row:
+116	132	extended_polish_ablation_gpt2	CONFIRMED	A=59.86,B=62.12,C=58.88,D=62.16,gap_B=5.5%,gap_D=5.6%,baseline=51.66

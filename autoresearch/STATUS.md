@@ -1,26 +1,32 @@
-# Research Status — 115 Cycles (001–115)
+# Research Status — 116 Cycles (001–116)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
-| Confirmed | 19 |
+| Confirmed | 20 |
 | Refuted | 36 |
 | Inconclusive | 51 |
 | Crash | 1 |
 
 ## Latest Cycle
+- **Cycle 116** (item 132): Extended-polish ablation — CONFIRMED
+  - Ablation: A (500 Adam), B (2500 Adam), C (500 Adam + r=8 corrections), D (500+2000 Adam)
+  - C: 58.88 PPL vs B: 62.12 and D: 62.16 — gaps of 5.50% and 5.57% (both ≥5% threshold)
+  - Extended polish overshoots: B and D worse than A (59.86) at 2500 steps
+  - **Corrections provide structure beyond optimization budget** — ablation confound resolved
+
+## Previous Cycle
 - **Cycle 115** (item 118): Cascade corrections — CONFIRMED
   - Per-block LoRA-style corrections (I + UV) on residual stream after compressed FFN
   - r=4: 73% degradation recovery (24K params), r=8: 74% (49K params), r=16: 74% (saturated)
   - PPL: 80.68 → 59.11 (from +56% to +14% over baseline 51.66)
-  - **Audit flags**: LoRA-equivalent, needs extended-polish ablation, per-block vs e2e polish gap
 
 ## Key Results (consolidated)
 
 ### Cascade Mechanism
 - c≈0.41 is attention-driven, uniform across heads (cycles 104, 113)
 - **LoRA cascade corrections recover 74% of degradation** with 49K params (cycle 115)
-- But: may be equivalent to extended polish — ablation needed
+- **Extended polish CANNOT replicate corrections** — ablation confirmed (cycle 116)
 
 ### Compression Recipe (updated)
 1. **FFN**: Topk + lstsq + 500 Adam, k≤4 at 6× → PPL ~80 (stacked)

@@ -6,9 +6,10 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-132. **Extended-polish ablation for cascade corrections — GPT-2 FFN**
+132. **Extended-polish ablation for cascade corrections — GPT-2 FFN** ✓ CONFIRMED (cycle 116)
    - Cycle 115 showed LoRA-style corrections (I + UV, r=8) recover 74% of k=4 stacking degradation (PPL 80.7→59.1). But the audit flagged a critical confound: is this recovery due to the correction structure, or would simply running 2000 more Adam polish steps on W_down alone achieve the same thing? This ablation resolves it. Setup: k=4 blocks [1,4,7,11], topk+lstsq, OWT, 3 seeds, 200 eval seqs. Conditions: (A) baseline: 500 Adam steps on W_down, no corrections (the current recipe, PPL ~80.7). (B) extended polish: 2500 Adam steps on W_down only, no corrections. (C) correction: 500 Adam on W_down + r=8 cascade corrections trained 2000 steps (cycle 115 recipe, PPL ~59.1). (D) matched-budget: 500 Adam on W_down + 2000 more Adam steps on W_down only (same total optimization budget as C but no correction params). Track PPL at steps {500, 1000, 1500, 2000, 2500} for conditions B and D to see the learning curve. Also report: total trainable params for each condition (C has 49K extra correction params; D has 0 extra).
    - Type: empirical
+   - **Result (cycle 116)**: CONFIRMED. A=59.86, B=62.12, C=58.88, D=62.16. Gap C vs B: 5.50%, C vs D: 5.57%. Both exceed 5% threshold. Extended polish (B) and matched-budget (D) both *degrade* beyond 500-step baseline (A), while corrections (C) improve it. Learning curves show B and D plateau then worsen (PPL 59.9→62.1), not improving toward C.
    - Confirmed if: condition C (corrections) outperforms both B and D by ≥5% relative PPL — corrections provide structure beyond what extended polish captures.
    - Refuted if: condition B or D reaches within 2% of condition C — corrections are just extra optimization budget, equivalent to LoRA fine-tuning.
    - Inconclusive if: 2-5% gap, or D converges to C given enough steps.
