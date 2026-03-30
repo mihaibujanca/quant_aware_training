@@ -86,7 +86,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 135. **Data-conditioned affine map extraction — GPT-2 FFN** *(INCONCLUSIVE — cycle 134)*
    - **Outcome: INCONCLUSIVE** — No meaningful Jacobian clustering. Block 4: 128/128 groups at all thresholds (max pairwise cos=0.87, mean=0.33). Block 7: 124/128 groups (few pairs with cos>0.95, mean=0.27). GELU FFNs lack the discrete piecewise-affine structure of ReLU networks. Where rare similar pairs exist (14 in block 7), interchangeability works (mean error 1.8%, 86% below 5%). The MASO framework doesn't directly apply to GELU networks.
-   - Commit: PENDING
+   - Commit: e2e1136
    - Artifacts: experiments/affine_map_extraction_cycle134.py, autoresearch/results/cycle_134_affine_maps.json
 
 ### Cycle 133
