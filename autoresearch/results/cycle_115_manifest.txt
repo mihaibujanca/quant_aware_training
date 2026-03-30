@@ -1,0 +1,29 @@
+Cycle 115: Per-block cascade correction — GPT-2 FFN
+=======================================================
+
+Item: 118
+Blocks compressed: [7, 5, 4, 1] at 6x (topk+lstsq+500 Adam)
+Correction: C_l(x) = x + U_l @ (V_l @ x), ranks [4, 8, 16]
+Training: 2000 Adam steps, lr=0.0001
+Seeds: [42, 123, 7], Eval seqs: 200
+
+Results:
+  Baseline PPL:    51.661 ± 4.480
+  Uncorrected PPL: 80.683 ± 10.825
+  Degradation:     29.022
+
+  r=4: PPL=59.609 ± 7.551  reduction=72.6%  params=24,576
+  r=8: PPL=59.107 ± 7.463  reduction=74.3%  params=49,152
+  r=16: PPL=59.169 ± 7.553  reduction=74.1%  params=98,304
+
+Best: r=8 → 74.3% reduction
+Verdict: CONFIRMED
+
+Files:
+  /Users/mihai/Projects/quant_aware_training/autoresearch/results/cycle_115_cascade_correction.json
+  /Users/mihai/Projects/quant_aware_training/autoresearch/results/cycle_115_ppl_bar.png
+  /Users/mihai/Projects/quant_aware_training/autoresearch/results/cycle_115_loss_curves.png
+  /Users/mihai/Projects/quant_aware_training/autoresearch/results/cycle_115_manifest.txt
+
+TSV row:
+115	118	compositional_stacking_cascade_correction_gpt2	CONFIRMED	best_r=8,reduction=74.3%,uncorrected_ppl=80.68,corrected_ppl=59.11,baseline=51.66

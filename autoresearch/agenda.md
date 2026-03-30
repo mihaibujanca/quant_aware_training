@@ -70,13 +70,14 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: AE outperforms at some k but not others, or encoder is nonlinear but the PPL gain is small (< 3%).
    - Depends on: none
 
-118. **Compositional stacking with per-block cascade correction — GPT-2 FFN**
+118. **Compositional stacking with per-block cascade correction — GPT-2 FFN** *(CONFIRMED — cycle 115)*
    - The cascade rate c≈0.41 compounds multiplicatively. What if we add a tiny per-block correction that absorbs the cascade? After compressing k blocks, insert a learned linear correction C_l = I + ΔW_l (rank-r, r in {4, 8, 16}) applied to the residual stream AFTER each compressed block l. Train all k corrections jointly under model loss (next-token CE), freezing everything else. Total added params: k × 2 × 768 × r. At k=4, r=8: 49K params (0.04% of GPT-2). Compare: (a) k=4 topk+lstsq+Adam with no correction, (b) same + rank-8 cascade corrections, (c) same + rank-16 corrections. 3 seeds, OWT, 200 eval seqs.
    - Type: empirical
    - Confirmed if: cascade corrections reduce stacked PPL degradation by ≥30% relative at k=4 with r≤16.
    - Refuted if: corrections reduce degradation by <10% even at r=16.
    - Inconclusive if: 10-30% reduction, or requires r>16.
    - Depends on: none
+   - Result: CONFIRMED. r=4: 72.6% reduction (PPL 80.7→59.6), r=8: 74.3% reduction (PPL 80.7→59.1), r=16: 74.1%. Corrections dramatically recover stacking degradation with only 49K params at r=8.
 
 125. **Linearity-adaptive compression ratio allocation — GPT-2 FFN** *(REFUTED — cycle 114)*
    - Cycle 107 found a block linearity gradient: middle blocks (4, 7) are nearly linear (direct regression ≈ topk), while early (1) and late (11) are strongly nonlinear. Exploit this: compress linear blocks more aggressively, allocate more capacity to nonlinear blocks, keeping total params fixed. Sweep: for k=4 block stacking, test (a) uniform 6× everywhere (baseline), (b) middle-heavy: blocks 4,7 at 8×, blocks 1,11 at 4× (matched total params), (c) edge-heavy: blocks 1,11 at 8×, blocks 4,7 at 4×. All with topk+lstsq+500 Adam, 3 seeds, 200 eval seqs OWT.
