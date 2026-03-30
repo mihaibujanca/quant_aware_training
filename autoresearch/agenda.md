@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-145. **Curved inference census — GPT-2 residual stream**
-   - Validate the curved inference framework (Manson 2025, arXiv 2507.21107) on GPT-2. Collect residual stream trajectory x^(0)..x^(12) at all 13 layer boundaries (post-embedding + 12 block outputs, pre-LayerNorm per MP7) over 200+ OWT eval sequences. Compute: (1) Per-layer salience S_l = ||x^(l+1) - x^(l)||_G where G = U^T U is the pullback metric from the unembedding matrix (model.lm_head.weight). In practice: S_l = ||U(x^(l+1) - x^(l))||_2, no explicit G formation needed. (2) Per-layer curvature kappa_l via 3-point central differences under G (layers 1-11, need neighbors). (3) Spearman correlation between salience and curvature profiles across layers. (4) Spearman correlation between per-layer curvature and existing per-block single-block swap PPL delta at 6x (recompute swap damage for all 12 blocks using standard topk+lstsq pipeline). Report: S_l and kappa_l profiles (with per-token std), salience-curvature correlation, curvature-vs-swap-damage correlation. Use `aleph.pullback_geometry` for all metric computations. 3 seeds for corpus sampling.
-   - Type: analysis
-   - Confirmed if: salience-curvature anticorrelation |rho| >= 0.7 (Manson reports r=-0.89 on LLaMA) AND curvature-damage correlation |rho| >= 0.5.
-   - Refuted if: |salience-curvature rho| < 0.3 (no anticorrelation on GPT-2).
-   - Inconclusive if: salience-curvature anticorrelation exists (|rho| >= 0.3) but curvature-damage correlation is weak (|rho| < 0.3).
-   - Depends on: none
-
 146. **Pullback-metric error measurement — GPT-2 FFN**
    - For each of 12 blocks, compress FFN at 6x via topk+lstsq (standard pipeline). For each compressed block, collect the FFN output error e_l = FFN_compressed(x) - FFN_teacher(x) over 200+ OWT tokens. Measure error in two norms: (1) Frobenius: ||e_l||_F (mean over tokens). (2) G-weighted: ||U e_l||_2 (mean over tokens, U = unembedding matrix). For each block, record single-block swap PPL delta. Then compute: (a) Spearman(Frobenius_error, PPL_delta) across 12 blocks. (b) Spearman(G_weighted_error, PPL_delta) across 12 blocks. Also compute ratio G_error / Frob_error per block to identify which blocks have semantically misaligned error. Use `aleph.pullback_geometry.pullback_norm` for G-weighted measurement. 3 seeds, 200 OWT eval sequences.
    - Type: empirical
@@ -145,6 +137,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 135
+
+145. **Curved inference census — GPT-2 residual stream** *(CONFIRMED — cycle 135)*
+   - **Outcome: CONFIRMED** — Strong salience-curvature anticorrelation rho=-0.745 (p=0.009) and curvature-damage correlation |rho|=0.645 (p=0.032). Curvature peaks in early layers (2-4, kappa≈0.002) and decays to near-zero in late layers (10-11). Late layers have low curvature but highest compression damage — the trajectory straightens under G where semantic precision matters most. Block 0 is anomalous (high damage, near-zero curvature). Consistent across 3 seeds.
+   - Commit: PENDING
+   - Artifacts: experiments/curved_inference_census_cycle135.py, autoresearch/results/cycle_135_curved_inference.json, autoresearch/results/cycle_135_curved_inference.png
 
 ### Cycle 134
 
