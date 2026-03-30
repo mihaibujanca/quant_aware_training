@@ -1,7 +1,7 @@
 item_number=146
 outcome=refuted
 key_metric=rho_frob=0.797 rho_gw=0.734 gap=-0.063 G/F_ratio=34-35_constant block11=60x_outlier
-commit=PENDING
+commit=e1f3c06
 paths=experiments/pullback_error_cycle136.py,autoresearch/results/cycle_136_pullback_error.json,autoresearch/results/cycle_136_scatter.png
 learned=The pullback metric G = U^T U is approximately isotropic when applied to FFN output errors. G/Frob ratio is nearly constant (~34-35x) across blocks 0-10, meaning the unembedding projects all FFN error directions approximately equally. Block 11 is the exception (60x) — its errors are amplified ~2x by the unembedding relative to other blocks, but this single outlier hurts rank correlation. Frobenius is sufficient for per-block error comparison.
 next=Items 147 (G-weighted lstsq) and 148 (curvature-guided allocation) depend on 146 being CONFIRMED. Since 146 is REFUTED, G-weighted lstsq may still be worth testing (the isometry could break at the within-block level even if it holds across blocks) but curvature-guided allocation loses its metric justification. Prioritize item 151 (AE param-matched) over 147/148.

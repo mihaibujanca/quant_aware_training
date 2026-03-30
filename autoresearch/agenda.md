@@ -134,7 +134,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 146. **Pullback-metric error measurement — GPT-2 FFN** *(REFUTED — cycle 136)*
    - **Outcome: REFUTED** — Frobenius (rho=0.797) beats G-weighted (rho=0.734) for predicting PPL damage. G/Frob ratio is nearly constant (~34-35) across blocks 0-10, meaning pullback metric is a constant rescaling at FFN output level. Block 11 anomalous (60x ratio) but this outlier hurts G-weighted correlation. Frobenius is already sufficient as per-block error metric.
-   - Commit: PENDING
+   - Commit: e1f3c06
    - Artifacts: experiments/pullback_error_cycle136.py, autoresearch/results/cycle_136_pullback_error.json, autoresearch/results/cycle_136_scatter.png
 
 ### Cycle 135
