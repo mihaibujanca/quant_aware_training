@@ -130,7 +130,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 140. **QK vs V error decomposition under FFN compression — GPT-2** *(INCONCLUSIVE — cycle 123)*
    - **Outcome: INCONCLUSIVE** — Dominant source varies by layer position: V dominates early layers (L2-L4: V_frac ~0.65-0.68), QK dominates late layers (L9-L11: QK_frac ~0.55-0.58). No single component exceeds 70% threshold across all 3 seeds in any layer. Float PPL=57.65, compressed k=4 PPL=71.66 (+24.3%). Cross-seed std < 0.02 (very stable). Layers 0-1 show E_total≈0 (clean residual stream before first compressed block, confirming sanity). Interaction terms generally small (|inter_frac| < 0.1 in most layers). Layer 5 anomaly: QK_frac=0.578 (high QK, likely attention layer sensitive to early residual stream corruption from block 1 and block 4 compressions). No surgical single correction target exists; correction strategies must target both QK and V pathways.
-   - Commit: TBD
+   - Commit: dbfd59fc17e1c08e00b04e407bd768449cc62c65
    - Artifacts: experiments/qk_v_decomposition_gpt2.py, autoresearch/results/cycle_123_qk_v_decomposition.json, autoresearch/results/cycle_123_qk_v_heatmap.png
 
 ### Cycle 121
