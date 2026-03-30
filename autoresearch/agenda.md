@@ -132,8 +132,8 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 120
 
-137. **Cascade corrections at k=8 stacking — GPT-2 FFN** *(CONFIRMED — cycle 120)*
-   - **Outcome: CONFIRMED** — r=8 corrections on k=8 blocks [1,2,3,4,5,6,7,9] at 6x recovered 91.4% of degradation (seed 42). Baseline ~57.65 PPL (note: seed 42 gives higher baseline than 3-seed average of 51.7 used in cycles 115/119). Uncorrected PPL 1055.3 (degradation 997.7 — catastrophic at k=8), corrected PPL 143.6. Recovery 91.4% far exceeds 20% CONFIRMED threshold. 98,304 correction params. Severe uncorrected degradation (1055 vs k=5's 122) is expected with 3 additional blocks; corrections are remarkably effective.
+137. **Cascade corrections at k=8 stacking — GPT-2 FFN** *(CONFIRMED with caveat — cycle 120)*
+   - **Outcome: CONFIRMED (metric caveat)** — r=8 corrections on k=8 blocks [1,2,3,4,5,6,7,9] at 6x recovered 91.4% of degradation by formula (seed 42). Baseline 57.65, uncorrected 1055.3, corrected 143.6. Recovery exceeds 20% threshold. However, the 91.4% figure is misleading: it is driven by the enormous 997.7-point denominator. Corrected PPL 143.6 is +149% above baseline — worse than k=5 uncorrected (122.1). Absolute corrected PPL trend across k: 59.1 (k=4) -> 70.1 (k=5) -> 143.6 (k=8) shows corrections become less effective as k grows. 98,304 correction params. [Audit: cycle_120.md — CORRECTED, misleading recovery metric]
    - Artifacts: experiments/cascade_correction_k8_cycle120.py, autoresearch/results/cycle_120_cascade_correction_k8.json, autoresearch/results/cycle_120_cascade_correction_k8.png
 
 ### Cycle 119
