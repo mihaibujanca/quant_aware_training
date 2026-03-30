@@ -6,55 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-138. **Train MoE testbed — Tiny Mixtral (retry with dropout)**
-   - Cycle 121 reached PPL 65.08 but overfitting prevented convergence to <50. Fix: add dropout=0.1 (attention_dropout + hidden_dropout in MixtralConfig), wider lr sweep {3e-4, 5e-4, 1e-3, 2e-3}, and gradient accumulation for effective batch 16. Reuse cycle 118 tokenizer. Train to 30M tokens with best lr. If PPL < 50: save checkpoint. If PPL > 50 at 30M with dropout: genuinely refuted.
-   - Type: implementation
-   - Confirmed if: model reaches val PPL < 50 on WikiText-2.
-   - Refuted if: PPL > 50 at 30M tokens with dropout + lr sweep.
-   - Inconclusive if: N/A.
-   - Depends on: none
-
-139. **REAP expert pruning baseline — Tiny Mixtral**
-   - Using the trained model from item 138, establish the expert pruning error landscape. Compute REAP saliency scores: `score(expert_k, layer_l) = mean over 256 calibration sequences of: gate_weight_k(x) × ||expert_k(x)||_2`. Prune at 25%/50%/75% (2/4/6 of 8 experts) using global saliency ranking. Measure: baseline PPL, PPL at each pruning level, per-layer damage ablation, saliency heatmap (4 layers × 8 experts), Gini coefficient of saliency per layer.
-   - Type: empirical
-   - Confirmed if: REAP pruning shows graded monotonic degradation (25% < 50% < 75%) AND saliency scores have meaningful spread (Gini > 0.3 in ≥2/4 layers).
-   - Refuted if: PPL insensitive to which experts are pruned (random ≈ REAP).
-   - Inconclusive if: graded degradation but some layers insensitive (flat saliency).
-   - Depends on: 138
-
-129. **Geometric decomposition of expert pruning error — Tiny Mixtral**
-   - The central scientific question: is MoE expert pruning error geometric (low-rank, metric-dominated, linearly correctable) — or is it fundamentally different from weight quantization error? Using the 50%-pruned model from item 128 (4/8 experts removed per layer), collect per-layer pruning error tensors over calibration data. **Run on CPU** (same histogram_mps constraint as item 128). At each MoE layer l, the pruning error per token is: `error_l(x) = y_full(x) - y_pruned(x)` where y_full runs all 8 experts (top-2 selected) and y_pruned runs the 4 surviving experts (top-2 selected from survivors, renormalized gates). Collect errors for 256 calibration sequences × 256 tokens = 65536 error vectors of dim 256 per layer. Decompose: (1) **SVD analysis**: compute SVD of the error matrix `E_l ∈ R^{65536 × 256}` for each layer. Report effective rank (number of singular values capturing 95% of Frobenius norm). If rank_95 ≪ 256 (hidden dim), the error is low-rank and a compact correction is feasible. (2) **Metric vs topological split**: for each token, check whether the top-2 expert routing decisions change at downstream layers when using pruned vs full model. Run both full and pruned forward passes, record per-layer routing decisions (which 2 experts selected). Metric error = same routing at downstream layers (linear distortion only). Topological error = different routing (nonlinear, harder to correct). Report metric fraction per layer. (3) **Per-layer attribution**: local error (this layer's pruned experts contributed to output) vs propagated error (upstream pruning changed the activations reaching this layer). Compute local as: error with only layer l pruned (all others full). Propagated = total - local. Report local vs propagated fraction per layer. (4) **Compare pruning levels**: repeat SVD analysis at 25% and 75% pruning. Does error rank scale with number of pruned experts?
-   - Type: analysis
-   - Confirmed if: pruning error is low-rank (rank_95 < 32, i.e., <12.5% of hidden dim) in ≥ 3/4 layers AND metric-dominated (>70% of tokens preserve downstream routing).
-   - Refuted if: pruning error is approximately full-rank (rank_95 > 128) OR topological-dominated (>50% of tokens change downstream routing).
-   - Inconclusive if: low-rank but topological fraction is 30-50%, or rank varies wildly across layers.
-   - Depends on: 139
-
-130. **Low-rank linear correction for expert pruning error — Tiny Mixtral**
-   - If item 129 shows pruning error is low-rank and metric-dominated, test whether a lightweight learned correction can recover PPL. **Run on CPU.** For each MoE layer l, train a low-rank correction: `C_l(x) = B_l @ (A_l @ h_l)` where h_l ∈ R^256 is the MoE layer input (the residual stream vector that enters both the router and the experts), A_l ∈ R^{r × 256}, B_l ∈ R^{256 × r}, so C_l has `2 × 256 × r` parameters per layer. The correction is added to the MoE layer output: `y_corrected = y_pruned + C_l(h_l)`. Training: for each layer independently, minimize MSE `||y_full - y_pruned - C_l(h_l)||²` over 256 calibration sequences (same as items 128-129) using AdamW (lr=1e-3, 500 steps, batch=32 sequences). Then evaluate end-to-end PPL with all 4 layer corrections applied simultaneously. Sweep: (a) rank r ∈ {4, 8, 16, 32, 64}, (b) pruning level ∈ {25%, 50%}, (c) 3 random seeds for calibration data order. Report: PPL recovery fraction = `(PPL_pruned - PPL_corrected) / (PPL_pruned - PPL_float)` at each (r, pruning_level). Total correction params at each rank: `4 layers × 2 × 256 × r` (e.g., rank-16 = 32K params = 0.2% of 15.5M model). Also compare against the parameter cost of simply keeping more experts: e.g., 50% pruned + rank-16 correction (32K correction params) vs 25% pruned with no correction (keeping 2 extra experts = ~0.5M extra expert params). Which is cheaper for the same PPL? Report ceiling: oracle correction (store exact per-token error, add it back) to verify it recovers float PPL exactly.
-   - Type: empirical
-   - Confirmed if: rank-16 correction recovers ≥50% of pruning PPL gap at 50% pruning, AND correction is more parameter-efficient than keeping extra experts (fewer added params for same PPL recovery).
-   - Refuted if: even rank-64 recovers <20% of the gap (pruning error cannot be captured by a linear function of layer input).
-   - Inconclusive if: 20-50% recovery at rank-16, or works at 25% but not 50%.
-   - Depends on: 129
-
-131. **Combined pruning + quantization + correction — Tiny Mixtral**
-   - Test the full compression pipeline that production MoE systems use: prune experts, quantize remaining weights, apply geometric correction. **Run on CPU.** Starting from the 50%-pruned model (item 128), apply simulated per-channel symmetric int4 quantization to all remaining expert weights (gate_proj, up_proj, down_proj in each surviving expert): `W_q = round(W / delta) * delta` where `delta = max(|W_col|) / 7` per output channel (8 levels above zero, 7 below = 4-bit signed). This simulates the W4A16 quantization that production pipelines use (e.g., Intel AutoRound, GPTQ). Measure independently: (a) float baseline PPL, (b) quantization-only PPL (no pruning, all 8 experts quantized to int4), (c) pruning-only PPL at 50% (from item 128), (d) combined pruning+quantization PPL. Compute interaction: `interaction = PPL_combined - (PPL_quant_only + PPL_prune_only - PPL_float)`. If interaction is small (<20% of combined degradation), errors are approximately additive. Apply corrections: (e) pruning correction only (from item 130, best rank), (f) quantization correction only (`c_local = -E_W @ a` where `E_W = W_q - W` is per-layer weight quantization error, applied at each expert independently), (g) both corrections summed, (h) joint correction (retrain rank-r matrix on combined prune+quantize error). Sweep joint correction rank r ∈ {16, 32, 64}. Report recovery fractions for each variant. The key deliverable: does combined correction recover ≥40% of the total prune+quantize PPL gap?
-   - Type: empirical
-   - Confirmed if: combined correction (g or h) recovers ≥40% of total (prune+quantize) PPL gap AND errors are approximately additive (interaction < 20% of combined degradation).
-   - Refuted if: combined correction recovers <15% AND joint correction also fails (<15%).
-   - Inconclusive if: independent corrections fail but joint correction works (errors interact but are jointly correctable), or only works at 25% pruning.
-   - Depends on: 130
-
-140. **QK vs V error decomposition under FFN compression — GPT-2** [INTERPRETABILITY]
-   - The key unmeasured question in the literature (no prior work). For k=4 compressed model (blocks [1,4,7,11] at 6x), at each of 12 attention layers, decompose the attention output error into QK-space (pattern change) and V-space (value change). For each head: (a) compute KL(softmax(QK^T/√d) ∥ softmax(Q'K'^T/√d)) where primed = compressed residual stream inputs, (b) hold attention patterns FIXED at float values, swap V to compressed → measure output error (V-only), (c) hold V FIXED at float, use compressed attention patterns → measure output error (QK-only), (d) total = QK + V + interaction. Report per-layer per-head heatmap of {QK_frac, V_frac, interaction_frac}. 2048 OWT tokens.
-   - Survey: `autoresearch/surveys/attention_cascade_correction.md`
-   - Type: analysis (interpretability)
-   - Confirmed if: one component (QK or V) accounts for >70% of total error in ≥8/12 layers (clear correction target).
-   - Refuted if: roughly equal (40-60% each) across all layers (no single target).
-   - Inconclusive if: dominant source varies by layer position.
-   - Depends on: none
-
 141. **Attention entropy shift under FFN compression — GPT-2** [INTERPRETABILITY]
    - For float vs k=4 compressed model: compute per-head attention entropy H = -Σ_j a_j log a_j for each query position on 2048 OWT tokens. Report: mean entropy shift (compressed - float) per head per layer. Correlate with cascade amplification fractions from cycle 104. Do compressed-model attention heads become more peaked (overconfident on wrong tokens) or more diffuse (lost specificity)?
    - Type: analysis (interpretability)
@@ -151,6 +102,14 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: hybrid beats one baseline but not the other, or <2% difference.
    - Depends on: none
 
+### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
+
+138. ~~**Train MoE testbed — Tiny Mixtral**~~ SKIPPED — WikiText-2 too small, overfits at PPL 65. Need pretrained model or larger dataset.
+139. ~~**REAP expert pruning baseline — Tiny Mixtral**~~ SKIPPED — depends on 138.
+129. ~~**Geometric decomposition of expert pruning error — Tiny Mixtral**~~ SKIPPED — depends on 139.
+130. ~~**Low-rank linear correction for expert pruning error — Tiny Mixtral**~~ SKIPPED — depends on 129.
+131. ~~**Combined pruning + quantization + correction — Tiny Mixtral**~~ SKIPPED — depends on 130.
+
 ### Closed — OBSOLETE items (do not run)
 
 23. ~~**Effective number of affine behaviors via Jacobian k-means — GPT-2 FFN**~~ ⚠ OBSOLETE: Superseded by item 80 (Jacobian effective rank census).
@@ -166,6 +125,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 123
+
+140. **QK vs V error decomposition under FFN compression — GPT-2** *(INCONCLUSIVE — cycle 123)*
+   - **Outcome: INCONCLUSIVE** — Dominant source varies by layer position: V dominates early layers (L2-L4: V_frac ~0.65-0.68), QK dominates late layers (L9-L11: QK_frac ~0.55-0.58). No single component exceeds 70% threshold across all 3 seeds in any layer. Float PPL=57.65, compressed k=4 PPL=71.66 (+24.3%). Cross-seed std < 0.02 (very stable). Layers 0-1 show E_total≈0 (clean residual stream before first compressed block, confirming sanity). Interaction terms generally small (|inter_frac| < 0.1 in most layers). Layer 5 anomaly: QK_frac=0.578 (high QK, likely attention layer sensitive to early residual stream corruption from block 1 and block 4 compressions). No surgical single correction target exists; correction strategies must target both QK and V pathways.
+   - Commit: TBD
+   - Artifacts: experiments/qk_v_decomposition_gpt2.py, autoresearch/results/cycle_123_qk_v_decomposition.json, autoresearch/results/cycle_123_qk_v_heatmap.png
 
 ### Cycle 121
 
