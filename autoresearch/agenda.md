@@ -81,7 +81,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 100. **Is FFN isotropy architectural or learned? — GPT-2 FFN** *(CONFIRMED — cycle 129)*
    - **Outcome: CONFIRMED** — Random-init GPT-2 has isotropy ratio 0.002 across all blocks (3 seeds, std<0.0002). Trained GPT-2: block 1=0.004, blocks 4-7=0.015. Training increases isotropy 7-8x in blocks 4-7 (learned). Block 1 is anomalous (only 1.5x increase — partially architectural). ReLU swap (qualitative): 0.014 vs GELU 0.015, negligible change — activation function doesn't drive isotropy.
-   - Commit: PENDING
+   - Commit: 6a82731
    - Artifacts: experiments/ffn_isotropy_architectural_gpt2.py, autoresearch/results/cycle_129_isotropy_architectural.json, autoresearch/results/cycle_129_isotropy_comparison.png
 
 ### Cycle 128
