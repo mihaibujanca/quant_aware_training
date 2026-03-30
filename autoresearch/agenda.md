@@ -90,7 +90,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 134. **Dead/always-active neuron census + exact pruning — GPT-2 FFN** *(INCONCLUSIVE — cycle 128)*
    - **Outcome: INCONCLUSIVE** — 0/36864 strict-removable (0.00%). No dead, always-active, or near-linear neurons under universal thresholds. Soft census: 14 channels in blocks 0-4 have >95% tokens in dead zone (z<-3), consistent across 3 seeds. These are approximate pruning candidates but too few (<0.5%) for meaningful compression. GELU networks have no free compression from stable channels.
-   - Commit: PENDING
+   - Commit: 5ae03ec
    - Artifacts: experiments/dead_neuron_census_gpt2_cycle128.py, autoresearch/results/cycle_128_census.json, autoresearch/results/cycle_128_census.png
 
 ### Cycle 127

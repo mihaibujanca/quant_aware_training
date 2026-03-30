@@ -1,7 +1,7 @@
 item_number=134
 outcome=inconclusive
 key_metric=strict_removable=0/36864(0.00%) soft95_dead=14_channels(blocks_0-4) no_always_active no_near_linear
-commit=PENDING
+commit=5ae03ec
 paths=experiments/dead_neuron_census_gpt2_cycle128.py,autoresearch/results/cycle_128_census.json,autoresearch/results/cycle_128_census.png
 learned=GPT-2 GELU FFN has essentially zero strictly dead/always-active/near-linear channels. The "for ALL tokens" criterion is too strict for GELU (unlike ReLU which has exact zeros). 14 channels in blocks 0-4 are >95% dead (z<-3), stable across 3 seeds, but too few for useful compression. Always-active (z>4) and near-linear categories are completely empty — GELU activations never stay in the positive-linear tail for all tokens.
 next=Exact stable-channel pruning is a dead end for GELU transformers. The R2 direction (Kumar/Serra/Berzins exact pruning) does not apply to GELU networks. Focus should shift to approximate methods: topk compression (already working) and data-conditioned affine map merging (item 135). The 14 soft95 channels could be investigated as a seed for importance-weighted pruning but are too few to matter.
