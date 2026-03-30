@@ -1,27 +1,26 @@
-# Research Status — 123 Cycles (001–123)
+# Research Status — 124 Cycles (001–124)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 23 |
 | Refuted | 36 |
-| Inconclusive | 54 |
+| Inconclusive | 55 |
 | Crash | 2 |
 
 ## Latest Cycle
-- **Cycle 123** (item 140): QK vs V error decomposition — INCONCLUSIVE
-  - V dominates early layers (L2-L4: V_frac ~0.66), QK dominates late (L9-L11: QK_frac ~0.57)
-  - No component exceeds 70% threshold in any layer; dominant source varies by position
-  - Cross-seed stability excellent (std < 0.02). Interaction terms small (<0.1)
-  - **Finding**: no single surgical target — correction must be layer-adaptive (V-focused early, QK-focused late)
+- **Cycle 124** (item 141): Attention entropy shift — INCONCLUSIVE
+  - Only 2/12 layers exceed 0.1 nats |delta_H| (need >=8 for CONFIRMED)
+  - Mean |delta_H| = 0.059 nats — shift is real but small, not REFUTED either
+  - Negative correlation with amplification (rho=-0.55, p=0.08) — fragile, inflated by trivial L1
+  - **Interesting**: signed analysis shows attention sharpening; signed rho=+0.72 (p=0.013) significant
 
 ## Previous Cycles
+- **Cycle 123** (item 140): QK vs V error decomposition — INCONCLUSIVE
+  - V dominates early layers, QK dominates late; no component >70% anywhere
 - **Cycle 121** (item 138): MoE training — INCONCLUSIVE (audit-corrected)
-  - Tiny Mixtral under-trained without dropout; PPL 65.08 best at 15M tokens
 - **Cycle 120** (item 137): Cascade corrections k=8 — CONFIRMED WITH CAVEAT
-  - Recovery 91.4%, 98K params; corrected PPL 143.6 vs baseline 57.7 (+149%)
 - **Cycle 119** (item 136): Cascade corrections k=5 — CONFIRMED
-  - Recovery 73.8% (seeds 42/123/7: 72.9/73.9/75.2%), 61K params, matches k=4 baseline 74.3%
 
 ## Key Results (consolidated)
 
@@ -45,6 +44,6 @@
 - Regime depth-invariant ~85% gated (cycle 111)
 
 ## Next Up
-- **141**: Attention entropy shift under FFN compression (P0)
-- **142**: Correction placement sweep (P0, informed by cycle 123)
+- **142**: Correction placement sweep — GPT-2 FFN k=4 (P0)
 - **134**: Dead/always-active neuron census + exact pruning (P1)
+- **100**: Is FFN isotropy architectural or learned? (P1, depends on 99)
