@@ -32,13 +32,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: independent corrections fail but joint correction works (errors interact but are jointly correctable), or only works at 25% pruning.
    - Depends on: 130
 
-136. **Cascade corrections at k=5 stacking — GPT-2 FFN**
-   - Split from item 133 (timed out at 140+ min). Test r=8 corrections on k=5 ONLY (blocks [1,3,4,7,11]). Single seed (seed 42) first — if PPL looks reasonable, run seeds 123 and 7. topk+lstsq+500 Adam on W_down, then train r=8 cascade corrections (2000 steps, lr=1e-4) under model loss. Uncorrected k=5 baseline is ~+60% PPL (cycle 106). Report: uncorrected PPL, corrected PPL, recovery fraction, total correction params. Compute budget: ~15 min for 1 seed (5 blocks × compress+polish + correction training).
-   - Type: empirical
-   - Confirmed if: corrections recover ≥30% of k=5 degradation with r=8.
-   - Refuted if: corrections recover <10% (cascade outpaces correction at k=5).
-   - Inconclusive if: 10-30% recovery.
-   - Depends on: none
+136. *(moved to PAST — cycle 119)*
 
 137. **Cascade corrections at k=8 stacking — GPT-2 FFN**
    - Second half of item 133 split. Test r=8 and r=16 corrections on k=8 (blocks [1,2,3,4,5,7,9,11]). Single seed (42) only — k=8 is expensive (8 blocks). If r=8 gives <10% recovery, skip r=16. Compute budget: ~20 min for 1 seed.
@@ -127,6 +121,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 119
+
+136. **Cascade corrections at k=5 stacking — GPT-2 FFN** *(CONFIRMED — cycle 119)*
+   - **Outcome: CONFIRMED** — r=8 corrections on k=5 blocks [7,5,4,1,6] at 6x recovered 73.8% of degradation (mean across 3 seeds). Baseline ~51.7 PPL, uncorrected ~122.1 PPL (+70.5 deg), corrected ~70.1 PPL (+18.5 residual). Recovery 73.8% exceeds 30% threshold. Near-identical to k=4 recovery (74.3%, cycle 115), showing cascade corrections scale gracefully from 4→5 blocks. 61,440 correction params.
+   - Artifacts: experiments/cascade_correction_k5_gpt2.py, autoresearch/results/cycle_119_cascade_correction_k5.json, autoresearch/results/cycle_119_cascade_correction_k5.png
 
 ### Cycle 118
 
