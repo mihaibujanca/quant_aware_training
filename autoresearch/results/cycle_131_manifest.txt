@@ -1,7 +1,7 @@
 item_number=88
 outcome=inconclusive
 key_metric=B4_ae=56.15±0.32_topk=57.28±0.05(-2.0%) B7_ae=55.86±0.11_topk=57.85±0.03(-3.4%) nonlin=5%
-commit=PENDING
+commit=ce37a8d
 paths=experiments/bottleneck_ae_poc_cycle131.py,autoresearch/results/cycle_131_bottleneck_ae.json
 learned=AE consistently outperforms topk+lstsq by 2-3.4% at k=384 on single-block swap. Both below float PPL (57.65), meaning the AE's model-loss training captures task-relevant structure that topk+lstsq misses. Nonlinearity at ~5% boundary — encoder is marginally nonlinear. The AE's advantage comes at 2.5x param cost. This is a positive signal but not decisive.
 next=Follow-up: (1) param-matched comparison (reduce AE to match topk param count), (2) k=128 or k=256 where topk+lstsq degrades more — the AE advantage may widen, (3) stacking test with multiple AE-compressed blocks. The 2-3% margin at k=384 should grow at more aggressive compression ratios.

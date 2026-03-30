@@ -62,7 +62,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 88. **Learned bottleneck AE for FFN compression — GPT-2 FFN** *(INCONCLUSIVE — cycle 131)*
    - **Outcome: INCONCLUSIVE** — AE consistently beats topk+lstsq at k=384: block 4 by -2.0% (56.15 vs 57.28), block 7 by -3.4% (55.86 vs 57.85). Both blocks beat float PPL (57.65). Nonlinearity ~5% (boundary). AE improvement is real and consistent (3 seeds, low std) but doesn't reach 5% CONFIRMED threshold. AE has 2.5x more params than topk+lstsq — param-matched test needed. POC only; full k-sweep, stacking, and k=128 test deferred.
-   - Commit: PENDING
+   - Commit: ce37a8d
    - Artifacts: experiments/bottleneck_ae_poc_cycle131.py, autoresearch/results/cycle_131_bottleneck_ae.json
 
 ### Cycle 130
