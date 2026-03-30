@@ -1,0 +1,6 @@
+cycle: 114
+item: 125
+verdict: REFUTED
+audit: ACCEPTED
+flags: none
+notes: 0.90% delta (threshold <1%). Naming of middle_heavy/edge_heavy is inverted but both directions tested. Consistent with cycle 094 (damage-based allocation also REFUTED).
