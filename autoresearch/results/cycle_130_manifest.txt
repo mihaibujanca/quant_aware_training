@@ -1,0 +1,7 @@
+item_number=87
+outcome=refuted
+key_metric=min_procrustes=84.4%(B4-B5) max=98.0%(B4-B7) all_pairs>84%
+commit=PENDING
+paths=experiments/procrustes_alignment_cycle130.py,autoresearch/results/cycle_130_procrustes.json,autoresearch/results/cycle_130_heatmap.png
+learned=Compressed W_down matrices occupy completely distinct subspaces across blocks. Even the most similar pair (blocks 4-5) has 84% residual. Cross-block weight sharing via orthogonal rotation is not viable. Each block's learned output projection is unique.
+next=Weight sharing is dead. Compression must be per-block. Focus on methods that improve per-block compression quality: item 88 (learned bottleneck autoencoder), item 127 (hybrid regression), or item 135 (affine map extraction).

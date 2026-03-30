@@ -10,14 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-87. **Cross-block weight sharing via Procrustes alignment — GPT-2 FFN [MOONSHOT]**
-   - If multiple blocks have similar Jacobian spectral structure (testable after item 80), their compressed W_down matrices might be related by a rotation. For each pair of compressed blocks (i, j), compute the Procrustes alignment: find orthogonal R that minimizes ||W_down_i − R · W_down_j||_F. If the residual is small (< 10% of ||W_down_i||_F), blocks i and j can share a single W_down with per-block rotation R_i — reducing total parameter count further. For k=4 compressed blocks: compute all 6 pairwise Procrustes distances. If any pairs are close, test shared-W_down + rotation vs independent W_down on stacked PPL. The extreme case: ONE shared W_down with 4 learned rotations (4 × 768 × 768 rotation params, but the rotation can be low-rank if spectral overlap is high).
-   - Type: analysis + empirical
-   - Confirmed if: ≥ 1 pair of blocks has Procrustes residual < 10% AND shared-weight stacking PPL is within 2pp of independent.
-   - Refuted if: all pairwise Procrustes residuals > 30% (blocks are functionally dissimilar despite similar rank).
-   - Inconclusive if: low Procrustes residual but shared-weight PPL degrades significantly (rotation alone doesn't capture the functional difference).
-   - Depends on: none (but benefits from item 80 results)
-
 88. **Learned bottleneck autoencoder for FFN compression — GPT-2 FFN [MOONSHOT]**
    - New formulation of the autoencoder compression idea (see item 44 for the original toy-ReLU version). topk+lstsq is axis-aligned linear encoding + linear decoding — a special case. Replace it with a learned bottleneck: Encoder E: h ∈ R^3072 → z ∈ R^k, Decoder D: z → y ∈ R^768, where h = GELU(W_up @ x + b_up) is the FFN hidden activation and y is the block output. The critical design choice: train under the **model loss** (next-token cross-entropy with the bottleneck swapped into the live model), not per-block reconstruction MSE. This way the bottleneck learns to preserve what matters for downstream computation, not just what's large in magnitude. The information bottleneck principle (Tishby et al.) predicts that under increasing compression pressure (shrinking k), the last features to die are the structurally essential ones — the irreducible functional core of the block.
    - **Sweep**: k ∈ {512, 384, 256, 128, 64} on blocks [1, 4, 7, 11]. For each k, train E+D for 2000 steps on OWT (lr=1e-4, freeze everything else). Track: (a) single-block swap PPL vs topk+lstsq at matched k, (b) which hidden channels have highest encoder weight — compare to topk ranking, (c) whether encoder learns a near-linear map (measure nonlinearity as ||E(h) − E_linear(h)||/||E(h)|| on held-out data). If the encoder stays near-linear, the autoencoder is just finding a better linear projection than topk (like item 82's Jacobian SVD, but learned). If it goes nonlinear, there's compressible structure that no linear method can capture.
@@ -76,6 +68,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 130
+
+87. **Cross-block weight sharing via Procrustes alignment — GPT-2 FFN** *(REFUTED — cycle 130)*
+   - **Outcome: REFUTED** — All 6 pairwise Procrustes residuals > 84% (min: blocks 4-5 = 84.4%, max: blocks 4-7 = 98.0%). Compressed W_down matrices are completely functionally dissimilar — no cross-block weight sharing is possible. Each block's compression occupies a distinct subspace.
+   - Commit: PENDING
+   - Artifacts: experiments/procrustes_alignment_cycle130.py, autoresearch/results/cycle_130_procrustes.json, autoresearch/results/cycle_130_heatmap.png
 
 ### Cycle 129
 

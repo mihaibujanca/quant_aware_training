@@ -1,0 +1,25 @@
+{
+  "cycle": 130,
+  "item": 87,
+  "float_ppl": 57.653,
+  "independent_ppl": 95.947,
+  "shared_ppl": null,
+  "distances": {
+    "1-4": 0.8536,
+    "1-5": 0.8894,
+    "1-7": 0.9378,
+    "4-5": 0.8437,
+    "4-7": 0.9801,
+    "5-7": 0.9052
+  },
+  "min_pair": [
+    4,
+    5
+  ],
+  "min_distance": 0.8437,
+  "max_distance": 0.9801,
+  "all_above_30": true,
+  "any_below_10": false,
+  "verdict": "REFUTED",
+  "verdict_detail": "All pairwise residuals > 30% (min=84.4%). Blocks are functionally dissimilar."
+}
