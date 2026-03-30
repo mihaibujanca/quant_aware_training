@@ -6,17 +6,57 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+145. **Curved inference census — GPT-2 residual stream**
+   - Validate the curved inference framework (Manson 2025, arXiv 2507.21107) on GPT-2. Collect residual stream trajectory x^(0)..x^(12) at all 13 layer boundaries (post-embedding + 12 block outputs, pre-LayerNorm per MP7) over 200+ OWT eval sequences. Compute: (1) Per-layer salience S_l = ||x^(l+1) - x^(l)||_G where G = U^T U is the pullback metric from the unembedding matrix (model.lm_head.weight). In practice: S_l = ||U(x^(l+1) - x^(l))||_2, no explicit G formation needed. (2) Per-layer curvature kappa_l via 3-point central differences under G (layers 1-11, need neighbors). (3) Spearman correlation between salience and curvature profiles across layers. (4) Spearman correlation between per-layer curvature and existing per-block single-block swap PPL delta at 6x (recompute swap damage for all 12 blocks using standard topk+lstsq pipeline). Report: S_l and kappa_l profiles (with per-token std), salience-curvature correlation, curvature-vs-swap-damage correlation. Use `aleph.pullback_geometry` for all metric computations. 3 seeds for corpus sampling.
+   - Type: analysis
+   - Confirmed if: salience-curvature anticorrelation |rho| >= 0.7 (Manson reports r=-0.89 on LLaMA) AND curvature-damage correlation |rho| >= 0.5.
+   - Refuted if: |salience-curvature rho| < 0.3 (no anticorrelation on GPT-2).
+   - Inconclusive if: salience-curvature anticorrelation exists (|rho| >= 0.3) but curvature-damage correlation is weak (|rho| < 0.3).
+   - Depends on: none
+
+146. **Pullback-metric error measurement — GPT-2 FFN**
+   - For each of 12 blocks, compress FFN at 6x via topk+lstsq (standard pipeline). For each compressed block, collect the FFN output error e_l = FFN_compressed(x) - FFN_teacher(x) over 200+ OWT tokens. Measure error in two norms: (1) Frobenius: ||e_l||_F (mean over tokens). (2) G-weighted: ||U e_l||_2 (mean over tokens, U = unembedding matrix). For each block, record single-block swap PPL delta. Then compute: (a) Spearman(Frobenius_error, PPL_delta) across 12 blocks. (b) Spearman(G_weighted_error, PPL_delta) across 12 blocks. Also compute ratio G_error / Frob_error per block to identify which blocks have semantically misaligned error. Use `aleph.pullback_geometry.pullback_norm` for G-weighted measurement. 3 seeds, 200 OWT eval sequences.
+   - Type: empirical
+   - Confirmed if: G-weighted Spearman |rho| exceeds Frobenius Spearman |rho| by >= 0.15, and G-weighted |rho| >= 0.6.
+   - Refuted if: Frobenius |rho| >= G-weighted |rho| (Frobenius is already sufficient).
+   - Inconclusive if: G-weighted marginally better (<0.15 improvement) or both correlations weak (|rho| < 0.4).
+   - Depends on: 145 (census validates pullback metric exists on GPT-2)
+
 ### P1
+
+147. **G-weighted lstsq compression — GPT-2 FFN**
+   - Replace the standard Frobenius-norm lstsq in the compression pipeline with G-weighted lstsq that minimizes ||U(y - ŷ)||² instead of ||y - ŷ||². Use `aleph.pullback_geometry.gweighted_lstsq` which transforms outputs via Cholesky of G = U^T U, solves standard lstsq, and transforms back. Compare against standard topk+lstsq on: (a) Single-block swap PPL for blocks [1, 4, 7, 11] at 6x compression. (b) k=4 stacking PPL (blocks [1, 4, 7, 11] at 6x). Both with 500-step Adam polish. Report BOTH pre-polish and post-polish numbers (polish may wash out initial difference — see cycle 133 precedent). 3 seeds, 200 OWT eval sequences.
+   - Type: empirical
+   - Confirmed if: G-weighted lstsq improves k=4 stacking PPL by >= 3% relative (e.g., from ~70 to ~68) over standard lstsq at matched parameters.
+   - Refuted if: G-weighted lstsq matches or is worse than standard lstsq at both single-block and stacking levels.
+   - Inconclusive if: G-weighted improves single-block but not stacking (or vice versa), or improvement is <3%.
+   - Depends on: 146 (confirms G-weighted error predicts PPL better than Frobenius)
+
+148. **Curvature-guided compression budget allocation — GPT-2 FFN**
+   - Cycle 094 showed uniform FFN compression allocation is near-optimal under Frobenius metric. Re-test with curvature-guided allocation: assign per-block compression ratios using kappa_l from item 145. Three allocations on k=4 stacking (blocks [1, 4, 7, 11]), matched total parameter budget (sum(k_l) = 4×512 = 2048): (a) Uniform 6x (512/3072 per block) — existing baseline. (b) Curvature-proportional: k_l proportional to kappa_l / mean(kappa), giving more neurons at high-curvature layers (protect where trajectory bends). (c) Inverse-curvature: k_l proportional to 1/kappa_l (more neurons where trajectory is straight — high-fidelity reconstruction of linear regions). All with 500-step Adam polish. 3 seeds, 200 OWT eval sequences.
+   - Type: empirical
+   - Confirmed if: any curvature-guided allocation improves k=4 stacking PPL by >= 2% relative over uniform.
+   - Refuted if: all three allocations within 1% of each other (confirming cycle 094's finding that allocation doesn't matter, even under geometric guidance).
+   - Inconclusive if: one curvature allocation is 1-2% better but unstable across seeds.
+   - Depends on: 145 (need curvature profile), 146 (confirms pullback metric is meaningful for compression)
 
 ### P2
 
-135. **Data-conditioned local affine map extraction for FFN merge candidates — GPT-2 FFN**
-   - R3 direction: use the MASO/spline viewpoint to extract per-token local affine maps and find merge-able groups. For each of blocks {1, 4, 7, 11}, compute per-token Jacobians J_l(x) = d(FFN_l(x))/dx ∈ R^{768×768} via `torch.func.jacrev` over 1024 tokens from OWT. Then: (1) compute pairwise cosine similarity of flattened Jacobians and report the effective number of distinct affine behaviors (spectral gap of the similarity matrix). (2) For each pair of tokens (i, j) with cos(J_i, J_j) > 0.95, verify that the affine maps are functionally interchangeable: ||J_i @ x_j + b_i - FFN(x_j)|| / ||FFN(x_j)|| < 0.05 (i.e., token j's output is well-approximated by token i's local map). (3) Report: per-block count of distinct functional groups, group sizes, and the compression ratio achievable by replacing each group with its centroid affine map. Compare centroid-affine compression quality against topk+lstsq at matched parameter count. This directly tests Walker et al. 2025's centroid affinity signal on GPT-2 FFNs.
+149. **Layer-local pullback metric via rest-of-network Jacobian — GPT-2 FFN**
+   - Instead of using the global unembedding pullback G = U^T U for all layers, compute a per-layer pullback metric that captures "how much does error at layer l affect the final output?" For each layer l, define the map f_l: R^768 -> R^{50257} as the composition of layers l+1 through 12 plus ln_f plus lm_head. Use JVP (forward-mode AD via torch.func.jvp) to compute ||J_l e_l||_2 directly for each block's compression error e_l, without forming the full Jacobian. This gives the layer-local pullback norm. Compare three error metrics across 12 blocks: (a) Frobenius ||e_l||_2. (b) Global pullback ||U e_l||_2. (c) Layer-local ||J_l e_l||_2. Correlate each with single-block swap PPL delta. 3 seeds, 200 OWT eval sequences.
    - Type: analysis
-   - Confirmed if: ≤50 distinct affine groups cover ≥90% of tokens in ≥2/4 blocks AND centroid-affine compression matches topk+lstsq single-block PPL within 5%.
-   - Refuted if: >200 distinct groups needed for 90% coverage (local maps are too diverse for merging).
-   - Inconclusive if: few groups but centroid-affine PPL is >10% worse than topk (merging is possible but the centroid map is a poor representative).
-   - Depends on: none
+   - Confirmed if: layer-local metric Spearman |rho| with PPL exceeds global pullback |rho| by >= 0.15.
+   - Refuted if: layer-local and global pullback correlations are within 0.05 (global G is sufficient).
+   - Inconclusive if: layer-local is marginally better (0.05-0.15) or computation is too noisy (cross-seed std > 0.1).
+   - Depends on: 146 (need global pullback baseline to compare against)
+
+150. **Curvature-salience guided correction rank allocation — GPT-2 FFN k=4**
+   - Cycles 119/120 showed r=8 LoRA corrections recover ~74% of k=4/k=5 degradation with corrections placed uniformly after every compressed block. Use the curvature and salience profiles from item 145 to redistribute correction rank non-uniformly. Three allocations at matched total params: (a) Uniform r=8 at all 4 correction points (baseline, ~49K params). (b) Curvature-weighted: higher rank at high-curvature layers, lower at low-curvature. (c) Salience-weighted: higher rank at high-salience layers. 3 seeds, 200 OWT eval sequences.
+   - Type: empirical
+   - Confirmed if: non-uniform correction rank improves PPL recovery by >= 5 percentage points (e.g., 74% -> 79%) over uniform.
+   - Refuted if: all allocations within 2pp of each other.
+   - Inconclusive if: improvement is 2-5pp or unstable across seeds.
+   - Depends on: 145 (curvature/salience profiles), 146 (confirms metric relevance)
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
@@ -41,6 +81,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 134
+
+135. **Data-conditioned affine map extraction — GPT-2 FFN** *(INCONCLUSIVE — cycle 134)*
+   - **Outcome: INCONCLUSIVE** — No meaningful Jacobian clustering. Block 4: 128/128 groups at all thresholds (max pairwise cos=0.87, mean=0.33). Block 7: 124/128 groups (few pairs with cos>0.95, mean=0.27). GELU FFNs lack the discrete piecewise-affine structure of ReLU networks. Where rare similar pairs exist (14 in block 7), interchangeability works (mean error 1.8%, 86% below 5%). The MASO framework doesn't directly apply to GELU networks.
+   - Commit: PENDING
+   - Artifacts: experiments/affine_map_extraction_cycle134.py, autoresearch/results/cycle_134_affine_maps.json
 
 ### Cycle 133
 

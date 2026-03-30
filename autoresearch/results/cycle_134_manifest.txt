@@ -1,0 +1,7 @@
+item_number=135
+outcome=inconclusive
+key_metric=B4_groups=128/128 B7_groups=124/128 mean_cos_B4=0.33 mean_cos_B7=0.27 no_clustering
+commit=PENDING
+paths=experiments/affine_map_extraction_cycle134.py,autoresearch/results/cycle_134_affine_maps.json,autoresearch/results/cycle_134_similarity_heatmap.png
+learned=GELU FFNs lack discrete piecewise-affine structure. Per-token Jacobians are nearly all distinct (128/128 groups at tau=0.95 in block 4). Mean pairwise cosine is 0.27-0.33 (far from 1.0). The MASO/spline framework (Balestriero) assumes piecewise-linear activation; GELU's smooth nonlinearity produces a continuous Jacobian landscape with no natural clustering. The rare similar pairs (14 in block 7 at cos>0.95) show functional interchangeability works locally (1.8% error) but too few pairs for compression.
+next=Affine map merging is not viable for GELU transformers. This is the last NEXT item — agenda refresh is now required. Promising directions for new items: (1) bottleneck AE at lower k (follow-up to cycle 131), (2) structured pruning via importance scores (not dead/alive but graduated), (3) nanochat benchmark if assets become available.

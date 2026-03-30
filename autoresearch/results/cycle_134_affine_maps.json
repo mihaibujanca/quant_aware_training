@@ -1,0 +1,128 @@
+{
+  "cycle": 134,
+  "item": 135,
+  "n_tokens": 128,
+  "blocks": [
+    4,
+    7
+  ],
+  "per_block": {
+    "4": {
+      "n_tokens": 128,
+      "jacobian_time_s": 1.0681757926940918,
+      "cosine_stats": {
+        "mean": 0.33038702607154846,
+        "median": 0.32360851764678955,
+        "min": 0.0484212189912796,
+        "max": 0.8702889680862427
+      },
+      "spectral": {
+        "n_eigenvalues_above_threshold": 128,
+        "top_5_eigenvalues": [
+          43.24296951293945,
+          5.364217758178711,
+          3.5759057998657227,
+          2.8323936462402344,
+          2.3694558143615723
+        ],
+        "spectral_gap_at": 1,
+        "spectral_gap_ratio": 8.06137466430664
+      },
+      "clusters": {
+        "0.9": {
+          "n_groups_mean": 128.0,
+          "n_groups_std": 0.0,
+          "n_groups_per_run": [
+            128,
+            128,
+            128
+          ]
+        },
+        "0.95": {
+          "n_groups_mean": 128.0,
+          "n_groups_std": 0.0,
+          "n_groups_per_run": [
+            128,
+            128,
+            128
+          ]
+        },
+        "0.99": {
+          "n_groups_mean": 128.0,
+          "n_groups_std": 0.0,
+          "n_groups_per_run": [
+            128,
+            128,
+            128
+          ]
+        }
+      },
+      "interchangeability": {
+        "n_pairs": 0,
+        "mean_error": null,
+        "median_error": null,
+        "max_error": null
+      }
+    },
+    "7": {
+      "n_tokens": 128,
+      "jacobian_time_s": 0.8157398700714111,
+      "cosine_stats": {
+        "mean": 0.2659686207771301,
+        "median": 0.25427180528640747,
+        "min": 0.05938694626092911,
+        "max": 0.9991592168807983
+      },
+      "spectral": {
+        "n_eigenvalues_above_threshold": 125,
+        "top_5_eigenvalues": [
+          35.296043395996094,
+          6.680830001831055,
+          4.065085411071777,
+          3.391659736633301,
+          2.9134459495544434
+        ],
+        "spectral_gap_at": 124,
+        "spectral_gap_ratio": 9.44621467590332
+      },
+      "clusters": {
+        "0.9": {
+          "n_groups_mean": 124.0,
+          "n_groups_std": 0.0,
+          "n_groups_per_run": [
+            124,
+            124,
+            124
+          ]
+        },
+        "0.95": {
+          "n_groups_mean": 124.0,
+          "n_groups_std": 0.0,
+          "n_groups_per_run": [
+            124,
+            124,
+            124
+          ]
+        },
+        "0.99": {
+          "n_groups_mean": 125.0,
+          "n_groups_std": 0.0,
+          "n_groups_per_run": [
+            125,
+            125,
+            125
+          ]
+        }
+      },
+      "interchangeability": {
+        "n_pairs": 14,
+        "mean_error": 0.018133259744250348,
+        "median_error": 0.013844062108546495,
+        "max_error": 0.0541917160153389,
+        "pct_below_5pct": 85.71428571428571
+      }
+    }
+  },
+  "verdict": "INCONCLUSIVE",
+  "verdict_detail": "50-200 groups, moderate clustering"
+}
