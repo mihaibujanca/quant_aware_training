@@ -1,0 +1,1 @@
+{"cycle": 115, "item": 118, "verdict": "APPROVE", "round": 1, "pitfalls_checked": ["MP1", "MP2", "MP3", "MP4", "MP5", "MP6", "MP7", "MP8"], "pitfalls_triggered": [], "advisories": ["A1: small degradation baseline may cause underpowered comparison", "A2: verify hook fires after full block (attn+ffn+residual), not just FFN"]}

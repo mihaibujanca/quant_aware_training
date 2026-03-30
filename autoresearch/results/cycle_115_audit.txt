@@ -1,0 +1,6 @@
+cycle: 115
+item: 118
+verdict: CONFIRMED
+audit: ACCEPTED
+flags: lora_equivalent, missing_extended_polish_ablation, per_block_vs_e2e_polish_gap
+notes: 74.3% degradation reduction at r=8 (49K params). Code correct, 3 seeds consistent, uncorrected PPL matches cycle 093. Correction is structurally LoRA on residual stream. Missing ablation: extended polish (2500 steps) vs 500 polish + 2000 correction. Uncorrected baseline uses per-block polish (PPL 80.68) not e2e polish (cycle 114: 76.69) — correction may partly compensate for the 4 PPL polish gap.
