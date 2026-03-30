@@ -114,6 +114,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 142. **Correction placement sweep — GPT-2 FFN k=4** *(REFUTED — cycle 125)*
    - **Outcome: REFUTED** — P1 (after FFN, residual stream) is within 2% of best alternative. Ranking: P1=69.52 (69.0% recovery), P5=70.18 (67.3%), P2=70.97 (65.2%), P4=71.65 (63.5%), P3=80.85 (39.4%). P1 reproduction matches cycle 115 (69.52 vs 69.53). Residual-stream correction is already near-optimal; attention-internal corrections (P3/P4) are worse, especially Q+K (r=4 may be insufficient but P4 at r=4 also underperforms P1 at r=8). Item 143 deprioritized.
+   - Commit: 4371880
    - Artifacts: experiments/placement_sweep_k4_cycle125.py, autoresearch/results/cycle_125_placement_sweep.json, autoresearch/results/cycle_125_ppl_bar.png, autoresearch/results/cycle_125_loss_curves.png
 
 ### Cycle 124

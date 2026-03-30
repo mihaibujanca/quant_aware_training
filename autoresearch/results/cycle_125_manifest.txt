@@ -1,7 +1,7 @@
 item_number=142
 outcome=refuted
 key_metric=P1_ppl=69.52 P5_ppl=70.18 P1_within_2pct_of_best diff=-1.0%
-commit=PENDING
+commit=4371880
 paths=experiments/placement_sweep_k4_cycle125.py,autoresearch/results/cycle_125_placement_sweep.json,autoresearch/results/cycle_125_ppl_bar.png,autoresearch/results/cycle_125_loss_curves.png
 learned=Residual-stream correction (P1, after FFN before attention) is near-optimal placement. Attention-internal corrections underperform: Q+K (P3) worst at 39% recovery vs 69% for P1; V+O (P4) at 63% still behind. Split corrections (P5: P1+P2 at r=4 each) approach but don't beat full-rank P1 at r=8.
 next=Item 143 (placement at scale) is now deprioritized since placement doesn't matter. Focus shifts to dead/always-active pruning (item 134) and interpretability (item 144 can still examine what corrections learn geometrically).
