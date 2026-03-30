@@ -1,0 +1,7 @@
+cycle: 116
+item: 132
+verdict: CONFIRMED
+audit_status: ACCEPTED (with flags)
+flags: overfitting_confound, calibration_set_too_small
+summary: C=58.88 vs B=62.12 (5.5%) and D=62.16 (5.6%) — both exceed 5% threshold. However, B and D overshoot their optimum (best PPL 58.5 at step 1000, then degrade to 62.1 at step 2500). Corrections win by implicit regularization, not by accessing structure W_down polish cannot reach. B at step 1000 matches C.
+recommendation: Use corrections for robustness to step count, or W_down polish with early stopping (~1000 steps). Test with larger calibration set (1000+ seqs) to disambiguate regularization from structural advantage.
