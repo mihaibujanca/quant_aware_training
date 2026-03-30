@@ -6,22 +6,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-132. **Extended-polish ablation for cascade corrections — GPT-2 FFN** ✓ CONFIRMED (cycle 116)
-   - Cycle 115 showed LoRA-style corrections (I + UV, r=8) recover 74% of k=4 stacking degradation (PPL 80.7→59.1). But the audit flagged a critical confound: is this recovery due to the correction structure, or would simply running 2000 more Adam polish steps on W_down alone achieve the same thing? This ablation resolves it. Setup: k=4 blocks [1,4,7,11], topk+lstsq, OWT, 3 seeds, 200 eval seqs. Conditions: (A) baseline: 500 Adam steps on W_down, no corrections (the current recipe, PPL ~80.7). (B) extended polish: 2500 Adam steps on W_down only, no corrections. (C) correction: 500 Adam on W_down + r=8 cascade corrections trained 2000 steps (cycle 115 recipe, PPL ~59.1). (D) matched-budget: 500 Adam on W_down + 2000 more Adam steps on W_down only (same total optimization budget as C but no correction params). Track PPL at steps {500, 1000, 1500, 2000, 2500} for conditions B and D to see the learning curve. Also report: total trainable params for each condition (C has 49K extra correction params; D has 0 extra).
-   - Type: empirical
-   - **Result (cycle 116)**: CONFIRMED. A=59.86, B=62.12, C=58.88, D=62.16. Gap C vs B: 5.50%, C vs D: 5.57%. Both exceed 5% threshold. Extended polish (B) and matched-budget (D) both *degrade* beyond 500-step baseline (A), while corrections (C) improve it. Learning curves show B and D plateau then worsen (PPL 59.9→62.1), not improving toward C.
-   - Confirmed if: condition C (corrections) outperforms both B and D by ≥5% relative PPL — corrections provide structure beyond what extended polish captures.
-   - Refuted if: condition B or D reaches within 2% of condition C — corrections are just extra optimization budget, equivalent to LoRA fine-tuning.
-   - Inconclusive if: 2-5% gap, or D converges to C given enough steps.
-   - Depends on: none (reuses cycle 115 setup)
-
-128. **Train MoE testbed + REAP expert pruning baseline — Tiny Mixtral**
-   - Train a tiny Mixtral-architecture MoE from scratch on WikiText-2, then establish the expert pruning error landscape. Use `from transformers import MixtralConfig, MixtralForCausalLM` with config: `MixtralConfig(hidden_size=256, intermediate_size=512, num_hidden_layers=4, num_attention_heads=4, num_key_value_heads=2, num_local_experts=8, num_experts_per_tok=2, max_position_embeddings=512, vocab_size=4096, router_aux_loss_coef=0.001)` — 15.5M params, structurally identical to production Mixtral (SiLU-gated FFN experts, learned softmax router with top-2 selection, RMSNorm, RoPE, GQA). **Run on CPU** (MPS hits a `histogram_mps` bug on int tensors with MoE grouped_mm dispatch; eager fallback is 8x slower than CPU at this model size). Train on WikiText-2 train split for 10M tokens (~14 min on CPU), batch=4, seq_len=256, AdamW lr=1e-4. Confirm model reaches reasonable validation PPL (should be <50 on WikiText-2 val; if not, increase tokens to 20M). Save trained checkpoint. Then implement REAP saliency scoring per expert: `score(expert_k, layer_l) = mean over 256 calibration sequences of: gate_weight_k(x) × ||expert_k(x)||_2` (REAP = Router-weighted Expert Activation Pruning, arXiv:2510.13999 — the dominant MoE pruning method used in production). Access router logits via `model(x, output_router_logits=True).router_logits` (list of `(batch*seq, num_experts)` tensors per layer). Calibration data: 256 sequences from WikiText-2 validation split, seq_len=256. Compute per-layer saliency distributions: Gini coefficient, top-4 vs bottom-4 spread, cross-layer correlation of expert rankings. Then prune at 3 levels: 25% (2/8 experts), 50% (4/8), 75% (6/8) per layer, using global saliency ranking (rank all layer×expert pairs, prune lowest). After pruning, zero out pruned expert logits before softmax so remaining experts receive renormalized gate weights. Measure: (a) baseline PPL on WikiText-2 val (256 seqs, seq_len=256), (b) PPL at each pruning level, (c) per-layer contribution to total PPL degradation (ablation: prune only layer l while keeping all others full, measure PPL delta, for each of the 4 layers). Report saliency heatmap (4 layers × 8 experts), PPL degradation curve, and per-layer damage profile.
-   - Type: implementation + empirical
-   - Confirmed if: model trains to PPL < 50 AND REAP pruning shows graded, monotonic PPL degradation (25% < 50% < 75%) AND saliency scores have meaningful spread (Gini > 0.3 in majority of layers).
-   - Refuted if: PPL is insensitive to which experts are pruned (random pruning ≈ REAP), indicating saliency scoring is ineffective at this scale.
-   - Inconclusive if: graded degradation but some layers are insensitive (flat saliency), suggesting per-layer pruning rates would outperform global.
-   - Depends on: none
+128. *(moved to PAST — cycle 118)*
 
 129. **Geometric decomposition of expert pruning error — Tiny Mixtral**
    - The central scientific question: is MoE expert pruning error geometric (low-rank, metric-dominated, linearly correctable) — or is it fundamentally different from weight quantization error? Using the 50%-pruned model from item 128 (4/8 experts removed per layer), collect per-layer pruning error tensors over calibration data. **Run on CPU** (same histogram_mps constraint as item 128). At each MoE layer l, the pruning error per token is: `error_l(x) = y_full(x) - y_pruned(x)` where y_full runs all 8 experts (top-2 selected) and y_pruned runs the 4 surviving experts (top-2 selected from survivors, renormalized gates). Collect errors for 256 calibration sequences × 256 tokens = 65536 error vectors of dim 256 per layer. Decompose: (1) **SVD analysis**: compute SVD of the error matrix `E_l ∈ R^{65536 × 256}` for each layer. Report effective rank (number of singular values capturing 95% of Frobenius norm). If rank_95 ≪ 256 (hidden dim), the error is low-rank and a compact correction is feasible. (2) **Metric vs topological split**: for each token, check whether the top-2 expert routing decisions change at downstream layers when using pruned vs full model. Run both full and pruned forward passes, record per-layer routing decisions (which 2 experts selected). Metric error = same routing at downstream layers (linear distortion only). Topological error = different routing (nonlinear, harder to correct). Report metric fraction per layer. (3) **Per-layer attribution**: local error (this layer's pruned experts contributed to output) vs propagated error (upstream pruning changed the activations reaching this layer). Compute local as: error with only layer l pruned (all others full). Propagated = total - local. Report local vs propagated fraction per layer. (4) **Compare pruning levels**: repeat SVD analysis at 25% and 75% pruning. Does error rank scale with number of pruned experts?
@@ -47,15 +32,23 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: independent corrections fail but joint correction works (errors interact but are jointly correctable), or only works at 25% pruning.
    - Depends on: 130
 
-### P1
-
-133. **Cascade corrections at k=5 and k=8 stacking — GPT-2 FFN**
-   - Cycle 115 showed corrections work at k=4 (74% recovery). Does the correction mechanism scale to deeper stacking where compositional error is worse? Test r=8 corrections on k=5 (blocks [1,3,4,7,11]) and k=8 (blocks [1,2,3,4,5,7,9,11]). Use the same recipe: topk+lstsq+500 Adam on W_down, then train r=8 cascade corrections under model loss. At k=5 the uncorrected PPL is ~+60% over float (from cycle 106); at k=8 it may be much worse. Report: (a) uncorrected stacked PPL, (b) corrected stacked PPL, (c) recovery fraction, (d) total correction params. If recovery fraction drops substantially at k=8, the cascade is outrunning what rank-8 can absorb — test r=16 and r=32 as fallback. 3 seeds, 200 eval seqs OWT.
+136. **Cascade corrections at k=5 stacking — GPT-2 FFN**
+   - Split from item 133 (timed out at 140+ min). Test r=8 corrections on k=5 ONLY (blocks [1,3,4,7,11]). Single seed (seed 42) first — if PPL looks reasonable, run seeds 123 and 7. topk+lstsq+500 Adam on W_down, then train r=8 cascade corrections (2000 steps, lr=1e-4) under model loss. Uncorrected k=5 baseline is ~+60% PPL (cycle 106). Report: uncorrected PPL, corrected PPL, recovery fraction, total correction params. Compute budget: ~15 min for 1 seed (5 blocks × compress+polish + correction training).
    - Type: empirical
-   - Confirmed if: corrections recover ≥30% of degradation at k=5 AND ≥20% at k=8 with r≤16.
-   - Refuted if: corrections recover <10% at k=5 (cascade outpaces correction capacity even one block deeper).
-   - Inconclusive if: works at k=5 but fails at k=8, or requires r>16.
-   - Depends on: none (reuses cycle 115 infrastructure)
+   - Confirmed if: corrections recover ≥30% of k=5 degradation with r=8.
+   - Refuted if: corrections recover <10% (cascade outpaces correction at k=5).
+   - Inconclusive if: 10-30% recovery.
+   - Depends on: none
+
+137. **Cascade corrections at k=8 stacking — GPT-2 FFN**
+   - Second half of item 133 split. Test r=8 and r=16 corrections on k=8 (blocks [1,2,3,4,5,7,9,11]). Single seed (42) only — k=8 is expensive (8 blocks). If r=8 gives <10% recovery, skip r=16. Compute budget: ~20 min for 1 seed.
+   - Type: empirical
+   - Confirmed if: corrections recover ≥20% of k=8 degradation with r≤16.
+   - Refuted if: corrections recover <10% at r=16 (cascade is uncorrectable at this depth).
+   - Inconclusive if: 10-20% recovery, or r=16 needed but r=8 fails.
+   - Depends on: 136 (run 136 first to validate the approach scales beyond k=4)
+
+### P1
 
 134. **Dead/always-active neuron census + exact pruning — GPT-2 FFN (GELU-correct)**
    - R2 requires exact white-box compression as a mandatory baseline, but the only prior attempt (item 47, cycle 032) was flawed (MP1: detection threshold above trivial baseline, and it targeted dead channels only). This corrects both issues for GELU networks. For each of GPT-2's 12 FFN blocks, compute per-neuron activation statistics over 256 OWT sequences (seq_len=256): (a) **dead neurons**: hidden units where |GELU(W_up @ x + b)_i| < 1e-6 for ALL tokens (these can be removed with zero error). (b) **always-active neurons**: units where GELU(z_i) ≈ z_i for all tokens, i.e., z_i > 4.0 for all tokens (GELU saturates to identity; these can be folded into a single linear map W_down[:, i] @ W_up[i, :] + bias adjustment). (c) **near-linear neurons**: units where max|GELU(z_i) - z_i| < 0.01 over all tokens (z_i always in the near-linear regime z > 2). Report per-block counts for each category. Then construct the exact-pruned model: remove dead neurons, fold always-active neurons into a bias correction, and measure single-block and k=4 stacked PPL. This is the zero-error-budget compression floor — the free compression we get before any approximation.
@@ -94,26 +87,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Refuted if: AE performs within 2% of topk+lstsq at all k values AND encoder is near-linear (nonlinearity < 5%) — meaning topk+lstsq is already near-optimal and there's no nonlinear structure to exploit.
    - Inconclusive if: AE outperforms at some k but not others, or encoder is nonlinear but the PPL gain is small (< 3%).
    - Depends on: none
-
-118. **Compositional stacking with per-block cascade correction — GPT-2 FFN** *(CONFIRMED — cycle 115)*
-   - The cascade rate c≈0.41 compounds multiplicatively. What if we add a tiny per-block correction that absorbs the cascade? After compressing k blocks, insert a learned linear correction C_l = I + ΔW_l (rank-r, r in {4, 8, 16}) applied to the residual stream AFTER each compressed block l. Train all k corrections jointly under model loss (next-token CE), freezing everything else. Total added params: k × 2 × 768 × r. At k=4, r=8: 49K params (0.04% of GPT-2). Compare: (a) k=4 topk+lstsq+Adam with no correction, (b) same + rank-8 cascade corrections, (c) same + rank-16 corrections. 3 seeds, OWT, 200 eval seqs.
-   - Type: empirical
-   - Confirmed if: cascade corrections reduce stacked PPL degradation by ≥30% relative at k=4 with r≤16.
-   - Refuted if: corrections reduce degradation by <10% even at r=16.
-   - Inconclusive if: 10-30% reduction, or requires r>16.
-   - Depends on: none
-   - Result: CONFIRMED. r=4: 72.6% reduction (PPL 80.7→59.6), r=8: 74.3% reduction (PPL 80.7→59.1), r=16: 74.1%. Corrections dramatically recover stacking degradation with only 49K params at r=8.
-
-125. **Linearity-adaptive compression ratio allocation — GPT-2 FFN** *(REFUTED — cycle 114)*
-   - Cycle 107 found a block linearity gradient: middle blocks (4, 7) are nearly linear (direct regression ≈ topk), while early (1) and late (11) are strongly nonlinear. Exploit this: compress linear blocks more aggressively, allocate more capacity to nonlinear blocks, keeping total params fixed. Sweep: for k=4 block stacking, test (a) uniform 6× everywhere (baseline), (b) middle-heavy: blocks 4,7 at 8×, blocks 1,11 at 4× (matched total params), (c) edge-heavy: blocks 1,11 at 8×, blocks 4,7 at 4×. All with topk+lstsq+500 Adam, 3 seeds, 200 eval seqs OWT.
-   - Type: empirical
-   - Confirmed if: non-uniform allocation (b) outperforms uniform (a) by ≥3% relative PPL at matched total params.
-   - Refuted if: uniform is within 1% of the best non-uniform allocation.
-   - Inconclusive if: 1-3% or dependent on block selection.
-   - Depends on: none
-   - Outcome: REFUTED — uniform PPL=76.69 vs best non-uniform (middle-heavy) PPL=75.99, Δ=+0.90% (well within 1% threshold); edge-heavy is worst (77.22). Budget-matched: all conditions exactly 3,150,848 params. Pre-polish spread also negligible (73.6–73.7 across all 3). Linearity gradient does not translate to actionable ratio allocation.
-   - Cycle: 114
-   - Artifacts: `experiments/linearity_adaptive_ratio_gpt2.py`, `autoresearch/results/cycle_114_linearity_adaptive_ratio.json`, `autoresearch/results/cycle_114_linearity_adaptive_ratio.png`
 
 126. **Attention projection pruning on high-amplification heads — GPT-2**
    - Instead of compressing attention weights globally (cycle 095/098: marginal), target only the heads that amplify FFN compression error (from item 124, or use cycle 104's per-transition attention fractions as proxy). For each of the top-3 amplifying head positions identified in cycle 104 (transitions with attn_frac > 1.0, i.e., layers 0-6), apply rank-r SVD (r ∈ {8, 11, 16}) to the value+output projection W_V W_O of those heads only, while leaving all other heads untouched. Measure: (a) single-transition cascade amplification factor before/after pruning, (b) k=4 FFN stacking PPL with vs without head pruning. 3 seeds, 200 eval seqs.
@@ -154,6 +127,19 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 118
+
+128. **Train MoE testbed + REAP expert pruning baseline — Tiny Mixtral** *(INCONCLUSIVE — cycle 118)*
+   - **Outcome: INCONCLUSIVE** — Model trained 20M tokens on WikiText-2, final val PPL=78.65 (>50 threshold). Extended run (20M tokens, fallback) still did not reach PPL<50. REAP saliency scoring works correctly: Gini>0.3 in all 4 layers (0.481, 0.351, 0.345, 0.377). Pruning is monotone (baseline=78.65, REAP25%=90.21, REAP50%=103.25, REAP75%=231.98). REAP decisively outperforms random (REAP50%=103.25 vs random50%=299.58±57.65 — better by >3 std). Per-layer ablation: Layer 0 most sensitive (ΔPPL=+8.58), Layer 1 least sensitive (Δ=+0.06). PPL>50 due to under-training (tiny vocab=4096, shallow 4-layer model). Saliency infrastructure and REAP implementation confirmed working.
+   - Artifacts: experiments/moe_reap_pruning_tiny_mixtral.py, experiments/results/cycle_118_tokenizer/, experiments/results/cycle_118_tiny_mixtral.pt, autoresearch/results/cycle_118_moe_reap.json, autoresearch/results/cycle_118_moe_reap.png
+   - Commit: TBD
+
+### Cycle 117
+
+133. **Cascade corrections at k=5 and k=8 stacking — GPT-2 FFN** *(CRASH — cycle 117)*
+   - **Outcome: CRASH (timeout)** — Killed after 140+ min CPU. Design problem: k=5+k=8 × 3 seeds × corrections training far exceeds 30-min cap. Superseded by items 136/137.
+   - Artifacts: autoresearch/briefs/cycle_117.md, autoresearch/plans/cycle_117.md, autoresearch/reviews/cycle_117.md
 
 ### Cycle 106
 
