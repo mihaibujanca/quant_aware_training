@@ -133,7 +133,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 128. **Train MoE testbed + REAP expert pruning baseline — Tiny Mixtral** *(INCONCLUSIVE — cycle 118)*
    - **Outcome: INCONCLUSIVE** — Model trained 20M tokens on WikiText-2, final val PPL=78.65 (>50 threshold). Extended run (20M tokens, fallback) still did not reach PPL<50. REAP saliency scoring works correctly: Gini>0.3 in all 4 layers (0.481, 0.351, 0.345, 0.377). Pruning is monotone (baseline=78.65, REAP25%=90.21, REAP50%=103.25, REAP75%=231.98). REAP decisively outperforms random (REAP50%=103.25 vs random50%=299.58±57.65 — better by >3 std). Per-layer ablation: Layer 0 most sensitive (ΔPPL=+8.58), Layer 1 least sensitive (Δ=+0.06). PPL>50 due to under-training (tiny vocab=4096, shallow 4-layer model). Saliency infrastructure and REAP implementation confirmed working.
    - Artifacts: experiments/moe_reap_pruning_tiny_mixtral.py, experiments/results/cycle_118_tokenizer/, experiments/results/cycle_118_tiny_mixtral.pt, autoresearch/results/cycle_118_moe_reap.json, autoresearch/results/cycle_118_moe_reap.png
-   - Commit: TBD
+   - Commit: 8a9d0f2
 
 ### Cycle 117
 
