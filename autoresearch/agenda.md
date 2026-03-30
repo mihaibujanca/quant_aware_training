@@ -22,6 +22,22 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: G-weighted marginally better (<0.15 improvement) or both correlations weak (|rho| < 0.4).
    - Depends on: 145 (census validates pullback metric exists on GPT-2)
 
+151. **Bottleneck AE at k=512 (6x) — param-matched comparison — GPT-2 FFN**
+   - Cycle 131 showed AE beats topk by 2-3.4% at k=384 (8x) but with 2.5x more params (1.48M vs ~0.59M). This confounds the comparison. Test at k=512 (6x, the standard working recipe compression ratio) with TWO AE configs: (a) full AE: E(h)=ReLU(W_enc @ h + b_enc), D(z)=W_dec @ z + b_dec, same as cycle 131 (3072->512->3072, ~3.15M params). (b) param-matched AE: reduce bottleneck to d_bn such that total AE params = topk+lstsq params (512*768 = 393K). d_bn ~ 64 (3072*64 + 64 + 64*3072 + 3072 = 396K). Compare single-block swap PPL on blocks [1, 4, 7, 11]. Also add 500-step Adam polish to both AE and topk baselines — cycle 133 showed polish erases pre-polish differences, so critical to check if AE advantage survives polish. 3 seeds, 200 OWT eval sequences.
+   - Type: empirical
+   - Confirmed if: param-matched AE beats topk+lstsq by >=3% relative PPL on >=2/4 blocks, POST-polish.
+   - Refuted if: param-matched AE matches or is worse than topk+lstsq post-polish (AE advantage was from extra params, not architecture).
+   - Inconclusive if: full AE beats topk but param-matched doesn't, or advantage disappears post-polish.
+   - Depends on: none
+
+152. **Bottleneck AE k=4 stacking — GPT-2 FFN**
+   - If item 151 shows AE has a real advantage at single-block, test the critical stacking case: compress blocks [1, 4, 7, 11] at 6x with AE, stack all 4, measure full-model PPL. Compare to working recipe (topk+lstsq+500 polish, PPL ~70). The key question: does AE's superior local reconstruction translate to better stacking behavior, or does the cascade still dominate? Run with 500-step polish on both. Also test AE + LoRA corrections (r=8) to see if AE + corrections can beat the current best (PPL ~59). 3 seeds.
+   - Type: empirical
+   - Confirmed if: AE stacking PPL < 67 (>4% improvement over topk recipe PPL ~70), OR AE+corrections PPL < 57 (>3% improvement over topk+corrections PPL ~59).
+   - Refuted if: AE stacking PPL >= 69 (within 2% of topk, cascade dominates regardless of local quality).
+   - Inconclusive if: AE stacking PPL 67-69 (marginal, within seed noise).
+   - Depends on: 151 (must confirm AE has single-block advantage first)
+
 ### P1
 
 147. **G-weighted lstsq compression — GPT-2 FFN**
@@ -40,6 +56,30 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: one curvature allocation is 1-2% better but unstable across seeds.
    - Depends on: 145 (need curvature profile), 146 (confirms pullback metric is meaningful for compression)
 
+153. **Graduated importance pruning — GPT-2 FFN**
+   - Dead/always-active census (cycle 128) found 0 strict-removable channels. But 14 channels have >95% tokens in dead zone. Instead of binary dead/alive, test a graduated scheme: for each of 3072 intermediate channels, compute importance = ||W_down[:,j]||_2 * rms(GELU(z_j)) over 2048 probe tokens. Rank channels by importance. Prune in 3 steps: (a) drop bottom 5% (154 channels), refit W_down via lstsq on remaining. (b) drop bottom 10% (307 channels), refit. (c) drop bottom 20% (614 channels), refit. For each pruning level, measure single-block swap PPL on blocks [1, 4, 7, 11] and compare to topk at matched k (topk selects k=2918, 2765, 2458 respectively). The question: does importance-weighted pruning beat topk's activation-magnitude selection? Since isotropy is learned (cycle 129), channel importance might be more structured than topk assumes. 3 seeds, 200 OWT eval sequences.
+   - Type: empirical
+   - Confirmed if: importance pruning beats topk+lstsq by >=2% relative at matched k on >=2/4 blocks.
+   - Refuted if: topk matches or beats importance pruning at all pruning levels (activation magnitude IS the right importance signal).
+   - Inconclusive if: advantage is block-dependent or <2%.
+   - Depends on: none
+
+154. **Correction subspace analysis — what do LoRA corrections learn? — GPT-2 FFN k=4**
+   - Cycle 127 found corrections partially align with compression error (max 0.46) but mostly learn a novel subspace. This needs sharper characterization. Train LoRA corrections (r=8) on the standard k=4 recipe. Extract the learned W_A, W_B matrices. Compute: (1) SVD of correction effect W_B @ W_A. (2) Project correction onto 3 subspaces: (a) span of compression error principal components (top-8 PCs of e_l per block), (b) span of attention amplification directions (top-8 PCs of attn_error per block), (c) the novel complement. (3) Ablation: zero out each component, measure PPL. (4) Cross-block sharing test: take block 4's correction and apply it to block 7 (and vice versa). If the novel subspace dominates, corrections aren't fixing error — they're compensating for something else (possibly re-routing around the damaged subspace). 3 seeds.
+   - Type: analysis
+   - Confirmed if: a single identifiable subspace (error, attention, or novel) accounts for >=60% of correction's PPL recovery when ablated.
+   - Refuted if: all three subspaces contribute roughly equally (correction is diffuse, no surgical target).
+   - Inconclusive if: dominant subspace varies by block or seed.
+   - Depends on: none
+
+155. **Eigenstructure-aware channel selection — GPT-2 FFN**
+   - Cycle 129 confirmed isotropy is learned (7-8x increase in blocks 4-7). The current topk selects channels by activation magnitude, ignoring the learned covariance structure. Test eigenstructure-aware selection: (1) Compute data covariance C = E[h h^T] of FFN intermediate activations (3072x3072). (2) Select top-k channels by WHITENED importance: importance_j = ||C^{-1/2}[:,j]||_2 * rms(act_j) — this upweights channels that are independently informative (low covariance with others) and downweights redundant channels. Compare to topk on single-block swap PPL for blocks [1, 4, 7, 11] at 6x (k=512). Both with lstsq refit + 500 Adam polish. 3 seeds, 200 OWT eval sequences.
+   - Type: empirical
+   - Confirmed if: eigenstructure-aware selection beats topk by >=2% relative PPL post-polish on >=2/4 blocks.
+   - Refuted if: eigenstructure-aware matches topk or is worse (learned isotropy doesn't help channel selection).
+   - Inconclusive if: advantage is <2% or block-dependent.
+   - Depends on: none
+
 ### P2
 
 149. **Layer-local pullback metric via rest-of-network Jacobian — GPT-2 FFN**
@@ -57,6 +97,30 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Refuted if: all allocations within 2pp of each other.
    - Inconclusive if: improvement is 2-5pp or unstable across seeds.
    - Depends on: 145 (curvature/salience profiles), 146 (confirms metric relevance)
+
+156. **Nanochat asset audit and benchmark lock-in**
+   - The program.md demands nanochat as primary benchmark, but all 134 cycles have run on GPT-2 proxy. Check: (1) Do nanochat checkpoints exist locally? `runs/nanochat_ffn_compression/` has `gpt2_shakespeare_real.json` — this is a GPT-2 proxy result, not nanochat. (2) Check for d24/d26 checkpoints in `runs/` or any HF cache. (3) Check for climbmix-400b data locally or accessible via HF. (4) If assets exist, run the standard working recipe (topk+lstsq+500 polish, k=4@6x, blocks [1,4,7,11]) on nanochat to establish the primary benchmark number. (5) If assets are missing, document exactly what's needed and mark the proxy limitation explicitly in STATUS.md. This is the R1 direction from program.md — it's overdue.
+   - Type: analysis
+   - Confirmed if: nanochat assets found, working recipe produces a primary benchmark PPL number.
+   - Refuted if: N/A (audit always produces useful output).
+   - Inconclusive if: assets partially available (checkpoint but no data, or vice versa).
+   - Depends on: none
+
+157. **Stacked AE with inter-block error feedback — GPT-2 FFN k=4**
+   - If bottleneck AEs work at single-block (item 151), the stacking question is whether AEs can be trained to account for upstream compression error. Train AEs sequentially in block order [1, 4, 7, 11]: block 1's AE trains on float inputs, block 4's AE trains on inputs from the model with block 1 already compressed, etc. Compare cascaded-AE vs independent-AE (each trained on float) vs topk+lstsq baseline. This is the AE analog of cycle 060's cascaded lstsq (which failed — re-probing didn't help lstsq). AE's nonlinear encoder might capture the error pattern that lstsq misses. 3 seeds, 200 OWT eval sequences.
+   - Type: empirical
+   - Confirmed if: cascaded-AE stacking PPL beats independent-AE stacking by >=3% relative.
+   - Refuted if: cascaded and independent AE stacking PPL within 1% (AE encoder doesn't exploit upstream error structure, same as lstsq).
+   - Inconclusive if: 1-3% improvement or high seed variance.
+   - Depends on: 152 (need baseline AE stacking numbers first)
+
+158. **Linear AE ablation — is encoder nonlinearity necessary? — GPT-2 FFN**
+   - Cycle 131 measured ~5% nonlinearity in the AE encoder (fraction of tokens where ReLU flips sign). If nonlinearity is only 5%, a linear AE (i.e., plain low-rank factorization W_dec @ W_enc with lstsq) should match. Test: (a) ReLU AE (cycle 131 architecture), (b) Linear AE (no ReLU, same dims), (c) topk+lstsq baseline. Single-block swap on blocks [1, 4, 7, 11] at 6x. This disentangles whether AE's advantage (if any from item 151) comes from (i) the nonlinear encoder or (ii) the joint end-to-end training with model CE loss. If linear AE matches ReLU AE, the advantage is training objective, not architecture. 3 seeds, 200 OWT eval sequences.
+   - Type: empirical
+   - Confirmed if: ReLU AE beats linear AE by >=2% relative on >=2/4 blocks (nonlinearity matters).
+   - Refuted if: linear AE matches ReLU AE within 1% (nonlinearity is cosmetic, training objective is what matters).
+   - Inconclusive if: difference is 1-2% or block-dependent.
+   - Depends on: 151 (establishes AE baseline numbers)
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
