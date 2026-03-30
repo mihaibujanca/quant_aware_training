@@ -1,0 +1,19 @@
+{
+  "cycle": 114,
+  "item": 125,
+  "round": 1,
+  "verdict": "APPROVE",
+  "blocking_issues": [],
+  "advisories": [
+    "A1: Report pre-polish PPL alongside post-polish to disentangle allocation effect from polish absorption",
+    "A2: Block set [1,4,7,11] correct for linearity hypothesis (unlike cycle 094's [7,5,4,1])"
+  ],
+  "design_corrections": [
+    "Budget mismatch fixed: agenda's 8x/4x (k=384/768, total=2304) replaced with matched k=384/640 (total=2048)"
+  ],
+  "prior_estimate": {
+    "confirmed": 0.25,
+    "refuted": 0.55,
+    "inconclusive": 0.20
+  }
+}

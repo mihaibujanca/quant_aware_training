@@ -1,0 +1,25 @@
+Cycle 114 — Linearity-Adaptive Compression Ratio Allocation — GPT-2 FFN
+Item: 125
+Verdict: REFUTED
+
+Key metrics (mean ± std across 3 seeds [42, 123, 7]):
+  Baseline PPL:           51.66 ± 4.48
+  Uniform   (k=512×4):   pre=73.65±8.27  post=76.69±10.24  delta=+48.4%
+  MiddleHvy (k=384mid,640edge): pre=73.70±8.38  post=75.99±10.29  delta=+47.1%
+  EdgeHeavy (k=640mid,384edge): pre=73.65±8.11  post=77.22± 9.99  delta=+49.5%
+
+  Budget: all 3 allocations = 3,150,848 params (0.0% relative difference)
+  Relative delta (uniform vs best non-uniform): +0.90% (threshold: <1% = REFUTED)
+
+Verdict rationale:
+  Middle-heavy is marginally better than uniform (0.90%), below the 1% REFUTED threshold.
+  Edge-heavy is worse than uniform. Neither non-uniform allocation outperforms uniform.
+  Pre-polish spread is also negligible (<0.1 PPL across all 3 conditions), confirming the
+  linearity gradient (cycle 107) does not translate into actionable ratio allocation.
+  Consistent with cycle 094 (damage-based allocation also REFUTED at +0.24%).
+
+Files:
+  experiments/linearity_adaptive_ratio_gpt2.py
+  autoresearch/results/cycle_114_linearity_adaptive_ratio.json
+  autoresearch/results/cycle_114_linearity_adaptive_ratio.png
+  autoresearch/results/cycle_114_manifest.txt
