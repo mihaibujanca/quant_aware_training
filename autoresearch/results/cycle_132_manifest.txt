@@ -1,0 +1,7 @@
+item_number=126
+outcome=refuted
+key_metric=r16_delta=+243_r11=+284_r8=+459 FFN_only=95.3 catastrophic_degradation
+commit=PENDING
+paths=experiments/attn_proj_pruning_cycle132.py,autoresearch/results/cycle_132_attn_pruning.json
+learned=Attention V@O rank pruning is catastrophically destructive even at mild compression (rank 16/64 = 25% retention). Heads that amplify FFN compression error carry essential task information that cannot be removed. Attention and FFN compression cannot be treated independently — attention structure must be preserved intact.
+next=Attention compression is definitively a dead end for the current approach. Focus exclusively on FFN compression improvements: bottleneck AE (promising from cycle 131), direct regression hybrid (item 127), and affine map extraction (item 135).

@@ -10,14 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-126. **Attention projection pruning on high-amplification heads — GPT-2**
-   - Instead of compressing attention weights globally (cycle 095/098: marginal), target only the heads that amplify FFN compression error (from item 124, or use cycle 104's per-transition attention fractions as proxy). For each of the top-3 amplifying head positions identified in cycle 104 (transitions with attn_frac > 1.0, i.e., layers 0-6), apply rank-r SVD (r ∈ {8, 11, 16}) to the value+output projection W_V W_O of those heads only, while leaving all other heads untouched. Measure: (a) single-transition cascade amplification factor before/after pruning, (b) k=4 FFN stacking PPL with vs without head pruning. 3 seeds, 200 eval seqs.
-   - Type: empirical
-   - Confirmed if: targeted head pruning reduces cascade amplification by ≥20% relative AND stacked PPL improves by ≥2% absolute over FFN-only compression.
-   - Refuted if: head pruning degrades stacked PPL (attention heads that amplify error also carry essential information).
-   - Inconclusive if: amplification reduced but PPL unchanged (cascade reduction offset by information loss).
-   - Depends on: 124 (or can use cycle 104 data as proxy)
-
 135. **Data-conditioned local affine map extraction for FFN merge candidates — GPT-2 FFN**
    - R3 direction: use the MASO/spline viewpoint to extract per-token local affine maps and find merge-able groups. For each of blocks {1, 4, 7, 11}, compute per-token Jacobians J_l(x) = d(FFN_l(x))/dx ∈ R^{768×768} via `torch.func.jacrev` over 1024 tokens from OWT. Then: (1) compute pairwise cosine similarity of flattened Jacobians and report the effective number of distinct affine behaviors (spectral gap of the similarity matrix). (2) For each pair of tokens (i, j) with cos(J_i, J_j) > 0.95, verify that the affine maps are functionally interchangeable: ||J_i @ x_j + b_i - FFN(x_j)|| / ||FFN(x_j)|| < 0.05 (i.e., token j's output is well-approximated by token i's local map). (3) Report: per-block count of distinct functional groups, group sizes, and the compression ratio achievable by replacing each group with its centroid affine map. Compare centroid-affine compression quality against topk+lstsq at matched parameter count. This directly tests Walker et al. 2025's centroid affinity signal on GPT-2 FFNs.
    - Type: analysis
@@ -57,6 +49,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 132
+
+126. **Attention projection pruning on high-amplification heads — GPT-2** *(REFUTED — cycle 132)*
+   - **Outcome: REFUTED** — Composed W_V@W_O SVD pruning catastrophically degrades PPL. Best rank=16 (25% of head dim): FFN-only=95.3, FFN+SVD=338.5 (+243). Even preserving 25% of each head's value-output subspace destroys model function. Attention heads carrying cascade error also carry essential information. 3 seeds, all consistent (std ~10 on delta >240).
+   - Commit: PENDING
+   - Artifacts: experiments/attn_proj_pruning_cycle132.py, autoresearch/results/cycle_132_attn_pruning.json
 
 ### Cycle 131
 
