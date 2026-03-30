@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-143. **Best correction placement at scale — GPT-2 FFN k=4**
-   - Take the best placement from item 142 and the 2 runners-up. Run with 3 seeds [42, 123, 7]. Also sweep rank {4, 8, 16} for the best placement. Compare against cycle 115 (P1, r=8) as baseline.
-   - Type: empirical
-   - Confirmed if: best placement outperforms cycle 115 by ≥5% relative PPL at matched rank, across 3 seeds.
-   - Refuted if: all placements within 3% of cycle 115 (placement doesn't matter, only rank).
-   - Inconclusive if: 3-5% or seed-dependent.
-   - Depends on: 142
-
 144. **SVD of learned corrections: geometric alignment — GPT-2** [INTERPRETABILITY]
    - For the best correction from items 142/143, extract learned UV^T matrices at each block. SVD them. Compare top-8 singular vectors to: (a) SVD of compression error E_l at each block, (b) SVD of attention output perturbation (cycle 104 data), (c) bump channel directions (cycle 110 data). Report cosine alignment matrices. Key question: do corrections align with the error directions, the attention amplification directions, or something orthogonal to both?
    - Type: analysis (interpretability)
@@ -109,6 +101,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 126
+
+143. **Best correction placement at scale — GPT-2 FFN k=4** *(INCONCLUSIVE — cycle 126, PLAN INVALID)*
+   - **Outcome: INCONCLUSIVE** — Predecessor item 142 (cycle 125) was REFUTED, invalidating premise. Placement is near-optimal at P1; no scale validation needed.
 
 ### Cycle 125
 

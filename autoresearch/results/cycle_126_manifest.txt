@@ -1,0 +1,7 @@
+item_number=143
+outcome=inconclusive
+key_metric=PLAN_INVALID predecessor_142_refuted
+commit=NONE
+paths=autoresearch/briefs/cycle_126.md,autoresearch/plans/cycle_126.md
+learned=Correction placement at scale is unnecessary — cycle 125 already closed the question with P1 within 2% of best.
+next=Proceed to item 144 (correction interpretability) or item 134 (dead/always-active pruning).
