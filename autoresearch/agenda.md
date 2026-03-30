@@ -6,13 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-138. **Train MoE testbed — Tiny Mixtral**
-   - Get a working trained model. This is infrastructure, not a hypothesis test — failure means bad training policy, not a scientific finding. Cycle 118 reached PPL 78.6 after 10M tokens with lr=1e-4. Fix: train for 30M tokens, sweep lr in {1e-4, 3e-4, 5e-4} (pick best by val PPL at 5M tokens, then train to 30M with that lr). Use cycle 118's MixtralConfig (hidden_size=256, 4 layers, 8 experts, top-2, ~15.5M params). Save best checkpoint. ⚠ If PPL > 50 at 30M tokens with best lr: double to 60M tokens before reporting failure. CPU training, ~15 min per 10M tokens.
-   - Type: implementation
-   - Confirmed if: model reaches val PPL < 50 on WikiText-2. Save checkpoint path in results JSON.
-   - Refuted if: PPL > 50 even at 60M tokens with lr sweep (model architecture is insufficient — would need to increase hidden_size or num_layers). This is unexpected and should be investigated before moving on.
-   - Inconclusive if: N/A — keep training until confirmed or refuted. Do not stop early.
-   - Depends on: none
 
 139. **REAP expert pruning baseline — Tiny Mixtral**
    - Using the trained model from item 138, establish the expert pruning error landscape. Compute REAP saliency scores: `score(expert_k, layer_l) = mean over 256 calibration sequences of: gate_weight_k(x) × ||expert_k(x)||_2`. Prune at 25%/50%/75% (2/4/6 of 8 experts) using global saliency ranking. Measure: baseline PPL, PPL at each pruning level, per-layer damage ablation, saliency heatmap (4 layers × 8 experts), Gini coefficient of saliency per layer.
@@ -46,9 +39,46 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: independent corrections fail but joint correction works (errors interact but are jointly correctable), or only works at 25% pruning.
    - Depends on: 130
 
-136. *(moved to PAST — cycle 119)*
+140. **QK vs V error decomposition under FFN compression — GPT-2** [INTERPRETABILITY]
+   - The key unmeasured question in the literature (no prior work). For k=4 compressed model (blocks [1,4,7,11] at 6x), at each of 12 attention layers, decompose the attention output error into QK-space (pattern change) and V-space (value change). For each head: (a) compute KL(softmax(QK^T/√d) ∥ softmax(Q'K'^T/√d)) where primed = compressed residual stream inputs, (b) hold attention patterns FIXED at float values, swap V to compressed → measure output error (V-only), (c) hold V FIXED at float, use compressed attention patterns → measure output error (QK-only), (d) total = QK + V + interaction. Report per-layer per-head heatmap of {QK_frac, V_frac, interaction_frac}. 2048 OWT tokens.
+   - Survey: `autoresearch/surveys/attention_cascade_correction.md`
+   - Type: analysis (interpretability)
+   - Confirmed if: one component (QK or V) accounts for >70% of total error in ≥8/12 layers (clear correction target).
+   - Refuted if: roughly equal (40-60% each) across all layers (no single target).
+   - Inconclusive if: dominant source varies by layer position.
+   - Depends on: none
 
-137. *(moved to PAST — cycle 120)*
+141. **Attention entropy shift under FFN compression — GPT-2** [INTERPRETABILITY]
+   - For float vs k=4 compressed model: compute per-head attention entropy H = -Σ_j a_j log a_j for each query position on 2048 OWT tokens. Report: mean entropy shift (compressed - float) per head per layer. Correlate with cascade amplification fractions from cycle 104. Do compressed-model attention heads become more peaked (overconfident on wrong tokens) or more diffuse (lost specificity)?
+   - Type: analysis (interpretability)
+   - Confirmed if: mean |entropy shift| > 0.1 nats in ≥8/12 layers AND entropy shift correlates with amplification (|Spearman| > 0.3).
+   - Refuted if: |entropy shift| < 0.02 nats everywhere (patterns are stable, cascade is V-space only).
+   - Inconclusive if: shift exists but no correlation with amplification.
+   - Depends on: none
+
+142. **Correction placement sweep — GPT-2 FFN k=4**
+   - Systematic ablation of WHERE to place rank-8 corrections. Same k=4 compressed model, same total rank budget (r=8 per block, 4 blocks). 5 placements: (P1) after FFN, before attention (cycle 115 baseline), (P2) after attention, before next FFN, (P3) on Q+K projections (additive: Q'=Qx + U_q V_q x), (P4) on V+O projections, (P5) P1+P2 combined (before AND after attention). Train each under model loss, 2000 steps, seed 42. Report PPL for each placement.
+   - Type: empirical
+   - Confirmed if: any non-P1 placement beats P1 by ≥5% relative PPL (current placement is suboptimal).
+   - Refuted if: P1 is within 2% of the best alternative (residual stream correction is already near-optimal placement).
+   - Inconclusive if: 2-5% differences or placement ranking is not robust.
+   - Depends on: 140 (results from A1 inform interpretation but not required to run)
+
+143. **Best correction placement at scale — GPT-2 FFN k=4**
+   - Take the best placement from item 142 and the 2 runners-up. Run with 3 seeds [42, 123, 7]. Also sweep rank {4, 8, 16} for the best placement. Compare against cycle 115 (P1, r=8) as baseline.
+   - Type: empirical
+   - Confirmed if: best placement outperforms cycle 115 by ≥5% relative PPL at matched rank, across 3 seeds.
+   - Refuted if: all placements within 3% of cycle 115 (placement doesn't matter, only rank).
+   - Inconclusive if: 3-5% or seed-dependent.
+   - Depends on: 142
+
+144. **SVD of learned corrections: geometric alignment — GPT-2** [INTERPRETABILITY]
+   - For the best correction from items 142/143, extract learned UV^T matrices at each block. SVD them. Compare top-8 singular vectors to: (a) SVD of compression error E_l at each block, (b) SVD of attention output perturbation (cycle 104 data), (c) bump channel directions (cycle 110 data). Report cosine alignment matrices. Key question: do corrections align with the error directions, the attention amplification directions, or something orthogonal to both?
+   - Type: analysis (interpretability)
+   - Confirmed if: corrections align with attention amplification directions (cosine > 0.5 for top-4 singular vectors in ≥3/4 blocks) — corrections undo what attention does to the error.
+   - Refuted if: corrections align with compression error directions instead (cosine > 0.5 with error SVD) — corrections just fix the raw error, attention is irrelevant.
+   - Inconclusive if: low alignment with both (<0.3) — corrections learn a novel subspace.
+   - Depends on: 142
 
 ### P1
 
@@ -129,6 +159,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 121
+
+138. **Train MoE testbed — Tiny Mixtral** *(REFUTED — cycle 121)*
+   - **Outcome: REFUTED** — lr sweep at 1M tokens: lr=1e-4→PPL 424.2, lr=3e-4→PPL 233.7, lr=5e-4→PPL 192.9. Full training at 30M tokens with best lr (5e-4): best val PPL=65.69 at 10M tokens; overfitting detected at 20M (PPL rising). Extended to 60M tokens (fresh run): best val PPL=65.08 at 15M tokens; overfitting again at 20M (65.08→70.87→84.88). PPL > 50 at 60M tokens. Architecture insufficient for PPL<50: 4-layer, hidden_size=256, vocab=4096 model on WikiText-2. Recommendation: increase hidden_size to 512 or add layers before running item 139.
+   - Artifacts: experiments/moe_train_cycle121.py, experiments/results/cycle_121_tiny_mixtral.pt, autoresearch/results/cycle_121_moe_training.json
 
 ### Cycle 120
 
