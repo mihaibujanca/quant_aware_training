@@ -1,24 +1,26 @@
-# Research Status — 119 Cycles (001–119)
+# Research Status — 120 Cycles (001–120)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
-| Confirmed | 22 |
+| Confirmed | 23 |
 | Refuted | 36 |
 | Inconclusive | 52 |
 | Crash | 1 |
 
 ## Latest Cycle
-- **Cycle 119** (item 136): Cascade corrections k=5 — CONFIRMED
-  - Blocks [7,5,4,1,6] at 6× (topk+lstsq+500 Adam), r=8 LoRA corrections 2000 CE steps
-  - Recovery: 73.8% ± varied (seeds 42/123/7: 72.9/73.9/75.2%), matches k=4 baseline 74.3%
-  - Corrections scale gracefully 4→5 blocks, 61K params, stable recovery despite 70% more degradation
-  - **Key finding**: k-scaling is robust; corrections preserve efficiency across compression depth
+- **Cycle 120** (item 137): Cascade corrections k=8 — CONFIRMED WITH CAVEAT
+  - 8-block stacking at 6×, r=8 LoRA corrections (98K params), seed=42
+  - **Recovery: 91.4%** by r=8 metric, BUT corrected PPL 143.6 vs baseline 57.7 (+149% above baseline)
+  - Progression: k=4 PPL 59.1 → k=5 PPL 70.1 → k=8 PPL 143.6 (corrected)
+  - **Interpretation**: Corrections help but scaling stalls; compound error overwhelms recovery at 8 blocks
+  - **Key finding**: k-scaling has hard limit; corrections necessary but insufficient for deep stacking
 
-## Previous Cycle
+## Previous Cycles
+- **Cycle 119** (item 136): Cascade corrections k=5 — CONFIRMED
+  - Recovery 73.8% (seeds 42/123/7: 72.9/73.9/75.2%), 61K params, matches k=4 baseline 74.3%
 - **Cycle 118** (item 128): MoE REAP pruning baseline — INCONCLUSIVE
-  - Tiny Mixtral (15.5M, 4-layer) trained 20M tokens WikiText-2, final PPL=78.65 (>50 threshold)
-  - REAP infrastructure confirmed; under-training responsible for PPL threshold miss
+  - Tiny Mixtral under-trained; REAP infrastructure confirmed
 
 ## Key Results (consolidated)
 

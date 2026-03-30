@@ -1,0 +1,10 @@
+{
+  "cycle": 120,
+  "item": 137,
+  "round": 2,
+  "verdict": "APPROVE",
+  "flags": ["single_seed"],
+  "blocking_issues": [],
+  "advisory": ["A3: reduce lr to 5e-5 if training diverges before declaring failure"],
+  "round1_resolution": "Block set changed from [1,2,3,4,5,7,9,11] to [1,2,3,4,5,6,7,9] — superset of k=5, drops block 11"
+}
