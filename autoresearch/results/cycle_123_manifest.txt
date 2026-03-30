@@ -1,0 +1,6 @@
+item_number=140
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_123_qk_v_decomposition.json,autoresearch/results/cycle_123_qk_v_heatmap.png
+code_paths=experiments/qk_v_decomposition_gpt2.py
+final_commit_hash=f517e3281079fa882180d5e0b79014c4f0e8f2e5
+agenda_updated=yes

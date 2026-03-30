@@ -1,24 +1,25 @@
-# Research Status — 121 Cycles (001–121)
+# Research Status — 123 Cycles (001–123)
 
 ## Score
 | Outcome | Count |
 |---------|-------|
 | Confirmed | 23 |
 | Refuted | 36 |
-| Inconclusive | 53 |
+| Inconclusive | 54 |
 | Crash | 2 |
 
 ## Latest Cycle
-- **Cycle 121** (item 138): MoE training — INCONCLUSIVE (audit-corrected from REFUTED)
-  - Tiny Mixtral under-trained without dropout; PPL 65.08 best at 15M tokens
-  - **Not architecture failure**: overfitting without dropout, needs dropout=0.1 fix
-  - Item 138 returned to NEXT with dropout remedy and wider lr sweep
-  - CONFIRMED: training recipe insufficient, not MoE design itself
+- **Cycle 123** (item 140): QK vs V error decomposition — INCONCLUSIVE
+  - V dominates early layers (L2-L4: V_frac ~0.66), QK dominates late (L9-L11: QK_frac ~0.57)
+  - No component exceeds 70% threshold in any layer; dominant source varies by position
+  - Cross-seed stability excellent (std < 0.02). Interaction terms small (<0.1)
+  - **Finding**: no single surgical target — correction must be layer-adaptive (V-focused early, QK-focused late)
 
 ## Previous Cycles
+- **Cycle 121** (item 138): MoE training — INCONCLUSIVE (audit-corrected)
+  - Tiny Mixtral under-trained without dropout; PPL 65.08 best at 15M tokens
 - **Cycle 120** (item 137): Cascade corrections k=8 — CONFIRMED WITH CAVEAT
   - Recovery 91.4%, 98K params; corrected PPL 143.6 vs baseline 57.7 (+149%)
-  - Compound error overwhelms recovery at 8 blocks; hard k-scaling limit
 - **Cycle 119** (item 136): Cascade corrections k=5 — CONFIRMED
   - Recovery 73.8% (seeds 42/123/7: 72.9/73.9/75.2%), 61K params, matches k=4 baseline 74.3%
 
@@ -44,6 +45,6 @@
 - Regime depth-invariant ~85% gated (cycle 111)
 
 ## Next Up
-- **136**: Cascade corrections k=5 only (P0 priority)
-- **137**: Cascade corrections k=8 only (P0 priority)
-- **129**: Geometric decomposition of expert pruning (MoE follow-on, P0)
+- **141**: Attention entropy shift under FFN compression (P0)
+- **142**: Correction placement sweep (P0, informed by cycle 123)
+- **134**: Dead/always-active neuron census + exact pruning (P1)
