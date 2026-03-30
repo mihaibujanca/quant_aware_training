@@ -10,17 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-88. **Learned bottleneck autoencoder for FFN compression — GPT-2 FFN [MOONSHOT]**
-   - New formulation of the autoencoder compression idea (see item 44 for the original toy-ReLU version). topk+lstsq is axis-aligned linear encoding + linear decoding — a special case. Replace it with a learned bottleneck: Encoder E: h ∈ R^3072 → z ∈ R^k, Decoder D: z → y ∈ R^768, where h = GELU(W_up @ x + b_up) is the FFN hidden activation and y is the block output. The critical design choice: train under the **model loss** (next-token cross-entropy with the bottleneck swapped into the live model), not per-block reconstruction MSE. This way the bottleneck learns to preserve what matters for downstream computation, not just what's large in magnitude. The information bottleneck principle (Tishby et al.) predicts that under increasing compression pressure (shrinking k), the last features to die are the structurally essential ones — the irreducible functional core of the block.
-   - **Sweep**: k ∈ {512, 384, 256, 128, 64} on blocks [1, 4, 7, 11]. For each k, train E+D for 2000 steps on OWT (lr=1e-4, freeze everything else). Track: (a) single-block swap PPL vs topk+lstsq at matched k, (b) which hidden channels have highest encoder weight — compare to topk ranking, (c) whether encoder learns a near-linear map (measure nonlinearity as ||E(h) − E_linear(h)||/||E(h)|| on held-out data). If the encoder stays near-linear, the autoencoder is just finding a better linear projection than topk (like item 82's Jacobian SVD, but learned). If it goes nonlinear, there's compressible structure that no linear method can capture.
-   - **Stacking extension**: after per-block autoencoders are trained, stack k=4 and measure PPL. Then fine-tune all 4 encoder-decoder pairs jointly under model loss (analogous to joint gradient polish). Compare: (a) per-block AE vs per-block topk+lstsq, (b) joint-tuned AE vs topk+lstsq+gradient polish.
-   - **The real question**: what survives at k=64 (48× compression)? Visualize the encoder's top principal directions in h-space. These are the irreducible features — what the block *must* compute. Compare across blocks: do different blocks protect the same features (globally shared structure, consistent with cycle 029) or different ones (block-specific essential computation)?
-   - Type: implementation + empirical
-   - Confirmed if: AE outperforms topk+lstsq by ≥ 5% relative PPL at k=384 in ≥ 2/4 blocks, OR AE achieves viable compression (≤ +15% PPL) at k=128 where topk+lstsq fails.
-   - Refuted if: AE performs within 2% of topk+lstsq at all k values AND encoder is near-linear (nonlinearity < 5%) — meaning topk+lstsq is already near-optimal and there's no nonlinear structure to exploit.
-   - Inconclusive if: AE outperforms at some k but not others, or encoder is nonlinear but the PPL gain is small (< 3%).
-   - Depends on: none
-
 126. **Attention projection pruning on high-amplification heads — GPT-2**
    - Instead of compressing attention weights globally (cycle 095/098: marginal), target only the heads that amplify FFN compression error (from item 124, or use cycle 104's per-transition attention fractions as proxy). For each of the top-3 amplifying head positions identified in cycle 104 (transitions with attn_frac > 1.0, i.e., layers 0-6), apply rank-r SVD (r ∈ {8, 11, 16}) to the value+output projection W_V W_O of those heads only, while leaving all other heads untouched. Measure: (a) single-transition cascade amplification factor before/after pruning, (b) k=4 FFN stacking PPL with vs without head pruning. 3 seeds, 200 eval seqs.
    - Type: empirical
@@ -68,6 +57,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 131
+
+88. **Learned bottleneck AE for FFN compression — GPT-2 FFN** *(INCONCLUSIVE — cycle 131)*
+   - **Outcome: INCONCLUSIVE** — AE consistently beats topk+lstsq at k=384: block 4 by -2.0% (56.15 vs 57.28), block 7 by -3.4% (55.86 vs 57.85). Both blocks beat float PPL (57.65). Nonlinearity ~5% (boundary). AE improvement is real and consistent (3 seeds, low std) but doesn't reach 5% CONFIRMED threshold. AE has 2.5x more params than topk+lstsq — param-matched test needed. POC only; full k-sweep, stacking, and k=128 test deferred.
+   - Commit: PENDING
+   - Artifacts: experiments/bottleneck_ae_poc_cycle131.py, autoresearch/results/cycle_131_bottleneck_ae.json
 
 ### Cycle 130
 
