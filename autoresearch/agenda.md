@@ -54,7 +54,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 126. **Attention projection pruning on high-amplification heads — GPT-2** *(REFUTED — cycle 132)*
    - **Outcome: REFUTED** — Composed W_V@W_O SVD pruning catastrophically degrades PPL. Best rank=16 (25% of head dim): FFN-only=95.3, FFN+SVD=338.5 (+243). Even preserving 25% of each head's value-output subspace destroys model function. Attention heads carrying cascade error also carry essential information. 3 seeds, all consistent (std ~10 on delta >240).
-   - Commit: PENDING
+   - Commit: 02be78c
    - Artifacts: experiments/attn_proj_pruning_cycle132.py, autoresearch/results/cycle_132_attn_pruning.json
 
 ### Cycle 131
