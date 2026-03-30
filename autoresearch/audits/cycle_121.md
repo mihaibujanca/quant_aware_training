@@ -1,0 +1,8 @@
+status=CONTESTED
+old_outcome=refuted
+new_outcome=inconclusive
+reason=The REFUTED verdict claims "architecture insufficient" but the evidence shows a training recipe failure, not an architecture limitation. (1) No dropout or regularization beyond weight_decay=0.01 — the model overfits catastrophically (val PPL minimum at 15M tokens, then 65→71→85 divergence). WikiText-2 has only ~2M tokens; at 15M the model has seen the data 7.5x. Dropout 0.1 is standard for small LM training and would directly address this. (2) The lr sweep tested only 3 values at 1M tokens (not 5M as specified), and higher lrs (1e-3, 2e-3) were not explored. (3) Effective model size is ~5.5M params (top-2 of 8 experts), not 15.5M — PPL 65 is reasonable for 5.5M active params without regularization. (4) The agenda itself says "failure means bad training policy, not a scientific finding" and "This is unexpected and should be investigated before moving on." No investigation was done. The correct outcome is INCONCLUSIVE: training recipe needs dropout and a wider lr sweep before concluding architecture is insufficient.
+guardrail_flags=G3_wrong_interpretation,G6_method_failure_not_refutation
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Re-run item 138 with dropout=0.1 (attention_dropout + hidden_dropout in MixtralConfig), wider lr sweep {3e-4, 5e-4, 1e-3, 2e-3}, and optionally larger batch (8 or 16 via gradient accumulation). If PPL < 50 with dropout: CONFIRMED. If PPL > 50 even with dropout + wider sweep: genuinely REFUTED. Do NOT proceed to item 139 until the testbed model is adequate.
+interesting=false

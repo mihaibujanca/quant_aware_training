@@ -6,6 +6,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+138. **Train MoE testbed — Tiny Mixtral (retry with dropout)**
+   - Cycle 121 reached PPL 65.08 but overfitting prevented convergence to <50. Fix: add dropout=0.1 (attention_dropout + hidden_dropout in MixtralConfig), wider lr sweep {3e-4, 5e-4, 1e-3, 2e-3}, and gradient accumulation for effective batch 16. Reuse cycle 118 tokenizer. Train to 30M tokens with best lr. If PPL < 50: save checkpoint. If PPL > 50 at 30M with dropout: genuinely refuted.
+   - Type: implementation
+   - Confirmed if: model reaches val PPL < 50 on WikiText-2.
+   - Refuted if: PPL > 50 at 30M tokens with dropout + lr sweep.
+   - Inconclusive if: N/A.
+   - Depends on: none
 
 139. **REAP expert pruning baseline — Tiny Mixtral**
    - Using the trained model from item 138, establish the expert pruning error landscape. Compute REAP saliency scores: `score(expert_k, layer_l) = mean over 256 calibration sequences of: gate_weight_k(x) × ||expert_k(x)||_2`. Prune at 25%/50%/75% (2/4/6 of 8 experts) using global saliency ranking. Measure: baseline PPL, PPL at each pruning level, per-layer damage ablation, saliency heatmap (4 layers × 8 experts), Gini coefficient of saliency per layer.
@@ -162,8 +169,8 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 121
 
-138. **Train MoE testbed — Tiny Mixtral** *(REFUTED — cycle 121)*
-   - **Outcome: REFUTED** — lr sweep at 1M tokens: lr=1e-4→PPL 424.2, lr=3e-4→PPL 233.7, lr=5e-4→PPL 192.9. Full training at 30M tokens with best lr (5e-4): best val PPL=65.69 at 10M tokens; overfitting detected at 20M (PPL rising). Extended to 60M tokens (fresh run): best val PPL=65.08 at 15M tokens; overfitting again at 20M (65.08→70.87→84.88). PPL > 50 at 60M tokens. Architecture insufficient for PPL<50: 4-layer, hidden_size=256, vocab=4096 model on WikiText-2. Recommendation: increase hidden_size to 512 or add layers before running item 139.
+138. **Train MoE testbed — Tiny Mixtral** *(INCONCLUSIVE — cycle 121, audit-corrected)*
+   - **Outcome: INCONCLUSIVE** — Best val PPL=65.08 at 15M tokens, then overfitting (no dropout used). Training recipe failure, not architecture limitation: no dropout/regularization beyond weight_decay=0.01, and WikiText-2 (~2M tokens) causes 7.5x epoch repeats at 15M tokens. Effective model size ~5.5M params (top-2 routing). Needs retry with dropout=0.1 and wider lr sweep.
    - Artifacts: experiments/moe_train_cycle121.py, experiments/results/cycle_121_tiny_mixtral.pt, autoresearch/results/cycle_121_moe_training.json
 
 ### Cycle 120
