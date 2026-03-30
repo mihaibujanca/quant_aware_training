@@ -1,0 +1,7 @@
+item_number=144
+outcome=inconclusive
+key_metric=max_cos_error=0.46(B5) max_cos_attn=0.25(B5) max_cos_bump=0.41(B5) null_p99=0.13 no_alignment>0.5
+commit=PENDING
+paths=experiments/svd_alignment_cycle127.py,autoresearch/results/cycle_127_svd_alignment.json,autoresearch/results/cycle_127_alignment_heatmap.png
+learned=Corrections operate in a subspace with moderate overlap to compression error (0.44-0.46 in middle blocks) but not strongly aligned with either error or attention amplification. Attention alignment is weak (max 0.25). Block 1 has zero attention delta (no upstream compression to perturb). The ~0.45 error alignment suggests corrections partially project onto error directions but also capture propagated/cross-block structure not in the single-block error SVD.
+next=The moderate error alignment (0.44-0.46) in blocks 4-5 suggests corrections partially undo compression error but also capture cross-block propagated effects. A follow-up comparing alignment against PROPAGATED error (cumulative from earlier compressed blocks) vs LOCAL error (single-block) could clarify. Proceed to item 134 (dead/always-active pruning) as main priority.

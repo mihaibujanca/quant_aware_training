@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-144. **SVD of learned corrections: geometric alignment — GPT-2** [INTERPRETABILITY]
-   - For the best correction from items 142/143, extract learned UV^T matrices at each block. SVD them. Compare top-8 singular vectors to: (a) SVD of compression error E_l at each block, (b) SVD of attention output perturbation (cycle 104 data), (c) bump channel directions (cycle 110 data). Report cosine alignment matrices. Key question: do corrections align with the error directions, the attention amplification directions, or something orthogonal to both?
-   - Type: analysis (interpretability)
-   - Confirmed if: corrections align with attention amplification directions (cosine > 0.5 for top-4 singular vectors in ≥3/4 blocks) — corrections undo what attention does to the error.
-   - Refuted if: corrections align with compression error directions instead (cosine > 0.5 with error SVD) — corrections just fix the raw error, attention is irrelevant.
-   - Inconclusive if: low alignment with both (<0.3) — corrections learn a novel subspace.
-   - Depends on: 142
-
 ### P1
 
 134. **Dead/always-active neuron census + exact pruning — GPT-2 FFN (GELU-correct)**
@@ -101,6 +93,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 127
+
+144. **SVD of learned corrections: geometric alignment — GPT-2** *(INCONCLUSIVE — cycle 127)*
+   - **Outcome: INCONCLUSIVE** — Corrections don't strongly align with either compression error or attention amplification directions. Max alignment with error: 0.46 (block 5), 0.44 (block 4) — above null p99 (0.13) but below 0.5 threshold. Attention alignment weak (max 0.25). Block 1 attention delta is zero (no upstream compressed blocks to perturb). Corrections learn a partially novel subspace; moderate overlap with error directions in middle blocks.
+   - Commit: PENDING
+   - Artifacts: experiments/svd_alignment_cycle127.py, autoresearch/results/cycle_127_svd_alignment.json, autoresearch/results/cycle_127_alignment_heatmap.png
 
 ### Cycle 126
 
