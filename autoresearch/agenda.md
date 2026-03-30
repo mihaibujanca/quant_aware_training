@@ -122,7 +122,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 141. **Attention entropy shift under FFN compression — GPT-2** *(INCONCLUSIVE — cycle 124)*
    - **Outcome: INCONCLUSIVE** — Entropy shift exists but is modest. Only 2/12 layers exceed 0.1 nat threshold (L5: 0.113, L9: 0.103). Mean |delta_H| across all layers = 0.059 nats. Shift is non-zero (not Refuted: max = 0.113 nats, vs 0.02 floor). Significant negative Spearman correlation with cycle 104 attn_frac: rho=-0.55, p=0.083 — borderline significant but wrong direction (high-cascade-amplification layers show LESS entropy shift, not more). Cross-seed std < 0.01 (very stable across seeds). Float PPL=57.65, compressed PPL=71.65 (+24.3%). Interpretation: FFN compression does perturb attention distributions, but the perturbation is concentrated in downstream layers (L5, L8-L10), not at the compressed blocks [1,4,7,11] themselves. The negative correlation with attn_frac suggests cascade amplification is not driven by attention pattern disturbance but by V-space corruption (consistent with cycle 123 INCONCLUSIVE finding).
-   - Commit: TBD
+   - Commit: 2186270baa5f3f170685241a11290816c7b6bf15
    - Artifacts: experiments/attn_entropy_shift_gpt2.py, autoresearch/results/cycle_124_attn_entropy_shift.json, autoresearch/results/cycle_124_attn_entropy_shift.png
 
 ### Cycle 123
