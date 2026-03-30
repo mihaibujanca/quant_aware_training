@@ -73,7 +73,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 87. **Cross-block weight sharing via Procrustes alignment — GPT-2 FFN** *(REFUTED — cycle 130)*
    - **Outcome: REFUTED** — All 6 pairwise Procrustes residuals > 84% (min: blocks 4-5 = 84.4%, max: blocks 4-7 = 98.0%). Compressed W_down matrices are completely functionally dissimilar — no cross-block weight sharing is possible. Each block's compression occupies a distinct subspace.
-   - Commit: PENDING
+   - Commit: 190ee71
    - Artifacts: experiments/procrustes_alignment_cycle130.py, autoresearch/results/cycle_130_procrustes.json, autoresearch/results/cycle_130_heatmap.png
 
 ### Cycle 129
