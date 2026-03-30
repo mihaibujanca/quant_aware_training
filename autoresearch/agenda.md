@@ -18,14 +18,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: few groups but centroid-affine PPL is >10% worse than topk (merging is possible but the centroid map is a poor representative).
    - Depends on: none
 
-127. **Direct regression for middle blocks + topk for edge blocks — GPT-2 FFN** [HYBRID]
-   - Cycle 107 showed direct regression matches topk in middle blocks but loses badly in early/late blocks. Test a hybrid: use direct rank-r regression (r=256) for blocks 4,7 and topk+lstsq (k=512) for blocks 1,11. Compare k=4 stacking PPL against all-topk and all-direct baselines. The hypothesis: direct regression's lack of hidden-layer inductive bias is fine when the block is near-linear but harmful when it's nonlinear. +500 Adam polish for both methods. 3 seeds, 200 eval seqs OWT.
-   - Type: empirical
-   - Confirmed if: hybrid outperforms both all-topk and all-direct by ≥2% relative PPL at k=4 stacking.
-   - Refuted if: all-topk matches or beats hybrid (topk is robust enough that block-adaptive method selection doesn't help).
-   - Inconclusive if: hybrid beats one baseline but not the other, or <2% difference.
-   - Depends on: none
-
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
 138. ~~**Train MoE testbed — Tiny Mixtral**~~ SKIPPED — WikiText-2 too small, overfits at PPL 65. Need pretrained model or larger dataset.
@@ -49,6 +41,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 133
+
+127. **Direct regression hybrid — GPT-2 FFN** *(REFUTED — cycle 133)*
+   - **Outcome: REFUTED** — All-topk (70.12±0.05) beats hybrid (70.49±0.02) post-polish. All-direct worst (72.84±0.09). Hybrid wins pre-polish (83.6 vs 84.9) but polish erases the difference. Topk is robust enough that block-adaptive method selection doesn't help. Very low seed variance (~0.05 PPL) confirms the result.
+   - Commit: PENDING
+   - Artifacts: experiments/hybrid_regression_topk_cycle133.py, autoresearch/results/cycle_133_hybrid_regression.json
 
 ### Cycle 132
 

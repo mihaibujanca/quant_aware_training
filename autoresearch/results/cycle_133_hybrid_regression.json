@@ -1,0 +1,77 @@
+{
+  "cycle": 133,
+  "item": 127,
+  "seeds": [
+    42,
+    123,
+    7
+  ],
+  "direct_rank": 256,
+  "topk_k": 512,
+  "float_ppl": 57.65287371228062,
+  "results": {
+    "42_all_topk": {
+      "seed": 42,
+      "condition": "all_topk",
+      "pre_ppl": 84.9426192371746,
+      "post_ppl": 70.06110034967634
+    },
+    "42_all_direct": {
+      "seed": 42,
+      "condition": "all_direct",
+      "pre_ppl": 86.62421118898736,
+      "post_ppl": 72.96078978700596
+    },
+    "42_hybrid": {
+      "seed": 42,
+      "condition": "hybrid",
+      "pre_ppl": 83.58155953469863,
+      "post_ppl": 70.4582104460972
+    },
+    "123_all_topk": {
+      "seed": 123,
+      "condition": "all_topk",
+      "pre_ppl": 84.9426192371746,
+      "post_ppl": 70.18085606395532
+    },
+    "123_all_direct": {
+      "seed": 123,
+      "condition": "all_direct",
+      "pre_ppl": 86.62421118898736,
+      "post_ppl": 72.80816683586369
+    },
+    "123_hybrid": {
+      "seed": 123,
+      "condition": "hybrid",
+      "pre_ppl": 83.58155953469863,
+      "post_ppl": 70.51648180888895
+    },
+    "7_all_topk": {
+      "seed": 7,
+      "condition": "all_topk",
+      "pre_ppl": 84.9426192371746,
+      "post_ppl": 70.11183800340493
+    },
+    "7_all_direct": {
+      "seed": 7,
+      "condition": "all_direct",
+      "pre_ppl": 86.62421118898736,
+      "post_ppl": 72.74560476995438
+    },
+    "7_hybrid": {
+      "seed": 7,
+      "condition": "hybrid",
+      "pre_ppl": 83.58155953469863,
+      "post_ppl": 70.49787323046505
+    }
+  },
+  "verdict": "REFUTED",
+  "verdict_detail": "All-topk beats hybrid by 0.5%",
+  "summary": {
+    "all_topk_post": 70.11793147234553,
+    "all_direct_post": 72.83818713094135,
+    "hybrid_post": 70.49085516181707,
+    "hybrid_vs_topk_pct": -0.5318520978027069,
+    "hybrid_vs_direct_pct": 3.2226666554790553
+  }
+}
