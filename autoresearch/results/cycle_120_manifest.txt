@@ -1,0 +1,16 @@
+item_number=137
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_120_cascade_correction_k8.json,autoresearch/results/cycle_120_cascade_correction_k8.png
+code_paths=experiments/cascade_correction_k8_cycle120.py
+log_paths=autoresearch/logs/cycle_120_run.log
+final_commit_hash=7e00b76f32d051341a8d244331bed8b969023744
+agenda_updated=yes
+verdict=CONFIRMED
+recovery_r8=91.38%
+baseline_ppl=57.653
+uncorrected_ppl=1055.303
+corrected_ppl=143.644
+correction_params=98304
+blocks=[1,2,3,4,5,6,7,9]
+rank=8
+seed=42
