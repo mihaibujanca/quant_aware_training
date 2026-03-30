@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-142. **Correction placement sweep — GPT-2 FFN k=4**
-   - Systematic ablation of WHERE to place rank-8 corrections. Same k=4 compressed model, same total rank budget (r=8 per block, 4 blocks). 5 placements: (P1) after FFN, before attention (cycle 115 baseline), (P2) after attention, before next FFN, (P3) on Q+K projections (additive: Q'=Qx + U_q V_q x), (P4) on V+O projections, (P5) P1+P2 combined (before AND after attention). Train each under model loss, 2000 steps, seed 42. Report PPL for each placement.
-   - Type: empirical
-   - Confirmed if: any non-P1 placement beats P1 by ≥5% relative PPL (current placement is suboptimal).
-   - Refuted if: P1 is within 2% of the best alternative (residual stream correction is already near-optimal placement).
-   - Inconclusive if: 2-5% differences or placement ranking is not robust.
-   - Depends on: 140 (results from A1 inform interpretation but not required to run)
-
 143. **Best correction placement at scale — GPT-2 FFN k=4**
    - Take the best placement from item 142 and the 2 runners-up. Run with 3 seeds [42, 123, 7]. Also sweep rank {4, 8, 16} for the best placement. Compare against cycle 115 (P1, r=8) as baseline.
    - Type: empirical
@@ -117,6 +109,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 125
+
+142. **Correction placement sweep — GPT-2 FFN k=4** *(REFUTED — cycle 125)*
+   - **Outcome: REFUTED** — P1 (after FFN, residual stream) is within 2% of best alternative. Ranking: P1=69.52 (69.0% recovery), P5=70.18 (67.3%), P2=70.97 (65.2%), P4=71.65 (63.5%), P3=80.85 (39.4%). P1 reproduction matches cycle 115 (69.52 vs 69.53). Residual-stream correction is already near-optimal; attention-internal corrections (P3/P4) are worse, especially Q+K (r=4 may be insufficient but P4 at r=4 also underperforms P1 at r=8). Item 143 deprioritized.
+   - Artifacts: experiments/placement_sweep_k4_cycle125.py, autoresearch/results/cycle_125_placement_sweep.json, autoresearch/results/cycle_125_ppl_bar.png, autoresearch/results/cycle_125_loss_curves.png
 
 ### Cycle 124
 

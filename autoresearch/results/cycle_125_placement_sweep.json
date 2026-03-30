@@ -1,0 +1,51 @@
+{
+  "cycle": 125,
+  "item": 142,
+  "ffn_blocks": [
+    7,
+    5,
+    4,
+    1
+  ],
+  "d_model": 768,
+  "budget_per_block": 12288,
+  "correction_train_steps": 2000,
+  "correction_lr": 0.0001,
+  "baseline_ppl_seed42": 57.65287371228062,
+  "uncorrected_ppl_seed42": 95.94652071057605,
+  "cycle115_p1_reference": 69.53,
+  "p1_reproduction_delta": 0.01425138673955928,
+  "placements_seed42": {
+    "P1": {
+      "ppl": 69.51574861326044,
+      "recovery": 69.02129770635878,
+      "param_count": 49152
+    },
+    "P2": {
+      "ppl": 70.96914106064857,
+      "recovery": 65.2259097991876,
+      "param_count": 49152
+    },
+    "P3": {
+      "ppl": 80.85217945093302,
+      "recovery": 39.417351030354794,
+      "param_count": 49152
+    },
+    "P4": {
+      "ppl": 71.6467138072528,
+      "recovery": 63.456496855483415,
+      "param_count": 49152
+    },
+    "P5": {
+      "ppl": 70.18056927086279,
+      "recovery": 67.28518555796,
+      "param_count": 49152
+    }
+  },
+  "escalation_triggered": false,
+  "escalation_results": {},
+  "verdict": "REFUTED",
+  "verdict_detail": "P1 within 2% of best alternative (diff=-1.0%)",
+  "best_non_p1": "P5",
+  "p1_vs_best_non_p1_pct": -0.9563597758271581
+}
