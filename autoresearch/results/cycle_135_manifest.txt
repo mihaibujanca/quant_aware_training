@@ -1,7 +1,7 @@
 item_number=145
 outcome=confirmed
 key_metric=rho_sk=-0.745(p=0.009) rho_kd=-0.645(p=0.032) curvature_peaks_L2-4 damage_peaks_L10-11
-commit=PENDING
+commit=275e8c3
 paths=experiments/curved_inference_census_cycle135.py,autoresearch/results/cycle_135_curved_inference.json,autoresearch/results/cycle_135_curved_inference.png
 learned=GPT-2 residual stream exhibits the same curved inference structure as larger models. Salience and curvature are strongly anticorrelated (rho=-0.745). Crucially: high-curvature layers (2-4) are EASY to compress while low-curvature late layers (10-11) are hardest. This means the trajectory straightens where semantic precision matters most — compression errors in the "straight" regime are small in Euclidean norm but large in G-norm (semantically important). This validates the pullback metric as a compression-aware geometry.
 next=Item 146 (pullback-metric error measurement) is now unblocked. G-weighted lstsq (item 147) should improve late-layer compression quality where G and Frobenius diverge most. Curvature-guided allocation (item 148) should protect low-curvature late layers with more budget.

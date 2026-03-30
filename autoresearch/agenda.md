@@ -142,7 +142,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 145. **Curved inference census — GPT-2 residual stream** *(CONFIRMED — cycle 135)*
    - **Outcome: CONFIRMED** — Strong salience-curvature anticorrelation rho=-0.745 (p=0.009) and curvature-damage correlation |rho|=0.645 (p=0.032). Curvature peaks in early layers (2-4, kappa≈0.002) and decays to near-zero in late layers (10-11). Late layers have low curvature but highest compression damage — the trajectory straightens under G where semantic precision matters most. Block 0 is anomalous (high damage, near-zero curvature). Consistent across 3 seeds.
-   - Commit: PENDING
+   - Commit: 275e8c3
    - Artifacts: experiments/curved_inference_census_cycle135.py, autoresearch/results/cycle_135_curved_inference.json, autoresearch/results/cycle_135_curved_inference.png
 
 ### Cycle 134
