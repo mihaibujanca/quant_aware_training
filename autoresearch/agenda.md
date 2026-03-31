@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-177. **Sign-pattern census on actual data — GPT-2 FFN** [INTERPRETABILITY]
-   - Binary sign of z (z > 0 = active): for each token, record which of 3072 channels are positive. On 4096 tokens per block: (a) count unique sign patterns, (b) Hamming distance distribution between patterns (expect ~20% = 600/3072 if 300 channels flip), (c) cluster patterns with k-means k={16,32,64,128}, measure within-cluster FFN output variance, (d) K* = min k for <5% within-cluster output variance. With 91% channels locked negative, patterns may be highly redundant — this is the corrected test of whether piecewise-linear structure exists in the SIGN domain rather than the continuous GELU' domain.
-   - Type: analysis (interpretability)
-   - Confirmed if: K* ≤ 64 for ≥6/12 blocks — sign patterns define a tractable partition.
-   - Refuted if: K* > 256 — even sign patterns are too diverse.
-   - Inconclusive if: varies across blocks.
-   - Depends on: none. ~10 min compute.
-
 178. **Training dynamics of negative z — GPT-2 FFN** [INTERPRETABILITY]
    - Does z_mean start negative at init or emerge during training? (a) Random-init GPT-2: compute z_mean per block on 4096 tokens, (b) compare GPT-2 small/medium/large z_mean — scale dependence?, (c) if training checkpoints available: track z_mean vs step. From cycle 129 we know isotropy is learned (7-8× increase). Does z_mean track the same trajectory?
    - Type: analysis (interpretability)
@@ -91,6 +83,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 167
+
+177. **Sign-pattern census on actual data — GPT-2 FFN** *(REFUTED — cycle 167)*
+   - All 4096 tokens produce unique sign patterns in every block (zero redundancy). K* > 256 in 11/12 blocks (best within-cluster variance ratio at k=128: 0.68 block 0). Even with 87-88% channels locked negative, the ~12-27% flipping channels create enough combinatorial diversity that sign patterns are effectively unique per token. Hamming distances: 400-900 (mean), spanning 13-30% of 3072 channels. k-means clustering fails to capture FFN output structure — sign patterns alone do not define a tractable piecewise partition. Block 2 anomaly at k=256 (ratio=0.02) is a statistical artifact from 16 samples/cluster.
+   - Artifacts: `experiments/sign_pattern_census_cycle167.py`, `autoresearch/results/cycle_167_sign_census.json`, `autoresearch/results/cycle_167_sign_census.png`
 
 ### Cycle 166
 

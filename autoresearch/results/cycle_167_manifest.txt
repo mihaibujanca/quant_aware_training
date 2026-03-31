@@ -1,0 +1,12 @@
+cycle=167
+item=177
+type=analysis
+verdict=REFUTED
+experiment=experiments/sign_pattern_census_cycle167.py
+results_json=autoresearch/results/cycle_167_sign_census.json
+results_png=autoresearch/results/cycle_167_sign_census.png
+brief=autoresearch/briefs/cycle_167.md
+plan=autoresearch/plans/cycle_167.md
+review=autoresearch/reviews/cycle_167.md
+review_json=autoresearch/reviews/cycle_167_review.json
+key_metrics=unique_patterns=4096/4096_all_blocks K*>256_in_11/12_blocks best_ratio_k128=0.68(block0) hamming_mean_range=400-907

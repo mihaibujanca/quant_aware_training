@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=REFUTED
+new_outcome=REFUTED
+reason=Criteria: K* <= 64 in >=6/12 blocks for CONFIRMED, K* > 256 for REFUTED. Result: K* > 256 in 11/12 blocks, K* = 256 in 1/12 (block 2, but this is a statistical artifact — the ratio jumps from 0.99 at k=128 to 0.02 at k=256, which is non-monotonic and indicates k-means overfitting with only 16 samples/cluster). All blocks produce 4096/4096 unique sign patterns — zero redundancy despite 73-88% channels being locked negative. At k=128 (the most reliable k given sample size), within-cluster variance ratio ranges 0.68-0.99 across blocks, far above the 0.05 threshold. The code correctly hooks mlp.c_fc output for pre-GELU z, binarizes with z>0, and uses sklearn MiniBatchKMeans. FFN output y is correctly collected from mlp forward hook (post-c_proj). Variance computation is correct: weighted within-cluster variance / total variance.
+guardrail_flags=k256_overfitting_blocks_1_2
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Sign patterns are NOT a tractable partition of the piecewise-linear space — too many unique patterns. This means item 183 (sign-pattern-conditioned piecewise lstsq) is unlikely to work directly. The ~9-27% flipping channels create O(4096) unique patterns in just 4096 tokens. For compression, the continuous activation structure (not binary sign) is more informative. Consider: (a) PCA on sign patterns to find a low-dim subspace that captures most variance, (b) soft clustering on z values (not just sign), (c) hierarchical partitioning using only the highest-variance channels.
+interesting=false
+interesting_reason=Result confirms that binary sign patterns are too diverse for direct partitioning, closing this direction cleanly. Not flagged because it is a straightforward negative result with no surprising implications beyond closing item 183's prerequisite.

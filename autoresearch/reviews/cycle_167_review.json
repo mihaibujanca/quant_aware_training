@@ -1,0 +1,15 @@
+{
+  "cycle": 167,
+  "item": 177,
+  "round": 1,
+  "verdict": "APPROVE",
+  "blocking_issues": [],
+  "minor_issues": [],
+  "checks": {
+    "R1_premise": "OK",
+    "R2_measurement": "OK",
+    "R3_capacity": "OK",
+    "R4_alignment": "OK",
+    "R5_pitfalls": "OK"
+  }
+}
