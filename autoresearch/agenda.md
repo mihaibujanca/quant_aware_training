@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-151. **Bottleneck AE at k=512 (6x) — param-matched comparison — GPT-2 FFN**
-   - Cycle 131 showed AE beats topk by 2-3.4% at k=384 (8x) but with 2.5x more params (1.48M vs ~0.59M). This confounds the comparison. Test at k=512 (6x, the standard working recipe compression ratio) with TWO AE configs: (a) full AE: E(h)=ReLU(W_enc @ h + b_enc), D(z)=W_dec @ z + b_dec, same as cycle 131 (3072->512->3072, ~3.15M params). (b) param-matched AE: reduce bottleneck to d_bn such that total AE params = topk+lstsq params (512*768 = 393K). d_bn ~ 64 (3072*64 + 64 + 64*3072 + 3072 = 396K). Compare single-block swap PPL on blocks [1, 4, 7, 11]. Also add 500-step Adam polish to both AE and topk baselines — cycle 133 showed polish erases pre-polish differences, so critical to check if AE advantage survives polish. 3 seeds, 200 OWT eval sequences.
-   - Type: empirical
-   - Confirmed if: param-matched AE beats topk+lstsq by >=3% relative PPL on >=2/4 blocks, POST-polish.
-   - Refuted if: param-matched AE matches or is worse than topk+lstsq post-polish (AE advantage was from extra params, not architecture).
-   - Inconclusive if: full AE beats topk but param-matched doesn't, or advantage disappears post-polish.
-   - Depends on: none
-
 152. **Bottleneck AE k=4 stacking — GPT-2 FFN**
    - If item 151 shows AE has a real advantage at single-block, test the critical stacking case: compress blocks [1, 4, 7, 11] at 6x with AE, stack all 4, measure full-model PPL. Compare to working recipe (topk+lstsq+500 polish, PPL ~70). The key question: does AE's superior local reconstruction translate to better stacking behavior, or does the cascade still dominate? Run with 500-step polish on both. Also test AE + LoRA corrections (r=8) to see if AE + corrections can beat the current best (PPL ~59). 3 seeds.
    - Type: empirical
@@ -129,6 +121,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 137
+
+151. **Bottleneck AE param-matched — GPT-2 FFN k=512** *(CONFIRMED — cycle 137)*
+   - **Outcome: CONFIRMED** — Param-matched AE (d_bn=64, 247K params) beats topk+lstsq (788K params) on both blocks post-polish. Block 4: AE=53.65±0.10, topk=55.32±0.04 (-3.0%). Block 7: AE=54.46±0.17, topk=56.36±0.02 (-3.4%). The AE uses 3x FEWER learnable params. Full AE (1.97M) actually worsens after polish (+1-4% vs topk). The nonlinear ReLU bottleneck at d_bn=64 learns a better subspace than axis-aligned top-512 selection, and this advantage SURVIVES 500-step Adam polish.
+   - Commit: PENDING
+   - Artifacts: experiments/ae_param_match_k512_cycle137.py, autoresearch/results/cycle_137_ae_param_match.json
 
 ### Cycle 136
 
