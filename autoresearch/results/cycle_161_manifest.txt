@@ -1,0 +1,5 @@
+item_number=171
+outcome=REFUTED
+key_metric=topk_stacked=87.684±0.062 centroid_stacked=88.311±0.046 delta=-0.627(centroid_worse) jaccard=0.333_all_blocks
+commit=ca65154
+paths=experiments/centroid_affinity_selection_cycle161.py,autoresearch/results/cycle_161_centroid_affinity.json,autoresearch/results/cycle_161_centroid_affinity.png
