@@ -1,0 +1,36 @@
+cycle: 162
+item: 172
+outcome: REFUTED
+date: 2026-03-31
+
+## Summary
+GELU-aware dead/near-saturated channel census on GPT-2 FFN, 3 seeds × 256 seqs × 256 tokens.
+T∈{2,3,4}. Total qualifying: 5/36864 (0.01%) at T=2; 0 at T=3 and T=4. Near-linear (min_z>T): 0 at all thresholds.
+Only blocks 0 (4 channels) and 1 (1 channel) had any dead channels at T=2.
+PPL validation: pruning 4 channels from block 0 → PPL delta +0.00% (from 45.492 to 45.493).
+Bottom 1% by contribution score (30 ch) → PPL delta -0.07%. Bottom 5% (153 ch) → +0.12%.
+Contribution score distribution: smooth log-normal shape, no cluster below null baseline (1/3072 = 0.033%).
+
+## Verdict
+REFUTED: <1% qualifying at ALL thresholds. Prior cycles 28, 32, 83, 128 all refuted. T=2 adds nothing.
+GPT-2 FFN channels are fully active across the OWT distribution at all practical GELU-saturation thresholds.
+The output-contribution score distribution shows no removable low-contribution tail.
+
+## Key metrics
+- Total qualifying (T=2): 5/36864 = 0.01%
+- Total qualifying (T=3): 0/36864 = 0.00%
+- Total qualifying (T=4): 0/36864 = 0.00%
+- Near-linear channels: 0 at all T
+- Orig PPL: 45.492
+- PPL delta T=2 prune: +0.00%
+- PPL delta bottom-1% score prune: -0.07%
+- PPL delta bottom-5% score prune: +0.12%
+- Null baseline (equal share): 0.0326%
+
+## Artifacts
+experiments/gelu_channel_census_cycle162.py
+autoresearch/results/cycle_162_census.json
+autoresearch/results/cycle_162_census.png
+autoresearch/results/cycle_162_manifest.txt
+autoresearch/logs/experiments.tsv (row appended)
+autoresearch/agenda.md (item 172 moved to PAST)

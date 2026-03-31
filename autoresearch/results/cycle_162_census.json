@@ -1,0 +1,1143 @@
+{
+  "cycle": 162,
+  "item": 172,
+  "seeds": [
+    42,
+    123,
+    7
+  ],
+  "n_seqs": 256,
+  "seq_len": 256,
+  "thresholds": [
+    2,
+    3,
+    4
+  ],
+  "total_neurons": 36864,
+  "total_qualifying_by_T": {
+    "2": 4.666666666666666,
+    "3": 0.3333333333333333,
+    "4": 0.0
+  },
+  "pct_qualifying_by_T": {
+    "2": 0.012659143518518517,
+    "3": 0.0009042245370370369,
+    "4": 0.0
+  },
+  "null_share_pct": 0.03255208333333333,
+  "ppl_results": {
+    "orig_ppl": 45.49197500261825,
+    "top_block": 0,
+    "n_pruned_T2": 4,
+    "ppl_after_T2": 45.492628147820746,
+    "ppl_delta_pct": 0.0014357371876273011,
+    "ppl_bottom1pct": 45.46045960766884,
+    "ppl_delta_bottom1pct": -0.0692768228849046,
+    "ppl_bottom5pct": 45.547970393514674,
+    "ppl_delta_bottom5pct": 0.12308850273747118
+  },
+  "verdict": "REFUTED",
+  "verdict_detail": "<1% qualifying at ALL thresholds (T=2: 0.01%)",
+  "per_seed": {
+    "42": {
+      "0": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 4,
+            "near_linear": 0,
+            "qualifying": 4,
+            "pct": 0.13020833333333331
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "1": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 1,
+            "near_linear": 0,
+            "qualifying": 1,
+            "pct": 0.03255208333333333
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "2": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "3": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "4": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "5": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "6": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "7": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "8": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "9": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "10": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "11": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      }
+    },
+    "123": {
+      "0": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 4,
+            "near_linear": 0,
+            "qualifying": 4,
+            "pct": 0.13020833333333331
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "1": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 1,
+            "near_linear": 0,
+            "qualifying": 1,
+            "pct": 0.03255208333333333
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "2": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "3": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "4": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "5": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "6": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "7": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "8": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "9": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "10": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "11": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      }
+    },
+    "7": {
+      "0": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 3,
+            "near_linear": 0,
+            "qualifying": 3,
+            "pct": 0.09765625
+          },
+          "3": {
+            "dead": 1,
+            "near_linear": 0,
+            "qualifying": 1,
+            "pct": 0.03255208333333333
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "1": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 1,
+            "near_linear": 0,
+            "qualifying": 1,
+            "pct": 0.03255208333333333
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "2": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "3": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "4": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "5": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "6": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "7": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "8": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "9": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "10": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      },
+      "11": {
+        "n_tokens": 65536,
+        "census": {
+          "2": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "3": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          },
+          "4": {
+            "dead": 0,
+            "near_linear": 0,
+            "qualifying": 0,
+            "pct": 0.0
+          }
+        }
+      }
+    }
+  },
+  "cross_seed_summary": {
+    "0": {
+      "census": {
+        "2": {
+          "dead_mean": 3.6666666666666665,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 3.6666666666666665,
+          "qualifying_pct": 0.11935763888888888
+        },
+        "3": {
+          "dead_mean": 0.3333333333333333,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.3333333333333333,
+          "qualifying_pct": 0.010850694444444444
+        },
+        "4": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        }
+      }
+    },
+    "1": {
+      "census": {
+        "2": {
+          "dead_mean": 1.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 1.0,
+          "qualifying_pct": 0.03255208333333333
+        },
+        "3": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "4": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        }
+      }
+    },
+    "2": {
+      "census": {
+        "2": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "3": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "4": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        }
+      }
+    },
+    "3": {
+      "census": {
+        "2": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "3": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "4": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        }
+      }
+    },
+    "4": {
+      "census": {
+        "2": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "3": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "4": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        }
+      }
+    },
+    "5": {
+      "census": {
+        "2": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "3": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "4": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        }
+      }
+    },
+    "6": {
+      "census": {
+        "2": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "3": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "4": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        }
+      }
+    },
+    "7": {
+      "census": {
+        "2": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "3": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "4": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        }
+      }
+    },
+    "8": {
+      "census": {
+        "2": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "3": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "4": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        }
+      }
+    },
+    "9": {
+      "census": {
+        "2": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "3": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "4": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        }
+      }
+    },
+    "10": {
+      "census": {
+        "2": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "3": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "4": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        }
+      }
+    },
+    "11": {
+      "census": {
+        "2": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "3": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        },
+        "4": {
+          "dead_mean": 0.0,
+          "near_linear_mean": 0.0,
+          "qualifying_mean": 0.0,
+          "qualifying_pct": 0.0
+        }
+      }
+    }
+  }
+}

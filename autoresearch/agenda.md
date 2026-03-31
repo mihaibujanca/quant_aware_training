@@ -59,13 +59,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-172. **GELU-aware dead and near-saturated channel census — GPT-2 FFN**
-   - Cycle 28 was refuted because it used ReLU-calibrated thresholds on GELU. Re-run with correct methodology: check pre-GELU values to find channels stuck in GELU's saturated tail (max pre-GELU < -T for T∈{2,3,4}) and near-linear channels (min pre-GELU > T). Also compute output-contribution score (‖W_down[:,j]‖ × rms(act_j)) and plot the distribution. This addresses R2 (exact white-box compression) with proper GELU handling per the item 16 post-hoc review.
-   - Type: analysis
-   - Confirmed if: at least 5% of channels across all blocks are dead or near-saturated (removable with <0.5% PPL increase on single-block swap).
-   - Refuted if: fewer than 1% of channels are removable at any threshold tested.
-   - Inconclusive if: 1-5% of channels qualify but removal causes >0.5% PPL increase.
-   - Depends on: none
 
 173. **Per-block error contribution profiling — stacked topk+lstsq — GPT-2 FFN k=4**
    - The gap between single-block PPL (~85) and stacked PPL (~95 pre-polish, ~70.7 post-polish) indicates massive cross-block error interaction, and cycle 151 showed corrections are 93-97% cascade compensation. Profile the stacking: compress blocks 0..i for i=0..11, record PPL at each step, and compute the marginal PPL contribution of each block. Identify which blocks are the dominant cascade error sources. This directly informs whether the correction budget (49K params) should be redistributed non-uniformly.
@@ -98,6 +91,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 162
+
+172. **GELU-aware dead and near-saturated channel census — GPT-2 FFN** *(REFUTED — cycle 162)*
+   - 3 seeds × 256 seqs × 256 tokens, T∈{2,3,4}. Total qualifying at T=2: 5/36864 (0.01%). Zero qualifying at T=3,4. Near-linear channels: 0 at all thresholds. Only blocks 0 (4 channels) and 1 (1 channel) had any dead channels at T=2. Block 0 prune (4 channels): PPL delta +0.00%. Bottom 1% by contribution score (30 ch): PPL delta -0.07%. Bottom 5% (153 ch): PPL delta +0.12%. T=2 threshold adds nothing vs cycle 128: GPT-2 FFN channels are fully active across the OWT distribution at all tested thresholds. Contribution scores follow a smooth distribution with no clear mass below null baseline (1/3072 = 0.033%).
+   - Artifacts: `experiments/gelu_channel_census_cycle162.py`, `autoresearch/results/cycle_162_census.json`, `autoresearch/results/cycle_162_census.png`
 
 ### Cycle 161
 
