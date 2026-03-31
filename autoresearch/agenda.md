@@ -45,8 +45,8 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 158
 
-168. **Topk+lstsq init for joint training — GPT-2 FFN k=4** *(INCONCLUSIVE — cycle 158)*
-   - Warm-start PPL = 73.0 ± 0.23 (3 seeds). Better than random-init (91.1) but worse than topk+polish (70.7). Rank expands from 4 to median 21.5 after training — not stuck in topk subspace. However, warm start provides no PPL advantage over topk+polish baseline. Joint training still can't beat simple polish.
+168. **Topk+lstsq init for joint training — GPT-2 FFN k=4** *(REFUTED — cycle 158, audit-corrected)*
+   - Warm-start PPL = 73.0 ± 0.23 (3 seeds). Better than random-init (91.1) but worse than topk+polish (70.7). PPL 73.0 >= 69.3 (REFUTED threshold: within 2% of topk+polish). Rank expands 4→21.5 confirming training left the init subspace, but warm start provides no PPL advantage over polish. Joint training from warm start is strictly worse than simple polish.
    - Artifacts: `experiments/topk_init_joint_cycle158.py`, `autoresearch/results/cycle_158_topk_init_joint.json`
 
 ### Cycle 157
