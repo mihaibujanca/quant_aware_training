@@ -10,14 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-154. **Correction subspace analysis — what do LoRA corrections learn? — GPT-2 FFN k=4**
-   - Cycle 127 found corrections partially align with compression error (max 0.46) but mostly learn a novel subspace. This needs sharper characterization. Train LoRA corrections (r=8) on the standard k=4 recipe. Extract the learned W_A, W_B matrices. Compute: (1) SVD of correction effect W_B @ W_A. (2) Project correction onto 3 subspaces: (a) span of compression error principal components (top-8 PCs of e_l per block), (b) span of attention amplification directions (top-8 PCs of attn_error per block), (c) the novel complement. (3) Ablation: zero out each component, measure PPL. (4) Cross-block sharing test: take block 4's correction and apply it to block 7 (and vice versa). If the novel subspace dominates, corrections aren't fixing error — they're compensating for something else (possibly re-routing around the damaged subspace). 3 seeds.
-   - Type: analysis
-   - Confirmed if: a single identifiable subspace (error, attention, or novel) accounts for >=60% of correction's PPL recovery when ablated.
-   - Refuted if: all three subspaces contribute roughly equally (correction is diffuse, no surgical target).
-   - Inconclusive if: dominant subspace varies by block or seed.
-   - Depends on: none
-
 155. **Eigenstructure-aware channel selection — GPT-2 FFN**
    - Cycle 129 confirmed isotropy is learned (7-8x increase in blocks 4-7). The current topk selects channels by activation magnitude, ignoring the learned covariance structure. Test eigenstructure-aware selection: (1) Compute data covariance C = E[h h^T] of FFN intermediate activations (3072x3072). (2) Select top-k channels by WHITENED importance: importance_j = ||C^{-1/2}[:,j]||_2 * rms(act_j) — this upweights channels that are independently informative (low covariance with others) and downweights redundant channels. Compare to topk on single-block swap PPL for blocks [1, 4, 7, 11] at 6x (k=512). Both with lstsq refit + 500 Adam polish. 3 seeds, 200 OWT eval sequences.
    - Type: empirical
@@ -91,6 +83,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 142
+
+154. **Correction subspace analysis — GPT-2 FFN k=4** *(INCONCLUSIVE — cycle 142)*
+   - **Outcome: INCONCLUSIVE** — Method failure: corrections trained on already-polished model WORSENED PPL (71.0 → 88.7). Corrections compete with polish optimization. Subspace decomposition and ablation results are not interpretable when corrections are harmful. Need to reproduce the cycle 115 protocol (corrections on unpolished model) for valid results. Not a genuine negative — the cycle 115 corrections DO work (PPL 59), this was a training setup error.
+   - Commit: PENDING
+   - Artifacts: experiments/correction_subspace_cycle142.py, autoresearch/results/cycle_142_correction_subspace.json
 
 ### Cycle 141
 
