@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=CONFIRMED
+new_outcome=CONFIRMED
+reason=Criteria: killing positive channels >+100% PPL → CONFIRMED. Result: +3,141,890% (22.7 → 713K). Code is correct: PositiveZeroWrapper zeros activated where z>0, keeps negative leak. PositiveMeanWrapper replaces positive region with token-mean. Hooks install/restore cleanly per block. Baseline PPL 22.70 within [15, 65] guard. Per-block results internally consistent: block 0 uniquely critical (220K PPL alone), blocks 1-10 cause 6-43%, block 11 causes 89%. Condition B (mean replacement, 33.9M PPL) worse than Condition A (zero, 713K PPL) — injecting wrong positive signal is more damaging than removing it, which is coherent. Minor confound: PositiveMeanWrapper line 110 computes mean over ALL channels (not just z>0 portion), so replacement value is slightly diluted by negative-region activations. Does not change the verdict since the effect is catastrophic either way.
+guardrail_flags=minor_confound_condB_mean_computation
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Block 0 is a 970K% outlier — investigate what makes block 0 positive channels uniquely critical (residual stream initialization? positional encoding?). The pos/neg norm ratio trend (1.37→2.56 with depth) suggests positive regime importance grows — may inform depth-adaptive compression budgets. Combined with cycle 102 (kill negative → +8320%), the 378x asymmetry (positive 378x more damaging to kill) quantifies that positive channels carry the primary signal while negative leak is a significant but secondary contributor.
+interesting=true
+interesting_reason=Completes the regime importance picture with cycle 102. Three new structural findings: (1) 378x asymmetry quantifies positive > negative importance, (2) block 0 is a ~10,000x outlier vs other blocks, (3) pos/neg norm ratio increases monotonically with depth (1.37→2.56). All three are actionable for compression design.
