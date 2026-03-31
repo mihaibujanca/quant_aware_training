@@ -1,0 +1,50 @@
+Cycle 164: Positive-channel ablation — GPT-2 FFN
+Item: 174
+Verdict: CONFIRMED
+Date: 2026-03-31
+
+KEY RESULTS:
+  Baseline PPL: 22.700
+  Full-model Condition A (zero positive): 713,227.1  delta=+3,141,890%
+  Full-model Condition B (token-mean replacement): 33,871,926.3  delta=+149,216,407%
+
+PER-BLOCK CONDITION A (single block zeroed):
+  Block  0: PPL=220232.8  delta=+970095.0%  (by far most sensitive)
+  Block  1: PPL=24.1      delta=+6.0%
+  Block  2: PPL=26.5      delta=+16.6%
+  Block  3: PPL=32.6      delta=+43.5%
+  Block  4: PPL=36.1      delta=+58.9%
+  Block  5: PPL=33.3      delta=+46.7%
+  Block  6: PPL=32.0      delta=+40.8%
+  Block  7: PPL=26.4      delta=+16.5%
+  Block  8: PPL=26.7      delta=+17.6%
+  Block  9: PPL=26.7      delta=+17.6%
+  Block 10: PPL=27.9      delta=+23.0%
+  Block 11: PPL=42.9      delta=+88.9%
+
+||y_pos|| vs ||y_neg|| (per block):
+  Block  0: pos=9.119  neg=5.819  ratio=1.567
+  Block  1: pos=6.786  neg=4.983  ratio=1.362
+  Block  2: pos=6.565  neg=5.393  ratio=1.217
+  Block  3: pos=6.902  neg=5.648  ratio=1.222
+  Block  4: pos=7.383  neg=5.907  ratio=1.250
+  Block  5: pos=8.301  neg=5.818  ratio=1.427
+  Block  6: pos=8.957  neg=5.965  ratio=1.501
+  Block  7: pos=9.394  neg=6.128  ratio=1.533
+  Block  8: pos=9.991  neg=6.157  ratio=1.623
+  Block  9: pos=10.722 neg=6.189  ratio=1.732
+  Block 10: pos=12.730 neg=6.224  ratio=2.045
+  Block 11: pos=15.895 neg=6.204  ratio=2.562
+
+INTERPRETATION:
+  - Positive channels (z>0) carry the primary computational signal in GPT-2 FFN.
+  - Negative leak (z<0 region) alone is catastrophically insufficient.
+  - Both regimes are essential (cf. cycle 102: killing negative → +8320% PPL; this cycle: killing positive → +3,141,890% PPL).
+  - Block 0 is uniquely critical: zeroing only block 0 → +970,095% PPL. Blocks 1-11 individually cause 6-89%.
+  - ||y_pos||/||y_neg|| ratio increases with depth (1.36→2.56): positive channels become increasingly dominant later in the network.
+  - Token-mean replacement (Condition B) is even more catastrophic than zeroing, confirming that token-SPECIFIC positive variation is essential (not just positive magnitude).
+
+ARTIFACTS:
+  experiments/positive_channel_ablation_gpt2.py
+  autoresearch/results/cycle_164_positive_ablation.json
+  autoresearch/results/cycle_164_positive_ablation.png

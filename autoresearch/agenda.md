@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-174. **Positive-channel ablation — GPT-2 FFN** [INTERPRETABILITY]
-   - Complement of cycle 102 (which killed negative channels → +8320% PPL). Kill the POSITIVE channels: for each block, set GELU(z) = 0 where z > 0, keep only the negative leak. Measure per-block and full-model PPL. Also test: replace positive channels with their token-mean (kill token-dependent signal, keep positive magnitude). This isolates whether the positive TOKEN VARIATION or the positive MAGNITUDE matters. Report per-block: (a) PPL with positive channels zeroed, (b) PPL with positive channels replaced by mean, (c) ||y_pos_mean|| vs ||y_pos_token||.
-   - Type: analysis (interpretability)
-   - Confirmed if: killing positive channels is catastrophic (>+100% PPL) — both regimes essential.
-   - Refuted if: killing positive channels causes <+20% PPL — the negative regime carries most computation.
-   - Inconclusive if: +20-100% — moderate degradation.
-   - Depends on: none. ~5 min compute.
-
 175. **Why is z_mean negative? Weight-data alignment decomposition — GPT-2 FFN** [INTERPRETABILITY]
    - z = W_up @ x + b. We know z_mean ≈ -1 but b_up mean ≈ -0.08. The negativity comes from W_up @ x. Decompose: (a) E[W_up @ x] over 4096 tokens, (b) per-channel cosine(W_up[j], E[x]) — are rows anti-aligned with data mean?, (c) PCA on inputs x, project W_up rows onto top-k PCs — is W_up anti-aligned with principal data directions?, (d) compute z_mean for RANDOM-INIT W_up (same distribution) on same data — is negativity learned or accidental?, (e) per-block comparison across all 12 blocks. Report full alignment statistics.
    - Type: analysis (interpretability)
@@ -115,6 +107,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 164
+
+174. **Positive-channel ablation — GPT-2 FFN** *(CONFIRMED — cycle 164)*
+   - Killing positive channels (z > 0 → 0, keep negative leak) causes +3,141,890% PPL full-model (22.7 → 713,227). Token-mean replacement even worse: +149,216,407% (33.9M PPL). Per-block: block 0 alone +970,095%, middle blocks 6-23% each, block 11 +89%. Positive channels carry the primary computational signal; negative leak alone is insufficient. ||y_pos|| > ||y_neg|| at all blocks, ratio increasing with depth (1.37→2.56). Positive regime is essential — both regimes needed.
+   - Artifacts: `experiments/positive_channel_ablation_gpt2.py`, `autoresearch/results/cycle_164_positive_ablation.json`, `autoresearch/results/cycle_164_positive_ablation.png`
 
 ### Cycle 163
 
