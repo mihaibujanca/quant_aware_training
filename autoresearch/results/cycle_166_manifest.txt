@@ -2,5 +2,5 @@ item_number=176
 tsv_path=autoresearch/logs/experiments.tsv
 result_paths=autoresearch/results/cycle_166_neg_bias.json,autoresearch/results/cycle_166_neg_bias.png
 code_paths=experiments/constant_neg_bias_gpt2_cycle166.py
-final_commit_hash=PENDING
+final_commit_hash=7925166
 agenda_updated=yes
