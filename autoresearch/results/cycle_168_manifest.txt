@@ -1,0 +1,17 @@
+Cycle 168 — Item 178: Training dynamics of negative z — scale comparison — GPT-2 FFN
+Verdict: CONFIRMED
+z_mean is negative across all GPT-2 scales (small/medium/large), confirming universality.
+
+Key metrics:
+  small  (12L/768d):  z_mean_avg=-0.969, Wx_mean_avg=-0.886, frac_neg=84.5%, PPL=32.8
+  medium (24L/1024d): z_mean_avg=-1.116, Wx_mean_avg=-1.052, frac_neg=87.1%, PPL=24.5
+  large  (36L/1280d): z_mean_avg=-1.427, Wx_mean_avg=-1.397, frac_neg=90.8%, PPL=20.9
+
+Max ratio (large/small): 1.47 (threshold <2.0 for CONFIRMED)
+Mild scale trend: larger models are slightly more negative, but all firmly in the z_mean ≈ -1 regime.
+Bias contribution shrinks with scale: ~8% (small) vs ~2% (large) — Wx dominates more at larger scale.
+
+Artifacts:
+  experiments/zmean_scale_comparison_cycle168.py
+  autoresearch/results/cycle_168_scale_comparison.json
+  autoresearch/results/cycle_168_scale_comparison.png

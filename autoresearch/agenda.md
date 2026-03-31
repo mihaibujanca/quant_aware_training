@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-178. **Training dynamics of negative z — GPT-2 FFN** [INTERPRETABILITY]
-   - Does z_mean start negative at init or emerge during training? (a) Random-init GPT-2: compute z_mean per block on 4096 tokens, (b) compare GPT-2 small/medium/large z_mean — scale dependence?, (c) if training checkpoints available: track z_mean vs step. From cycle 129 we know isotropy is learned (7-8× increase). Does z_mean track the same trajectory?
-   - Type: analysis (interpretability)
-   - Confirmed if: random-init z_mean ≈ 0 AND trained z_mean ≈ -1 — negativity is fully learned.
-   - Refuted if: random-init z_mean already ≈ -1 — geometric accident.
-   - Inconclusive if: random-init slightly negative (-0.2 to -0.5) but training amplifies.
-   - Depends on: none. ~5 min compute.
-
 179. **Does constant bias shift under compression? — GPT-2 FFN** [INTERPRETABILITY]
    - The 41%/block cascade is attention-driven. But the "constant" bias b_leak may shift when upstream blocks are compressed (different inputs → different channels go negative). For k=4 compressed model: (a) compute b_leak on float vs compressed inputs at each block, (b) measure ||b_leak_compressed - b_leak_float|| / ||b_leak_float||, (c) if shift is large: fix b_leak to float value, measure cascade improvement. This tests whether the bias instability contributes to the cascade.
    - Type: analysis (interpretability)
@@ -83,6 +75,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 168
+
+178. **Training dynamics of negative z — GPT-2 FFN** *(CONFIRMED — cycle 168)*
+   - z_mean negativity is universal across GPT-2 scales: small=-0.97, medium=-1.12, large=-1.43 (max_ratio=1.47, all < -0.3). Mild scale trend: larger models more negative (1.47x). Dead fraction grows 84.5% → 90.8% with scale. Bias contribution shrinks from ~8% (small) to ~2% (large) — Wx anti-alignment increasingly dominant at scale. Combined with cycle 165 (random-init ≈ 0), negativity is both learned and universal.
+   - Artifacts: `experiments/zmean_scale_comparison_cycle168.py`, `autoresearch/results/cycle_168_scale_comparison.json`, `autoresearch/results/cycle_168_scale_comparison.png`
 
 ### Cycle 167
 
