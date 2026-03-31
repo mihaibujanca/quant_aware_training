@@ -1,0 +1,18 @@
+{
+  "cycle": 153,
+  "item": 163,
+  "seed": 42,
+  "float_ppl": 57.65287371228062,
+  "results": {
+    "joint_corr": {
+      "joint_ppl": 91.90351518999923,
+      "corrected_ppl": 107.49756282206455
+    },
+    "topk_corr": {
+      "unpolished_ppl": 84.9426192371746,
+      "corrected_ppl": 69.82239605745255
+    }
+  },
+  "verdict": "REFUTED",
+  "verdict_detail": "Joint+corr (107.5) >= topk+corr (69.8)"
+}
