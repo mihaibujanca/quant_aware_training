@@ -6,53 +6,57 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-~~152~~ MOVED TO PAST (cycle 138).
+159. **Joint stacking-aware compression training — GPT-2 FFN k=4**
+   - The composition barrier (cycle 138): independently trained compressions don't stack. This is the direct attack: train all 4 compressed blocks [1,4,7,11] simultaneously under the full model CE loss. For each block, compress FFN via rank-r linear factorization (W_ffn ≈ W_dec @ W_enc, r chosen for 6x compression). Initialize W_enc, W_dec via SVD of the original W_ffn. Then train all 8 matrices (4 blocks × {W_enc, W_dec}) jointly for 2000 steps on OWT under model CE loss with all 4 blocks swapped in simultaneously. Compare: (a) joint-trained stacking PPL, (b) independent-trained stacking PPL (cycle 138 protocol), (c) topk+lstsq+polish baseline (PPL ~70). Use AdamW lr=1e-4 with cosine schedule. 3 seeds, 200 OWT eval sequences.
+   - Type: empirical
+   - Confirmed if: joint-trained stacking PPL beats topk+lstsq+polish (70.0) by >=2% relative.
+   - Refuted if: joint-trained stacking PPL is within 2% of topk+lstsq+polish or WORSE.
+   - Inconclusive if: better by 2-5% but high seed variance (std > 1.0 PPL).
+   - Depends on: none
+
+160. **Linear factorization + CE training (single-block) — GPT-2 FFN k=4**
+   - Cycle 148 proved nonlinearity is cosmetic — the CE training objective is what matters. This removes the AE entirely: just do rank-r factorization W_ffn ≈ W_dec @ W_enc (no encoder nonlinearity, no bottleneck activation) and train W_enc, W_dec under single-block swap CE loss. This is the minimal trainable compression. Compare: (a) CE-trained linear factorization, (b) SVD-initialized linear factorization (no training, lstsq only), (c) topk+lstsq+polish, (d) ReLU AE (cycle 137 numbers). Single-block swap on blocks [1,4,7,11] at 6x. AdamW lr=1e-4, 500 steps. 3 seeds, 200 OWT eval sequences.
+   - Type: empirical
+   - Confirmed if: CE-trained linear factorization beats topk+lstsq+polish by >=2% on >=2/4 blocks.
+   - Refuted if: CE-trained linear factorization within 1% of topk+lstsq+polish (CE training doesn't help linear factorization).
+   - Inconclusive if: 1-2% improvement or block-dependent.
+   - Depends on: none
 
 ### P1
 
-~~155~~ MOVED TO PAST (cycle 143).
+161. **Correction subspace analysis on unpolished model — GPT-2 FFN k=4**
+   - Redo cycle 142 with the correct protocol. Cycle 142 trained corrections on a polished model and PPL worsened (71→88.7) — corrections compete with polish. The original cycle 115 protocol trained corrections on the unpolished topk+lstsq model (PPL ~84.9 pre-polish) and got PPL 59. Apply the cycle 115 correction protocol, THEN decompose the learned correction into: (a) local error cancellation component (projection onto E_local = W_q - W_float), (b) cascade compensation component (orthogonal complement). Measure fraction of correction energy in each subspace per block. Ablate: apply only local component, only cascade component. 3 seeds, 200 OWT eval sequences.
+   - Type: analysis
+   - Confirmed if: cascade component accounts for >=30% of correction energy and its ablation degrades PPL by >=5%.
+   - Refuted if: corrections are >90% local error cancellation (cascade is negligible).
+   - Inconclusive if: decomposition is unstable across seeds or blocks.
+   - Depends on: none (fixes cycle 142 method failure)
+
+162. **Progressive stacking — train-then-freeze — GPT-2 FFN k=4**
+   - Alternative to full joint training (item 159): train compressed blocks one at a time in a stacking-aware manner. Phase 1: compress block 1 under single-block CE loss (500 steps). Freeze block 1. Phase 2: compress block 4 under 2-block stacked CE loss (blocks 1+4 both swapped, only block 4 params trainable, 500 steps). Freeze block 4. Phase 3: compress block 7 (blocks 1+4+7 swapped, only block 7 trainable). Phase 4: compress block 11 (all 4 swapped, only block 11 trainable). Use rank-r linear factorization same as item 159. Compare final 4-block stacked PPL against: (a) joint training (item 159), (b) independent training, (c) topk+lstsq+polish. 3 seeds, 200 OWT eval sequences.
+   - Type: empirical
+   - Confirmed if: progressive stacking PPL beats independent stacking by >=3% relative.
+   - Refuted if: progressive and independent within 1.5% (sequential awareness doesn't help).
+   - Inconclusive if: 1.5-3% or ordering-dependent (need to test reverse order).
+   - Depends on: none (but compare results with 159)
 
 ### P2
 
-149. **Layer-local pullback metric via rest-of-network Jacobian — GPT-2 FFN**
-   - Instead of using the global unembedding pullback G = U^T U for all layers, compute a per-layer pullback metric that captures "how much does error at layer l affect the final output?" For each layer l, define the map f_l: R^768 -> R^{50257} as the composition of layers l+1 through 12 plus ln_f plus lm_head. Use JVP (forward-mode AD via torch.func.jvp) to compute ||J_l e_l||_2 directly for each block's compression error e_l, without forming the full Jacobian. This gives the layer-local pullback norm. Compare three error metrics across 12 blocks: (a) Frobenius ||e_l||_2. (b) Global pullback ||U e_l||_2. (c) Layer-local ||J_l e_l||_2. Correlate each with single-block swap PPL delta. 3 seeds, 200 OWT eval sequences.
-   - Type: analysis
-   - Confirmed if: layer-local metric Spearman |rho| with PPL exceeds global pullback |rho| by >= 0.15.
-   - Refuted if: layer-local and global pullback correlations are within 0.05 (global G is sufficient).
-   - Inconclusive if: layer-local is marginally better (0.05-0.15) or computation is too noisy (cross-seed std > 0.1).
-   - Depends on: 146 (need global pullback baseline to compare against)
-
-150. **Curvature-salience guided correction rank allocation — GPT-2 FFN k=4**
-   - Cycles 119/120 showed r=8 LoRA corrections recover ~74% of k=4/k=5 degradation with corrections placed uniformly after every compressed block. Use the curvature and salience profiles from item 145 to redistribute correction rank non-uniformly. Three allocations at matched total params: (a) Uniform r=8 at all 4 correction points (baseline, ~49K params). (b) Curvature-weighted: higher rank at high-curvature layers, lower at low-curvature. (c) Salience-weighted: higher rank at high-salience layers. 3 seeds, 200 OWT eval sequences.
+163. **Joint training + LoRA corrections — GPT-2 FFN k=4**
+   - If joint training (item 159) works, add LoRA corrections (r=8, ~49K params) on top of jointly-trained compression. The question: does joint training reduce the work corrections need to do? Compare correction recovery: (a) LoRA on independently-trained compression (cycle 119/120 baseline, ~74% recovery), (b) LoRA on jointly-trained compression. If joint training already handles cascade, corrections should focus on local refinement and achieve higher final recovery. Same correction training protocol as cycle 119. 3 seeds, 200 OWT eval sequences.
    - Type: empirical
-   - Confirmed if: non-uniform correction rank improves PPL recovery by >= 5 percentage points (e.g., 74% -> 79%) over uniform.
-   - Refuted if: all allocations within 2pp of each other.
-   - Inconclusive if: improvement is 2-5pp or unstable across seeds.
-   - Depends on: 145 (curvature/salience profiles), 146 (confirms metric relevance)
+   - Confirmed if: jointly-trained + LoRA beats independently-trained + LoRA by >=3% relative PPL.
+   - Refuted if: within 1.5% (joint training doesn't reduce correction burden).
+   - Inconclusive if: 1.5-3% or high seed variance.
+   - Depends on: 159 (need joint training baseline)
 
-156. **Nanochat asset audit and benchmark lock-in**
-   - The program.md demands nanochat as primary benchmark, but all 134 cycles have run on GPT-2 proxy. Check: (1) Do nanochat checkpoints exist locally? `runs/nanochat_ffn_compression/` has `gpt2_shakespeare_real.json` — this is a GPT-2 proxy result, not nanochat. (2) Check for d24/d26 checkpoints in `runs/` or any HF cache. (3) Check for climbmix-400b data locally or accessible via HF. (4) If assets exist, run the standard working recipe (topk+lstsq+500 polish, k=4@6x, blocks [1,4,7,11]) on nanochat to establish the primary benchmark number. (5) If assets are missing, document exactly what's needed and mark the proxy limitation explicitly in STATUS.md. This is the R1 direction from program.md — it's overdue.
-   - Type: analysis
-   - Confirmed if: nanochat assets found, working recipe produces a primary benchmark PPL number.
-   - Refuted if: N/A (audit always produces useful output).
-   - Inconclusive if: assets partially available (checkpoint but no data, or vice versa).
-   - Depends on: none
-
-157. **Stacked AE with inter-block error feedback — GPT-2 FFN k=4**
-   - If bottleneck AEs work at single-block (item 151), the stacking question is whether AEs can be trained to account for upstream compression error. Train AEs sequentially in block order [1, 4, 7, 11]: block 1's AE trains on float inputs, block 4's AE trains on inputs from the model with block 1 already compressed, etc. Compare cascaded-AE vs independent-AE (each trained on float) vs topk+lstsq baseline. This is the AE analog of cycle 060's cascaded lstsq (which failed — re-probing didn't help lstsq). AE's nonlinear encoder might capture the error pattern that lstsq misses. 3 seeds, 200 OWT eval sequences.
+164. **Joint training step budget sweep — GPT-2 FFN k=4**
+   - Joint training (item 159) uses 2000 steps. Is that enough? Too much? Sweep step budgets [500, 1000, 2000, 4000] for joint training. Plot PPL vs steps. Also compare wall-clock: joint 2000 steps vs topk+lstsq+500 polish (current recipe). The practical question: is the joint training approach worth the compute even if it works? 1 seed (deterministic sweep), 200 OWT eval sequences.
    - Type: empirical
-   - Confirmed if: cascaded-AE stacking PPL beats independent-AE stacking by >=3% relative.
-   - Refuted if: cascaded and independent AE stacking PPL within 1% (AE encoder doesn't exploit upstream error structure, same as lstsq).
-   - Inconclusive if: 1-3% improvement or high seed variance.
-   - Depends on: 152 (need baseline AE stacking numbers first)
-
-158. **Linear AE ablation — is encoder nonlinearity necessary? — GPT-2 FFN**
-   - Cycle 131 measured ~5% nonlinearity in the AE encoder (fraction of tokens where ReLU flips sign). If nonlinearity is only 5%, a linear AE (i.e., plain low-rank factorization W_dec @ W_enc with lstsq) should match. Test: (a) ReLU AE (cycle 131 architecture), (b) Linear AE (no ReLU, same dims), (c) topk+lstsq baseline. Single-block swap on blocks [1, 4, 7, 11] at 6x. This disentangles whether AE's advantage (if any from item 151) comes from (i) the nonlinear encoder or (ii) the joint end-to-end training with model CE loss. If linear AE matches ReLU AE, the advantage is training objective, not architecture. 3 seeds, 200 OWT eval sequences.
-   - Type: empirical
-   - Confirmed if: ReLU AE beats linear AE by >=2% relative on >=2/4 blocks (nonlinearity matters).
-   - Refuted if: linear AE matches ReLU AE within 1% (nonlinearity is cosmetic, training objective is what matters).
-   - Inconclusive if: difference is 1-2% or block-dependent.
-   - Depends on: 151 (establishes AE baseline numbers)
+   - Confirmed if: clear diminishing-returns curve identifiable; optimal budget <= 2000 steps.
+   - Refuted if: PPL still improving at 4000 steps (budget too small to converge).
+   - Inconclusive if: noisy loss curve, no clear plateau.
+   - Depends on: 159 (confirm joint training works at all before sweeping budget)
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
@@ -77,6 +81,36 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 148
+
+158. **Linear AE ablation — is encoder nonlinearity necessary? — GPT-2 FFN** *(REFUTED — cycle 148)*
+   - **Outcome: REFUTED** — Linear AE matches ReLU AE within 0.1-0.7% (B4: relu=54.34, linear=54.30; B7: relu=55.28, linear=54.91). Nonlinearity is cosmetic. The advantage over topk comes from the CE training objective, not encoder architecture.
+   - Commit: 0844df4
+   - Artifacts: experiments/linear_ae_ablation_cycle148.py, autoresearch/results/cycle_148_linear_ae_ablation.json
+
+### Cycle 147
+
+157. **Stacked AE with inter-block error feedback — GPT-2 FFN k=4** *(INCONCLUSIVE — cycle 147, PLAN INVALID)*
+   - Predecessor 152 REFUTED (AE stacking worse). Plan invalid.
+
+### Cycle 146
+
+156. **Nanochat asset audit and benchmark lock-in** *(INCONCLUSIVE — cycle 146)*
+   - **Outcome: INCONCLUSIVE** — No nanochat checkpoints or climbmix data available. Model code present but not importable. All cycles remain GPT-2 proxy.
+   - Artifacts: autoresearch/results/cycle_146_nanochat_audit.md
+
+### Cycle 145
+
+150. **Curvature-salience guided correction rank allocation — GPT-2 FFN k=4** *(INCONCLUSIVE — cycle 145, PLAN INVALID)*
+   - Triple invalidation: dep 146 refuted, allocation doesn't help (cycle 114), polish convergence issues.
+
+### Cycle 144
+
+149. **Layer-local pullback metric via rest-of-network Jacobian — GPT-2 FFN** *(REFUTED — cycle 144)*
+   - **Outcome: REFUTED** — Layer-local pullback rho=0.538, WORSE than Frobenius (rho=0.797). Downstream amplification is non-monotonic. Global Frobenius remains best per-block error metric.
+   - Commit: f35ece2
+   - Artifacts: experiments/layer_local_pullback_cycle144.py, autoresearch/results/cycle_144_layer_local_pullback.json
 
 ### Cycle 143
 
