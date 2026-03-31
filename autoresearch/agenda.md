@@ -10,13 +10,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-155. **Eigenstructure-aware channel selection — GPT-2 FFN**
-   - Cycle 129 confirmed isotropy is learned (7-8x increase in blocks 4-7). The current topk selects channels by activation magnitude, ignoring the learned covariance structure. Test eigenstructure-aware selection: (1) Compute data covariance C = E[h h^T] of FFN intermediate activations (3072x3072). (2) Select top-k channels by WHITENED importance: importance_j = ||C^{-1/2}[:,j]||_2 * rms(act_j) — this upweights channels that are independently informative (low covariance with others) and downweights redundant channels. Compare to topk on single-block swap PPL for blocks [1, 4, 7, 11] at 6x (k=512). Both with lstsq refit + 500 Adam polish. 3 seeds, 200 OWT eval sequences.
-   - Type: empirical
-   - Confirmed if: eigenstructure-aware selection beats topk by >=2% relative PPL post-polish on >=2/4 blocks.
-   - Refuted if: eigenstructure-aware matches topk or is worse (learned isotropy doesn't help channel selection).
-   - Inconclusive if: advantage is <2% or block-dependent.
-   - Depends on: none
+~~155~~ MOVED TO PAST (cycle 143).
 
 ### P2
 
@@ -83,6 +77,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 143
+
+155. **Eigenstructure-aware channel selection — GPT-2 FFN** *(REFUTED — cycle 143)*
+   - **Outcome: REFUTED** — Whitened importance is worse than topk on 3/4 blocks (B1 +0.3%, B4 +0.4%, B7 +2.8% worse) and marginally better on B11 (-1.3%). Covariance whitening hurts channel selection — decorrelating removes structural information that lstsq uses. Learned isotropy doesn't help channel selection. Zero seed variance confirms deterministic result.
+   - Commit: PENDING
+   - Artifacts: experiments/eigenstructure_channel_selection_cycle143.py, autoresearch/results/cycle_143_eigenstructure.json
 
 ### Cycle 142
 
