@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-175. **Why is z_mean negative? Weight-data alignment decomposition — GPT-2 FFN** [INTERPRETABILITY]
-   - z = W_up @ x + b. We know z_mean ≈ -1 but b_up mean ≈ -0.08. The negativity comes from W_up @ x. Decompose: (a) E[W_up @ x] over 4096 tokens, (b) per-channel cosine(W_up[j], E[x]) — are rows anti-aligned with data mean?, (c) PCA on inputs x, project W_up rows onto top-k PCs — is W_up anti-aligned with principal data directions?, (d) compute z_mean for RANDOM-INIT W_up (same distribution) on same data — is negativity learned or accidental?, (e) per-block comparison across all 12 blocks. Report full alignment statistics.
-   - Type: analysis (interpretability)
-   - Confirmed if: trained W_up is significantly more anti-aligned with data than random init (z_mean shift > 0.5 between trained and random) — network LEARNED to put channels negative.
-   - Refuted if: random init z_mean is already ≈ -1 — negativity is a geometric accident of high-dimensional projection, not learned.
-   - Inconclusive if: partial shift (0.1-0.5).
-   - Depends on: none. ~5 min compute.
-
 176. **Functional role of constant negative bias — GPT-2 FFN** [INTERPRETABILITY]
    - The negative regime contributes a near-constant vector b_leak per block (87-98% token-independent). Test if this is functionally just a bias: (a) compute b_leak = E[y_neg] per block on 4096 tokens, (b) create modified model: GELU(z)→ReLU(z) (kill negative) BUT add b_leak as explicit constant to block output, (c) measure per-block and full-model PPL of "ReLU + b_leak" vs float. If PPL recovers near-float: the negative regime IS just a bias (768 params per block). If broken: the 1.5-13% token-dependent negative signal is critical.
    - Type: analysis (interpretability)
@@ -107,6 +99,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 165
+
+175. **Why is z_mean negative? Weight-data alignment decomposition — GPT-2 FFN** *(CONFIRMED — cycle 165)*
+   - Negativity is LEARNED, not geometric accident. Trained W_up @ x mean ≈ -0.61 to -1.06 per block; random-init W_rand @ x mean ≈ 0 (±0.001). Mean shift = 0.886 across all 12 blocks. Per-channel cosine alignment: 83-98% of c_fc rows are anti-aligned with E[x], mean cos ≈ -0.06 to -0.11. Decomposition: z_mean ≈ -1, b_mean ≈ -0.08, Wx_mean ≈ -0.9 (dominant). Bias contributes only ~8-10% of total negativity; W_up @ x is the primary driver. Network has learned weight rows that systematically point opposite to the mean input direction.
+   - Artifacts: `experiments/weight_data_alignment_cycle165.py`, `autoresearch/results/cycle_165_alignment.json`, `autoresearch/results/cycle_165_alignment.png`
 
 ### Cycle 164
 

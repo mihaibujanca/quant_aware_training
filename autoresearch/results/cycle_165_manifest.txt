@@ -1,0 +1,21 @@
+Cycle 165 — Item 175: Weight-data alignment decomposition — GPT-2 FFN
+Verdict: CONFIRMED
+Mean shift (trained vs random): 0.886 (threshold: >0.5)
+
+Key metrics per block:
+  Block  0: z_mean=-0.994, b_mean=-0.093, Wx_mean=-0.901, Wx_rand≈+0.000, shift=0.901, cos_mean=-0.113, frac_neg=92.22%
+  Block  1: z_mean=-0.683, b_mean=-0.072, Wx_mean=-0.611, Wx_rand≈+0.000, shift=0.611, cos_mean=-0.059, frac_neg=83.95%
+  Block  3: z_mean=-1.148, b_mean=-0.093, Wx_mean=-1.055, Wx_rand≈+0.000, shift=1.055, cos_mean=-0.081, frac_neg=98.40%
+  Block 11: z_mean=-0.872, b_mean=-0.064, Wx_mean=-0.808, Wx_rand≈+0.000, shift=0.809, cos_mean=-0.072, frac_neg=93.07%
+
+Summary:
+- Negativity is LEARNED, not a geometric accident of high-D projection
+- Bias (b_mean≈-0.08) contributes only ~8-10% of total z_mean≈-1
+- W_up @ x is the primary driver (Wx_mean≈-0.6 to -1.06)
+- 83-98% of W_up rows are anti-aligned with E[x] (per-channel cosine)
+- Random-init W_rand @ x mean ≈ 0 (±0.001), confirming the anti-alignment is trained in
+
+Artifacts:
+  experiments/weight_data_alignment_cycle165.py
+  autoresearch/results/cycle_165_alignment.json
+  autoresearch/results/cycle_165_alignment.png
