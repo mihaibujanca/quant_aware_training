@@ -6,57 +6,49 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-159. **Joint stacking-aware compression training — GPT-2 FFN k=4**
-   - The composition barrier (cycle 138): independently trained compressions don't stack. This is the direct attack: train all 4 compressed blocks [1,4,7,11] simultaneously under the full model CE loss. For each block, compress FFN via rank-r linear factorization (W_ffn ≈ W_dec @ W_enc, r chosen for 6x compression). Initialize W_enc, W_dec via SVD of the original W_ffn. Then train all 8 matrices (4 blocks × {W_enc, W_dec}) jointly for 2000 steps on OWT under model CE loss with all 4 blocks swapped in simultaneously. Compare: (a) joint-trained stacking PPL, (b) independent-trained stacking PPL (cycle 138 protocol), (c) topk+lstsq+polish baseline (PPL ~70). Use AdamW lr=1e-4 with cosine schedule. 3 seeds, 200 OWT eval sequences.
+165. **Multi-seed validation of joint training — GPT-2 FFN k=4**
+   - Cycle 149 got 69.76 (1 seed), cycle 153 got 91.9 (different seed). Is 69.76 an outlier or the typical result? Run 8 seeds (0-7) of the cycle 149 protocol: random-init rank-64 linear factorization, all 4 blocks [1,4,7,11] jointly trained under stacked CE loss, 2000 steps AdamW lr=1e-4. Report: median, mean, std, min, max PPL. Also record per-seed training loss curves (save every 100 steps) to check for bimodal convergence (some seeds may find a good basin, others not). 200 OWT eval sequences per seed.
    - Type: empirical
-   - Confirmed if: joint-trained stacking PPL beats topk+lstsq+polish (70.0) by >=2% relative.
-   - Refuted if: joint-trained stacking PPL is within 2% of topk+lstsq+polish or WORSE.
-   - Inconclusive if: better by 2-5% but high seed variance (std > 1.0 PPL).
+   - Confirmed if: median PPL <= 72 (i.e. 69.76 is representative, not an outlier) AND std < 3.0.
+   - Refuted if: median PPL > 80 or std > 10 (seed-dependence is catastrophic, method unreliable).
+   - Inconclusive if: median 72-80 or std 3-10 (works sometimes but unstable).
    - Depends on: none
 
-160. **Linear factorization + CE training (single-block) — GPT-2 FFN k=4**
-   - Cycle 148 proved nonlinearity is cosmetic — the CE training objective is what matters. This removes the AE entirely: just do rank-r factorization W_ffn ≈ W_dec @ W_enc (no encoder nonlinearity, no bottleneck activation) and train W_enc, W_dec under single-block swap CE loss. This is the minimal trainable compression. Compare: (a) CE-trained linear factorization, (b) SVD-initialized linear factorization (no training, lstsq only), (c) topk+lstsq+polish, (d) ReLU AE (cycle 137 numbers). Single-block swap on blocks [1,4,7,11] at 6x. AdamW lr=1e-4, 500 steps. 3 seeds, 200 OWT eval sequences.
+166. **Joint training with correction-aware loss — GPT-2 FFN k=4**
+   - The composition barrier: CE-trained models resist post-hoc corrections (cycle 153, 107.5 PPL). Hypothesis: joint training optimizes for a subspace that corrections can't reach. Fix: train compression AND corrections simultaneously. Architecture: for each block, W_ffn ≈ W_dec @ W_enc + LoRA(r=8). Loss = stacked CE with all 4 compressed+corrected blocks swapped in. Train both factorization params (W_enc, W_dec) and LoRA params jointly. Compare: (a) joint compress+correct (this), (b) joint compress then post-hoc correct (cycle 153 = 107.5), (c) topk+lstsq+corrections (PPL ~59 baseline). 3 seeds, 2000 steps AdamW lr=1e-4. 200 OWT eval sequences.
    - Type: empirical
-   - Confirmed if: CE-trained linear factorization beats topk+lstsq+polish by >=2% on >=2/4 blocks.
-   - Refuted if: CE-trained linear factorization within 1% of topk+lstsq+polish (CE training doesn't help linear factorization).
-   - Inconclusive if: 1-2% improvement or block-dependent.
+   - Confirmed if: joint compress+correct PPL < 65 (beats topk+corrections ~59 by composition, or closes gap significantly).
+   - Refuted if: PPL > 75 or corrections collapse to zero (optimizer ignores LoRA branch).
+   - Inconclusive if: 65-75 or high seed variance (>5 PPL std).
    - Depends on: none
 
 ### P1
 
-161. **Correction subspace analysis on unpolished model — GPT-2 FFN k=4**
-   - Redo cycle 142 with the correct protocol. Cycle 142 trained corrections on a polished model and PPL worsened (71→88.7) — corrections compete with polish. The original cycle 115 protocol trained corrections on the unpolished topk+lstsq model (PPL ~84.9 pre-polish) and got PPL 59. Apply the cycle 115 correction protocol, THEN decompose the learned correction into: (a) local error cancellation component (projection onto E_local = W_q - W_float), (b) cascade compensation component (orthogonal complement). Measure fraction of correction energy in each subspace per block. Ablate: apply only local component, only cascade component. 3 seeds, 200 OWT eval sequences.
-   - Type: analysis
-   - Confirmed if: cascade component accounts for >=30% of correction energy and its ablation degrades PPL by >=5%.
-   - Refuted if: corrections are >90% local error cancellation (cascade is negligible).
-   - Inconclusive if: decomposition is unstable across seeds or blocks.
-   - Depends on: none (fixes cycle 142 method failure)
-
-162. **Progressive stacking — train-then-freeze — GPT-2 FFN k=4**
-   - Alternative to full joint training (item 159): train compressed blocks one at a time in a stacking-aware manner. Phase 1: compress block 1 under single-block CE loss (500 steps). Freeze block 1. Phase 2: compress block 4 under 2-block stacked CE loss (blocks 1+4 both swapped, only block 4 params trainable, 500 steps). Freeze block 4. Phase 3: compress block 7 (blocks 1+4+7 swapped, only block 7 trainable). Phase 4: compress block 11 (all 4 swapped, only block 11 trainable). Use rank-r linear factorization same as item 159. Compare final 4-block stacked PPL against: (a) joint training (item 159), (b) independent training, (c) topk+lstsq+polish. 3 seeds, 200 OWT eval sequences.
+167. **Higher-rank joint training (rank-128, rank-256) — GPT-2 FFN k=4**
+   - Cycle 149 used rank-64 (~6x compression). Seed-dependence might stem from insufficient capacity — rank-64 has a narrow loss landscape with few good basins. Test rank-128 (~3x compression, 1.97M params) and rank-256 (~1.5x compression, 3.93M params). If higher rank eliminates seed-dependence, the problem is capacity not method. Run 3 seeds each at rank-64/128/256 under cycle 149 joint protocol. Report PPL mean/std per rank. Also measure: does higher rank reduce the gap between best and worst seed?
    - Type: empirical
-   - Confirmed if: progressive stacking PPL beats independent stacking by >=3% relative.
-   - Refuted if: progressive and independent within 1.5% (sequential awareness doesn't help).
-   - Inconclusive if: 1.5-3% or ordering-dependent (need to test reverse order).
-   - Depends on: none (but compare results with 159)
+   - Confirmed if: rank-128 or rank-256 has std < 1.5 AND mean PPL < 65.
+   - Refuted if: seed variance persists at rank-256 (std > 5) — problem is optimization not capacity.
+   - Inconclusive if: monotonic improvement but still high variance.
+   - Depends on: 165 (need rank-64 seed distribution as baseline)
+
+168. **Topk+lstsq init for joint training — GPT-2 FFN k=4**
+   - Joint training with random init is seed-dependent (cycles 149/153). Topk+lstsq gives a reliable starting point (PPL ~84.9 single, ~95 stacked). Hypothesis: initializing joint training from the topk+lstsq solution (projected to rank-r factored form via SVD of the sparse matrix) gives a warm start that avoids bad basins. Protocol: (a) compute topk+lstsq W_approx for each block, (b) SVD to get W_dec @ W_enc (rank-64), (c) joint-train under stacked CE for 2000 steps. Compare: topk-init joint vs random-init joint (item 165 numbers) vs topk+lstsq+polish (PPL ~70.7). 3 seeds, 200 OWT eval sequences.
+   - Type: empirical
+   - Confirmed if: topk-init joint PPL < 68 AND std < 2.0 across seeds (reliable AND good).
+   - Refuted if: PPL within 2% of topk+lstsq+polish (~70.7) — warm start doesn't help joint training.
+   - Inconclusive if: better than random-init but worse than topk+corrections (~59).
+   - Depends on: 165 (need random-init seed statistics for comparison)
 
 ### P2
 
-163. **Joint training + LoRA corrections — GPT-2 FFN k=4**
-   - If joint training (item 159) works, add LoRA corrections (r=8, ~49K params) on top of jointly-trained compression. The question: does joint training reduce the work corrections need to do? Compare correction recovery: (a) LoRA on independently-trained compression (cycle 119/120 baseline, ~74% recovery), (b) LoRA on jointly-trained compression. If joint training already handles cascade, corrections should focus on local refinement and achieve higher final recovery. Same correction training protocol as cycle 119. 3 seeds, 200 OWT eval sequences.
+169. **Correction-first compression: train corrections, then compress residual — GPT-2 FFN k=4**
+   - Flip the pipeline. Current best: compress (topk+lstsq) then correct (LoRA). Alternative: first learn what the correction network WOULD do (train LoRA on uncompressed model to predict the compression error pattern), then compress W_ffn - W_correction to preserve the subspace corrections can't reach. Protocol: (a) train LoRA corrections on topk+lstsq compressed model (cycle 115 protocol), (b) compute effective correction matrix C = W_corrected - W_compressed per block, (c) compute residual R = W_float - C, (d) compress R via topk+lstsq at k=4. Compare stacked PPL of compress(R)+corrections vs compress(W)+corrections (current recipe). 3 seeds, 200 OWT eval sequences.
    - Type: empirical
-   - Confirmed if: jointly-trained + LoRA beats independently-trained + LoRA by >=3% relative PPL.
-   - Refuted if: within 1.5% (joint training doesn't reduce correction burden).
-   - Inconclusive if: 1.5-3% or high seed variance.
-   - Depends on: 159 (need joint training baseline)
-
-164. **Joint training step budget sweep — GPT-2 FFN k=4**
-   - Joint training (item 159) uses 2000 steps. Is that enough? Too much? Sweep step budgets [500, 1000, 2000, 4000] for joint training. Plot PPL vs steps. Also compare wall-clock: joint 2000 steps vs topk+lstsq+500 polish (current recipe). The practical question: is the joint training approach worth the compute even if it works? 1 seed (deterministic sweep), 200 OWT eval sequences.
-   - Type: empirical
-   - Confirmed if: clear diminishing-returns curve identifiable; optimal budget <= 2000 steps.
-   - Refuted if: PPL still improving at 4000 steps (budget too small to converge).
-   - Inconclusive if: noisy loss curve, no clear plateau.
-   - Depends on: 159 (confirm joint training works at all before sweeping budget)
+   - Confirmed if: correction-first PPL < 57 (beats current best ~59 by >=3%).
+   - Refuted if: PPL > 62 or corrections can't transfer to the modified compressed weights.
+   - Inconclusive if: 57-62 (marginal or within noise).
+   - Depends on: none
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
@@ -81,6 +73,44 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 154
+
+164. **Joint training step budget sweep — GPT-2 FFN k=4** *(INCONCLUSIVE — cycle 154, PLAN INVALID)*
+   - Joint training seed-dependent (91.9 vs 69.76) and CE models resist corrections. Sweep pointless until seed-dependence resolved.
+
+### Cycle 153
+
+163. **Joint training + LoRA corrections — GPT-2 FFN k=4** *(REFUTED — cycle 153)*
+   - **Outcome: REFUTED** — CE-trained models resist post-hoc corrections. Joint+corrections = 107.5 (catastrophic). Topk+corrections = 69.8 (works). Joint PPL = 91.9 (seed-dependent, vs 69.76 in cycle 149).
+   - Commit: 34ea5f8
+   - Artifacts: experiments/joint_plus_corrections_cycle153.py, autoresearch/results/cycle_153_joint_corrections.json
+
+### Cycle 152
+
+162. **Progressive stacking — train-then-freeze — GPT-2 FFN k=4** *(REFUTED — cycle 152)*
+   - **Outcome: REFUTED** — Progressive = 78.2, worse than joint (69.8), topk (70.7), and independent (74.4). Greedy per-block can't adapt to cumulative error.
+   - Commit: 7911858
+   - Artifacts: experiments/progressive_stacking_cycle152.py, autoresearch/results/cycle_152_progressive_stacking.json
+
+### Cycle 151
+
+161. **Correction subspace analysis on unpolished model — GPT-2 FFN k=4** *(CONFIRMED — cycle 151)*
+   - **Outcome: CONFIRMED** — Novel subspace dominates corrections (93-97%). Block 7 correction is almost entirely cascade compensation (novel recovery=110%, error recovery=34%). Corrections reroute around damaged subspace.
+   - Commit: 6fefec8
+   - Artifacts: experiments/correction_subspace_unpolished_cycle151.py, autoresearch/results/cycle_151_correction_subspace.json
+
+### Cycle 150
+
+160. **Linear factorization + CE training (single-block) — GPT-2 FFN k=4** *(INCONCLUSIVE — cycle 150, PLAN INVALID)*
+   - Superseded by cycles 148 (linear=ReLU at single-block) and 149 (joint training works at stacking).
+
+### Cycle 149
+
+159. **Joint stacking-aware compression training — GPT-2 FFN k=4** *(INCONCLUSIVE — cycle 149)*
+   - **Outcome: INCONCLUSIVE** — Random-init rank-64 = 69.76 (beats topk 70.70 by 1.3%), but SVD init fails (78.2) and 2% threshold not met. Random beats structured init with 1.6x fewer params, but seed-dependent.
+   - Commit: 7344625
+   - Artifacts: experiments/joint_stacking_training_cycle149.py, autoresearch/results/cycle_149_joint_stacking.json
 
 ### Cycle 148
 

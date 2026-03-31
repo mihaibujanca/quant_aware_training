@@ -19,4 +19,8 @@
 Attention pruning, cross-block sharing, exact pruning, GELU affine maps, G-weighted metrics, method hybrids, eigenstructure selection, progressive stacking, corrections on CE-trained models
 
 ## Next
-- **164**: Joint training step sweep (P2) — last item before agenda refresh
+- **165**: Multi-seed validation of joint training (P0) — 8 seeds to characterize seed-dependence
+- **166**: Joint training with correction-aware loss (P0) — train compression + corrections simultaneously
+- **167**: Higher-rank joint training rank-128/256 (P1) — test if capacity reduces seed variance
+- **168**: Topk+lstsq init for joint training (P1) — warm start from known-good solution
+- **169**: Correction-first compression (P2) — flip pipeline: correct then compress residual
