@@ -60,13 +60,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ### P2
 
 
-173. **Per-block error contribution profiling — stacked topk+lstsq — GPT-2 FFN k=4**
-   - The gap between single-block PPL (~85) and stacked PPL (~95 pre-polish, ~70.7 post-polish) indicates massive cross-block error interaction, and cycle 151 showed corrections are 93-97% cascade compensation. Profile the stacking: compress blocks 0..i for i=0..11, record PPL at each step, and compute the marginal PPL contribution of each block. Identify which blocks are the dominant cascade error sources. This directly informs whether the correction budget (49K params) should be redistributed non-uniformly.
-   - Type: analysis
-   - Confirmed if: a clear Pareto structure exists (3 or fewer blocks contribute >60% of the total stacking degradation) AND concentrating corrections on those blocks recovers at least 1 PPL point.
-   - Refuted if: degradation is approximately uniform across blocks (no block contributes >15% of total).
-   - Inconclusive if: Pareto structure exists but concentrating corrections on top blocks does not improve PPL.
-   - Depends on: none
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
@@ -91,6 +84,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 163
+
+173. **Per-block error contribution profiling — stacked topk+lstsq — GPT-2 FFN k=4** *(REFUTED — cycle 163)*
+   - 3 seeds [42,137,7], 12 blocks progressive stacking, baseline PPL=52.3. Degradation is approximately uniform: top-3 blocks contribute only 36% of total (need >60%), max single-block contribution 12.6% (need >15%). Correction concentration: Condition A (top-3 r=8)=60.3±9.2, Condition B (top-3 r=11)=60.4±9.3, uniform (4 blocks r=8)=58.6±8.3. Concentrated corrections 1.7 PPL worse than uniform. Degradation profile is approximately uniform (blocks 7-11 each 10-12%, blocks 0-6 each 3-10%), supporting hypothesis that error accumulates diffusely across all blocks rather than concentrating in a few.
+   - Artifacts: `experiments/per_block_stacking_profile_cycle163.py`, `autoresearch/results/cycle_163_per_block_profile.json`, `autoresearch/results/cycle_163_per_block_profile.png`
 
 ### Cycle 162
 

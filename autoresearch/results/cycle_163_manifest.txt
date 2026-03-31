@@ -1,0 +1,38 @@
+Cycle 163 — Item 173 — Per-block error contribution profiling
+VERDICT: REFUTED
+
+Key metrics:
+  Baseline PPL: 52.306
+  Top-3 blocks fraction of total degradation: 0.361 (need >0.60)
+  Max single-block fraction: 0.126 (need >0.15)
+  Condition A (top-3 r=8): 60.333 ± 9.218
+  Condition B (top-3 r=11): 60.402 ± 9.263
+  Uniform (4 blocks r=8): 58.600 ± 8.255
+  Concentrated vs uniform: -1.733 PPL (worse, not better)
+
+Per-block degradation fractions (mean across seeds):
+  Block  0:  2.8%
+  Block  1:  4.7%
+  Block  2:  5.7%
+  Block  3:  6.8%
+  Block  4:  8.1%
+  Block  5:  6.8%
+  Block  6:  9.9%
+  Block  7: 12.1%
+  Block  8: 12.2%
+  Block  9: 11.5%
+  Block 10:  9.3%
+  Block 11: 10.1%
+
+Refuted because: degradation is approximately uniform across blocks (no
+block contributes >15% of total, top-3 contribute only 36%). Blocks 7-11
+each contribute 10-12%, blocks 0-6 each 3-10%. No Pareto concentration.
+
+Implication: correction budget should remain distributed uniformly across
+blocks. There is no structural reason to concentrate LoRA on a subset.
+
+Artifacts:
+  experiments/per_block_stacking_profile_cycle163.py
+  autoresearch/results/cycle_163_per_block_profile.json
+  autoresearch/results/cycle_163_per_block_profile.png
+  autoresearch/results/cycle_163_manifest.txt
