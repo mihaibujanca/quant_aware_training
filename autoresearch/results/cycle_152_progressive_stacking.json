@@ -1,0 +1,48 @@
+{
+  "cycle": 152,
+  "item": 162,
+  "seed": 42,
+  "float_ppl": 57.65287371228062,
+  "d_bn": 64,
+  "blocks_order": [
+    1,
+    4,
+    7,
+    11
+  ],
+  "steps_per_phase": 500,
+  "phases": {
+    "phase_1": {
+      "block": 1,
+      "pre_ppl": 61.25937777972981,
+      "post_ppl": 55.479713015432466,
+      "loss_start": 3.7852022647857666,
+      "loss_end": 3.7921061515808105
+    },
+    "phase_2": {
+      "block": 4,
+      "pre_ppl": 61.54730907350561,
+      "post_ppl": 58.385486877183915,
+      "loss_start": 4.380237579345703,
+      "loss_end": 3.6223978996276855
+    },
+    "phase_3": {
+      "block": 7,
+      "pre_ppl": 66.21789253984267,
+      "post_ppl": 64.05977044551567,
+      "loss_start": 3.8405258655548096,
+      "loss_end": 3.5874388217926025
+    },
+    "phase_4": {
+      "block": 11,
+      "pre_ppl": 80.82575392491972,
+      "post_ppl": 78.20287874165867,
+      "loss_start": 4.064828395843506,
+      "loss_end": 4.144556045532227
+    }
+  },
+  "final_ppl": 78.20287874165867,
+  "total_params": 986112,
+  "verdict": "REFUTED",
+  "verdict_detail": "Progressive (78.2) >= 72 (no benefit over independent)"
+}
