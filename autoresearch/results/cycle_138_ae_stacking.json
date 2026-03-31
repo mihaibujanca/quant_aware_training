@@ -1,0 +1,20 @@
+{
+  "cycle": 138,
+  "item": 152,
+  "seed": 42,
+  "float_ppl": 57.65287371228062,
+  "topk": {
+    "pre": 84.9426192371746,
+    "post": 71.0180123789507
+  },
+  "ae": {
+    "pre": 259.8162180334128,
+    "post": 74.39125063939642
+  },
+  "ae_corr": {
+    "ppl": 76.71773512445894,
+    "corr_params": 49152
+  },
+  "verdict": "REFUTED",
+  "verdict_detail": "AE stacking=74.4 (>=69, within 2% of topk 71.0)"
+}

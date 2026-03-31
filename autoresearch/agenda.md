@@ -6,13 +6,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-152. **Bottleneck AE k=4 stacking — GPT-2 FFN**
-   - If item 151 shows AE has a real advantage at single-block, test the critical stacking case: compress blocks [1, 4, 7, 11] at 6x with AE, stack all 4, measure full-model PPL. Compare to working recipe (topk+lstsq+500 polish, PPL ~70). The key question: does AE's superior local reconstruction translate to better stacking behavior, or does the cascade still dominate? Run with 500-step polish on both. Also test AE + LoRA corrections (r=8) to see if AE + corrections can beat the current best (PPL ~59). 3 seeds.
-   - Type: empirical
-   - Confirmed if: AE stacking PPL < 67 (>4% improvement over topk recipe PPL ~70), OR AE+corrections PPL < 57 (>3% improvement over topk+corrections PPL ~59).
-   - Refuted if: AE stacking PPL >= 69 (within 2% of topk, cascade dominates regardless of local quality).
-   - Inconclusive if: AE stacking PPL 67-69 (marginal, within seed noise).
-   - Depends on: 151 (must confirm AE has single-block advantage first)
+~~152~~ MOVED TO PAST (cycle 138).
 
 ### P1
 
@@ -121,6 +115,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 138
+
+152. **Bottleneck AE k=4 stacking — GPT-2 FFN** *(REFUTED — cycle 138)*
+   - **Outcome: REFUTED** — AE stacking (74.4) is 4.7% WORSE than topk (71.0). Pre-polish AE stacking is catastrophic (259.8 vs 84.9) — independently trained AEs don't compose. Even after 500-step joint polish, AE can't match topk. AE+LoRA corrections (76.7) even worse. The 3% single-block AE advantage (cycle 137) does NOT transfer to multi-block stacking. Cascade/composition dominates local quality.
+   - Commit: PENDING
+   - Artifacts: experiments/ae_stacking_k4_cycle138.py, autoresearch/results/cycle_138_ae_stacking.json
 
 ### Cycle 137
 

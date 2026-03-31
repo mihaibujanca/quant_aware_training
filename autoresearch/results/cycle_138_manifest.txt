@@ -1,0 +1,7 @@
+item_number=152
+outcome=refuted
+key_metric=topk_post=71.0 ae_post=74.4(+4.7%) ae_corr=76.7 ae_pre_stack=259.8 cascade_dominates
+commit=PENDING
+paths=experiments/ae_stacking_k4_cycle138.py,autoresearch/results/cycle_138_ae_stacking.json
+learned=AE's single-block advantage does NOT survive stacking. Independently trained per-block AEs produce catastrophic pre-polish stacking (PPL 260 vs 85 for topk). Even after joint polish, AE (74.4) can't match topk (71.0). The cascade/composition problem is the fundamental bottleneck — local reconstruction quality is irrelevant once errors propagate through attention. LoRA corrections on top of AE stacking make it worse (76.7), suggesting the AE errors are in a different subspace than what corrections can fix.
+next=The composition problem is THE fundamental barrier. Neither better local compression (AE) nor post-hoc corrections (LoRA) can overcome it. The next direction should be JOINT training of all compressed blocks simultaneously (not independent per-block), or finding a compression method that is inherently composition-aware (e.g., distillation under stacked model loss from the start).
