@@ -6,16 +6,56 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+174. **Positive-channel ablation — GPT-2 FFN** [INTERPRETABILITY]
+   - Complement of cycle 102 (which killed negative channels → +8320% PPL). Kill the POSITIVE channels: for each block, set GELU(z) = 0 where z > 0, keep only the negative leak. Measure per-block and full-model PPL. Also test: replace positive channels with their token-mean (kill token-dependent signal, keep positive magnitude). This isolates whether the positive TOKEN VARIATION or the positive MAGNITUDE matters. Report per-block: (a) PPL with positive channels zeroed, (b) PPL with positive channels replaced by mean, (c) ||y_pos_mean|| vs ||y_pos_token||.
+   - Type: analysis (interpretability)
+   - Confirmed if: killing positive channels is catastrophic (>+100% PPL) — both regimes essential.
+   - Refuted if: killing positive channels causes <+20% PPL — the negative regime carries most computation.
+   - Inconclusive if: +20-100% — moderate degradation.
+   - Depends on: none. ~5 min compute.
+
+175. **Why is z_mean negative? Weight-data alignment decomposition — GPT-2 FFN** [INTERPRETABILITY]
+   - z = W_up @ x + b. We know z_mean ≈ -1 but b_up mean ≈ -0.08. The negativity comes from W_up @ x. Decompose: (a) E[W_up @ x] over 4096 tokens, (b) per-channel cosine(W_up[j], E[x]) — are rows anti-aligned with data mean?, (c) PCA on inputs x, project W_up rows onto top-k PCs — is W_up anti-aligned with principal data directions?, (d) compute z_mean for RANDOM-INIT W_up (same distribution) on same data — is negativity learned or accidental?, (e) per-block comparison across all 12 blocks. Report full alignment statistics.
+   - Type: analysis (interpretability)
+   - Confirmed if: trained W_up is significantly more anti-aligned with data than random init (z_mean shift > 0.5 between trained and random) — network LEARNED to put channels negative.
+   - Refuted if: random init z_mean is already ≈ -1 — negativity is a geometric accident of high-dimensional projection, not learned.
+   - Inconclusive if: partial shift (0.1-0.5).
+   - Depends on: none. ~5 min compute.
+
+176. **Functional role of constant negative bias — GPT-2 FFN** [INTERPRETABILITY]
+   - The negative regime contributes a near-constant vector b_leak per block (87-98% token-independent). Test if this is functionally just a bias: (a) compute b_leak = E[y_neg] per block on 4096 tokens, (b) create modified model: GELU(z)→ReLU(z) (kill negative) BUT add b_leak as explicit constant to block output, (c) measure per-block and full-model PPL of "ReLU + b_leak" vs float. If PPL recovers near-float: the negative regime IS just a bias (768 params per block). If broken: the 1.5-13% token-dependent negative signal is critical.
+   - Type: analysis (interpretability)
+   - Confirmed if: ReLU + b_leak recovers to within +5% PPL of float in ≥8/12 blocks — negative regime is absorbable as bias.
+   - Refuted if: ReLU + b_leak still >+30% PPL — token-dependent negative signal is essential.
+   - Inconclusive if: +5-30%.
+   - Depends on: none. ~10 min compute.
+
+177. **Sign-pattern census on actual data — GPT-2 FFN** [INTERPRETABILITY]
+   - Binary sign of z (z > 0 = active): for each token, record which of 3072 channels are positive. On 4096 tokens per block: (a) count unique sign patterns, (b) Hamming distance distribution between patterns (expect ~20% = 600/3072 if 300 channels flip), (c) cluster patterns with k-means k={16,32,64,128}, measure within-cluster FFN output variance, (d) K* = min k for <5% within-cluster output variance. With 91% channels locked negative, patterns may be highly redundant — this is the corrected test of whether piecewise-linear structure exists in the SIGN domain rather than the continuous GELU' domain.
+   - Type: analysis (interpretability)
+   - Confirmed if: K* ≤ 64 for ≥6/12 blocks — sign patterns define a tractable partition.
+   - Refuted if: K* > 256 — even sign patterns are too diverse.
+   - Inconclusive if: varies across blocks.
+   - Depends on: none. ~10 min compute.
+
+178. **Training dynamics of negative z — GPT-2 FFN** [INTERPRETABILITY]
+   - Does z_mean start negative at init or emerge during training? (a) Random-init GPT-2: compute z_mean per block on 4096 tokens, (b) compare GPT-2 small/medium/large z_mean — scale dependence?, (c) if training checkpoints available: track z_mean vs step. From cycle 129 we know isotropy is learned (7-8× increase). Does z_mean track the same trajectory?
+   - Type: analysis (interpretability)
+   - Confirmed if: random-init z_mean ≈ 0 AND trained z_mean ≈ -1 — negativity is fully learned.
+   - Refuted if: random-init z_mean already ≈ -1 — geometric accident.
+   - Inconclusive if: random-init slightly negative (-0.2 to -0.5) but training amplifies.
+   - Depends on: none. ~5 min compute.
+
+179. **Does constant bias shift under compression? — GPT-2 FFN** [INTERPRETABILITY]
+   - The 41%/block cascade is attention-driven. But the "constant" bias b_leak may shift when upstream blocks are compressed (different inputs → different channels go negative). For k=4 compressed model: (a) compute b_leak on float vs compressed inputs at each block, (b) measure ||b_leak_compressed - b_leak_float|| / ||b_leak_float||, (c) if shift is large: fix b_leak to float value, measure cascade improvement. This tests whether the bias instability contributes to the cascade.
+   - Type: analysis (interpretability)
+   - Confirmed if: b_leak shift > 20% relative AND fixing it reduces cascade by ≥10% — bias instability contributes to cascade.
+   - Refuted if: b_leak shift < 5% — bias is stable under compression, cascade is elsewhere.
+   - Inconclusive if: shift exists but fixing doesn't help (shift is a symptom not cause).
+   - Depends on: none. ~15 min compute.
+
 ### P1
 
-
-171. **Centroid-affinity channel selection vs activation-norm topk — GPT-2 FFN k=4**
-   - Cycle 27 confirmed centroid similarity is a strong merge signal (rho=0.853). Apply this to channel selection: for each block, compute centroid affinity between all 3072 intermediate channels on a calibration set and select k=4 channels that maximize coverage of the centroid space (farthest-point or greedy set cover on centroid embeddings). Compare single-block and stacked PPL against the current activation-norm topk baseline.
-   - Type: empirical
-   - Confirmed if: centroid-selected channels achieve lower stacked PPL than activation-norm topk by at least 1.5 PPL points at k=4.
-   - Refuted if: centroid selection is worse than or within 0.5 PPL of activation-norm topk.
-   - Inconclusive if: better on some blocks, worse on others, with net stacked PPL within 0.5-1.5 of baseline.
-   - Depends on: none
 
 ### P2
 
@@ -58,6 +98,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 161
+
+171. **Centroid-affinity channel selection vs activation-norm topk — GPT-2 FFN k=4** *(REFUTED — cycle 161)*
+   - Centroid-FPS stacked PPL = 88.311 ± 0.046 vs topk = 87.684 ± 0.062. Delta = -0.627 (centroid *worse* by 0.6 PPL). Jaccard = 0.333 on all blocks (methods select distinct channels), so the geometric signal simply points to suboptimal channels. The cycle-27 centroid signal (inter-block merge predictor, rho=0.853) does not transfer to intra-block channel selection.
+   - Artifacts: `experiments/centroid_affinity_selection_cycle161.py`, `autoresearch/results/cycle_161_centroid_affinity.json`, `autoresearch/results/cycle_161_centroid_affinity.png`
 
 ### Cycle 160
 
