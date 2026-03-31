@@ -10,22 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-147. **G-weighted lstsq compression — GPT-2 FFN**
-   - Replace the standard Frobenius-norm lstsq in the compression pipeline with G-weighted lstsq that minimizes ||U(y - ŷ)||² instead of ||y - ŷ||². Use `aleph.pullback_geometry.gweighted_lstsq` which transforms outputs via Cholesky of G = U^T U, solves standard lstsq, and transforms back. Compare against standard topk+lstsq on: (a) Single-block swap PPL for blocks [1, 4, 7, 11] at 6x compression. (b) k=4 stacking PPL (blocks [1, 4, 7, 11] at 6x). Both with 500-step Adam polish. Report BOTH pre-polish and post-polish numbers (polish may wash out initial difference — see cycle 133 precedent). 3 seeds, 200 OWT eval sequences.
-   - Type: empirical
-   - Confirmed if: G-weighted lstsq improves k=4 stacking PPL by >= 3% relative (e.g., from ~70 to ~68) over standard lstsq at matched parameters.
-   - Refuted if: G-weighted lstsq matches or is worse than standard lstsq at both single-block and stacking levels.
-   - Inconclusive if: G-weighted improves single-block but not stacking (or vice versa), or improvement is <3%.
-   - Depends on: 146 (confirms G-weighted error predicts PPL better than Frobenius)
-
-148. **Curvature-guided compression budget allocation — GPT-2 FFN**
-   - Cycle 094 showed uniform FFN compression allocation is near-optimal under Frobenius metric. Re-test with curvature-guided allocation: assign per-block compression ratios using kappa_l from item 145. Three allocations on k=4 stacking (blocks [1, 4, 7, 11]), matched total parameter budget (sum(k_l) = 4×512 = 2048): (a) Uniform 6x (512/3072 per block) — existing baseline. (b) Curvature-proportional: k_l proportional to kappa_l / mean(kappa), giving more neurons at high-curvature layers (protect where trajectory bends). (c) Inverse-curvature: k_l proportional to 1/kappa_l (more neurons where trajectory is straight — high-fidelity reconstruction of linear regions). All with 500-step Adam polish. 3 seeds, 200 OWT eval sequences.
-   - Type: empirical
-   - Confirmed if: any curvature-guided allocation improves k=4 stacking PPL by >= 2% relative over uniform.
-   - Refuted if: all three allocations within 1% of each other (confirming cycle 094's finding that allocation doesn't matter, even under geometric guidance).
-   - Inconclusive if: one curvature allocation is 1-2% better but unstable across seeds.
-   - Depends on: 145 (need curvature profile), 146 (confirms pullback metric is meaningful for compression)
-
 153. **Graduated importance pruning — GPT-2 FFN**
    - Dead/always-active census (cycle 128) found 0 strict-removable channels. But 14 channels have >95% tokens in dead zone. Instead of binary dead/alive, test a graduated scheme: for each of 3072 intermediate channels, compute importance = ||W_down[:,j]||_2 * rms(GELU(z_j)) over 2048 probe tokens. Rank channels by importance. Prune in 3 steps: (a) drop bottom 5% (154 channels), refit W_down via lstsq on remaining. (b) drop bottom 10% (307 channels), refit. (c) drop bottom 20% (614 channels), refit. For each pruning level, measure single-block swap PPL on blocks [1, 4, 7, 11] and compare to topk at matched k (topk selects k=2918, 2765, 2458 respectively). The question: does importance-weighted pruning beat topk's activation-magnitude selection? Since isotropy is learned (cycle 129), channel importance might be more structured than topk assumes. 3 seeds, 200 OWT eval sequences.
    - Type: empirical
@@ -115,6 +99,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 139
+
+147. **G-weighted lstsq — GPT-2 FFN** *(INCONCLUSIVE — cycle 139, PLAN INVALID)*
+   - Predecessor 146 REFUTED: G-weighted is constant rescaling of Frobenius. G-lstsq would be equivalent to standard lstsq.
+
+### Cycle 140
+
+148. **Curvature-guided allocation — GPT-2 FFN** *(INCONCLUSIVE — cycle 140, PLAN INVALID)*
+   - Predecessor 146 REFUTED + cycle 114 showed allocation doesn't help. Double invalidation.
 
 ### Cycle 138
 
