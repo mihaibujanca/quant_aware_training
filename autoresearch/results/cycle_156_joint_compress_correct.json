@@ -1,0 +1,11 @@
+{
+  "cycle": 156,
+  "item": 166,
+  "seed": 42,
+  "float_ppl": 57.65287371228062,
+  "final_ppl": 110.00323161625701,
+  "factorization_params": 986112,
+  "correction_params": 49152,
+  "verdict": "REFUTED",
+  "verdict_detail": "PPL 110.0 > 75"
+}
