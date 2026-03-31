@@ -1,29 +1,22 @@
-# Research Status — 152 Cycles (001–152)
+# Research Status — 153 Cycles (001–153)
 
-## Score (estimated)
-| Outcome | Count |
-|---------|-------|
-| Confirmed | 34 |
-| Refuted | 52 |
-| Inconclusive | 62 |
-| Crash | 2 |
-
-## Session 125-152 Summary (28 cycles)
-### Confirmed
-- FFN isotropy learned (129), curved inference (135), AE param-matched (137)
-- Corrections are cascade compensation (151) — novel subspace 93-97%
+## Session 125-153 (29 cycles)
 
 ### Key Findings
-- **Joint stacking training** (149): random-init rank-64 beats topk (69.76 vs 70.70, 1.3%)
-- **Training objective > architecture** (148): linear = ReLU AE; CE loss is the ingredient
-- **Composition barrier** (138): independent training fails, joint training succeeds
-- **Progressive stacking fails** (152): 78.2, worse than all baselines
+1. **Training objective > architecture** (148): linear = ReLU AE. CE loss is the ingredient.
+2. **Joint stacking works** (149): random rank-64 = 69.76 (beats topk 70.70, 1.3%, seed-dependent)
+3. **CE models resist corrections** (153): joint+corrections = 107 (catastrophic); topk+corrections = 69.8
+4. **Corrections are cascade compensation** (151): 93-97% novel subspace, block 7 is entirely cascade
+5. **Progressive stacking fails** (152): 78.2, worse than all baselines
+6. **Topk+lstsq+corrections remains best overall**: PPL ~59 at 1.6M + 49K params
 
-### Working Recipe
-1. **Best stacking**: joint random rank-64 + 2000 CE steps → PPL 69.76 (986K params)
-2. **Classic**: topk+lstsq+500 polish → PPL 70.70 (1.58M params)
-3. **+ LoRA corrections** → PPL ~59
+### Working Recipes (ranked)
+1. **topk+lstsq + corrections** → PPL ~59 (49K correction params, total ~1.6M)
+2. **Joint random rank-64** → PPL 69.76 (986K params, no corrections needed, but seed-dependent)
+3. **topk+lstsq+polish** → PPL ~70.7 (1.58M params)
 
-## Next Up
-- **163**: Joint training + LoRA corrections (P2, dep on 159)
-- **164**: Joint training step budget sweep (P2, dep on 159)
+### Dead Ends (this session)
+Attention pruning, cross-block sharing, exact pruning, GELU affine maps, G-weighted metrics, method hybrids, eigenstructure selection, progressive stacking, corrections on CE-trained models
+
+## Next
+- **164**: Joint training step sweep (P2) — last item before agenda refresh
