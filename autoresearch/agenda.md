@@ -11,14 +11,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-169. **Correction-first compression: train corrections, then compress residual — GPT-2 FFN k=4**
-   - Flip the pipeline. Current best: compress (topk+lstsq) then correct (LoRA). Alternative: first learn what the correction network WOULD do (train LoRA on uncompressed model to predict the compression error pattern), then compress W_ffn - W_correction to preserve the subspace corrections can't reach. Protocol: (a) train LoRA corrections on topk+lstsq compressed model (cycle 115 protocol), (b) compute effective correction matrix C = W_corrected - W_compressed per block, (c) compute residual R = W_float - C, (d) compress R via topk+lstsq at k=4. Compare stacked PPL of compress(R)+corrections vs compress(W)+corrections (current recipe). 3 seeds, 200 OWT eval sequences.
-   - Type: empirical
-   - Confirmed if: correction-first PPL < 57 (beats current best ~59 by >=3%).
-   - Refuted if: PPL > 62 or corrections can't transfer to the modified compressed weights.
-   - Inconclusive if: 57-62 (marginal or within noise).
-   - Depends on: none
-
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
 138. ~~**Train MoE testbed — Tiny Mixtral**~~ SKIPPED — WikiText-2 too small, overfits at PPL 65. Need pretrained model or larger dataset.
@@ -42,6 +34,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 159
+
+169. **Correction-first compression: train corrections, then compress residual — GPT-2 FFN k=4** *(INCONCLUSIVE — cycle 159)*
+   - Correction-first (retrained) PPL = 60.0 ± 7.4 vs Phase A (compress+correct) = 59.2 ± 7.4. Improvement vs A = -0.81 (marginal, in [57, 62] range). OOD triggered on all seeds (cosine sims ~0, corrections trained on compressed residuals are OOD for float residuals). lstsq ratio <1 for all blocks (cf targets are easier to fit), but PPL difference is noise-level. Corrections can't transfer directly: transferred PPL=75.3 vs retrained 60.0. The subspace corrections occupy is not separable from what compression occupies.
+   - Artifacts: `experiments/correction_first_cycle159.py`, `autoresearch/results/cycle_159_correction_first.json`, `autoresearch/results/cycle_159_correction_first.png`
 
 ### Cycle 158
 
