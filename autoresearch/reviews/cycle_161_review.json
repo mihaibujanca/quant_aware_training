@@ -1,0 +1,14 @@
+{
+  "cycle": 161,
+  "item": 171,
+  "round": 2,
+  "verdict": "APPROVED",
+  "blocking_issues": [],
+  "minor_issues": [],
+  "advisories": [],
+  "round1_resolutions": [
+    "R2 blocking: method now uses proper d_model centroid embeddings (activation-weighted mean hidden states)",
+    "R5/MP6 minor: Jaccard > 0.75 now maps to REFUTED",
+    "R1 advisory: premise transfer flagged as exploratory in premise note"
+  ]
+}
