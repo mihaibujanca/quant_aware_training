@@ -1,0 +1,5 @@
+item_number=169
+outcome=inconclusive
+key_metric=phaseA_ppl=59.2±7.4,phaseB_retrained_ppl=60.0±7.4,improvement=-0.81,transferred_ppl=75.3,OOD_triggered_all_seeds,lstsq_ratio_max=0.868
+commit=fcaffc1d58673e55afb243152aba4d60b630397d
+paths=experiments/correction_first_cycle159.py,autoresearch/results/cycle_159_correction_first.json,autoresearch/results/cycle_159_correction_first.png
