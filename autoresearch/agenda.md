@@ -56,6 +56,37 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
+180. **Literature scan: FFN compression 2025-2026 — what are we missing?** [LITERATURE]
+   - We have exhausted many directions but may be missing recent work. Search arxiv, ICML/NeurIPS/ICLR 2025 proceedings, and relevant blogs for: (a) structured pruning of FFN/MLP layers in transformers (post-2024), (b) no-training or calibration-only compression methods (SliceGPT, ShortGPT, LaCo, FLAP, etc.), (c) activation-aware structured pruning (Wanda-structured, OWL, etc.), (d) any method achieving <15% PPL degradation on GPT-2 scale with FFN-only compression at similar ratios. For each relevant paper: record method, compression ratio, PPL result, whether it uses training, and whether it's been tried in this repo. Deliverable: annotated table of >=5 methods with gap analysis vs our topk+lstsq recipe.
+   - Type: literature
+   - Confirmed if: find >=2 methods not yet tried that achieve comparable or better results at similar compression ratio.
+   - Refuted if: all found methods are already tried or clearly worse.
+   - Inconclusive if: found methods target different scales/settings and comparison is unclear.
+   - Depends on: none. ~30 min research.
+
+181. **Wider-shallower compression: all 12 blocks at k=8 vs 4 blocks at k=4 — GPT-2 FFN** [EMPIRICAL]
+   - Current recipe compresses 4 of 12 FFN blocks at 6x ratio (k=4 of 24 channel groups). Since error accumulates diffusely (cycle 163), compressing MORE blocks at a LIGHTER ratio might yield lower cascade damage. Test: (a) 12 blocks at k=8 (~3x ratio, same total param reduction as 4@k=4), (b) 12 blocks at k=12 (~2x ratio, higher total params but tests the curve), (c) 8 blocks at k=6 (intermediate). All with lstsq fitting, no corrections. Compare stacked PPL. Also test with corrections (r=4 uniform) to see if lighter-per-block compression needs fewer correction params.
+   - Type: empirical
+   - Confirmed if: 12@k=8 PPL < 4@k=4 PPL (70.7) by >=2 PPL points — wider-shallower is better.
+   - Refuted if: 12@k=8 PPL >= 4@k=4 PPL — concentrating compression in fewer blocks is better.
+   - Inconclusive if: within 2 PPL points.
+   - Depends on: none. ~15 min compute.
+
+182. **Lstsq regression target: residual-stream delta vs raw output — GPT-2 FFN k=4** [EMPIRICAL]
+   - Current lstsq fits W_compressed @ x ≈ W_float @ x (raw block output). But FFN output enters a residual stream: y_block = FFN(x) is ADDED to x. The compositionally relevant quantity is x + FFN(x), not FFN(x) alone. Alternative targets: (a) fit the residual-stream delta normalized by ||x|| (scale-invariant), (b) fit in the subspace of top-k SVD directions of the Jacobian (geometry-preserving), (c) fit with token-frequency weighting (common tokens matter more). Compare stacked PPL of each target vs raw lstsq at k=4 across 4 blocks. If (a) helps, the lstsq step was wasting capacity matching irrelevant output scale.
+   - Type: empirical
+   - Confirmed if: any alternative target improves stacked PPL by >=2 points over raw lstsq.
+   - Refuted if: all alternatives within 1 PPL of raw lstsq or worse.
+   - Inconclusive if: improvement 1-2 PPL.
+   - Depends on: none. ~15 min compute.
+
+183. **Sign-pattern-conditioned lstsq — GPT-2 FFN k=4** [EMPIRICAL]
+   - Current lstsq fits ONE linear map per block. But the FFN is piecewise-linear (via GELU ≈ ReLU): tokens in different sign patterns use different affine maps. If sign patterns cluster into K* tractable groups (item 177), fit a SEPARATE lstsq per cluster: for cluster c, W_c = argmin ||W @ X_c - Y_c||. At inference, route tokens by sign pattern to the appropriate W_c. This is a piecewise-linear compressed block. Test with K={4,8,16} clusters from k-means on sign patterns. Each cluster gets its own k=4 topk+lstsq. Total params = K * (k * d_in) but each sees cleaner signal. Compare stacked PPL vs single lstsq.
+   - Type: empirical
+   - Confirmed if: K=8 piecewise lstsq improves stacked PPL by >=3 points over single lstsq (justifying K× param overhead).
+   - Refuted if: <1 PPL improvement — sign-pattern conditioning adds no value.
+   - Inconclusive if: 1-3 PPL improvement.
+   - Depends on: 177 (informative but not blocking — can use k-means directly). ~20 min compute.
 
 ### P2
 
