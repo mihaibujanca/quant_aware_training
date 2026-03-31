@@ -1,7 +1,7 @@
 item_number=151
 outcome=confirmed
 key_metric=B4_ae=53.65±0.10_topk=55.32±0.04(-3.0%) B7_ae=54.46±0.17_topk=56.36±0.02(-3.4%) ae_params=247K_topk=788K
-commit=PENDING
+commit=1d89948
 paths=experiments/ae_param_match_k512_cycle137.py,autoresearch/results/cycle_137_ae_param_match.json
 learned=A nonlinear ReLU bottleneck at d_bn=64 outperforms topk+lstsq at k=512 with 3x fewer learnable params. The advantage is architectural — the nonlinear encoder learns correlations between hidden channels that axis-aligned top-k misses. Full AE (d_bn=512) worsens after polish (overfits), but the small param-matched AE is robust to polish. This is the first method to definitively beat topk+lstsq at matched or fewer params.
 next=Item 152 (AE stacking) is now unblocked and is the critical next step: does AE's 3% single-block advantage translate to better k=4 stacking? Also need to test early/late blocks [1, 11] to confirm the result generalizes beyond middle blocks.

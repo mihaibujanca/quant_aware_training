@@ -126,7 +126,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 151. **Bottleneck AE param-matched — GPT-2 FFN k=512** *(CONFIRMED — cycle 137)*
    - **Outcome: CONFIRMED** — Param-matched AE (d_bn=64, 247K params) beats topk+lstsq (788K params) on both blocks post-polish. Block 4: AE=53.65±0.10, topk=55.32±0.04 (-3.0%). Block 7: AE=54.46±0.17, topk=56.36±0.02 (-3.4%). The AE uses 3x FEWER learnable params. Full AE (1.97M) actually worsens after polish (+1-4% vs topk). The nonlinear ReLU bottleneck at d_bn=64 learns a better subspace than axis-aligned top-512 selection, and this advantage SURVIVES 500-step Adam polish.
-   - Commit: PENDING
+   - Commit: 1d89948
    - Artifacts: experiments/ae_param_match_k512_cycle137.py, autoresearch/results/cycle_137_ae_param_match.json
 
 ### Cycle 136
