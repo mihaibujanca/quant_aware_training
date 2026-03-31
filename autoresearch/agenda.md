@@ -10,14 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-180. **Literature scan: FFN compression 2025-2026 — what are we missing?** [LITERATURE]
-   - We have exhausted many directions but may be missing recent work. Search arxiv, ICML/NeurIPS/ICLR 2025 proceedings, and relevant blogs for: (a) structured pruning of FFN/MLP layers in transformers (post-2024), (b) no-training or calibration-only compression methods (SliceGPT, ShortGPT, LaCo, FLAP, etc.), (c) activation-aware structured pruning (Wanda-structured, OWL, etc.), (d) any method achieving <15% PPL degradation on GPT-2 scale with FFN-only compression at similar ratios. For each relevant paper: record method, compression ratio, PPL result, whether it uses training, and whether it's been tried in this repo. Deliverable: annotated table of >=5 methods with gap analysis vs our topk+lstsq recipe.
-   - Type: literature
-   - Confirmed if: find >=2 methods not yet tried that achieve comparable or better results at similar compression ratio.
-   - Refuted if: all found methods are already tried or clearly worse.
-   - Inconclusive if: found methods target different scales/settings and comparison is unclear.
-   - Depends on: none. ~30 min research.
-
 181. **Wider-shallower compression: all 12 blocks at k=8 vs 4 blocks at k=4 — GPT-2 FFN** [EMPIRICAL]
    - Current recipe compresses 4 of 12 FFN blocks at 6x ratio (k=4 of 24 channel groups). Since error accumulates diffusely (cycle 163), compressing MORE blocks at a LIGHTER ratio might yield lower cascade damage. Test: (a) 12 blocks at k=8 (~3x ratio, same total param reduction as 4@k=4), (b) 12 blocks at k=12 (~2x ratio, higher total params but tests the curve), (c) 8 blocks at k=6 (intermediate). All with lstsq fitting, no corrections. Compare stacked PPL. Also test with corrections (r=4 uniform) to see if lighter-per-block compression needs fewer correction params.
    - Type: empirical
@@ -69,6 +61,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 170
+
+180. **Literature scan: FFN compression 2025-2026 — what are we missing?** *(CONFIRMED — cycle 170)*
+   - Scanned 11 methods from AAAI/ICLR/NeurIPS/NAACL/ACL/COLING 2024-2025. Found >=2 untried methods with comparable approaches: (1) **SoLA split** — preserve top-k channels full-rank + SVD-compress the rest (vs our prune+reconstruct), (2) **PruneNet spectral selection** — calibration-free channel selection via singular value distribution preservation (vs our activation-magnitude topk). Also notable: 2SSP combines FFN width pruning with attention depth pruning (untried combo). FLAP, CFSP, LLM-BIP are structured neuron pruning variants close to what we do. StructuredFFN/Spark train from scratch (out of scope).
+   - Artifacts: `autoresearch/results/cycle_170_literature_scan.md`
 
 ### Cycle 169
 
