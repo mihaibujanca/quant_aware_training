@@ -1,0 +1,132 @@
+{
+  "cycle": 158,
+  "item": 168,
+  "seeds": [
+    42,
+    7,
+    137
+  ],
+  "float_ppl": 57.65287371228062,
+  "topk_polish_baseline": 70.7,
+  "random_init_baseline": 91.1,
+  "topk_corrections_baseline": 59.0,
+  "d_bn": 64,
+  "k_topk": 4,
+  "noise_scale": 0.001,
+  "joint_steps": 2000,
+  "lr": 0.0001,
+  "per_seed": {
+    "42": {
+      "pre_ppl": 91.37246124381497,
+      "post_ppl": 73.02272804261058,
+      "rank_before": {
+        "7": 4,
+        "5": 4,
+        "4": 4,
+        "1": 4
+      },
+      "rank_after": {
+        "7": 14,
+        "5": 23,
+        "4": 17,
+        "1": 27
+      },
+      "loss_log": [
+        {
+          "step": 0,
+          "loss": 4.309475421905518
+        },
+        {
+          "step": 500,
+          "loss": 3.9045591354370117
+        },
+        {
+          "step": 1000,
+          "loss": 3.444765090942383
+        },
+        {
+          "step": 1500,
+          "loss": 3.4640679359436035
+        }
+      ]
+    },
+    "7": {
+      "pre_ppl": 91.37275882592944,
+      "post_ppl": 73.32713943410123,
+      "rank_before": {
+        "7": 4,
+        "5": 4,
+        "4": 4,
+        "1": 4
+      },
+      "rank_after": {
+        "7": 13,
+        "5": 25,
+        "4": 20,
+        "1": 26
+      },
+      "loss_log": [
+        {
+          "step": 0,
+          "loss": 4.491736888885498
+        },
+        {
+          "step": 500,
+          "loss": 4.147980213165283
+        },
+        {
+          "step": 1000,
+          "loss": 3.914565086364746
+        },
+        {
+          "step": 1500,
+          "loss": 3.5722615718841553
+        }
+      ]
+    },
+    "137": {
+      "pre_ppl": 91.37207913760162,
+      "post_ppl": 72.76104560466078,
+      "rank_before": {
+        "7": 4,
+        "5": 4,
+        "4": 4,
+        "1": 4
+      },
+      "rank_after": {
+        "7": 15,
+        "5": 25,
+        "4": 20,
+        "1": 25
+      },
+      "loss_log": [
+        {
+          "step": 0,
+          "loss": 4.311707973480225
+        },
+        {
+          "step": 500,
+          "loss": 3.864880323410034
+        },
+        {
+          "step": 1000,
+          "loss": 3.6321797370910645
+        },
+        {
+          "step": 1500,
+          "loss": 3.983184814453125
+        }
+      ]
+    }
+  },
+  "post_ppl_median": 73.02272804261058,
+  "post_ppl_mean": 73.0369710271242,
+  "post_ppl_std": 0.2313261808046939,
+  "post_ppl_min": 72.76104560466078,
+  "post_ppl_max": 73.32713943410123,
+  "pre_ppl_mean": 91.37243306911535,
+  "median_effective_rank_after": 21.5,
+  "rank_stuck": false,
+  "verdict": "INCONCLUSIVE",
+  "verdict_detail": "PPL 73.0 better than random-init (91.1) but worse than topk+polish (70.7); std=0.23"
+}

@@ -6,39 +6,8 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-165. **Multi-seed validation of joint training — GPT-2 FFN k=4**
-   - Cycle 149 got 69.76 (1 seed), cycle 153 got 91.9 (different seed). Is 69.76 an outlier or the typical result? Run 8 seeds (0-7) of the cycle 149 protocol: random-init rank-64 linear factorization, all 4 blocks [1,4,7,11] jointly trained under stacked CE loss, 2000 steps AdamW lr=1e-4. Report: median, mean, std, min, max PPL. Also record per-seed training loss curves (save every 100 steps) to check for bimodal convergence (some seeds may find a good basin, others not). 200 OWT eval sequences per seed.
-   - Type: empirical
-   - Confirmed if: median PPL <= 72 (i.e. 69.76 is representative, not an outlier) AND std < 3.0.
-   - Refuted if: median PPL > 80 or std > 10 (seed-dependence is catastrophic, method unreliable).
-   - Inconclusive if: median 72-80 or std 3-10 (works sometimes but unstable).
-   - Depends on: none
-
-166. **Joint training with correction-aware loss — GPT-2 FFN k=4**
-   - The composition barrier: CE-trained models resist post-hoc corrections (cycle 153, 107.5 PPL). Hypothesis: joint training optimizes for a subspace that corrections can't reach. Fix: train compression AND corrections simultaneously. Architecture: for each block, W_ffn ≈ W_dec @ W_enc + LoRA(r=8). Loss = stacked CE with all 4 compressed+corrected blocks swapped in. Train both factorization params (W_enc, W_dec) and LoRA params jointly. Compare: (a) joint compress+correct (this), (b) joint compress then post-hoc correct (cycle 153 = 107.5), (c) topk+lstsq+corrections (PPL ~59 baseline). 3 seeds, 2000 steps AdamW lr=1e-4. 200 OWT eval sequences.
-   - Type: empirical
-   - Confirmed if: joint compress+correct PPL < 65 (beats topk+corrections ~59 by composition, or closes gap significantly).
-   - Refuted if: PPL > 75 or corrections collapse to zero (optimizer ignores LoRA branch).
-   - Inconclusive if: 65-75 or high seed variance (>5 PPL std).
-   - Depends on: none
-
 ### P1
 
-167. **Higher-rank joint training (rank-128, rank-256) — GPT-2 FFN k=4**
-   - Cycle 149 used rank-64 (~6x compression). Seed-dependence might stem from insufficient capacity — rank-64 has a narrow loss landscape with few good basins. Test rank-128 (~3x compression, 1.97M params) and rank-256 (~1.5x compression, 3.93M params). If higher rank eliminates seed-dependence, the problem is capacity not method. Run 3 seeds each at rank-64/128/256 under cycle 149 joint protocol. Report PPL mean/std per rank. Also measure: does higher rank reduce the gap between best and worst seed?
-   - Type: empirical
-   - Confirmed if: rank-128 or rank-256 has std < 1.5 AND mean PPL < 65.
-   - Refuted if: seed variance persists at rank-256 (std > 5) — problem is optimization not capacity.
-   - Inconclusive if: monotonic improvement but still high variance.
-   - Depends on: 165 (need rank-64 seed distribution as baseline)
-
-168. **Topk+lstsq init for joint training — GPT-2 FFN k=4**
-   - Joint training with random init is seed-dependent (cycles 149/153). Topk+lstsq gives a reliable starting point (PPL ~84.9 single, ~95 stacked). Hypothesis: initializing joint training from the topk+lstsq solution (projected to rank-r factored form via SVD of the sparse matrix) gives a warm start that avoids bad basins. Protocol: (a) compute topk+lstsq W_approx for each block, (b) SVD to get W_dec @ W_enc (rank-64), (c) joint-train under stacked CE for 2000 steps. Compare: topk-init joint vs random-init joint (item 165 numbers) vs topk+lstsq+polish (PPL ~70.7). 3 seeds, 200 OWT eval sequences.
-   - Type: empirical
-   - Confirmed if: topk-init joint PPL < 68 AND std < 2.0 across seeds (reliable AND good).
-   - Refuted if: PPL within 2% of topk+lstsq+polish (~70.7) — warm start doesn't help joint training.
-   - Inconclusive if: better than random-init but worse than topk+corrections (~59).
-   - Depends on: 165 (need random-init seed statistics for comparison)
 
 ### P2
 
@@ -73,6 +42,30 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 158
+
+168. **Topk+lstsq init for joint training — GPT-2 FFN k=4** *(INCONCLUSIVE — cycle 158)*
+   - Warm-start PPL = 73.0 ± 0.23 (3 seeds). Better than random-init (91.1) but worse than topk+polish (70.7). Rank expands from 4 to median 21.5 after training — not stuck in topk subspace. However, warm start provides no PPL advantage over topk+polish baseline. Joint training still can't beat simple polish.
+   - Artifacts: `experiments/topk_init_joint_cycle158.py`, `autoresearch/results/cycle_158_topk_init_joint.json`
+
+### Cycle 157
+
+167. **Higher-rank joint training (rank-128, rank-256) — GPT-2 FFN k=4** *(REFUTED — cycle 157)*
+   - Higher rank dramatically worse: r64=91.1, r128=175.4, r256=621.9. More params = worse optimization, not better. Problem is optimization landscape, not capacity.
+   - Artifacts: `experiments/higher_rank_joint_cycle157.py`, `autoresearch/results/cycle_157_higher_rank_joint.json`
+
+### Cycle 156
+
+166. **Joint training with correction-aware loss — GPT-2 FFN k=4** *(REFUTED — cycle 156)*
+   - Joint compress+correct PPL=110.0, worse than compress-only (91) and topk+corr (59). Corrections during joint training make optimization harder.
+   - Artifacts: `experiments/joint_compress_correct_cycle156.py`, `autoresearch/results/cycle_156_joint_compress_correct.json`
+
+### Cycle 155
+
+165. **Multi-seed validation of joint training — GPT-2 FFN k=4** *(REFUTED — cycle 155)*
+   - Median 91.1±1.0 across 8 seeds. Cycle 149's 69.76 was an anomaly. Rank-64 joint training consistently ~91 PPL.
+   - Artifacts: `experiments/joint_multiseed_cycle155.py`, `autoresearch/results/cycle_155_joint_multiseed.json`
 
 ### Cycle 154
 
