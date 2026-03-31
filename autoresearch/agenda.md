@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-176. **Functional role of constant negative bias — GPT-2 FFN** [INTERPRETABILITY]
-   - The negative regime contributes a near-constant vector b_leak per block (87-98% token-independent). Test if this is functionally just a bias: (a) compute b_leak = E[y_neg] per block on 4096 tokens, (b) create modified model: GELU(z)→ReLU(z) (kill negative) BUT add b_leak as explicit constant to block output, (c) measure per-block and full-model PPL of "ReLU + b_leak" vs float. If PPL recovers near-float: the negative regime IS just a bias (768 params per block). If broken: the 1.5-13% token-dependent negative signal is critical.
-   - Type: analysis (interpretability)
-   - Confirmed if: ReLU + b_leak recovers to within +5% PPL of float in ≥8/12 blocks — negative regime is absorbable as bias.
-   - Refuted if: ReLU + b_leak still >+30% PPL — token-dependent negative signal is essential.
-   - Inconclusive if: +5-30%.
-   - Depends on: none. ~10 min compute.
-
 177. **Sign-pattern census on actual data — GPT-2 FFN** [INTERPRETABILITY]
    - Binary sign of z (z > 0 = active): for each token, record which of 3072 channels are positive. On 4096 tokens per block: (a) count unique sign patterns, (b) Hamming distance distribution between patterns (expect ~20% = 600/3072 if 300 channels flip), (c) cluster patterns with k-means k={16,32,64,128}, measure within-cluster FFN output variance, (d) K* = min k for <5% within-cluster output variance. With 91% channels locked negative, patterns may be highly redundant — this is the corrected test of whether piecewise-linear structure exists in the SIGN domain rather than the continuous GELU' domain.
    - Type: analysis (interpretability)
@@ -99,6 +91,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 166
+
+176. **Functional role of constant negative bias — GPT-2 FFN** *(CONFIRMED — cycle 166)*
+   - ReLU + b_leak (mean negative output) recovers within +5% PPL in 11/12 blocks (mean delta +2.38%, max +5.91% at block 4). The negative GELU regime is functionally a constant bias per block. However, full-model replacement (all 12 blocks) degrades PPL by +87% — cascade accumulation of small per-block errors. Per-block, the negative regime = 3072 fixed params of redundancy. Block 4 is the only outlier (5.91%). b_leak norms increase with depth (4.05 → 5.32).
+   - Artifacts: `experiments/constant_neg_bias_gpt2_cycle166.py`, `autoresearch/results/cycle_166_neg_bias.json`, `autoresearch/results/cycle_166_neg_bias.png`
 
 ### Cycle 165
 
