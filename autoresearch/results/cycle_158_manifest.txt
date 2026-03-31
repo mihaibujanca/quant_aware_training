@@ -1,0 +1,5 @@
+item_number=168
+outcome=inconclusive
+key_metric=topk_init_joint_ppl=73.0±0.23(3seeds) vs random_init=91.1 vs topk_polish=70.7 rank_expanded=4to21.5
+commit=87a0e6f
+paths=experiments/topk_init_joint_cycle158.py,autoresearch/results/cycle_158_topk_init_joint.json,autoresearch/results/cycle_158_manifest.txt
