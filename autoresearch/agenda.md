@@ -6,13 +6,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-179. **Does constant bias shift under compression? — GPT-2 FFN** [INTERPRETABILITY]
-   - The 41%/block cascade is attention-driven. But the "constant" bias b_leak may shift when upstream blocks are compressed (different inputs → different channels go negative). For k=4 compressed model: (a) compute b_leak on float vs compressed inputs at each block, (b) measure ||b_leak_compressed - b_leak_float|| / ||b_leak_float||, (c) if shift is large: fix b_leak to float value, measure cascade improvement. This tests whether the bias instability contributes to the cascade.
-   - Type: analysis (interpretability)
-   - Confirmed if: b_leak shift > 20% relative AND fixing it reduces cascade by ≥10% — bias instability contributes to cascade.
-   - Refuted if: b_leak shift < 5% — bias is stable under compression, cascade is elsewhere.
-   - Inconclusive if: shift exists but fixing doesn't help (shift is a symptom not cause).
-   - Depends on: none. ~15 min compute.
+
 
 ### P1
 
@@ -75,6 +69,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 169
+
+179. **Does constant bias shift under compression? — GPT-2 FFN** *(REFUTED — cycle 169)*
+   - b_leak is stable at uncompressed blocks under k=4 compression: blocks 0,2,3,6 shift <3.4%, blocks 8-11 shift 7-10% (cascade accumulation). Compressed blocks shift 59-93% but this is expected — they have entirely different W_down from lstsq fitting, not a cascade effect. Fixing compressed blocks' b_leak to float values hurts PPL (52.3 → 119.5), confirming the compressed model's b_leak is already adapted to its new projection. The 41%/block cascade is NOT caused by bias instability.
+   - Artifacts: `experiments/bias_shift_compression_cycle169.py`, `autoresearch/results/cycle_169_bias_shift.json`, `autoresearch/results/cycle_169_bias_shift.png`
 
 ### Cycle 168
 

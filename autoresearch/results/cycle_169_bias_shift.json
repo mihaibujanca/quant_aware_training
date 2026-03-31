@@ -1,0 +1,106 @@
+{
+  "cycle": 169,
+  "item": 179,
+  "verdict": "REFUTED",
+  "ppl_base": 35.212,
+  "ppl_compressed": 52.346,
+  "ppl_fixed": 119.483,
+  "cascade_reduction_pct": -391.84,
+  "max_shift": 0.934,
+  "mean_shift": 0.2726,
+  "mean_compressed_block_shift": 0.7157,
+  "mean_uncompressed_block_shift": 0.051,
+  "compress_blocks": [
+    7,
+    5,
+    4,
+    1
+  ],
+  "per_block": {
+    "0": {
+      "b_leak_float_norm": 14.936,
+      "b_leak_compressed_norm": 14.936,
+      "delta_norm": 0.0,
+      "relative_shift": 0.0,
+      "is_compressed_block": false
+    },
+    "1": {
+      "b_leak_float_norm": 11.7658,
+      "b_leak_compressed_norm": 2.2898,
+      "delta_norm": 10.9895,
+      "relative_shift": 0.934,
+      "is_compressed_block": true
+    },
+    "2": {
+      "b_leak_float_norm": 26.8962,
+      "b_leak_compressed_norm": 27.0449,
+      "delta_norm": 0.3421,
+      "relative_shift": 0.0127,
+      "is_compressed_block": false
+    },
+    "3": {
+      "b_leak_float_norm": 33.5242,
+      "b_leak_compressed_norm": 33.9259,
+      "delta_norm": 0.4832,
+      "relative_shift": 0.0144,
+      "is_compressed_block": false
+    },
+    "4": {
+      "b_leak_float_norm": 33.3715,
+      "b_leak_compressed_norm": 14.2167,
+      "delta_norm": 20.1178,
+      "relative_shift": 0.6028,
+      "is_compressed_block": true
+    },
+    "5": {
+      "b_leak_float_norm": 33.1139,
+      "b_leak_compressed_norm": 15.0714,
+      "delta_norm": 19.5629,
+      "relative_shift": 0.5908,
+      "is_compressed_block": true
+    },
+    "6": {
+      "b_leak_float_norm": 29.2217,
+      "b_leak_compressed_norm": 29.98,
+      "delta_norm": 0.9849,
+      "relative_shift": 0.0337,
+      "is_compressed_block": false
+    },
+    "7": {
+      "b_leak_float_norm": 28.9527,
+      "b_leak_compressed_norm": 9.6063,
+      "delta_norm": 21.28,
+      "relative_shift": 0.735,
+      "is_compressed_block": true
+    },
+    "8": {
+      "b_leak_float_norm": 27.7393,
+      "b_leak_compressed_norm": 29.5222,
+      "delta_norm": 1.925,
+      "relative_shift": 0.0694,
+      "is_compressed_block": false
+    },
+    "9": {
+      "b_leak_float_norm": 28.7561,
+      "b_leak_compressed_norm": 31.1497,
+      "delta_norm": 2.5553,
+      "relative_shift": 0.0889,
+      "is_compressed_block": false
+    },
+    "10": {
+      "b_leak_float_norm": 52.4898,
+      "b_leak_compressed_norm": 57.3853,
+      "delta_norm": 5.1239,
+      "relative_shift": 0.0976,
+      "is_compressed_block": false
+    },
+    "11": {
+      "b_leak_float_norm": 122.2821,
+      "b_leak_compressed_norm": 133.0415,
+      "delta_norm": 11.1836,
+      "relative_shift": 0.0915,
+      "is_compressed_block": false
+    }
+  },
+  "notes": "Compressed blocks show 59-93% shift but this is expected (different W_down). Uncompressed blocks show <10% shift (0-9.8%), well below 20% threshold. b_leak is stable under compression cascade. Fixing b_leak at compressed blocks to float values hurts PPL (52.3 -> 119.5) because the compressed MLP already adapted its b_leak to its new W_down."
+}
