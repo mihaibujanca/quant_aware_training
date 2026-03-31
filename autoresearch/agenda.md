@@ -10,14 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-153. **Graduated importance pruning — GPT-2 FFN**
-   - Dead/always-active census (cycle 128) found 0 strict-removable channels. But 14 channels have >95% tokens in dead zone. Instead of binary dead/alive, test a graduated scheme: for each of 3072 intermediate channels, compute importance = ||W_down[:,j]||_2 * rms(GELU(z_j)) over 2048 probe tokens. Rank channels by importance. Prune in 3 steps: (a) drop bottom 5% (154 channels), refit W_down via lstsq on remaining. (b) drop bottom 10% (307 channels), refit. (c) drop bottom 20% (614 channels), refit. For each pruning level, measure single-block swap PPL on blocks [1, 4, 7, 11] and compare to topk at matched k (topk selects k=2918, 2765, 2458 respectively). The question: does importance-weighted pruning beat topk's activation-magnitude selection? Since isotropy is learned (cycle 129), channel importance might be more structured than topk assumes. 3 seeds, 200 OWT eval sequences.
-   - Type: empirical
-   - Confirmed if: importance pruning beats topk+lstsq by >=2% relative at matched k on >=2/4 blocks.
-   - Refuted if: topk matches or beats importance pruning at all pruning levels (activation magnitude IS the right importance signal).
-   - Inconclusive if: advantage is block-dependent or <2%.
-   - Depends on: none
-
 154. **Correction subspace analysis — what do LoRA corrections learn? — GPT-2 FFN k=4**
    - Cycle 127 found corrections partially align with compression error (max 0.46) but mostly learn a novel subspace. This needs sharper characterization. Train LoRA corrections (r=8) on the standard k=4 recipe. Extract the learned W_A, W_B matrices. Compute: (1) SVD of correction effect W_B @ W_A. (2) Project correction onto 3 subspaces: (a) span of compression error principal components (top-8 PCs of e_l per block), (b) span of attention amplification directions (top-8 PCs of attn_error per block), (c) the novel complement. (3) Ablation: zero out each component, measure PPL. (4) Cross-block sharing test: take block 4's correction and apply it to block 7 (and vice versa). If the novel subspace dominates, corrections aren't fixing error — they're compensating for something else (possibly re-routing around the damaged subspace). 3 seeds.
    - Type: analysis
@@ -99,6 +91,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 141
+
+153. **Graduated importance pruning — GPT-2 FFN** *(INCONCLUSIVE — cycle 141)*
+   - **Outcome: INCONCLUSIVE** — Importance pruning consistently beats topk at all 12 configs (4 blocks × 3 pruning levels) by 0.2-2.0%. Results are deterministic (zero seed variance). B11@20% hits exactly 2.0%. Advantage grows with pruning aggressiveness. But doesn't reach 2% threshold on >=2 blocks. Importance signal is real but topk's activation-magnitude selection is already good — importance adds marginal refinement, not a step change.
+   - Commit: PENDING
+   - Artifacts: experiments/importance_pruning_k4_cycle141.py, autoresearch/results/cycle_141_importance_pruning.json
 
 ### Cycle 139
 
