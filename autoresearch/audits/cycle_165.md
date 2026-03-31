@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=CONFIRMED
+new_outcome=CONFIRMED
+reason=Criteria: mean shift (trained vs random W_up @ x) > 0.5 → CONFIRMED. Result: 0.886, well above threshold. Code is correct: GPT-2 Conv1D weight shape (768, 3072) handled properly with z = x @ W + b, verified by assert at atol=1e-4 in every block. Hook captures c_fc input and output correctly. Per-channel cosine alignment computed against E[x] — 83-98% of W_up rows anti-aligned across all 12 blocks. Random baseline (N=3 draws, std ~0.001) shows Wx_rand_mean ≈ 0, vs trained Wx_mean ≈ -0.9, giving ~500x signal-to-noise. Bias contributes only 8-10% of z_mean negativity; W_up @ x is the dominant driver. All 12 blocks show consistent pattern. Minor: line 109 computes unused init_std (dead code, no impact). N_RAND_DRAWS=3 is low but adequate given effect size dwarfs noise by 500x.
+guardrail_flags=none
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=This mechanistically explains WHY topk compression works well (most channels are in the anti-aligned "off" regime by default — keeping only the rare positive activations preserves signal). Next step: check whether the anti-alignment degree per block correlates with topk compression loss per block. Blocks with weaker anti-alignment (block 1, frac_neg=84%) may need different k than blocks with stronger anti-alignment (block 3, frac_neg=98%).
+interesting=true
+interesting_reason=Establishes the mechanistic basis for FFN sparsity: training drives W_up rows opposite to E[x], pushing ~90% of pre-activations negative (GELU off-regime) by default. This is not just an observation but a causal decomposition (W_up @ x vs bias vs random baseline). Directly actionable: anti-alignment strength varies 84-98% across blocks, suggesting block-adaptive k allocation for topk compression.
