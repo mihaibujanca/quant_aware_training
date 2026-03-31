@@ -1,0 +1,5 @@
+item_number: 167
+outcome: refuted
+key_metric: r64=91.1 r128=175.4 r256=621.9 higher_rank_catastrophically_worse
+commit: NONE
+paths: experiments/higher_rank_joint_cycle157.py,autoresearch/results/cycle_157_higher_rank_joint.json

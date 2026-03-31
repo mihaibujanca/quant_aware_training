@@ -1,0 +1,5 @@
+item_number: 166
+outcome: refuted
+key_metric: joint_compress_correct=110.0 compress_only=91 topk_corr=59 corrections_dont_help_joint
+commit: 6755fa5
+paths: experiments/joint_compress_correct_cycle156.py,autoresearch/results/cycle_156_joint_compress_correct.json

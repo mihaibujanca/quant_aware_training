@@ -1,26 +1,23 @@
-# Research Status — 153 Cycles (001–153)
+# Research Status — 158 Cycles (001–158)
 
-## Session 125-153 (29 cycles)
+## Session 125-158 (34 cycles)
 
 ### Key Findings
 1. **Training objective > architecture** (148): linear = ReLU AE. CE loss is the ingredient.
-2. **Joint stacking works** (149): random rank-64 = 69.76 (beats topk 70.70, 1.3%, seed-dependent)
-3. **CE models resist corrections** (153): joint+corrections = 107 (catastrophic); topk+corrections = 69.8
-4. **Corrections are cascade compensation** (151): 93-97% novel subspace, block 7 is entirely cascade
-5. **Progressive stacking fails** (152): 78.2, worse than all baselines
+2. **Joint training exhausted** (155-158): random-init 91.1, warm-start 73.0, polish 70.7 — 5 consecutive refutations
+3. **Higher rank makes joint training worse** (157): r128=175, r256=622 vs r64=91
+4. **CE models resist corrections** (153, 156): joint+corrections=107-110; topk+corrections=59
+5. **Corrections are cascade compensation** (151): 93-97% novel subspace
 6. **Topk+lstsq+corrections remains best overall**: PPL ~59 at 1.6M + 49K params
 
 ### Working Recipes (ranked)
 1. **topk+lstsq + corrections** → PPL ~59 (49K correction params, total ~1.6M)
-2. **Joint random rank-64** → PPL 69.76 (986K params, no corrections needed, but seed-dependent)
-3. **topk+lstsq+polish** → PPL ~70.7 (1.58M params)
+2. **topk+lstsq+polish** → PPL ~70.7 (1.58M params)
+3. **topk+lstsq warm-start joint** → PPL ~73.0 (986K params, reliable but worse than polish)
 
 ### Dead Ends (this session)
-Attention pruning, cross-block sharing, exact pruning, GELU affine maps, G-weighted metrics, method hybrids, eigenstructure selection, progressive stacking, corrections on CE-trained models
+Attention pruning, cross-block sharing, exact pruning, GELU affine maps, G-weighted metrics, method hybrids, eigenstructure selection, progressive stacking, corrections on CE-trained models, higher-rank joint, joint compress+correct, warm-start joint
 
 ## Next
-- **165**: Multi-seed validation of joint training (P0) — 8 seeds to characterize seed-dependence
-- **166**: Joint training with correction-aware loss (P0) — train compression + corrections simultaneously
-- **167**: Higher-rank joint training rank-128/256 (P1) — test if capacity reduces seed variance
-- **168**: Topk+lstsq init for joint training (P1) — warm start from known-good solution
 - **169**: Correction-first compression (P2) — flip pipeline: correct then compress residual
+- After 169: NEXT will be empty → agenda refresh required

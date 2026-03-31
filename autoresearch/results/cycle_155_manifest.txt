@@ -1,0 +1,5 @@
+item_number: 165
+outcome: refuted
+key_metric: median=91.1±1.0 topk=70.7 cycle149_69.76_was_anomaly 8seeds_all_around_91
+commit: de573c6
+paths: experiments/joint_multiseed_cycle155.py,autoresearch/results/cycle_155_joint_multiseed.json
