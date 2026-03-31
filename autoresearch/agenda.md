@@ -8,8 +8,39 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
+170. **Block-adaptive compression ratio via per-block sensitivity — GPT-2 FFN**
+   - Currently all 12 blocks use uniform k=4 (6x compression). Measure per-block sensitivity by sweeping k∈{2,3,4,5,6} on each block individually (single-block swap PPL) and then allocate a global channel budget equal to 12×4=48 channels across blocks to minimize total PPL, giving harder blocks more channels. Compare the adaptive allocation's stacked PPL against uniform k=4 at the same total parameter count.
+   - Type: empirical
+   - Confirmed if: adaptive allocation achieves stacked PPL at least 2 PPL points better than uniform k=4 (~70.7) at equal total FFN parameter count.
+   - Refuted if: adaptive allocation is within 1 PPL of uniform k=4 or worse.
+   - Inconclusive if: improvement is 1-2 PPL and depends on which blocks get more/fewer channels.
+   - Depends on: none
+
+171. **Centroid-affinity channel selection vs activation-norm topk — GPT-2 FFN k=4**
+   - Cycle 27 confirmed centroid similarity is a strong merge signal (rho=0.853). Apply this to channel selection: for each block, compute centroid affinity between all 3072 intermediate channels on a calibration set and select k=4 channels that maximize coverage of the centroid space (farthest-point or greedy set cover on centroid embeddings). Compare single-block and stacked PPL against the current activation-norm topk baseline.
+   - Type: empirical
+   - Confirmed if: centroid-selected channels achieve lower stacked PPL than activation-norm topk by at least 1.5 PPL points at k=4.
+   - Refuted if: centroid selection is worse than or within 0.5 PPL of activation-norm topk.
+   - Inconclusive if: better on some blocks, worse on others, with net stacked PPL within 0.5-1.5 of baseline.
+   - Depends on: none
 
 ### P2
+
+172. **GELU-aware dead and near-saturated channel census — GPT-2 FFN**
+   - Cycle 28 was refuted because it used ReLU-calibrated thresholds on GELU. Re-run with correct methodology: check pre-GELU values to find channels stuck in GELU's saturated tail (max pre-GELU < -T for T∈{2,3,4}) and near-linear channels (min pre-GELU > T). Also compute output-contribution score (‖W_down[:,j]‖ × rms(act_j)) and plot the distribution. This addresses R2 (exact white-box compression) with proper GELU handling per the item 16 post-hoc review.
+   - Type: analysis
+   - Confirmed if: at least 5% of channels across all blocks are dead or near-saturated (removable with <0.5% PPL increase on single-block swap).
+   - Refuted if: fewer than 1% of channels are removable at any threshold tested.
+   - Inconclusive if: 1-5% of channels qualify but removal causes >0.5% PPL increase.
+   - Depends on: none
+
+173. **Per-block error contribution profiling — stacked topk+lstsq — GPT-2 FFN k=4**
+   - The gap between single-block PPL (~85) and stacked PPL (~95 pre-polish, ~70.7 post-polish) indicates massive cross-block error interaction, and cycle 151 showed corrections are 93-97% cascade compensation. Profile the stacking: compress blocks 0..i for i=0..11, record PPL at each step, and compute the marginal PPL contribution of each block. Identify which blocks are the dominant cascade error sources. This directly informs whether the correction budget (49K params) should be redistributed non-uniformly.
+   - Type: analysis
+   - Confirmed if: a clear Pareto structure exists (3 or fewer blocks contribute >60% of the total stacking degradation) AND concentrating corrections on those blocks recovers at least 1 PPL point.
+   - Refuted if: degradation is approximately uniform across blocks (no block contributes >15% of total).
+   - Inconclusive if: Pareto structure exists but concentrating corrections on top blocks does not improve PPL.
+   - Depends on: none
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 

@@ -18,5 +18,8 @@
 ### Dead Ends (this session)
 Attention pruning, cross-block sharing, exact pruning, GELU affine maps, G-weighted metrics, method hybrids, eigenstructure selection, progressive stacking, corrections on CE-trained models, higher-rank joint, joint compress+correct, warm-start joint, correction-first compression
 
-## Next
-- NEXT is empty — agenda refresh required
+## Next (agenda refreshed)
+- **170**: Block-adaptive compression ratio (P1) — non-uniform k per block
+- **171**: Centroid-affinity channel selection (P1) — geometry-based channel selection vs topk
+- **172**: GELU-aware dead/saturated channel census (P2) — R2 exact white-box baseline
+- **173**: Per-block error contribution profiling (P2) — identify cascade error sources
