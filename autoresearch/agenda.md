@@ -8,13 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-170. **Block-adaptive compression ratio via per-block sensitivity — GPT-2 FFN**
-   - Currently all 12 blocks use uniform k=4 (6x compression). Measure per-block sensitivity by sweeping k∈{2,3,4,5,6} on each block individually (single-block swap PPL) and then allocate a global channel budget equal to 12×4=48 channels across blocks to minimize total PPL, giving harder blocks more channels. Compare the adaptive allocation's stacked PPL against uniform k=4 at the same total parameter count.
-   - Type: empirical
-   - Confirmed if: adaptive allocation achieves stacked PPL at least 2 PPL points better than uniform k=4 (~70.7) at equal total FFN parameter count.
-   - Refuted if: adaptive allocation is within 1 PPL of uniform k=4 or worse.
-   - Inconclusive if: improvement is 1-2 PPL and depends on which blocks get more/fewer channels.
-   - Depends on: none
 
 171. **Centroid-affinity channel selection vs activation-norm topk — GPT-2 FFN k=4**
    - Cycle 27 confirmed centroid similarity is a strong merge signal (rho=0.853). Apply this to channel selection: for each block, compute centroid affinity between all 3072 intermediate channels on a calibration set and select k=4 channels that maximize coverage of the centroid space (farthest-point or greedy set cover on centroid embeddings). Compare single-block and stacked PPL against the current activation-norm topk baseline.
@@ -65,6 +58,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 160
+
+170. **Block-adaptive compression ratio via per-block sensitivity — GPT-2 FFN** *(INCONCLUSIVE — cycle 160, PLAN INVALID)*
+   - Duplicates refuted items 110 (cycle 94) and 65 (cycle 50). Non-uniform allocation already shown to be absorbed by polish.
 
 ### Cycle 159
 
