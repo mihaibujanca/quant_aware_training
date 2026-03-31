@@ -1,0 +1,365 @@
+{
+  "cycle": 171,
+  "item": 181,
+  "verdict": "REFUTED",
+  "verdict_note": "12@3x PPL (183.41) >= 4@6x PPL (59.39)",
+  "seeds": [
+    42,
+    137,
+    7
+  ],
+  "polish_steps": 500,
+  "polish_lr": 0.0001,
+  "polish_mode": "joint",
+  "eval_sequences": 200,
+  "teacher_ppl_mean": 52.3055936291863,
+  "teacher_ppl_per_seed": {
+    "42": 57.65287371228062,
+    "137": 48.81508639388072,
+    "7": 50.44882078139756
+  },
+  "configs": {
+    "baseline_4x6x": {
+      "label": "4 blocks @ 6x",
+      "n_blocks": 4,
+      "hidden": 512,
+      "mean_ppl_unpolished": 74.74590172061095,
+      "std_ppl_unpolished": 7.278416489848908,
+      "mean_ppl_polished": 59.38846931957588,
+      "std_ppl_polished": 8.16413987848289,
+      "per_seed_unpolished": [
+        84.99406693788474,
+        68.7885411516563,
+        70.45509707229176
+      ],
+      "per_seed_polished": [
+        70.82638391886726,
+        52.305564752753156,
+        55.03345928710722
+      ],
+      "compressed_params": 3150848
+    },
+    "A_12x3x": {
+      "label": "12 blocks @ 3x",
+      "n_blocks": 12,
+      "hidden": 1024,
+      "mean_ppl_unpolished": 254.02318914803308,
+      "std_ppl_unpolished": 34.868522884215984,
+      "mean_ppl_polished": 183.4066173453424,
+      "std_ppl_polished": 33.46802913885769,
+      "per_seed_unpolished": [
+        303.1558981590486,
+        225.82317104777763,
+        233.09049823727293
+      ],
+      "per_seed_polished": [
+        230.29209208375005,
+        154.3533848487238,
+        165.57437510355336
+      ],
+      "compressed_params": 18895872
+    },
+    "B_12x2x": {
+      "label": "12 blocks @ 2x",
+      "n_blocks": 12,
+      "hidden": 1536,
+      "mean_ppl_unpolished": 185.80078373055161,
+      "std_ppl_unpolished": 23.95859274986849,
+      "mean_ppl_polished": 155.101270012164,
+      "std_ppl_polished": 26.1892374348882,
+      "per_seed_unpolished": [
+        219.6742877030747,
+        168.18539612875378,
+        169.5426673598264
+      ],
+      "per_seed_polished": [
+        191.71660329803115,
+        131.96636167183468,
+        141.62084506662617
+      ],
+      "compressed_params": 28339200
+    },
+    "C_8x4x": {
+      "label": "8 blocks @ 4x",
+      "n_blocks": 8,
+      "hidden": 768,
+      "mean_ppl_unpolished": 187.56201974291676,
+      "std_ppl_unpolished": 18.741856388891655,
+      "mean_ppl_polished": 127.43125268056856,
+      "std_ppl_polished": 20.525254697320428,
+      "per_seed_unpolished": [
+        213.99600281777197,
+        172.6659881668184,
+        176.02406824415988
+      ],
+      "per_seed_polished": [
+        156.26161173388553,
+        110.09427264267899,
+        115.93787366514121
+      ],
+      "compressed_params": 9449472
+    }
+  },
+  "per_seed_detail": {
+    "42": {
+      "baseline_ppl": 57.65287371228062,
+      "configs": {
+        "baseline_4x6x": {
+          "blocks": [
+            1,
+            4,
+            7,
+            11
+          ],
+          "hidden": 512,
+          "ratio": 6.0,
+          "n_blocks": 4,
+          "ppl_unpolished": 84.99406693788474,
+          "ppl_polished": 70.82638391886726,
+          "compressed_params": 3150848,
+          "source_params": 18889728
+        },
+        "A_12x3x": {
+          "blocks": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "hidden": 1024,
+          "ratio": 3.0,
+          "n_blocks": 12,
+          "ppl_unpolished": 303.1558981590486,
+          "ppl_polished": 230.29209208375005,
+          "compressed_params": 18895872,
+          "source_params": 56669184
+        },
+        "B_12x2x": {
+          "blocks": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "hidden": 1536,
+          "ratio": 2.0,
+          "n_blocks": 12,
+          "ppl_unpolished": 219.6742877030747,
+          "ppl_polished": 191.71660329803115,
+          "compressed_params": 28339200,
+          "source_params": 56669184
+        },
+        "C_8x4x": {
+          "blocks": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "hidden": 768,
+          "ratio": 4.0,
+          "n_blocks": 8,
+          "ppl_unpolished": 213.99600281777197,
+          "ppl_polished": 156.26161173388553,
+          "compressed_params": 9449472,
+          "source_params": 37779456
+        }
+      }
+    },
+    "137": {
+      "baseline_ppl": 48.81508639388072,
+      "configs": {
+        "baseline_4x6x": {
+          "blocks": [
+            1,
+            4,
+            7,
+            11
+          ],
+          "hidden": 512,
+          "ratio": 6.0,
+          "n_blocks": 4,
+          "ppl_unpolished": 68.7885411516563,
+          "ppl_polished": 52.305564752753156,
+          "compressed_params": 3150848,
+          "source_params": 18889728
+        },
+        "A_12x3x": {
+          "blocks": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "hidden": 1024,
+          "ratio": 3.0,
+          "n_blocks": 12,
+          "ppl_unpolished": 225.82317104777763,
+          "ppl_polished": 154.3533848487238,
+          "compressed_params": 18895872,
+          "source_params": 56669184
+        },
+        "B_12x2x": {
+          "blocks": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "hidden": 1536,
+          "ratio": 2.0,
+          "n_blocks": 12,
+          "ppl_unpolished": 168.18539612875378,
+          "ppl_polished": 131.96636167183468,
+          "compressed_params": 28339200,
+          "source_params": 56669184
+        },
+        "C_8x4x": {
+          "blocks": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "hidden": 768,
+          "ratio": 4.0,
+          "n_blocks": 8,
+          "ppl_unpolished": 172.6659881668184,
+          "ppl_polished": 110.09427264267899,
+          "compressed_params": 9449472,
+          "source_params": 37779456
+        }
+      }
+    },
+    "7": {
+      "baseline_ppl": 50.44882078139756,
+      "configs": {
+        "baseline_4x6x": {
+          "blocks": [
+            1,
+            4,
+            7,
+            11
+          ],
+          "hidden": 512,
+          "ratio": 6.0,
+          "n_blocks": 4,
+          "ppl_unpolished": 70.45509707229176,
+          "ppl_polished": 55.03345928710722,
+          "compressed_params": 3150848,
+          "source_params": 18889728
+        },
+        "A_12x3x": {
+          "blocks": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "hidden": 1024,
+          "ratio": 3.0,
+          "n_blocks": 12,
+          "ppl_unpolished": 233.09049823727293,
+          "ppl_polished": 165.57437510355336,
+          "compressed_params": 18895872,
+          "source_params": 56669184
+        },
+        "B_12x2x": {
+          "blocks": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "hidden": 1536,
+          "ratio": 2.0,
+          "n_blocks": 12,
+          "ppl_unpolished": 169.5426673598264,
+          "ppl_polished": 141.62084506662617,
+          "compressed_params": 28339200,
+          "source_params": 56669184
+        },
+        "C_8x4x": {
+          "blocks": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "hidden": 768,
+          "ratio": 4.0,
+          "n_blocks": 8,
+          "ppl_unpolished": 176.02406824415988,
+          "ppl_polished": 115.93787366514121,
+          "compressed_params": 9449472,
+          "source_params": 37779456
+        }
+      }
+    }
+  },
+  "delta_A_vs_baseline": 124.01814802576652,
+  "delta_B_vs_baseline": 95.71280069258813,
+  "delta_C_vs_baseline": 68.04278336099267,
+  "best_nonbaseline": "C_8x4x",
+  "best_nonbaseline_delta": 68.04278336099267
+}

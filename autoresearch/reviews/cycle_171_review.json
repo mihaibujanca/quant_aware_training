@@ -1,0 +1,10 @@
+{
+  "cycle": 171,
+  "item": 181,
+  "review_pass": true,
+  "r1_answers_item": true,
+  "r2_confounds": true,
+  "r3_compute_budget": true,
+  "r4_no_overlap": true,
+  "r5_pitfalls_noted": ["baseline_drift", "polish_underfitting_12_blocks", "c041_compounding"]
+}

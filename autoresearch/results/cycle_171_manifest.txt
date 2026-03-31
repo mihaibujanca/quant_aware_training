@@ -1,0 +1,7 @@
+cycle=171
+item=181
+verdict=REFUTED
+experiment=wider_shallower_compression
+summary=All wider-shallower configs catastrophically worse than 4@6x baseline. 12@3x PPL=183.4 vs 4@6x PPL=59.4 (+124). 12@2x=155.1 (+96). 8@4x=127.4 (+68). The c=0.41/block compounding rate dominates: touching more blocks always hurts, even at light per-block compression. Block count is the primary cost variable.
+learned=Block count is the primary driver of stacked compression damage, not per-block compression ratio. The ~41%/block compounding rate means compressing 12 blocks at 3x is far worse than 4 blocks at 6x, despite each block having gentler compression. This definitively closes "spread thin" as a compression strategy.
+artifacts=experiments/wider_shallower_compression_cycle171.py,autoresearch/results/cycle_171_wider_shallower.json

@@ -6,17 +6,31 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+184. **Unified per-block regime ablation table — GPT-2 FFN** [INTERPRETABILITY]
+   - Reconciles contradictory claims from cycles 102 (killing neg = catastrophic), 109 (neg is 87-98% bias), 164 (positive = 99.9% of L2 norm). Those used different metrics — this uses ONE metric (single-block PPL) across all conditions. For each of 12 blocks independently (all others float), 2048 OWT tokens, measure PPL under 6 conditions: C0=float baseline, C1=kill negative (h_neg→0, equivalent to ReLU at this block), C2=kill positive (h_pos→0), C3=replace negative with its token-mean (y_pos(x) + μ_neg + b_down), C4=replace positive with its token-mean (y_neg(x) + μ_pos + b_down), C5=replace both with means (block outputs constant E[y]). Report 12×6 PPL table. Also report per-block: ||y_pos||, ||y_neg||, ||s_pos||, ||s_neg||, ||μ_pos||, ||μ_neg||. Interaction check: PPL(C1)+PPL(C2)-PPL(C0) vs PPL(C5).
+   - Type: analysis (interpretability)
+   - Confirmed if: C3 ≈ C0 (within +2% PPL) in ≥8/12 blocks — negative regime IS absorbable as constant bias.
+   - Refuted if: C3 >> C0 (>+10% PPL) in ≥8/12 blocks — token-dependent negative signal matters despite small L2 energy.
+   - Inconclusive if: mixed across blocks.
+   - Depends on: none. ~10 min (72 forward passes).
 
+185. **Geometry of token-dependent negative signal — GPT-2 FFN** [INTERPRETABILITY]
+   - The token-dependent negative signal s_neg(x) = y_neg(x) - μ_neg has only 1.5-13% of negative-regime L2 energy but may be aimed at prediction-critical directions. For each of 12 blocks on 2048 tokens: (a) stack s_neg into S_neg ∈ R^{2048×768}, SVD it — report effective rank at 95% energy, (b) same for S_pos, compare ranks, (c) compute prediction-sensitive directions J(x) = d(CE_loss)/d(y_block) per token (768-dim gradient), (d) per-token cosine alignment cos(s_neg(x), J(x)) — does the negative signal point where predictions are sensitive?, (e) same alignment for s_pos, (f) report per-block: mean|cos(s_neg,J)| vs mean|cos(s_pos,J)|, rank(S_neg) vs rank(S_pos).
+   - Type: analysis (interpretability)
+   - Confirmed if: |cos(s_neg, J)| > 0.2 in ≥8/12 blocks AND rank(S_neg) < rank(S_pos)/4 — negative signal is precise, low-rank, prediction-aligned.
+   - Refuted if: |cos(s_neg, J)| < 0.05 — negative token signal is orthogonal to predictions (noise).
+   - Inconclusive if: moderate alignment or varies by block.
+   - Depends on: none. ~15 min (forward + backward for gradients).
+
+186. **Per-token prediction impact of negative regime — GPT-2 FFN** [INTERPRETABILITY]
+   - Measure functional impact in prediction space, not hidden-state space. For each of 12 blocks independently, 2048 tokens: (a) float model P_float(next_token|context), (b) ReLU-at-block-l model P_relu(next_token|context), (c) per-token KL(P_float || P_relu), (d) top-50 tokens by KL per block — report actual tokens and contexts, (e) fraction where P_relu(correct) > P_float(correct) (negative regime HURTS), (f) correlate mean KL with ||y_neg|| and ||s_neg|| from item 184.
+   - Type: analysis (interpretability)
+   - Confirmed if: mean KL > 0.1 nats in ≥8/12 blocks AND top-50 tokens show semantic pattern.
+   - Refuted if: mean KL < 0.01 nats — negligible per-block prediction impact.
+   - Inconclusive if: moderate KL or no semantic pattern.
+   - Depends on: none. ~10 min (forward passes only).
 
 ### P1
-
-181. **Wider-shallower compression: all 12 blocks at k=8 vs 4 blocks at k=4 — GPT-2 FFN** [EMPIRICAL]
-   - Current recipe compresses 4 of 12 FFN blocks at 6x ratio (k=4 of 24 channel groups). Since error accumulates diffusely (cycle 163), compressing MORE blocks at a LIGHTER ratio might yield lower cascade damage. Test: (a) 12 blocks at k=8 (~3x ratio, same total param reduction as 4@k=4), (b) 12 blocks at k=12 (~2x ratio, higher total params but tests the curve), (c) 8 blocks at k=6 (intermediate). All with lstsq fitting, no corrections. Compare stacked PPL. Also test with corrections (r=4 uniform) to see if lighter-per-block compression needs fewer correction params.
-   - Type: empirical
-   - Confirmed if: 12@k=8 PPL < 4@k=4 PPL (70.7) by >=2 PPL points — wider-shallower is better.
-   - Refuted if: 12@k=8 PPL >= 4@k=4 PPL — concentrating compression in fewer blocks is better.
-   - Inconclusive if: within 2 PPL points.
-   - Depends on: none. ~15 min compute.
 
 182. **Lstsq regression target: residual-stream delta vs raw output — GPT-2 FFN k=4** [EMPIRICAL]
    - Current lstsq fits W_compressed @ x ≈ W_float @ x (raw block output). But FFN output enters a residual stream: y_block = FFN(x) is ADDED to x. The compositionally relevant quantity is x + FFN(x), not FFN(x) alone. Alternative targets: (a) fit the residual-stream delta normalized by ||x|| (scale-invariant), (b) fit in the subspace of top-k SVD directions of the Jacobian (geometry-preserving), (c) fit with token-frequency weighting (common tokens matter more). Compare stacked PPL of each target vs raw lstsq at k=4 across 4 blocks. If (a) helps, the lstsq step was wasting capacity matching irrelevant output scale.
@@ -61,6 +75,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 171
+
+181. **Wider-shallower compression: all 12 blocks at k=8 vs 4 blocks at k=4 — GPT-2 FFN** *(REFUTED — cycle 171)*
+   - All wider-shallower configs are catastrophically worse: 12@3x PPL=183.4 vs 4@6x PPL=59.4 (joint polish). 12@2x=155.1, 8@4x=127.4. The c=0.41/block compounding rate dominates: touching more blocks always compounds more error, even at very light per-block compression. Block count is the primary cost, not per-block ratio. This definitively closes the "spread compression thinly" hypothesis.
+   - Artifacts: `experiments/wider_shallower_compression_cycle171.py`, `autoresearch/results/cycle_171_wider_shallower.json`
 
 ### Cycle 170
 
