@@ -120,7 +120,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 152. **Bottleneck AE k=4 stacking — GPT-2 FFN** *(REFUTED — cycle 138)*
    - **Outcome: REFUTED** — AE stacking (74.4) is 4.7% WORSE than topk (71.0). Pre-polish AE stacking is catastrophic (259.8 vs 84.9) — independently trained AEs don't compose. Even after 500-step joint polish, AE can't match topk. AE+LoRA corrections (76.7) even worse. The 3% single-block AE advantage (cycle 137) does NOT transfer to multi-block stacking. Cascade/composition dominates local quality.
-   - Commit: PENDING
+   - Commit: 1626479
    - Artifacts: experiments/ae_stacking_k4_cycle138.py, autoresearch/results/cycle_138_ae_stacking.json
 
 ### Cycle 137
