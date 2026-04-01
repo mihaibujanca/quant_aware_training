@@ -1,7 +1,7 @@
 item_number=204
 outcome=refuted
 key_metric=n_frob_decrease_k8=2/12_k9=2/12_k10=2/12_verdict=refuted_redirection
-commit=TBD
+commit=16f260d
 paths=autoresearch/results/cycle_194_self_correction.json,experiments/self_correction_analysis_cycle194.py
 learned=Self-correction at k=8-10 is error REDIRECTION, not cancellation. Only 2/12 layers show magnitude decrease (specifically the layer where the newly swapped block sits: L8 when k=8, L10 when k=10). The other 10 layers keep growing. PPL improves at k=8-10 despite growing total error because some fraction of the error rotates into low-PPL subspace (consistent with cycle 184's diffuse high-rank errors across 768 dims). Block 11 breaks the self-correction pattern with a large PPL jump despite similar frob to k=10.
 next=Agenda refresh needed — all current items exhausted. Focus on geometric decomposition or new research direction.
