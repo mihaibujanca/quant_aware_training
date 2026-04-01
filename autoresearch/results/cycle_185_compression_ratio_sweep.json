@@ -1,0 +1,176 @@
+{
+  "cycle": 185,
+  "item": 194,
+  "verdict": "REFUTED",
+  "verdict_note": "k=8 PPL=57.2 >55 \u2014 compression floor independent of ratio",
+  "summary": {
+    "2": {
+      "mean_ppl": 61.56256608216921,
+      "std_ppl": 8.017669078497594,
+      "params": 1576960,
+      "ratio": 11.978571428571428,
+      "per_seed_ppls": [
+        72.73531258499723,
+        54.30232668733067,
+        57.65005897417974
+      ]
+    },
+    "4": {
+      "mean_ppl": 59.41978685273356,
+      "std_ppl": 8.1450234668665,
+      "params": 3150848,
+      "ratio": 5.995125121871953,
+      "per_seed_ppls": [
+        70.82050704586247,
+        52.29471793602514,
+        55.14413557631308
+      ]
+    },
+    "6": {
+      "mean_ppl": 58.297828516532775,
+      "std_ppl": 8.154405010748667,
+      "params": 4724736,
+      "ratio": 3.998049414824447,
+      "per_seed_ppls": [
+        69.70654522446092,
+        51.13663491873867,
+        54.05030540639874
+      ]
+    },
+    "8": {
+      "mean_ppl": 57.1556340155493,
+      "std_ppl": 7.86805292339922,
+      "params": 6298624,
+      "ratio": 2.999024548853845,
+      "per_seed_ppls": [
+        68.14993439876255,
+        50.174096906432894,
+        53.14287074145245
+      ]
+    }
+  },
+  "per_seed": {
+    "42": {
+      "baseline_ppl": 57.65287371228062,
+      "k2": {
+        "hidden_dim": 256,
+        "compressed_params": 1576960,
+        "compression_ratio": 11.978571428571428,
+        "stacked_raw": 86.1071610977071,
+        "stacked_polished": 72.73531258499723
+      },
+      "k4": {
+        "hidden_dim": 512,
+        "compressed_params": 3150848,
+        "compression_ratio": 5.995125121871953,
+        "stacked_raw": 84.99407301713437,
+        "stacked_polished": 70.82050704586247
+      },
+      "k6": {
+        "hidden_dim": 768,
+        "compressed_params": 4724736,
+        "compression_ratio": 3.998049414824447,
+        "stacked_raw": 83.9121203042709,
+        "stacked_polished": 69.70654522446092
+      },
+      "k8": {
+        "hidden_dim": 1024,
+        "compressed_params": 6298624,
+        "compression_ratio": 2.999024548853845,
+        "stacked_raw": 82.06923724816882,
+        "stacked_polished": 68.14993439876255
+      }
+    },
+    "137": {
+      "baseline_ppl": 48.81508639388072,
+      "k2": {
+        "hidden_dim": 256,
+        "compressed_params": 1576960,
+        "compression_ratio": 11.978571428571428,
+        "stacked_raw": 70.35529312427163,
+        "stacked_polished": 54.30232668733067
+      },
+      "k4": {
+        "hidden_dim": 512,
+        "compressed_params": 3150848,
+        "compression_ratio": 5.995125121871953,
+        "stacked_raw": 68.78853754355386,
+        "stacked_polished": 52.29471793602514
+      },
+      "k6": {
+        "hidden_dim": 768,
+        "compressed_params": 4724736,
+        "compression_ratio": 3.998049414824447,
+        "stacked_raw": 67.90739484824138,
+        "stacked_polished": 51.13663491873867
+      },
+      "k8": {
+        "hidden_dim": 1024,
+        "compressed_params": 6298624,
+        "compression_ratio": 2.999024548853845,
+        "stacked_raw": 66.72379194841302,
+        "stacked_polished": 50.174096906432894
+      }
+    },
+    "7": {
+      "baseline_ppl": 50.44882078139756,
+      "k2": {
+        "hidden_dim": 256,
+        "compressed_params": 1576960,
+        "compression_ratio": 11.978571428571428,
+        "stacked_raw": 72.13334062060422,
+        "stacked_polished": 57.65005897417974
+      },
+      "k4": {
+        "hidden_dim": 512,
+        "compressed_params": 3150848,
+        "compression_ratio": 5.995125121871953,
+        "stacked_raw": 70.4550913610386,
+        "stacked_polished": 55.14413557631308
+      },
+      "k6": {
+        "hidden_dim": 768,
+        "compressed_params": 4724736,
+        "compression_ratio": 3.998049414824447,
+        "stacked_raw": 69.46592494405527,
+        "stacked_polished": 54.05030540639874
+      },
+      "k8": {
+        "hidden_dim": 1024,
+        "compressed_params": 6298624,
+        "compression_ratio": 2.999024548853845,
+        "stacked_raw": 68.38970466558848,
+        "stacked_polished": 53.14287074145245
+      }
+    }
+  },
+  "config": {
+    "blocks": [
+      1,
+      4,
+      7,
+      11
+    ],
+    "k_values": [
+      2,
+      4,
+      6,
+      8
+    ],
+    "hidden_dims": {
+      "2": 256,
+      "4": 512,
+      "6": 768,
+      "8": 1024
+    },
+    "polish_steps": 500,
+    "lr": 0.0001,
+    "seeds": [
+      42,
+      137,
+      7
+    ],
+    "eval_seqs": 200,
+    "seq_len": 128
+  }
+}

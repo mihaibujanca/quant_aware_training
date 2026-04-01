@@ -8,14 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-194. **Compression ratio sweep — GPT-2 FFN k={2,4,6,8} on blocks [1,4,7,11]** [EMPIRICAL]
-   - We always use k=4 (6x compression). Map the PPL-vs-compression curve by running topk+lstsq+polish at k=2 (12x), k=4 (6x), k=6 (4x), k=8 (3x) on the standard 4 blocks. This reveals whether the recipe is operating in a steep or flat region of the tradeoff curve, and whether lighter compression (k=6 or k=8) closes the gap to float (PPL ~30) enough to be practically useful. Report: stacked PPL, total FFN params, and compression ratio for each k.
-   - Type: empirical
-   - Confirmed if: PPL decreases monotonically with k AND k=6 or k=8 achieves PPL <45 (practical operating point exists).
-   - Refuted if: diminishing returns — k=8 still >55 PPL (compression approach has a floor unrelated to ratio).
-   - Inconclusive if: non-monotonic or only marginal improvement at higher k.
-   - Depends on: none. ~15 min compute.
-
 ### P2
 
 195. **Fewer-block compression — GPT-2 FFN k=4 on 2 blocks vs 4 blocks** [EMPIRICAL]
@@ -59,6 +51,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 185
+
+194. **Compression ratio sweep k={2,4,6,8} — GPT-2 FFN** *(REFUTED — cycle 185)*
+   - PPL curve nearly flat: k=2→61.56, k=4→59.42, k=6→58.30, k=8→57.16 (only 4.4 PPL gain for 4x more params, 12x→3x compression). k=8 PPL=57.2 >55 threshold — compression floor is ratio-independent. Cascade/composition barrier dominates regardless of per-block channel count. Diminishing returns confirmed.
+   - Artifacts: `experiments/compression_ratio_sweep_cycle185.py`, `autoresearch/results/cycle_185_compression_ratio_sweep.json`
 
 ### Cycle 184
 
