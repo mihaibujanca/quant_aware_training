@@ -1,7 +1,7 @@
 item_number=219
 outcome=refuted
 key_metric=standard_ppl=54.689_best_pca_p512=54.770_improvement=-0.080_verdict=refuted
-commit=pending
+commit=9b245ff
 paths=autoresearch/results/cycle_208_pca_lstsq.json,experiments/pca_lstsq_cycle208.py
 learned=PCA conditioning makes lstsq worse at all P values. lstsq handles near-zero-variance input dimensions implicitly. Explicit PCA projection adds approximation error without benefit. Reducing P to 192 (actual input_rank) is worst (+0.39 PPL penalty).
 next=Item 212: rank-1 input FFN compression. Agenda P0/P1/P2 exhausted; need refresh.
