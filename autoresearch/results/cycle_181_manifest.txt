@@ -1,0 +1,13 @@
+cycle: 181
+item: 191
+type: empirical
+verdict: REFUTED
+description: Full-model ReLU + per-block bias vector swap — GPT-2
+key_metrics: ppl_base=22.7 ppl_full=42.643 delta=+87.9% single_block_max_delta=+5.9% incremental_0-4=+30.1% incremental_0-11=+87.9% mu_neg_norm_block11=120.3
+artifacts:
+  - experiments/full_relu_bias_swap_cycle181.py
+  - autoresearch/results/cycle_181_relu_bias_swap.json
+  - autoresearch/results/cycle_181_relu_bias_swap.png
+  - autoresearch/briefs/cycle_181.md
+  - autoresearch/plans/cycle_181.md
+  - autoresearch/reviews/cycle_181.md

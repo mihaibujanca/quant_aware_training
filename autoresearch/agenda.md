@@ -6,16 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-191. **Full-model ReLU + per-block bias vector swap — GPT-2** [INTERPRETABILITY]
-   - Cycle 173 (item 184) confirmed: replacing GELU with ReLU in a single block, then adding a per-block constant vector μ_neg_l ∈ R^768 to that block's output, recovers within 2% PPL. That was tested one block at a time (all other blocks kept GELU). This tests ALL 12 simultaneously.
-   - Setup: for each FFN block l ∈ {0..11}, precompute μ_neg_l = E_x[W_down @ (GELU(z) ⊙ 𝟙[z≤0])] on 2048 OWT tokens using the float GELU model. This is one 768-dim vector per block (the mean output contribution of the negative regime). Then replace all 12 blocks: activation becomes ReLU instead of GELU, and add μ_neg_l as a constant to block l's output. The modified block computes: y_l(x) = W_down @ ReLU(W_up @ x + b_up) + b_down + μ_neg_l. Measure full-model PPL.
-   - Total added params: 12 × 768 = 9,216 (trivial).
-   - Type: empirical
-   - Confirmed if: full-model ReLU + per-block bias PPL within +10% of float.
-   - Refuted if: PPL > +50% (per-block biases don't compose).
-   - Inconclusive if: +10-50%.
-   - Depends on: none. ~5 min compute.
-
 192. **Iterative bias recomputation for ReLU swap — GPT-2** [INTERPRETABILITY]
    - Only run if item 191 is REFUTED or INCONCLUSIVE (precomputed biases don't compose well). The precomputed μ_neg_l from item 191 were computed on the float GELU model's activations. When upstream blocks are swapped to ReLU, the residual stream changes, so downstream blocks receive different inputs than what μ_neg_l was computed on. Fix: swap blocks sequentially and recompute each bias on the partially-swapped model. Swap block 0 to ReLU, recompute μ_neg_1 on the now-ReLU-block-0 model, swap block 1 to ReLU+μ_neg_1, recompute μ_neg_2, etc. Measure full-model PPL after all 12 swaps. Compare to item 191's precomputed result.
    - Type: empirical
@@ -87,6 +77,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 181
+
+191. **Full-model ReLU + per-block bias vector swap — GPT-2** *(REFUTED — cycle 181)*
+   - Full-model ReLU+bias swap: PPL 42.6 (+87.9% vs float 22.7). Single-block swaps all within +6% (confirming cycle 173), but simultaneous 12-block swap cascades severely. Incremental accumulation shows smooth degradation: blocks 0-2 within +10%, blocks 0-4 at +30%, blocks 0-6 at +56%, all 12 at +88%. Precomputed biases from float model become stale as upstream blocks change the residual stream — exactly the distribution-shift failure predicted in R4 review. Block 11's μ_neg norm (120.3) is 4x larger than other blocks, suggesting the last block amplifies accumulated errors. Item 192 (iterative recomputation) is now eligible.
+   - Artifacts: `experiments/full_relu_bias_swap_cycle181.py`, `autoresearch/results/cycle_181_relu_bias_swap.json`, `autoresearch/results/cycle_181_relu_bias_swap.png`
 
 ### Cycle 180
 
