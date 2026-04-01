@@ -1,0 +1,184 @@
+{
+  "seeds": {
+    "42": {
+      "ppl_base": 57.65,
+      "ppl_A_bias_only": 106.57,
+      "ppl_B_lstsq_pre": 82.45,
+      "ppl_B_lstsq_post": 57.46,
+      "ppl_C_bias_polish": 60.29,
+      "stats_A": {
+        "1": {
+          "n_channels": 512,
+          "n_removed": 2560,
+          "analytic_bias_norm": 4.150721073150635,
+          "recon_mse": 0.213721
+        },
+        "4": {
+          "n_channels": 512,
+          "n_removed": 2560,
+          "analytic_bias_norm": 14.608750343322754,
+          "recon_mse": 0.411202
+        },
+        "7": {
+          "n_channels": 512,
+          "n_removed": 2560,
+          "analytic_bias_norm": 14.475412368774414,
+          "recon_mse": 0.770088
+        },
+        "11": {
+          "n_channels": 512,
+          "n_removed": 2560,
+          "analytic_bias_norm": 53.798362731933594,
+          "recon_mse": 4.152997
+        }
+      },
+      "stats_B": {
+        "1": {
+          "n_channels": 512,
+          "lstsq_mse": 0.089358
+        },
+        "4": {
+          "n_channels": 512,
+          "lstsq_mse": 0.175074
+        },
+        "7": {
+          "n_channels": 512,
+          "lstsq_mse": 0.441326
+        },
+        "11": {
+          "n_channels": 512,
+          "lstsq_mse": 1.618656
+        }
+      }
+    },
+    "137": {
+      "ppl_base": 48.82,
+      "ppl_A_bias_only": 82.17,
+      "ppl_B_lstsq_pre": 68.02,
+      "ppl_B_lstsq_post": 44.56,
+      "ppl_C_bias_polish": 46.81,
+      "stats_A": {
+        "1": {
+          "n_channels": 512,
+          "n_removed": 2560,
+          "analytic_bias_norm": 4.37436580657959,
+          "recon_mse": 0.206151
+        },
+        "4": {
+          "n_channels": 512,
+          "n_removed": 2560,
+          "analytic_bias_norm": 14.832157135009766,
+          "recon_mse": 0.407501
+        },
+        "7": {
+          "n_channels": 512,
+          "n_removed": 2560,
+          "analytic_bias_norm": 14.627764701843262,
+          "recon_mse": 0.760829
+        },
+        "11": {
+          "n_channels": 512,
+          "n_removed": 2560,
+          "analytic_bias_norm": 55.84499740600586,
+          "recon_mse": 4.026102
+        }
+      },
+      "stats_B": {
+        "1": {
+          "n_channels": 512,
+          "lstsq_mse": 0.085542
+        },
+        "4": {
+          "n_channels": 512,
+          "lstsq_mse": 0.176613
+        },
+        "7": {
+          "n_channels": 512,
+          "lstsq_mse": 0.439114
+        },
+        "11": {
+          "n_channels": 512,
+          "lstsq_mse": 1.625424
+        }
+      }
+    },
+    "7": {
+      "ppl_base": 50.45,
+      "ppl_A_bias_only": 86.86,
+      "ppl_B_lstsq_pre": 70.66,
+      "ppl_B_lstsq_post": 47.41,
+      "ppl_C_bias_polish": 49.78,
+      "stats_A": {
+        "1": {
+          "n_channels": 512,
+          "n_removed": 2560,
+          "analytic_bias_norm": 4.118731498718262,
+          "recon_mse": 0.212406
+        },
+        "4": {
+          "n_channels": 512,
+          "n_removed": 2560,
+          "analytic_bias_norm": 14.634871482849121,
+          "recon_mse": 0.409052
+        },
+        "7": {
+          "n_channels": 512,
+          "n_removed": 2560,
+          "analytic_bias_norm": 14.628929138183594,
+          "recon_mse": 0.790929
+        },
+        "11": {
+          "n_channels": 512,
+          "n_removed": 2560,
+          "analytic_bias_norm": 54.44089126586914,
+          "recon_mse": 4.202252
+        }
+      },
+      "stats_B": {
+        "1": {
+          "n_channels": 512,
+          "lstsq_mse": 0.089313
+        },
+        "4": {
+          "n_channels": 512,
+          "lstsq_mse": 0.179438
+        },
+        "7": {
+          "n_channels": 512,
+          "lstsq_mse": 0.459653
+        },
+        "11": {
+          "n_channels": 512,
+          "lstsq_mse": 1.670533
+        }
+      }
+    }
+  },
+  "config": {
+    "blocks": [
+      1,
+      4,
+      7,
+      11
+    ],
+    "topk_hidden": 512,
+    "polish_steps": 500,
+    "polish_lr": 0.0001,
+    "eval_seqs": 200,
+    "seq_len": 128,
+    "seeds": [
+      42,
+      137,
+      7
+    ]
+  },
+  "aggregate": {
+    "mean_ppl_A_bias_only": 91.87,
+    "mean_ppl_B_lstsq_pre": 73.71,
+    "mean_ppl_B_lstsq_post": 49.81,
+    "mean_ppl_C_bias_polish": 52.29,
+    "verdict": "INCONCLUSIVE",
+    "reason": "bias-only=91.9 >> lstsq=73.7 (fails <=73 criterion); bias+polish=52.3 < 68.7 but polish is not free \u2014 the lstsq step is not eliminated",
+    "note": "bias+polish gap vs lstsq+polish is only 2.5 PPL (52.3 vs 49.8), suggesting bias is a reasonable init for polish but cannot replace lstsq without fine-tuning"
+  }
+}

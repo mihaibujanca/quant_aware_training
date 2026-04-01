@@ -26,13 +26,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-190. **FLAP-style bias compensation for topk pruning — GPT-2 FFN k=4**
-   - Type: empirical
-   - After topk channel selection, instead of lstsq reconstruction, compute the analytic bias update that compensates for the removed neurons' expected contribution (FLAP formula: Δb = W_down[:,removed] @ E[GELU(W_up[removed,:] @ x + b[removed])]). Compare: (a) topk + FLAP bias vs topk + lstsq, (b) topk + FLAP bias + lstsq (FLAP as init for lstsq) vs topk + lstsq. Baseline: topk+lstsq PPL ~70.7. If FLAP bias alone matches lstsq, that eliminates the calibration-data lstsq step entirely.
-   - Confirmed: FLAP bias-only stacked PPL ≤ 73 (within 3 PPL of lstsq without needing calibration data), OR FLAP+lstsq ≤ 68.7 (≥2 PPL improvement as better init)
-   - Refuted: FLAP bias-only >85 PPL AND FLAP+lstsq within ±1 of lstsq-only
-   - Inconclusive: FLAP bias-only 73-85 range with no lstsq improvement
-   - Depends on: none (analytic formula from FLAP paper, applied to existing topk selection)
+~~190. **FLAP-style bias compensation for topk pruning — GPT-2 FFN k=4**~~ INCONCLUSIVE — cycle 180
 
 ### P2
 
@@ -61,6 +55,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 180
+
+190. **FLAP-style bias compensation for topk pruning — GPT-2 FFN k=4** *(INCONCLUSIVE — cycle 180)*
+   - Analytic bias compensation (absorbing removed channels' mean contribution as a constant bias) is significantly worse than lstsq pre-polish: mean PPL 91.9 vs 73.7. However, after 500-step Adam polish, the gap narrows dramatically: bias+polish 52.3 vs lstsq+polish 49.8 (only +2.5 PPL). Per-block MSE: bias reconstruction is ~2x worse than lstsq (e.g. block 11: 4.15 vs 1.62), but polish compensates. The analytic bias does not eliminate the need for data-dependent fitting — it's a worse initialization than lstsq, but polish can mostly close the gap.
+   - Artifacts: `experiments/flap_bias_compensation_cycle180.py`, `autoresearch/results/cycle_180_flap_bias.json`
 
 ### Cycle 179
 
