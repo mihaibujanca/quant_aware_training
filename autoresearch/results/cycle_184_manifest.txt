@@ -1,0 +1,7 @@
+item_number=197
+outcome=refuted
+key_metric=R2_exp=0.972_rank90_max=434_alpha_smooth=True_sharp_ratio=2.17
+commit=fc06510
+paths=autoresearch/results/cycle_184_trajectory_divergence.json,autoresearch/results/cycle_184_trajectory_divergence.png,experiments/trajectory_divergence_cycle184.py
+learned=Divergence is exponential (R²=0.972) and α-smooth (no phase transition), but DIFFUSE (rank_90=300-434 out of 768). Low-rank correction would need ~434 dimensions to capture 90% of divergence. Transition-zone fraction does NOT distinguish divergent from non-divergent tokens (both ~0.49). Final block (11) shows reduced divergence rank (215), possibly self-correcting.
+next=Diffuse divergence rules out low-rank targeted correction. Exponential cascade + diffuse error = compression quality degrades smoothly with block count. This confirms block count (not ratio) is the primary lever. Continue with item 194 (compression ratio sweep) to characterize the tradeoff curve.
