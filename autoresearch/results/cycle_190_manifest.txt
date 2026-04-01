@@ -1,7 +1,7 @@
 item_number=200
 outcome=inconclusive
 key_metric=hybrid_all12_ppl=28.980_baseline=22.700_pct=+27.67%_threshold_confirmed=+54%_refuted=+23%
-commit=TBD
+commit=2770b96
 paths=autoresearch/results/cycle_190_gelu_neg_relu_pos.json,experiments/gelu_neg_relu_pos_cycle190.py
 learned=Hybrid (GELU for z<0, ReLU for z>=0) all-12 PPL=28.980 (+27.67%) — just above the 28-PPL refuted threshold, in the inconclusive 28-35 range. Positive-regime shape change alone costs +27.67%, close to negative-regime constant replacement (+20.33% from C3 cycle 188). Full ReLU+bias swap costs +88% — implies superadditive interaction between negative-regime loss and positive-regime shape change. Non-monotone progressive: PPL peaks at k=7 (28.484), decreases through k=10 (27.851), then rises at k=11 (28.980). Some self-correction in deep layers. Both error types (shape and constant replacement) are roughly comparable in cost.
 next=Agenda refresh needed — both P0 items (199, 200) complete. No more P0 items.
