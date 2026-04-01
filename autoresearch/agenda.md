@@ -6,23 +6,41 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-206. **Jacobian effective rank census — data-active rank of GPT-2 FFN blocks** *(REFUTED — cycle 195)*
-   - overall_mean_rank_90=472.4/768. All 12 blocks high-rank; 0/12 meet <100 criterion. Blocks 1-11: mean_rank 387-543/768 (50-71%). Block 0 lower at 166.8/768. R3 MASO active-subspace hypothesis refuted: GPT-2 FFN blocks operate in near-full-rank subspaces.
-   - Artifacts: `experiments/jacobian_rank_census_cycle195.py`, `autoresearch/results/cycle_195_jacobian_rank.json`
+209. **K-sweep for near-rank-1-input blocks — does rank-1 residual enable much smaller K?**
+   - Cycle 198 found blocks 3-11 have input_rank_90=1 (near-rank-1 residual stream). If the FFN input lives on a 1D manifold, the topk channel selection need only capture a 1D→K map. Test K={8,16,32,64,128,256,512} for blocks [3,4,5,6,7,8,9,10] (all with input_rank=1). Compare PPL vs K curve to baseline K=512→30.089 PPL. Run on GPT-2 with wikitext-2 eval.
+   - Type: empirical
+   - Confirmed if: K≤64 gives PPL ≤31.5 (within 5% of K=512=30.089) for blocks 3-10 compressed
+   - Refuted if: PPL is still above 35 at K=128 (no significant rank-1 benefit)
+   - Inconclusive if: large per-run variance makes PPL comparison ambiguous
+   - Depends on: none
 
-207. **LayerNorm recalibration for stacked compressed blocks** *(REFUTED — cycle 196)*
-   - LN recal worsens PPL by 0.248 (30.089→30.337). Per-channel cross-token stats are irrelevant to LN's per-token normalization. Cascade barrier lives in normalized residual content, not distributional shift. LN direction closed.
-   - Artifacts: `experiments/ln_recalibration_cycle196.py`, `autoresearch/results/cycle_196_ln_recal.json`
+210. **Residual stream rank trajectory under compression — does topk+lstsq preserve rank collapse?**
+   - Cycle 198 found sharp rank collapse: 269→207→25→1 across blocks 0-3. If topk+lstsq compression of block 1 (input_rank=207) destroys this rank collapse, later blocks would receive wrong-rank input, amplifying cascade. Measure output rank of each compressed block vs float block. Hypothesis: block 1 compression degrades from rank 207→1 more slowly, disrupting the cascade.
+   - Type: analysis
+   - Confirmed if: compressed block 1 output rank differs from float block 1 output rank by >10× at 90% energy threshold
+   - Refuted if: output rank at each compressed block is within 2× of the float model's corresponding block
+   - Inconclusive if: rank measurements are noisy / dominated by numerical precision
+   - Depends on: none
 
 ### P1
 
-208. **Block-pair joint compression — sequential progressive fitting** *(INCONCLUSIVE — cycle 197)*
-   - Strategy A (all-float): 30.089 PPL. Strategy B (sequential): 29.954 PPL. Improvement: 0.135 PPL (within noise). Distribution mismatch in fitting data is NOT the cascade bottleneck. Cascade is from fundamental information loss per block.
-   - Artifacts: `experiments/joint_compression_cycle197.py`, `autoresearch/results/cycle_197_joint_compression.json`
+211. **Block 11 geometry deep-dive — anomalous delta_norm and rank drop**
+   - Cycle 198: block 11 delta_norm=335 (11× median of other blocks). Cycle 184: rank_90 drops 434→215 at block 11 (possible self-correction). Cycle 187: block 11 borderline droppable (PPL 41.4, highest of non-block-0 blocks). Analyze: (a) block 11 input/output rank, (b) what token types drive the large delta, (c) whether block 11 is performing a final "projection to output space" role analogous to block 0 input role.
+   - Type: analysis
+   - Confirmed if: block 11 input/output rank is anomalous (>3× median of blocks 2-10), OR token-type breakdown shows concentrated usage pattern (e.g. specific token positions or frequent tokens)
+   - Refuted if: block 11 metrics are within 2× of the median of blocks 2-10 across all three sub-analyses
+   - Inconclusive if: only one sub-analysis shows anomaly without a coherent explanation
+   - Depends on: none
 
 ### P2
 
-*(queue empty — agenda refresh needed)*
+212. **Rank-1 input FFN compression — explicit 1D subspace projection**
+   - Blocks 3-11 have input_rank_90=1. The FFN input is effectively a scalar (x ≈ s·v₁ where v₁ is the top singular vector from cycle 198 data). Design a compressed FFN that explicitly parameterizes this: (1) project input to top PCA direction → scalar s; (2) learn K weight vectors w_k and scalar functions a_k(s) (parameterized as 1D lookup tables or polynomials); (3) output = Σ_k a_k(s)·w_k. Compare to topk+lstsq at matching parameter budget.
+   - Type: implementation + empirical
+   - Confirmed if: rank-1 parameterized FFN matches topk+lstsq PPL within 1 PPL at 50% fewer parameters (K/2)
+   - Refuted if: PPL is worse than topk+lstsq at equal parameter budget
+   - Inconclusive if: PPL gap is ≤2 but parameter budget comparison is unclear
+   - Depends on: 209 (K-sweep tells us what K is the right budget baseline)
 
 
 
