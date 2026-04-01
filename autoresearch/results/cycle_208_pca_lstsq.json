@@ -1,0 +1,30 @@
+{
+  "cycle": 208,
+  "item": 219,
+  "verdict": "REFUTED",
+  "float_ppl": 53.89489152418256,
+  "ppl_results": {
+    "standard": 54.689250899938756,
+    "pca_p192": 55.07417397407521,
+    "pca_p256": 54.913113524587246,
+    "pca_p384": 54.910131309071346,
+    "pca_p512": 54.769593699994516
+  },
+  "best_pca_name": "pca_p512",
+  "best_pca_ppl": 54.769593699994516,
+  "improvement_vs_standard": -0.08034280005576022,
+  "config": {
+    "BLOCK": 1,
+    "K": 512,
+    "PCA_DIMS": [
+      192,
+      256,
+      384,
+      512
+    ],
+    "N_CALIB": 200,
+    "N_EVAL": 100,
+    "SEQ_LEN": 128,
+    "SEED": 42
+  }
+}

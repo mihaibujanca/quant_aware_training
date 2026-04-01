@@ -1,0 +1,22 @@
+{
+  "cycle": 208,
+  "item": 219,
+  "verdict": "REFUTED",
+  "hypothesis": "PCA projection to top-P input components reduces lstsq noise for block 1 (input_rank=192)",
+  "result_summary": "All PCA variants worse than standard (54.770-55.074 vs 54.689). Best improvement: -0.08 PPL.",
+  "key_metrics": {
+    "float_ppl": 53.895,
+    "standard_ppl": 54.689,
+    "pca_p512": 54.77,
+    "pca_p384": 54.91,
+    "pca_p256": 54.913,
+    "pca_p192": 55.074,
+    "best_improvement": -0.08
+  },
+  "interpretation": [
+    "lstsq handles near-zero-variance input dimensions through numerical conditioning, not needing explicit PCA.",
+    "PCA projection adds approximation error in the input transformation itself.",
+    "Smaller P is progressively worse (P=192 is worst at +0.39 PPL), confirming that the discarded components carry signal.",
+    "The 576 near-zero-variance dimensions in block 1 input do NOT degrade lstsq fit."
+  ]
+}

@@ -1,6 +1,11 @@
-# Research Status — 207 Cycles (001–207)
+# Research Status — 208 Cycles (001–208)
 
-## Latest: Cycle 207
+## Latest: Cycle 208
+
+219. **PCA-conditioned lstsq for block 1** — REFUTED
+   - All PCA variants worse than standard (54.770–55.074 vs 54.689). PCA adds approximation error without reducing lstsq noise. lstsq handles near-zero-variance input dimensions implicitly through numerical conditioning.
+
+## Cycle 207
 
 218. **Block 1 channel selection scoring** — REFUTED
    - All 4 criteria (act_std×W_proj_norm, mean_abs×W_proj_norm, pure act_std, pure weight) within 1 PPL (range 54.629–55.679). Best improvement: 0.06 PPL. Despite orderings differing (min Kendall-tau=−0.13), lstsq W_out adapts to any reasonable 512-channel subset. Selection criterion is irrelevant at K=512.

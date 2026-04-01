@@ -10,22 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-219. **PCA-conditioned lstsq for block 1 — reduce input dimension before regression**
-   - Block 1 inputs span ~192 dimensions (input_rank_90=192); 576 near-zero-variance dimensions add noise to lstsq. Hypothesis: projecting to top-P PCA components before lstsq (P=192,256,384), then projecting back, reduces overfitting for block 1 at K=512. Compare single-block PPL vs standard lstsq.
-   - Type: empirical
-   - Confirmed if: best PCA variant achieves single-block PPL ≤1 PPL better than standard lstsq at K=512
-   - Refuted if: all PCA variants within 0.3 PPL of standard lstsq
-   - Inconclusive if: improvement 0.3-1 PPL but doesn't replicate with different calibration split
-   - Depends on: none
-
-212. **Rank-1 input FFN compression — explicit 1D subspace projection**
-   - Blocks 3-11 have input_rank_90=1. The FFN input is effectively a scalar (x ≈ s·v₁ where v₁ is the top singular vector from cycle 198 data). Design a compressed FFN that explicitly parameterizes this: (1) project input to top PCA direction → scalar s; (2) learn K weight vectors w_k and scalar functions a_k(s) (parameterized as 1D lookup tables or polynomials); (3) output = Σ_k a_k(s)·w_k. Compare to topk+lstsq at matching parameter budget.
-   - Type: implementation + empirical
-   - Confirmed if: rank-1 parameterized FFN matches topk+lstsq PPL within 1 PPL at 50% fewer parameters (K/2)
-   - Refuted if: PPL is worse than topk+lstsq at equal parameter budget
-   - Inconclusive if: PPL gap is ≤2 but parameter budget comparison is unclear
-   - Depends on: none (209 REFUTED — K=512 remains baseline; compare at K=512)
-
 212. **Rank-1 input FFN compression — explicit 1D subspace projection**
    - Blocks 3-11 have input_rank_90=1. The FFN input is effectively a scalar (x ≈ s·v₁ where v₁ is the top singular vector from cycle 198 data). Design a compressed FFN that explicitly parameterizes this: (1) project input to top PCA direction → scalar s; (2) learn K weight vectors w_k and scalar functions a_k(s) (parameterized as 1D lookup tables or polynomials); (3) output = Σ_k a_k(s)·w_k. Compare to topk+lstsq at matching parameter budget.
    - Type: implementation + empirical
@@ -61,6 +45,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 208
+
+219. **PCA-conditioned lstsq for block 1** *(REFUTED — cycle 208)*
+   - **Outcome: REFUTED** — All PCA variants worse than standard (54.770–55.074 vs 54.689). Best improvement: −0.08 PPL. lstsq handles near-zero-variance input dimensions through numerical conditioning; explicit PCA adds approximation error without benefit.
 
 ### Cycle 207
 
