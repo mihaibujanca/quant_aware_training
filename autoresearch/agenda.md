@@ -6,19 +6,20 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-~~192. **Iterative bias recomputation for ReLU swap — GPT-2**~~ INCONCLUSIVE — cycle 182
+194. **Residual stream trajectory divergence: GELU vs ReLU+bias — GPT-2** [INTERPRETABILITY]
+   - Cycle 192 showed iterative ReLU+bias still fails at +63% PPL despite correct per-block biases. The bias calibration is fixed; the remaining damage must come from the SHAPE difference between GELU and ReLU near z=0. This experiment measures HOW the residual stream diverges across 12 blocks. For 2048 OWT tokens, run three models: (a) float GELU, (b) full-model ReLU+iterative bias (from cycle 192), (c) full-model ReLU (no bias, cycle 102). At each block boundary (12 points), capture the residual stream vector r_l ∈ R^768. Measure:
+   - (1) Per-layer divergence: ||r_gelu_l - r_relu+bias_l|| / ||r_gelu_l|| — how fast does the trajectory diverge?
+   - (2) Divergence direction: SVD of the divergence matrix D_l = [r_gelu - r_relu+bias] across tokens. What rank is the divergence? Is it concentrated in a few directions or diffuse?
+   - (3) Divergence growth rate: fit ||D_l|| vs layer index. Linear (additive per-block error) or exponential (compounding)?
+   - (4) Where does GELU vs ReLU differ most ON THE TOKENS THAT ACTUALLY DIVERGE? For the top-50 most-divergent tokens at each layer: what fraction of their channels are in |z| < 1 (the transition zone)? Compare to the bottom-50 (least-divergent).
+   - (5) Smooth interpolation test: replace GELU with GELU_α(z) = α·GELU(z) + (1-α)·ReLU(z) for α ∈ {0, 0.25, 0.5, 0.75, 1.0}, all with iterative bias. Measure PPL. If the damage is smooth in α, it's about the activation shape. If there's a sharp threshold, there's a phase transition.
+   - Type: analysis (interpretability)
+   - Confirmed if: divergence grows exponentially (R² > 0.8 for exp fit) AND divergence rank ≤ 32 (concentrated) AND α interpolation is smooth.
+   - Refuted if: divergence is diffuse (rank > 256) or α has a sharp transition.
+   - Inconclusive if: growth is linear or rank varies wildly by layer.
+   - Depends on: none. ~15 min compute.
 
 ### P1
-
-~~190. **FLAP-style bias compensation for topk pruning — GPT-2 FFN k=4**~~ INCONCLUSIVE — cycle 180
-
-193. **Matched-budget distillation control baseline — GPT-2 FFN k=4** [EMPIRICAL]
-   - program.md requires distillation as a control baseline; we have never run it. Train a student FFN block (same architecture as topk+lstsq: 768→k*128→768 with GELU) using KL-divergence distillation from the float teacher on 2048 OWT tokens, for each of blocks [1,4,7,11]. Student gets 500 Adam steps (same budget as polish). Compare single-block swap PPL and stacked 4-block PPL against topk+lstsq+polish (PPL ~70) and topk+lstsq+corrections (PPL ~59). This is NOT a new method — it is the missing control that tells us whether our geometric recipe actually beats naive distillation at matched params and compute.
-   - Type: empirical
-   - Confirmed if: topk+lstsq+polish beats distillation by ≥3 PPL (geometric compression justified).
-   - Refuted if: distillation matches or beats topk+lstsq+polish (geometric approach adds no value over SGD).
-   - Inconclusive if: within ±3 PPL.
-   - Depends on: none. ~10 min compute.
 
 194. **Compression ratio sweep — GPT-2 FFN k={2,4,6,8} on blocks [1,4,7,11]** [EMPIRICAL]
    - We always use k=4 (6x compression). Map the PPL-vs-compression curve by running topk+lstsq+polish at k=2 (12x), k=4 (6x), k=6 (4x), k=8 (3x) on the standard 4 blocks. This reveals whether the recipe is operating in a steep or flat region of the tradeoff curve, and whether lighter compression (k=6 or k=8) closes the gap to float (PPL ~30) enough to be practically useful. Report: stacked PPL, total FFN params, and compression ratio for each k.
@@ -71,6 +72,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 183
+
+193. **Matched-budget distillation control baseline — GPT-2 FFN k=4** *(CONFIRMED — cycle 183)*
+   - Local Adam+MSE distillation (cached block I/O, up to 2000 steps) vs topk+lstsq+polish: stacked PPL 80.7 vs 59.4 (+21.3 PPL). Single-block PPLs nearly identical (within 0.3-3.3 PPL), but stacking diverges sharply — topk+lstsq preserves compositional geometry that Adam-from-scratch does not.
+   - Artifacts: `experiments/distillation_baseline_cycle183.py`, `autoresearch/results/cycle_183_distillation_baseline.json`
 
 ### Cycle 182
 
