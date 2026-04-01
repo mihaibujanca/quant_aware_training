@@ -6,7 +6,39 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+187. **SoLA-style split compression — GPT-2 FFN k=4**
+   - Type: empirical
+   - Instead of topk+lstsq (keep k groups, drop rest), keep k groups full-rank AND SVD-compress the remaining 20 groups at rank r. Compare stacked PPL to topk+lstsq at matched total parameter count. Sweep r ∈ {2, 4, 8, 16} for the compressed tail. Baseline: topk+lstsq PPL ~70.7 (no corrections). If split beats topk+lstsq by ≥2 PPL at same params, CONFIRMED. If within ±2 PPL, INCONCLUSIVE. If worse, REFUTED.
+   - Confirmed: stacked PPL ≤ 68.7 at matched params (≥2 PPL improvement over topk+lstsq 70.7)
+   - Refuted: stacked PPL ≥ 72.7 or worse than topk+lstsq at all rank settings
+   - Inconclusive: within ±2 PPL of topk+lstsq
+   - Depends on: none (uses existing topk infrastructure + torch.linalg.svd)
+
+188. **Negative-regime bias absorption + positive-only compression — GPT-2 FFN k=4**
+   - Type: empirical
+   - Absorb constant negative GELU output as a 768-dim bias vector per block (from cycle 173: max +1.4% PPL per block). Then apply topk+lstsq compression only to the positive-regime channels (~9-13% active). Measure: (a) stacked PPL of bias-absorbed model (all 12 blocks, no compression), (b) stacked PPL of bias-absorbed + topk+lstsq on positive regime (4 blocks, k=4). Baseline: topk+lstsq PPL ~70.7. If positive-only compression at same k gives better PPL (smaller effective problem), CONFIRMED. If absorption cascade degrades baseline too much (>5 PPL), REFUTED.
+   - Confirmed: bias-absorbed + positive-only compression PPL ≤ 68 at same params as topk+lstsq
+   - Refuted: absorption cascade >5 PPL degradation before compression, or positive-only worse than full
+   - Inconclusive: absorption stable but positive-only ≈ full topk+lstsq
+   - Depends on: none (uses cycle 166/173 bias computation + existing topk)
+
 ### P1
+
+189. **PruneNet spectral channel selection — GPT-2 FFN k=4**
+   - Type: empirical
+   - Replace activation-magnitude topk with a spectral selection criterion: for each candidate channel subset, compute the KS-distance between the singular value distribution of the pruned W_down and the full W_down. Select the k groups that minimize spectral distortion. Compare stacked PPL to activation-norm topk at k=4, 4 blocks, with and without lstsq+polish. This is calibration-free (weight-only). Baseline: topk stacked PPL ~87.7 (no lstsq), ~70.7 (with lstsq). If spectral beats topk by ≥2 PPL, CONFIRMED.
+   - Confirmed: spectral selection stacked PPL ≤ topk - 2 PPL (either raw or with lstsq)
+   - Refuted: spectral selection ≥ topk + 2 PPL
+   - Inconclusive: within ±2 PPL
+   - Depends on: none (weight-only criterion, no calibration data needed)
+
+190. **FLAP-style bias compensation for topk pruning — GPT-2 FFN k=4**
+   - Type: empirical
+   - After topk channel selection, instead of lstsq reconstruction, compute the analytic bias update that compensates for the removed neurons' expected contribution (FLAP formula: Δb = W_down[:,removed] @ E[GELU(W_up[removed,:] @ x + b[removed])]). Compare: (a) topk + FLAP bias vs topk + lstsq, (b) topk + FLAP bias + lstsq (FLAP as init for lstsq) vs topk + lstsq. Baseline: topk+lstsq PPL ~70.7. If FLAP bias alone matches lstsq, that eliminates the calibration-data lstsq step entirely.
+   - Confirmed: FLAP bias-only stacked PPL ≤ 73 (within 3 PPL of lstsq without needing calibration data), OR FLAP+lstsq ≤ 68.7 (≥2 PPL improvement as better init)
+   - Refuted: FLAP bias-only >85 PPL AND FLAP+lstsq within ±1 of lstsq-only
+   - Inconclusive: FLAP bias-only 73-85 range with no lstsq improvement
+   - Depends on: none (analytic formula from FLAP paper, applied to existing topk selection)
 
 ### P2
 

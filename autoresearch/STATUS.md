@@ -17,5 +17,5 @@
 2. **topk+lstsq+polish** → PPL ~70.7 (1.58M params)
 
 ## Next
-- NEXT is empty — agenda refresh required
-- Priority directions: SoLA split, PruneNet spectral selection (from literature scan)
+- 4 items queued (187-190): SoLA split (P0), negative-regime absorption (P0), PruneNet spectral (P1), FLAP bias compensation (P1)
+- Priority directions: split compression (preserve+compress vs prune+reconstruct), reduce effective problem size via bias absorption
