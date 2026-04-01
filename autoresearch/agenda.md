@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-184. **Unified per-block regime ablation table — GPT-2 FFN** [INTERPRETABILITY]
-   - Reconciles contradictory claims from cycles 102 (killing neg = catastrophic), 109 (neg is 87-98% bias), 164 (positive = 99.9% of L2 norm). Those used different metrics — this uses ONE metric (single-block PPL) across all conditions. For each of 12 blocks independently (all others float), 2048 OWT tokens, measure PPL under 6 conditions: C0=float baseline, C1=kill negative (h_neg→0, equivalent to ReLU at this block), C2=kill positive (h_pos→0), C3=replace negative with its token-mean (y_pos(x) + μ_neg + b_down), C4=replace positive with its token-mean (y_neg(x) + μ_pos + b_down), C5=replace both with means (block outputs constant E[y]). Report 12×6 PPL table. Also report per-block: ||y_pos||, ||y_neg||, ||s_pos||, ||s_neg||, ||μ_pos||, ||μ_neg||. Interaction check: PPL(C1)+PPL(C2)-PPL(C0) vs PPL(C5).
-   - Type: analysis (interpretability)
-   - Confirmed if: C3 ≈ C0 (within +2% PPL) in ≥8/12 blocks — negative regime IS absorbable as constant bias.
-   - Refuted if: C3 >> C0 (>+10% PPL) in ≥8/12 blocks — token-dependent negative signal matters despite small L2 energy.
-   - Inconclusive if: mixed across blocks.
-   - Depends on: none. ~10 min (72 forward passes).
-
 185. **Geometry of token-dependent negative signal — GPT-2 FFN** [INTERPRETABILITY]
    - The token-dependent negative signal s_neg(x) = y_neg(x) - μ_neg has only 1.5-13% of negative-regime L2 energy but may be aimed at prediction-critical directions. For each of 12 blocks on 2048 tokens: (a) stack s_neg into S_neg ∈ R^{2048×768}, SVD it — report effective rank at 95% energy, (b) same for S_pos, compare ranks, (c) compute prediction-sensitive directions J(x) = d(CE_loss)/d(y_block) per token (768-dim gradient), (d) per-token cosine alignment cos(s_neg(x), J(x)) — does the negative signal point where predictions are sensitive?, (e) same alignment for s_pos, (f) report per-block: mean|cos(s_neg,J)| vs mean|cos(s_pos,J)|, rank(S_neg) vs rank(S_pos).
    - Type: analysis (interpretability)
@@ -1452,3 +1444,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Outcome: INCONCLUSIVE (audit corrected — pseudo-replication, margins within noise)
    - Cycle: 107
    - Artifacts: `experiments/direct_regression_bypass_gpt2.py`, `autoresearch/results/cycle_107_direct_regression.json`, `autoresearch/results/cycle_107_direct_regression.png`
+
+### Cycle 173
+
+184. **Unified per-block regime ablation table — GPT-2 FFN** *(CONFIRMED — cycle 173)*
+   - C3 (replace negative with token-mean) within +2% PPL of float baseline in 12/12 blocks (max delta +1.4%). Negative regime IS absorbable as constant bias. C1 (kill neg) causes +4-233% damage; C2 (kill pos) causes +6-970k% damage. Block 0 is uniquely sensitive to both positive regime removal and constant-output replacement. Interaction gap always negative: independent kills worse than mean replacement.
+   - Outcome: CONFIRMED
+   - Cycle: 173
+   - Artifacts: `experiments/regime_ablation_table_cycle173.py`, `autoresearch/results/cycle_173_regime_ablation.json`, `autoresearch/results/cycle_173_regime_ablation.png`

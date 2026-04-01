@@ -1,0 +1,5 @@
+item_number: 184
+outcome: confirmed
+key_metric: C3_within_2pct=12/12_blocks, max_C3_delta=+1.4%, negative_regime_absorbable_as_constant_bias
+commit: PENDING
+paths: experiments/regime_ablation_table_cycle173.py, autoresearch/results/cycle_173_regime_ablation.json, autoresearch/results/cycle_173_regime_ablation.png
