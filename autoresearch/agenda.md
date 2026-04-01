@@ -6,13 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-220. **Adam W_out correction step-count curve — BLOCKS=[1,4,7] K=512**
-   - Cycle 206 ran 1000 steps; eval PPL was still decreasing. Test Adam at {500, 1000, 2000, 4000, 8000} steps. Measure held-out PPL at each checkpoint. Goal: find where PPL plateaus and whether more steps cause overfitting. Same config: LR=1e-4, N_CALIB=200, N_EVAL=100.
-   - Type: empirical
-   - Confirmed if: PPL plateaus (improvement <0.5 PPL in last 2000 steps) before step 4000 AND no overfitting (eval vs calib diverge <2 PPL)
-   - Refuted if: PPL still decreasing monotonically at step 8000
-   - Inconclusive if: plateau found but with >2 PPL overfitting
-
 221. **6-block Adam correction — BLOCKS=[1,2,4,5,7,8] K=512**
    - Cycle 203 showed any superset of [1,4,7] causes cascade to 75+ PPL with topk+lstsq only. Cycle 206 dissolved [1,4,7] cascade with Adam correction. Test whether Adam can also dissolve the cascade for 6 compressed blocks. Use same protocol: topk+lstsq init, freeze fc, train W_out of 6 MLPs (6×768×512+6×768=2.36M params), 2000 Adam steps, LR=1e-4.
    - Type: empirical
@@ -73,6 +66,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 210
+
+220. **Adam W_out correction step-count curve** *(INCONCLUSIVE — cycle 210)*
+   - **Outcome: INCONCLUSIVE** — Plateau between steps 2000-4000 (0.25 PPL delta). Overfitting at step 8000 (+4.67 PPL). Best PPL: 46.556 at step 4000. Practical: early stop at ~4000 steps for N_CALIB=200.
 
 ### Cycle 209
 

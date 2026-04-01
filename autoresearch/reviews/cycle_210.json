@@ -1,0 +1,19 @@
+{
+  "cycle": 210,
+  "item": 220,
+  "verdict": "INCONCLUSIVE",
+  "hypothesis": "Adam W_out correction PPL plateaus before step 4000 without overfitting",
+  "result_summary": "Plateau at 2000-4000 steps (0.25 PPL delta). Overfitting at step 8000 (+4.67 PPL). Best: step 4000 = 46.556.",
+  "key_metrics": {
+    "float_ppl": 53.895,
+    "init_ppl": 61.746,
+    "step_500": 50.26,
+    "step_1000": 48.173,
+    "step_2000": 46.806,
+    "step_4000": 46.556,
+    "step_8000": 51.223,
+    "optimal_step": 4000,
+    "optimal_ppl": 46.556
+  },
+  "practical_recommendation": "Use early stopping at ~4000 steps for N_CALIB=200. With larger calibration data, plateau would occur later."
+}

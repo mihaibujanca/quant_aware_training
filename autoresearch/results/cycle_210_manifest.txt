@@ -1,0 +1,7 @@
+item_number=220
+outcome=inconclusive
+key_metric=step500=50.260_step1000=48.173_step2000=46.806_step4000=46.556_step8000=51.223_optimal_step=4000_verdict=inconclusive
+commit=pending
+paths=autoresearch/results/cycle_210_adam_step_curve.json,experiments/adam_step_curve_cycle210.py
+learned=Adam plateau at step 4000 (PPL 46.556, best achievable). Overfitting after step 4000 (51.223 at 8000 steps, +4.67 PPL). Optimal: 2000-4000 steps with early stopping for N_CALIB=200. Best PPL is 46.556 (13.6% below float).
+next=Item 221: 6-block Adam correction with early stopping at 4000 steps.

@@ -1,0 +1,40 @@
+{
+  "cycle": 210,
+  "item": 220,
+  "verdict": "INCONCLUSIVE",
+  "float_ppl": 53.89489152418256,
+  "ppl_init": 61.74644400996286,
+  "step_results": {
+    "500": 50.25997640096776,
+    "1000": 48.172765599048525,
+    "2000": 46.80560609231738,
+    "4000": 46.555618077002975,
+    "8000": 51.223087818522075
+  },
+  "plateau_found": false,
+  "overfitting": true,
+  "last_two_delta": 4.667469741519099,
+  "config": {
+    "BLOCKS": [
+      1,
+      4,
+      7
+    ],
+    "K": 512,
+    "LR": 0.0001,
+    "EVAL_STEPS": [
+      500,
+      1000,
+      2000,
+      4000,
+      8000
+    ],
+    "N_CALIB": 200,
+    "N_EVAL": 100,
+    "SEQ_LEN": 128,
+    "SEED": 42
+  },
+  "verdict_note": "Plateau found between steps 2000-4000 (delta=0.25 PPL), then overfitting at step 8000 (+4.67 PPL). Optimal: step 4000 (PPL 46.556). Practical recommendation: early stop at 2000-4000 steps using held-out eval.",
+  "optimal_step": 4000,
+  "optimal_ppl": 46.556
+}

@@ -1,6 +1,11 @@
-# Research Status — 209 Cycles (001–209) [agenda refreshed after cycle 209]
+# Research Status — 210 Cycles (001–210)
 
-## Latest: Cycle 209
+## Latest: Cycle 210
+
+220. **Adam W_out step-count curve** — INCONCLUSIVE
+   - Plateau between steps 2000-4000 (delta=0.25 PPL). Overfitting at step 8000 (+4.67 PPL). Best: step 4000 = PPL 46.556 (13.6% below float 53.895). Practical: early stop at ~4000 steps for N_CALIB=200.
+
+## Cycle 209
 
 212. **Rank-1 input FFN compression** — REFUTED
    - Block 4 MLP input rank_90=395 (not rank-1). LN2 per-token normalization spreads residual stream into ~395D effective variation. Rank-1 K=512 PPL=58.207 vs standard K=512 PPL=55.715 (gap=+2.49). Key correction: residual stream rank-1 ≠ MLP input rank-1 after LayerNorm. Rank-1 model saturates at K≥256.
