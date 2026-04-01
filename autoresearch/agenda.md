@@ -8,14 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-204. **Self-correction depth analysis — where and why blocks 8-10 partially compensate** [ANALYSIS]
-   - Cycle 190: hybrid progressive shows non-monotone PPL (peak k=7, decrease k=8-10, rise k=11). This suggests late blocks partially compensate for accumulated errors. Analysis: rerun hybrid progressive sweep with residual error collection. For each k, measure ||e_l||_F per layer and the block-l contribution to PPL change. Determine if error MAGNITUDE decreases at layers 8-10, or if the error is present but redirected to low-PPL subspace. Compare error direction (cos with k=7 error) at layers 8-10.
-   - Type: analysis/empirical
-   - Confirmed if: ||e_l||_F actually decreases at k=8-10 layers (error partially cancelled by later hybrid blocks).
-   - Refuted if: ||e_l||_F keeps growing but PPL decreases (error redirected to low-PPL subspace).
-   - Inconclusive if: both effects mix.
-   - Depends on: 199, 200 (done). ~15 min compute.
-
 ### P2
 
 205. **Block 0 criticality analysis — what makes block 0 unique** [ANALYSIS]
@@ -52,6 +44,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 194
+
+204. **Self-correction depth analysis — blocks 8-10 partial compensation** *(REFUTED — cycle 194)*
+   - max_decrease=2/12 layers (only the specific layer where the newly swapped block sits). Error magnitude generally keeps growing; PPL improvement at k=8-10 is error REDIRECTION to low-PPL subspace, not cancellation. Consistent with cycle 184 (diffuse high-rank errors, no low-rank correction viable). Block 11 breaks self-correction with large PPL jump.
+   - Artifacts: `experiments/self_correction_analysis_cycle194.py`, `autoresearch/results/cycle_194_self_correction.json`
 
 ### Cycle 193
 
