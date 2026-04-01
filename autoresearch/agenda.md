@@ -6,13 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-198. **Progressive C3 composition — per-channel mean replacement across all 12 blocks** [EMPIRICAL]
-   - The critical missing experiment from the GELU bump investigation (see `docs/gelu_bump_audit.md`). Cycle 173 C3 (replace negative GELU output with per-channel conditional mean, 3072-dim, token-dependent mask, GELU preserved for z>0) works within +1.4% per block. But nobody tested C3 applied to ALL 12 blocks simultaneously. This directly tests whether per-channel replacement composes — without the confound of the GELU→ReLU shape change that made cycles 181/182 fail. Install C3 hooks on blocks 0..k for k=0..11, evaluate PPL at each step. Fork `experiments/regime_ablation_table_cycle173.py`.
-   - Type: empirical
-   - Confirmed if: C3-all-12 PPL < 26.1 (+15% over baseline 22.7). Means the cycle 181 failure is caused by the shape change, not composition of constant replacements.
-   - Refuted if: C3-all-12 PPL > 31.8 (+40% over baseline). Means even token-dependent per-channel replacement doesn't compose — the token-dependent negative signal (s_leak, 18-48% of output norm) matters for cross-block coherence.
-   - Inconclusive if: between +15% and +40%.
-   - Depends on: none. ~15 min compute.
 
 199. **Cascade error direction analysis — GELU vs ReLU+bias residual stream** [EMPIRICAL]
    - Explains the 2.7x superadditivity in cycle 181. Collect residual stream vectors from both float and 181-progressive-swapped models at each layer. Compute per-layer error e_l = r_float_l - r_swapped_l, then measure: (a) cos(e_l, e_{l-1}) — directional alignment of successive errors, (b) ||e_l|| growth curve, (c) effective rank of error matrix E (across tokens). If errors are aligned (cos > 0.3), errors compound directionally (potentially correctable with low-rank intervention). If diffuse (cos < 0.1), each block introduces independent damage.
@@ -61,6 +54,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 188
+
+198. **Progressive C3 composition — per-channel mean replacement across all 12 blocks** *(INCONCLUSIVE — cycle 188)*
+   - Baseline 22.700 PPL. Progressive C3: +0.53%, +1.79%, +3.30%, +5.26%, +7.94%, +10.76%, +13.34%, +15.22%, +17.01%, +18.30%, +18.98%, +20.33% for blocks 0-11. All-12 PPL=27.314 (+20.33%), between +15% and +40% thresholds. Shape-preserving replacement composes far better than ReLU+bias (27.3 vs ~42 PPL). Constant replacement itself accounts for ~4.6 PPL; shape change accounts for remaining ~14.3 PPL of the 18.9-PPL gap in cycles 181/182.
+   - Artifacts: `experiments/c3_composition_cycle188.py`, `autoresearch/results/cycle_188_c3_composition.json`
 
 ### Cycle 187
 

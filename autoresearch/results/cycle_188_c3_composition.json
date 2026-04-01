@@ -1,0 +1,104 @@
+{
+  "cycle": 188,
+  "item": 198,
+  "verdict": "INCONCLUSIVE",
+  "verdict_note": "C3 all-12 blocks PPL=27.31 in [26.10, 31.78] (+20.33%)",
+  "baseline_ppl": 22.69985207563429,
+  "all12_ppl": 27.313921487213296,
+  "threshold_confirmed": 26.10482988697943,
+  "threshold_refuted": 31.779792905888005,
+  "progressive": [
+    {
+      "n_blocks": 1,
+      "last_block_added": 0,
+      "ppl": 22.819480503291974,
+      "delta": 0.119628427657684,
+      "pct_increase": 0.5270009128653816
+    },
+    {
+      "n_blocks": 2,
+      "last_block_added": 1,
+      "ppl": 23.105826717231555,
+      "delta": 0.4059746415972647,
+      "pct_increase": 1.7884461988764777
+    },
+    {
+      "n_blocks": 3,
+      "last_block_added": 2,
+      "ppl": 23.448508188710836,
+      "delta": 0.7486561130765459,
+      "pct_increase": 3.298066042818592
+    },
+    {
+      "n_blocks": 4,
+      "last_block_added": 3,
+      "ppl": 23.893909875533847,
+      "delta": 1.1940577998995572,
+      "pct_increase": 5.260200797437101
+    },
+    {
+      "n_blocks": 5,
+      "last_block_added": 4,
+      "ppl": 24.50112019356331,
+      "delta": 1.8012681179290198,
+      "pct_increase": 7.935153550460694
+    },
+    {
+      "n_blocks": 6,
+      "last_block_added": 5,
+      "ppl": 25.143090447819866,
+      "delta": 2.4432383721855757,
+      "pct_increase": 10.763234773710769
+    },
+    {
+      "n_blocks": 7,
+      "last_block_added": 6,
+      "ppl": 25.72903461435322,
+      "delta": 3.0291825387189313,
+      "pct_increase": 13.344503429475711
+    },
+    {
+      "n_blocks": 8,
+      "last_block_added": 7,
+      "ppl": 26.1539852700807,
+      "delta": 3.4541331944464098,
+      "pct_increase": 15.216544949004444
+    },
+    {
+      "n_blocks": 9,
+      "last_block_added": 8,
+      "ppl": 26.56180197693049,
+      "delta": 3.8619499012961995,
+      "pct_increase": 17.01310602566245
+    },
+    {
+      "n_blocks": 10,
+      "last_block_added": 9,
+      "ppl": 26.853176286428763,
+      "delta": 4.153324210794473,
+      "pct_increase": 18.29670165671517
+    },
+    {
+      "n_blocks": 11,
+      "last_block_added": 10,
+      "ppl": 27.008011699437322,
+      "delta": 4.308159623803032,
+      "pct_increase": 18.978800432040487
+    },
+    {
+      "n_blocks": 12,
+      "last_block_added": 11,
+      "ppl": 27.313921487213296,
+      "delta": 4.614069411579006,
+      "pct_increase": 20.32642942432072
+    }
+  ],
+  "config": {
+    "n_seqs": 200,
+    "seq_len": 1024,
+    "batch_size": 4,
+    "seed": 42,
+    "device": "mps",
+    "n_blocks": 12
+  }
+}
