@@ -1,0 +1,7 @@
+item_number=196
+outcome=confirmed
+key_metric=droppable=10/12_baseline=34.9_block0=1923_blocks1-10_all_below_40
+commit=PENDING
+paths=autoresearch/results/cycle_187_layer_drop.json,experiments/layer_drop_cycle187.py
+learned=Block 0 is critical (PPL 1923 when dropped). Blocks 1-10 individually droppable (PPL <40, damage +1.5-4.3). Block 11 borderline (41.4 PPL). Multi-block drop [1,4,7,11] gives 53.0 PPL (+18). GPT-2 FFN blocks are individually near-redundant but cascade interactions matter. Single-block compression quality ≠ multi-block quality confirmed from a different angle.
+next=P0: item 198 (C3 composition all-12 blocks — does per-channel replacement compose?). Block drop confirms block 0 is uniquely critical — worth investigating separately.

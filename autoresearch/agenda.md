@@ -35,13 +35,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ### P2
 
 
-196. **Layer-drop baseline — GPT-2 FFN skip blocks [1,4,7,11]** [EMPIRICAL]
-   - Instead of compressing FFN blocks, skip them entirely (zero out their residual-stream contribution). This is the extreme of "fewer blocks" — compress to zero params. Run on single blocks first (12 single-block drops), then the standard 4-block set [1,4,7,11]. Compare single-block-drop PPL ranking against single-block-swap-damage from cycle 005. If some blocks are droppable (PPL <40 for single drop), this identifies blocks where compression effort is wasted.
-   - Type: empirical
-   - Confirmed if: ≥3 blocks have single-drop PPL <40 (dropping viable, compression effort should focus elsewhere).
-   - Refuted if: all single-drop PPL >60 (every block carries essential signal, no free drops).
-   - Inconclusive if: 1-2 blocks droppable.
-   - Depends on: none. ~5 min compute.
 
 
 
@@ -68,6 +61,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 187
+
+196. **Layer-drop baseline — GPT-2 FFN skip blocks [1,4,7,11]** *(CONFIRMED — cycle 187)*
+   - Baseline PPL 34.9. Block 0 critical (PPL 1923 when dropped). Blocks 1-10 all droppable (PPL 36.4–39.1, damage +1.5–4.3). Block 11 borderline (41.4 PPL). Multi-block drop [1,4,7,11]: 53.0 PPL (+18). GPT-2 FFN blocks are individually near-redundant but cascade interactions produce nonlinear damage (single-block damage 2-4 vs multi-block 18). Block 0 uniquely critical.
+   - Artifacts: `experiments/layer_drop_cycle187.py`, `autoresearch/results/cycle_187_layer_drop.json`
 
 ### Cycle 186
 

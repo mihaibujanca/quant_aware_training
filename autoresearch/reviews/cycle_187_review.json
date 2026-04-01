@@ -1,0 +1,17 @@
+{
+  "cycle": 187,
+  "item": 196,
+  "recommendation": "revise",
+  "approved": false,
+  "flags": [
+    "CRITICAL: Monkey-patch binding bug — lambda x loses self binding. Use types.MethodType or wrapper.",
+    "CRITICAL: Verdict logic doesn't test stated hypothesis. Verdict counts any 3 droppable blocks, but doesn't check if TARGET_BLOCKS [1,4,7,11] are droppable.",
+    "CRITICAL: Verdict thresholds miscalibrated. Damage < 40 PPL at baseline ~45 means 89% overhead — no justification for why this is 'droppable'.",
+    "HIGH: No try/finally for restoration safety. If eval crashes mid-run, block remains zero-patched.",
+    "HIGH: Loss aggregation ambiguous. PPL must be exp(mean_loss_over_all_tokens), not mean(exp(loss_per_batch)).",
+    "HIGH: No restoration sanity check. After unpatching, verify .forward is actually restored.",
+    "MEDIUM: Missing torch.no_grad() context at top level (noted in plan but not enforced).",
+    "MEDIUM: No handling for MPS device. Will error on Mac without explicit check.",
+    "MEDIUM: No verification that openwebtext_sample.txt exists or has sufficient tokens."
+  ]
+}
