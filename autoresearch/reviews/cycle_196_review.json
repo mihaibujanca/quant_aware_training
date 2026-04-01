@@ -1,0 +1,7 @@
+{
+  "cycle": 196,
+  "item": 207,
+  "verdict": "REFUTED",
+  "quality": "valid",
+  "notes": "Blocks [1,4,7,11], K=512, N_SEQS=200×128=25600 tokens. LN-2 recal worsens PPL by 0.248. Per-channel cross-token stats are irrelevant to per-token LN normalization. Cascade barrier is not fixable with distributional recalibration."
+}

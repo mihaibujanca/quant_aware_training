@@ -10,13 +10,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - overall_mean_rank_90=472.4/768. All 12 blocks high-rank; 0/12 meet <100 criterion. Blocks 1-11: mean_rank 387-543/768 (50-71%). Block 0 lower at 166.8/768. R3 MASO active-subspace hypothesis refuted: GPT-2 FFN blocks operate in near-full-rank subspaces.
    - Artifacts: `experiments/jacobian_rank_census_cycle195.py`, `autoresearch/results/cycle_195_jacobian_rank.json`
 
-207. **LayerNorm recalibration for stacked compressed blocks** [EMPIRICAL]
-   - The cascade barrier (cycles 181-194) arises because each compressed block shifts the residual stream distribution, and subsequent LN layers receive shifted inputs. Hypothesis: recalibrating LN γ/β parameters at each block's input (after fitting topk+lstsq on all 12 blocks) restores distribution alignment. Method: (1) fit all-12 topk+lstsq model (as in cycle 181); (2) run calibration through both float and compressed models; (3) for each block, compute mean and std of compressed model's LN input vs float model's; (4) adjust LN parameters to match float statistics: γ' = γ × std_float/std_comp, β' = β + (mean_float - mean_comp)/std_comp. Cost: 2×768×12 = 18,432 params. No training needed.
-   - Type: empirical
-   - Confirmed if: LN-recalibrated compressed PPL < 50 (saves >9 PPL from ~59 baseline).
-   - Refuted if: LN-recalibrated PPL within 2 PPL of ~59.
-   - Inconclusive if: 2-9 PPL improvement.
-   - Depends on: existing topk+lstsq recipe. ~15 min compute.
+207. **LayerNorm recalibration for stacked compressed blocks** *(REFUTED — cycle 196)*
+   - LN recal worsens PPL by 0.248 (30.089→30.337). Per-channel cross-token stats are irrelevant to LN's per-token normalization. Cascade barrier lives in normalized residual content, not distributional shift. LN direction closed.
+   - Artifacts: `experiments/ln_recalibration_cycle196.py`, `autoresearch/results/cycle_196_ln_recal.json`
 
 ### P1
 
@@ -63,6 +59,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 196
+
+207. **LayerNorm recalibration for stacked compressed blocks** *(REFUTED — cycle 196)*
+   - compressed_ppl=30.089 (blocks [1,4,7,11], K=512). LN-2 recal → 30.337 (worse). All-12 LN-2 recal → 30.645 (worse). Best improvement = -0.248. Per-channel cross-token statistics irrelevant to LN's per-token normalization. Cascade barrier is in residual content, not distributional shift. LN recalibration direction closed.
+   - Artifacts: `experiments/ln_recalibration_cycle196.py`, `autoresearch/results/cycle_196_ln_recal.json`
 
 ### Cycle 195
 

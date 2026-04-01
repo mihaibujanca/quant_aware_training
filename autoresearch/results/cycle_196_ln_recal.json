@@ -1,0 +1,25 @@
+{
+  "cycle": 196,
+  "item": 207,
+  "verdict": "REFUTED",
+  "float_ppl": 25.08245086669922,
+  "compressed_ppl_before_recal": 30.08885383605957,
+  "compressed_ppl_ln2_recal_blocks_only": 30.336868286132812,
+  "compressed_ppl_ln2_recal_all12": 30.644746780395508,
+  "best_improvement": -0.2480144500732422,
+  "n_recal_params_blocks_only": 6144,
+  "n_recal_params_all12": 18432,
+  "config": {
+    "BLOCKS": [
+      1,
+      4,
+      7,
+      11
+    ],
+    "K": 512,
+    "N_SEQS_CALIB": 200,
+    "SEQ_LEN": 128,
+    "SEED": 42,
+    "DEVICE": "mps"
+  }
+}

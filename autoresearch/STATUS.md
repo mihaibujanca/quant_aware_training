@@ -1,6 +1,11 @@
-# Research Status — 195 Cycles (001–195)
+# Research Status — 196 Cycles (001–196)
 
-## Latest: Cycle 195
+## Latest: Cycle 196
+
+207. **LayerNorm recalibration for stacked compressed blocks** — REFUTED
+   - Compressed PPL 30.089 (blocks [1,4,7,11], K=512). LN-2 recal → 30.337 (WORSE by 0.248). Per-channel cross-token statistics irrelevant to LN's per-token normalization — LN normalizes each token independently over 768 channels. Cascade barrier is in residual CONTENT (correlational structure), not distributional shift. LN direction closed.
+
+## Cycle 195
 
 206. **Jacobian effective rank census — data-active rank of GPT-2 FFN blocks** — REFUTED
    - overall_mean_rank_90=472.4/768 (61%). 0/12 blocks below 100/768 low-rank threshold. Blocks 1-11: mean 387-543. Block 0 lower (166.8/768=22%) but not exploitable. Rank gradient: low early → high middle (b9 peaks at 543) → slight drop b11 (459). Stacked ranks 359-642. R3 MASO active-subspace hypothesis REFUTED: GPT-2 FFN blocks are near-full-rank. Consistent with cycles 184/189 (diffuse high-rank error structure).
@@ -90,15 +95,16 @@
 15. **Superadditivity is general — not specific to zero-point** (193): C3+Hybrid (non-zero neg replacement) PPL=41.4 ≈ ReLU+bias PPL=42.6. Combining both-regime modifications produces ~35% extra damage beyond simple sum, regardless of the specific form of negative-regime replacement.
 16. **Self-correction at k=8-10 is passive error rotation, not cancellation** (194): max 2/12 layers show magnitude decrease. PPL improves because errors rotate into low-PPL subspace (consistent with diffuse high-rank structure from cycle 184). Self-correction is a statistical artifact, not exploitable.
 17. **FFN Jacobians are near-full-rank — no active subspace** (195): overall_mean_rank_90=472.4/768 (61%). 0/12 blocks low-rank (<100). Rank gradient: b0=166 → b9=543 → b11=459. Stacked ranks 359-642. R3 MASO active-subspace hypothesis fully refuted. Consistent with cycles 184/189 (diffuse errors). GPT-2 FFN functions are globally distributed across nearly all 768 dimensions.
+18. **LN recalibration is ineffective** (196): LN-2 recal worsens PPL by 0.248 (30.089→30.337). Per-channel cross-token statistics don't match what per-token LN normalization needs. Cascade error lives in normalized residual content, not distributional shift.
 
 ### Working Recipes (ranked)
 1. **topk+lstsq + corrections** -> PPL ~59 (49K correction params, total ~1.6M)
 2. **topk+lstsq+polish** -> PPL ~70.7 (1.58M params)
 
 ### Exhausted Directions
-Channel selection, joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, full-model ReLU swap, iterative bias recomputation, low-rank residual correction, compression ratio sweep (ratio-independent floor), fewer-block compression (cascade barrier persists at 2 blocks), Jacobian active subspace compression (R3 MASO hypothesis refuted — near-full-rank Jacobians)
+Channel selection, joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, full-model ReLU swap, iterative bias recomputation, low-rank residual correction, compression ratio sweep (ratio-independent floor), fewer-block compression (cascade barrier persists at 2 blocks), Jacobian active subspace compression (R3 MASO hypothesis refuted — near-full-rank Jacobians), LN recalibration (per-channel stats irrelevant to per-token LN)
 
 ## Next
-- Item 207: LayerNorm recalibration (P0)
 - Item 208: Block-pair joint compression (P1)
 - Item 205: Block 0 criticality analysis (P2)
+- Agenda refresh may be needed if 208 and 205 exhaust queue
