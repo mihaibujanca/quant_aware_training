@@ -6,17 +6,25 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-214. **Block subset search — more compressible blocks from {2,3,5,6,8,9,10}**
-   - BLOCKS=[1,4,7] at K=512 gives +14.6% above float (cycle 202). Can we reduce this further by also compressing some of blocks {2,3,5,6,8,9,10} (all rank-1 input, individually near-redundant per cycle 187)? Test: BLOCKS=[1,2,3,4,5,6,7] (7 blocks) and BLOCKS=[1,2,4,5,7,8] (6 blocks, evenly spaced) with K=512. Compare to BLOCKS=[1,4,7] baseline (61.75 PPL) and to individual-block cascade behavior.
+215. **3-block selection sweep — is [1,4,7] optimal among all stride-3/4 selections?**
+   - Cycle 203 confirmed 3 is the ceiling for topk+lstsq (adding any 2 blocks costs +13+ PPL). Is [1,4,7] (stride-3) actually optimal, or could [2,5,8], [3,6,9], [1,5,9], [2,6,10] (different strides/starting points) achieve lower PPL? Test 8 evenly-spaced 3-block selections from {1,...,10} with K=512. Excluding blocks 0 and 11 (bookends).
    - Type: empirical
-   - Confirmed if: any tested superset of [1,4,7] achieves PPL ≤63 (within 2 PPL of [1,4,7])
-   - Refuted if: all tested supersets give PPL >66 (significantly worse than [1,4,7])
-   - Inconclusive if: results are mixed (some better, some worse)
-   - Depends on: 213 (confirmed — [1,4,7] is new anchor)
+   - Confirmed if: any tested 3-block selection achieves PPL ≤60 (lower than [1,4,7]=61.75)
+   - Refuted if: no 3-block selection beats [1,4,7] by more than 1 PPL (all within noise)
+   - Inconclusive if: multiple 3-block selections within ±1 PPL of 61.75
+   - Depends on: 214 (confirmed — 3 blocks is the ceiling)
 
 ### P1
 
 ### P2
+
+212. **Rank-1 input FFN compression — explicit 1D subspace projection**
+   - Blocks 3-11 have input_rank_90=1. The FFN input is effectively a scalar (x ≈ s·v₁ where v₁ is the top singular vector from cycle 198 data). Design a compressed FFN that explicitly parameterizes this: (1) project input to top PCA direction → scalar s; (2) learn K weight vectors w_k and scalar functions a_k(s) (parameterized as 1D lookup tables or polynomials); (3) output = Σ_k a_k(s)·w_k. Compare to topk+lstsq at matching parameter budget.
+   - Type: implementation + empirical
+   - Confirmed if: rank-1 parameterized FFN matches topk+lstsq PPL within 1 PPL at 50% fewer parameters (K/2)
+   - Refuted if: PPL is worse than topk+lstsq at equal parameter budget
+   - Inconclusive if: PPL gap is ≤2 but parameter budget comparison is unclear
+   - Depends on: none (209 REFUTED — K=512 remains baseline; compare at K=512)
 
 212. **Rank-1 input FFN compression — explicit 1D subspace projection**
    - Blocks 3-11 have input_rank_90=1. The FFN input is effectively a scalar (x ≈ s·v₁ where v₁ is the top singular vector from cycle 198 data). Design a compressed FFN that explicitly parameterizes this: (1) project input to top PCA direction → scalar s; (2) learn K weight vectors w_k and scalar functions a_k(s) (parameterized as 1D lookup tables or polynomials); (3) output = Σ_k a_k(s)·w_k. Compare to topk+lstsq at matching parameter budget.
@@ -53,6 +61,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 203
+
+214. **Block subset search — more compressible blocks from {2,3,5,6,8,9,10}** *(REFUTED — cycle 203)*
+   - No superset of [1,4,7] within 2 PPL of 61.75. Adding 2 blocks costs +13-40 PPL. 3 blocks is the ceiling. Cascade near-symmetric across early/middle/late blocks (+40/43/46%). Each extra block adds ~14-15% PPL.
+   - Artifacts: `experiments/block_subset_search_cycle203.py`, `autoresearch/results/cycle_203_block_subset_search.json`
 
 ### Cycle 202
 

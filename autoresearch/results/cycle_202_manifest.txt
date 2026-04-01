@@ -1,7 +1,7 @@
 item_number=213
 outcome=confirmed
 key_metric=ppl_147=61.746_ppl_14711=68.138_improvement=6.4_pct_above_float_147=14.6_verdict=confirmed
-commit=pending
+commit=1613ba2
 paths=autoresearch/results/cycle_202_block11_exclusion.json,experiments/block11_exclusion_cycle202.py
 learned=Excluding block 11 from compression set improves PPL by 6.4 points (68.14→61.75, +26.4%→+14.6% above float). Block 11's rank-expansion (rank-2→231) cannot be faithfully approximated by topk+lstsq K=512 from degenerate rank-2 input. New best recipe: BLOCKS=[1,4,7] K=512 → +14.6% above float. Block 0 and block 11 are both bookend blocks that must not be compressed.
 next=Explore compressing more of blocks 2-10 with BLOCKS=[1,4,7] as anchor; or test different block subsets from {2,3,5,6,8,9,10} to further reduce PPL.

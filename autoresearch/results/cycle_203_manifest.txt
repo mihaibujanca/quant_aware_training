@@ -1,0 +1,7 @@
+item_number=214
+outcome=refuted
+key_metric=anchor_147=61.75_best_superset=75.65_gap=13.9_verdict=refuted
+commit=pending
+paths=autoresearch/results/cycle_203_block_subset_search.json,experiments/block_subset_search_cycle203.py
+learned=No superset of [1,4,7] achieves within 2 PPL of 61.75. Adding any 2 extra blocks costs +13-40 PPL (cascade). 3 blocks is the practical ceiling for topk+lstsq compression without blocks 0/11. Cascade is near-symmetric: early (+40%), middle (+43%), late (+46%) blocks all similar. Each additional block adds ~14-15% PPL.
+next=Test different 3-block selections (e.g., [2,5,8], [3,6,9], [1,5,9]) to find if [1,4,7] is optimal or just one viable choice.
