@@ -6,11 +6,41 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-*(queue empty — pending new approach)*
+216. **Block 1 single-block K-sweep — isolate the high-rank-input bottleneck**
+   - Block 1 (input_rank=192) is the dominant compressible block and first injector of cascade error. Cycle 199 measured 4-block aggregate K-sweep, never block 1 alone. High-rank input may require K>512 to saturate quality. Compress only block 1 with K={256,512,768,1024,1536}; keep blocks 2-11 at float. Report single-block PPL vs K.
+   - Type: empirical
+   - Confirmed if: single-block PPL continues to improve beyond K=512 by ≥0.5 PPL
+   - Refuted if: PPL is flat (within 0.3) for K>512, K=512 already at ceiling for block 1
+   - Inconclusive if: PPL decreases 0.3-0.5 or OOM before K=1536
+   - Depends on: none
+
+217. **Adam correction on W_out of compressed MLPs — topk+lstsq init, CE target**
+   - All prior joint-training refutations used K=4 with per-block MSE; none started from K=512 topk+lstsq. Take BLOCKS=[1,4,7] K=512 model (PPL=61.75), freeze everything except W_out of 3 compressed MLPs (3×768×512=1.18M params), run 500-1000 Adam steps on full-model cross-entropy on calibration data. This is targeted correction, not distillation.
+   - Type: empirical
+   - Confirmed if: post-correction held-out PPL ≤59.0 (−2.75 from baseline 61.75) without overfitting
+   - Refuted if: PPL improves <0.5 or worsens
+   - Inconclusive if: PPL improves 0.5-2.75 but calib vs eval diverge >2 PPL
+   - Depends on: none (baseline: BLOCKS=[1,4,7] K=512 from cycle 202)
 
 ### P1
 
+218. **Block 1 channel selection — magnitude topk vs output-contribution topk**
+   - Standard topk uses act_std × W_proj_norm. For block 1's high-rank input (rank=192), magnitude may poorly proxy output contribution. Measure per-channel: (1) current score; (2) mean output contribution ||W_proj[:,k]|| × act_std. Compute Kendall-tau rank correlation; measure single-block PPL under each criterion at K=512.
+   - Type: analysis + empirical
+   - Confirmed if: Kendall-tau <0.7 AND output-contribution topk gives ≥1 PPL improvement for block 1 single-block PPL
+   - Refuted if: Kendall-tau ≥0.85 OR PPL difference <0.3
+   - Inconclusive if: orderings differ (tau<0.7) but PPL gap <0.5
+   - Depends on: none
+
 ### P2
+
+219. **PCA-conditioned lstsq for block 1 — reduce input dimension before regression**
+   - Block 1 inputs span ~192 dimensions (input_rank_90=192); 576 near-zero-variance dimensions add noise to lstsq. Hypothesis: projecting to top-P PCA components before lstsq (P=192,256,384), then projecting back, reduces overfitting for block 1 at K=512. Compare single-block PPL vs standard lstsq.
+   - Type: empirical
+   - Confirmed if: best PCA variant achieves single-block PPL ≤1 PPL better than standard lstsq at K=512
+   - Refuted if: all PCA variants within 0.3 PPL of standard lstsq
+   - Inconclusive if: improvement 0.3-1 PPL but doesn't replicate with different calibration split
+   - Depends on: none
 
 212. **Rank-1 input FFN compression — explicit 1D subspace projection**
    - Blocks 3-11 have input_rank_90=1. The FFN input is effectively a scalar (x ≈ s·v₁ where v₁ is the top singular vector from cycle 198 data). Design a compressed FFN that explicitly parameterizes this: (1) project input to top PCA direction → scalar s; (2) learn K weight vectors w_k and scalar functions a_k(s) (parameterized as 1D lookup tables or polynomials); (3) output = Σ_k a_k(s)·w_k. Compare to topk+lstsq at matching parameter budget.

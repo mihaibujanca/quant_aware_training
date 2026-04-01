@@ -153,8 +153,10 @@
 Channel selection, joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, full-model ReLU swap, iterative bias recomputation, low-rank residual correction, compression ratio sweep (ratio-independent floor), fewer-block compression (cascade barrier persists at 2 blocks), Jacobian active subspace compression (R3 MASO hypothesis refuted — near-full-rank Jacobians), LN recalibration (per-channel stats irrelevant to per-token LN)
 
 ## Next
-- Agenda refresh required — P0/P1/P2 queue exhausted after cycle 204
-- Item 212: Rank-1 FFN compression (P2, still in queue)
+- Item 216: Block 1 single-block K-sweep (P0)
+- Item 217: Adam correction on W_out of compressed MLPs (P0)
+- Item 218: Block 1 channel selection quality analysis (P1)
+- Item 219: PCA-conditioned lstsq for block 1 (P2)
 
 ### Working Recipes (updated)
 1. **BLOCKS=[1,4,7] K=512** → +14.6% above float PPL (BEST — held-out eval)
