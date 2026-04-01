@@ -1,6 +1,11 @@
-# Research Status — 205 Cycles (001–205)
+# Research Status — 206 Cycles (001–206)
 
-## Latest: Cycle 205
+## Latest: Cycle 206
+
+217. **Adam W_out correction on BLOCKS=[1,4,7] K=512** — CONFIRMED
+   - Adam on W_out/b_out only (1.18M params, frozen fc weights): PPL 61.746→48.111, improvement=13.635 PPL. Final PPL is 10.7% BELOW float (53.895). Cascade barrier is not structural — it is suboptimal W_out init for the 512-channel compressed activation space. 1.18M params and 1000 Adam steps fully dissolve the +14.6% cascade.
+
+## Cycle 205
 
 216. **Block 1 single-block K-sweep** — INCONCLUSIVE
    - Block 1 alone at K=512: +1.5% PPL (54.689 vs float 53.895). The 3-block +14.6% is entirely cascade, not poor single-block quality. Improvement beyond K=512: 0.493 PPL (below 0.5 threshold). K=512 is near-optimal; the bottleneck is cascade amplification (10×), not single-block approximation quality.

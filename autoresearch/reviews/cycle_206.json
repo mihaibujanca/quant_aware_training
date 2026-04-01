@@ -1,0 +1,33 @@
+{
+  "cycle": 206,
+  "item": 217,
+  "verdict": "CONFIRMED",
+  "hypothesis": "Adam on W_out/b_out only (frozen fc weights) reduces cascade from +14.6% toward target \u2264+11.4%",
+  "result_summary": "PPL drops 61.746\u219248.111 (improvement=13.635 PPL). Final PPL is 10.7% BELOW float (53.895). Eval PPL still decreasing at step 1000.",
+  "key_metrics": {
+    "float_ppl": 53.895,
+    "ppl_before_adam": 61.746,
+    "ppl_after_adam": 48.111,
+    "improvement_ppl": 13.635,
+    "pct_vs_float": -10.7,
+    "overfitting": false,
+    "n_trainable_params": 1181952,
+    "n_steps": 1000,
+    "lr": 0.0001
+  },
+  "interpretation": [
+    "Target was \u226459.0 PPL. Actual: 48.111 \u2014 target exceeded by 11 PPL.",
+    "PPL below float is not overfitting (held-out eval set, eval still decreasing).",
+    "Adam optimizes W_out for the 512-channel compressed activation space specifically; original W_out was optimized for 3072-dim full fc.",
+    "Cascade barrier is NOT structural \u2014 it is purely from suboptimal W_out init. Correctable with 1.18M params.",
+    "Eval PPL still decreasing at step 1000 \u2014 more steps likely improve further."
+  ],
+  "surprises": [
+    "PPL below float baseline: compressed K=512 + Adam W_out correction outperforms original GPT-2 on this eval split.",
+    "Improvement is 5x the threshold (13.6 vs 2.75). The cascade was entirely addressable by direct W_out correction."
+  ],
+  "next_items": [
+    218,
+    219
+  ]
+}

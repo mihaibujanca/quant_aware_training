@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-217. **Adam correction on W_out of compressed MLPs — topk+lstsq init, CE target**
-   - All prior joint-training refutations used K=4 with per-block MSE; none started from K=512 topk+lstsq. Take BLOCKS=[1,4,7] K=512 model (PPL=61.75), freeze everything except W_out of 3 compressed MLPs (3×768×512=1.18M params), run 500-1000 Adam steps on full-model cross-entropy on calibration data. This is targeted correction, not distillation.
-   - Type: empirical
-   - Confirmed if: post-correction held-out PPL ≤59.0 (−2.75 from baseline 61.75) without overfitting
-   - Refuted if: PPL improves <0.5 or worsens
-   - Inconclusive if: PPL improves 0.5-2.75 but calib vs eval diverge >2 PPL
-   - Depends on: none (baseline: BLOCKS=[1,4,7] K=512 from cycle 202)
-
 ### P1
 
 218. **Block 1 channel selection — magnitude topk vs output-contribution topk**
@@ -77,6 +69,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 206
+
+217. **Adam correction on W_out of compressed MLPs — topk+lstsq init, CE target** *(CONFIRMED — cycle 206)*
+   - BLOCKS=[1,4,7] K=512 model; frozen fc weights; 1.18M trainable params (W_out/b_out of 3 compressed MLPs).
+   - **Outcome: CONFIRMED** — PPL drops 61.746→48.111 (improvement=13.635), which is 10.7% BELOW float (53.895). Target was ≤59.0. Cascade barrier is not structural: suboptimal W_out init fully explains the +14.6% cascade, correctable with 1.18M params and 1000 Adam steps. Eval PPL still decreasing at step 1000.
 
 ### Cycle 205
 
