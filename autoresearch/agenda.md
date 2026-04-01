@@ -6,9 +6,48 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+201. **Mean residual error correction — directional coherence-based bias (9216 params)** [EMPIRICAL]
+   - Cycle 189: cascade errors are directionally coherent (mean cos=0.716). Even though high-rank (not low-rank correctable), the MEAN error vector per layer should be nonzero and correctable. Build full-swap ReLU+bias model (all 12 blocks). Calibrate: for each layer l, compute mean_error[l] = mean(r_float[l] - r_swapped[l]) over tokens (shape: 768). Apply as bias to the block output (residual stream). Cost: 12×768=9216 params. Test: does first-moment correction reduce PPL below the 44.8 achieved without correction?
+   - Type: empirical
+   - Confirmed if: corrected full-swap PPL < 38 (saves >6 PPL from 44.8 baseline, >15% improvement).
+   - Refuted if: corrected PPL within 1 PPL of uncorrected (44.8). First moment is not useful.
+   - Inconclusive if: 1-6 PPL improvement.
+   - Depends on: 199 (done). ~15 min compute.
+
+202. **Exact dead-channel pruning baseline — GPT-2 FFN (Serra/Berzins required baseline)** [EMPIRICAL]
+   - The program (R2) mandates exact white-box pruning as the foundational baseline. Not yet done. For each FFN block: identify channels where |GELU(z)| < epsilon (say 0.01) for ALL calibration tokens — these are effectively dead. Remove them from weight matrices exactly (no retraining). Measure compression ratio and PPL. Compare to topk+lstsq best (PPL ~59). Expected: very few truly dead channels in GELU networks (GELU never exactly 0), but "near-dead" threshold may give 5-20% compression at near-zero PPL cost.
+   - Type: empirical
+   - Confirmed if: near-dead (threshold 0.01) pruning achieves >5% channel reduction at PPL <25 (+10%) for at least 8/12 blocks.
+   - Refuted if: fewer than 1% of channels are near-dead across all blocks.
+   - Inconclusive if: small number of dead channels but PPL impact unclear.
+   - Depends on: none. ~10 min compute.
+
 ### P1
 
+203. **Superadditive interaction isolation — C3+Hybrid combined modification** [EMPIRICAL]
+   - Cycles 188, 190: C3 alone +20.33%, hybrid alone +27.67%, full ReLU+bias +88%. If errors were independent: C3+Hybrid ≈ 48%. Actual: +88% → ~40% superadditive penalty. But C3+Hybrid is not exactly ReLU+bias (C3 uses per-channel mean for z<0, not zero). Experiment: apply C3 (negative regime) + Hybrid (positive regime) simultaneously to all 12 blocks. Measure PPL. If C3+Hybrid ≈ 48% (sum), interaction requires zero-point for negative regime (not just shape). If C3+Hybrid is also near 88%, the interaction is general.
+   - Type: empirical
+   - Confirmed if: C3+Hybrid PPL > 45 (superadditivity is general, not specific to ReLU zero-point).
+   - Refuted if: C3+Hybrid PPL ≈ 28-35 (close to simple sum, no superadditivity with non-zero negative replacement).
+   - Inconclusive if: 35-45 range.
+   - Depends on: 198 (done), 200 (done). ~10 min compute.
+
+204. **Self-correction depth analysis — where and why blocks 8-10 partially compensate** [ANALYSIS]
+   - Cycle 190: hybrid progressive shows non-monotone PPL (peak k=7, decrease k=8-10, rise k=11). This suggests late blocks partially compensate for accumulated errors. Analysis: rerun hybrid progressive sweep with residual error collection. For each k, measure ||e_l||_F per layer and the block-l contribution to PPL change. Determine if error MAGNITUDE decreases at layers 8-10, or if the error is present but redirected to low-PPL subspace. Compare error direction (cos with k=7 error) at layers 8-10.
+   - Type: analysis/empirical
+   - Confirmed if: ||e_l||_F actually decreases at k=8-10 layers (error partially cancelled by later hybrid blocks).
+   - Refuted if: ||e_l||_F keeps growing but PPL decreases (error redirected to low-PPL subspace).
+   - Inconclusive if: both effects mix.
+   - Depends on: 199, 200 (done). ~15 min compute.
+
 ### P2
+
+205. **Block 0 criticality analysis — what makes block 0 unique** [ANALYSIS]
+   - Cycle 187: block 0 drop gives PPL 1923 vs all other blocks <41. Block 0 handles raw token embeddings. Analysis: compare block 0 weight statistics (singular values, channel norms, rank of activation patterns) to blocks 1-11. Does block 0 have unique channel usage patterns? Is it singular-value-concentrated (making it less redundant)? This is a data-active geometry analysis using MASO-style tools.
+   - Type: analysis
+   - Confirmed if: block 0 has significantly different data-active geometry (e.g., rank of activation covariance >2x other blocks, or singular value concentration ratio >3x).
+   - Refuted if: block 0 geometry is similar to other blocks — criticality is due to positional/role effects only.
+   - Depends on: none. ~10 min compute.
 
 
 
