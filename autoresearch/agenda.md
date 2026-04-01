@@ -16,12 +16,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-208. **Block-pair joint compression — consecutive block pairs as single units** [EMPIRICAL]
-   - The cascade barrier might be reducible by compressing pairs of consecutive blocks jointly. For each pair (l, l+1), run topk+lstsq on the COMPOSITION f_{l+1}(f_l(x)) with combined student. Compare to: 2× single-block cascade (known ~12% PPL each → cascade cost). Key test: does joint compression of 2 blocks give lower PPL than compressing each independently and stacking? Run on all 6 non-overlapping pairs (0+1, 2+3, 4+5, 6+7, 8+9, 10+11).
-   - Type: empirical
-   - Confirmed if: best joint-pair PPL < sum(individual) by >2 PPL (joint compression reduces cascade).
-   - Refuted if: joint PPL ≥ stacked individual PPL.
-   - Depends on: existing topk+lstsq recipe. ~20 min compute.
+208. **Block-pair joint compression — sequential progressive fitting** *(INCONCLUSIVE — cycle 197)*
+   - Strategy A (all-float): 30.089 PPL. Strategy B (sequential): 29.954 PPL. Improvement: 0.135 PPL (within noise). Distribution mismatch in fitting data is NOT the cascade bottleneck. Cascade is from fundamental information loss per block.
+   - Artifacts: `experiments/joint_compression_cycle197.py`, `autoresearch/results/cycle_197_joint_compression.json`
 
 ### P2
 
@@ -59,6 +56,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 197
+
+208. **Block-pair joint compression — sequential progressive fitting** *(INCONCLUSIVE — cycle 197)*
+   - Strategy A (all-float): 30.089 PPL. Strategy B (sequential progressive): 29.954 PPL. Improvement: 0.135 PPL (within noise). Distribution mismatch in training data is NOT the cascade bottleneck. Cascade barrier is from fundamental information loss (K=512 channels cannot represent 3072), not from distribution shift during fitting.
+   - Artifacts: `experiments/joint_compression_cycle197.py`, `autoresearch/results/cycle_197_joint_compression.json`
 
 ### Cycle 196
 

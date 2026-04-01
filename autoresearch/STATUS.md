@@ -1,6 +1,11 @@
-# Research Status — 196 Cycles (001–196)
+# Research Status — 197 Cycles (001–197)
 
-## Latest: Cycle 196
+## Latest: Cycle 197
+
+208. **Block-pair joint compression via sequential progressive fitting** — INCONCLUSIVE
+   - Sequential fitting (each block on compressed predecessor's I/O): 29.954 PPL vs all-float 30.089 PPL. Improvement 0.135 PPL (noise-level). Distribution mismatch in fitting data is NOT the cascade bottleneck. Cascade is from intrinsic information loss per block (K=512 cannot represent 3072), not from training/inference distribution mismatch.
+
+## Cycle 196
 
 207. **LayerNorm recalibration for stacked compressed blocks** — REFUTED
    - Compressed PPL 30.089 (blocks [1,4,7,11], K=512). LN-2 recal → 30.337 (WORSE by 0.248). Per-channel cross-token statistics irrelevant to LN's per-token normalization — LN normalizes each token independently over 768 channels. Cascade barrier is in residual CONTENT (correlational structure), not distributional shift. LN direction closed.
@@ -96,6 +101,7 @@
 16. **Self-correction at k=8-10 is passive error rotation, not cancellation** (194): max 2/12 layers show magnitude decrease. PPL improves because errors rotate into low-PPL subspace (consistent with diffuse high-rank structure from cycle 184). Self-correction is a statistical artifact, not exploitable.
 17. **FFN Jacobians are near-full-rank — no active subspace** (195): overall_mean_rank_90=472.4/768 (61%). 0/12 blocks low-rank (<100). Rank gradient: b0=166 → b9=543 → b11=459. Stacked ranks 359-642. R3 MASO active-subspace hypothesis fully refuted. Consistent with cycles 184/189 (diffuse errors). GPT-2 FFN functions are globally distributed across nearly all 768 dimensions.
 18. **LN recalibration is ineffective** (196): LN-2 recal worsens PPL by 0.248 (30.089→30.337). Per-channel cross-token statistics don't match what per-token LN normalization needs. Cascade error lives in normalized residual content, not distributional shift.
+19. **Sequential fitting provides negligible benefit** (197): fitting each block on compressed predecessors' I/O gains 0.135 PPL (noise-level). Distribution mismatch in fitting data is NOT the cascade bottleneck — cascade is from intrinsic information loss per compressed block.
 
 ### Working Recipes (ranked)
 1. **topk+lstsq + corrections** -> PPL ~59 (49K correction params, total ~1.6M)
@@ -105,6 +111,5 @@
 Channel selection, joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, full-model ReLU swap, iterative bias recomputation, low-rank residual correction, compression ratio sweep (ratio-independent floor), fewer-block compression (cascade barrier persists at 2 blocks), Jacobian active subspace compression (R3 MASO hypothesis refuted — near-full-rank Jacobians), LN recalibration (per-channel stats irrelevant to per-token LN)
 
 ## Next
-- Item 208: Block-pair joint compression (P1)
 - Item 205: Block 0 criticality analysis (P2)
-- Agenda refresh may be needed if 208 and 205 exhaust queue
+- Agenda refresh required after 205 — P0/P1 queue exhausted

@@ -1,0 +1,7 @@
+{
+  "cycle": 197,
+  "item": 208,
+  "verdict": "INCONCLUSIVE",
+  "quality": "valid",
+  "notes": "Sequential progressive fitting gains 0.135 PPL over all-float fitting (30.089→29.954). Within noise. Distribution mismatch in fitting data is not the cascade bottleneck. True joint 2-block student not tested (would require gradient optimization)."
+}

@@ -1,7 +1,7 @@
 item_number=207
 outcome=refuted
 key_metric=compressed_ppl=30.089_ln2_recal=30.337_improvement=-0.248_verdict=refuted
-commit=TBD
+commit=215cd73
 paths=autoresearch/results/cycle_196_ln_recal.json,experiments/ln_recalibration_cycle196.py
 learned=LN recalibration based on per-channel cross-token statistics provides zero improvement and slightly worsens PPL (−0.248). LN normalizes per-token over channels — per-channel distributional corrections are irrelevant. Cascade barrier is not from LN distributional mismatch but from modified residual content. This closes the LN recalibration direction.
 next=Item 208: Block-pair joint compression (P1). Or item 205: block 0 criticality (P2). Agenda refresh may be needed.

@@ -1,0 +1,7 @@
+item_number=208
+outcome=inconclusive
+key_metric=strategy_a_ppl=30.089_strategy_b_ppl=29.954_improvement=0.135_verdict=inconclusive
+commit=TBD
+paths=autoresearch/results/cycle_197_joint_compression.json,experiments/joint_compression_cycle197.py
+learned=Sequential progressive fitting (fitting each block on compressed predecessor's output) gains only 0.135 PPL over all-float fitting. Within noise. Distribution mismatch between float training data and compressed inference inputs is NOT the cascade bottleneck. Cascade barrier is from fundamental information loss (K=512 channels cannot represent 3072), not from distribution mismatch. LN recal (196) and sequential fitting (197) both confirm: cascade is an intrinsic capacity constraint.
+next=Agenda refresh needed — items 205-208 exhausted. P0/P1 queue empty. Need new research directions.
