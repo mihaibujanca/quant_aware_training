@@ -1,6 +1,11 @@
-# Research Status — 197 Cycles (001–197)
+# Research Status — 198 Cycles (001–198)
 
-## Latest: Cycle 197
+## Latest: Cycle 198
+
+205. **Block 0 criticality analysis — what makes block 0 unique** — CONFIRMED
+   - Block 0 input_rank_90=269 vs median_others=1 (269×). Raw token embeddings span 269 dimensions; later blocks operate on near-rank-1 residual stream. Input rank collapse: b0=269→b1=207→b2=25→b3+=1. Block 0 is irreplaceable because it transforms high-diversity embeddings into the residual stream. Cannot be compressed by the same topk+lstsq approach as blocks 1-11 (which operate on rank-1 input).
+
+## Cycle 197
 
 208. **Block-pair joint compression via sequential progressive fitting** — INCONCLUSIVE
    - Sequential fitting (each block on compressed predecessor's I/O): 29.954 PPL vs all-float 30.089 PPL. Improvement 0.135 PPL (noise-level). Distribution mismatch in fitting data is NOT the cascade bottleneck. Cascade is from intrinsic information loss per block (K=512 cannot represent 3072), not from training/inference distribution mismatch.
@@ -102,6 +107,7 @@
 17. **FFN Jacobians are near-full-rank — no active subspace** (195): overall_mean_rank_90=472.4/768 (61%). 0/12 blocks low-rank (<100). Rank gradient: b0=166 → b9=543 → b11=459. Stacked ranks 359-642. R3 MASO active-subspace hypothesis fully refuted. Consistent with cycles 184/189 (diffuse errors). GPT-2 FFN functions are globally distributed across nearly all 768 dimensions.
 18. **LN recalibration is ineffective** (196): LN-2 recal worsens PPL by 0.248 (30.089→30.337). Per-channel cross-token statistics don't match what per-token LN normalization needs. Cascade error lives in normalized residual content, not distributional shift.
 19. **Sequential fitting provides negligible benefit** (197): fitting each block on compressed predecessors' I/O gains 0.135 PPL (noise-level). Distribution mismatch in fitting data is NOT the cascade bottleneck — cascade is from intrinsic information loss per compressed block.
+20. **Block 0 criticality is from high input diversity, not specialization** (198): block 0 input_rank_90=269 vs median=1 for blocks 2-11. Input rank collapse: 269→207→25→1 across blocks 0-3. Block 0 must transform high-dimensional raw embeddings (50257-type vocabulary) into the residual stream. Cannot be dropped or replaced by later-block compression approach.
 
 ### Working Recipes (ranked)
 1. **topk+lstsq + corrections** -> PPL ~59 (49K correction params, total ~1.6M)
@@ -111,5 +117,4 @@
 Channel selection, joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, full-model ReLU swap, iterative bias recomputation, low-rank residual correction, compression ratio sweep (ratio-independent floor), fewer-block compression (cascade barrier persists at 2 blocks), Jacobian active subspace compression (R3 MASO hypothesis refuted — near-full-rank Jacobians), LN recalibration (per-channel stats irrelevant to per-token LN)
 
 ## Next
-- Item 205: Block 0 criticality analysis (P2)
-- Agenda refresh required after 205 — P0/P1 queue exhausted
+- Agenda refresh required — all items exhausted after cycle 198

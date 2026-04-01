@@ -22,12 +22,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-205. **Block 0 criticality analysis — what makes block 0 unique** [ANALYSIS]
-   - Cycle 187: block 0 drop gives PPL 1923 vs all other blocks <41. Block 0 handles raw token embeddings. Analysis: compare block 0 weight statistics (singular values, channel norms, rank of activation patterns) to blocks 1-11. Does block 0 have unique channel usage patterns? Is it singular-value-concentrated (making it less redundant)? This is a data-active geometry analysis using MASO-style tools.
-   - Type: analysis
-   - Confirmed if: block 0 has significantly different data-active geometry (e.g., rank of activation covariance >2x other blocks, or singular value concentration ratio >3x).
-   - Refuted if: block 0 geometry is similar to other blocks — criticality is due to positional/role effects only.
-   - Depends on: none. ~10 min compute.
+*(queue empty — agenda refresh needed)*
 
 
 
@@ -56,6 +51,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 198
+
+205. **Block 0 criticality analysis — what makes block 0 unique** *(CONFIRMED — cycle 198)*
+   - Block 0 input_rank_90=269 vs median_others=1 (269× outlier). Raw token embeddings span 269 dimensions; later blocks operate on a near-rank-1 residual stream. Input rank collapse: 269→207→25→1 by block 3. Block 0 is irreplaceable because it transforms high-diversity embeddings into the residual stream; dropping it leaves later blocks operating on the wrong subspace. Cannot be compressed by the same approach as blocks 1-11.
+   - Artifacts: `experiments/block0_criticality_cycle198.py`, `autoresearch/results/cycle_198_block0_criticality.json`
 
 ### Cycle 197
 

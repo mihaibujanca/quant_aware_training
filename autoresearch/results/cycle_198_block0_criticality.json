@@ -1,0 +1,172 @@
+{
+  "cycle": 198,
+  "item": 205,
+  "verdict": "CONFIRMED",
+  "outlier_count": 1,
+  "outlier_flags": {
+    "low_preact_rank": false,
+    "high_delta_norm": false,
+    "low_channel_util": false,
+    "high_input_rank": true
+  },
+  "block0_vs_median_others": {
+    "preact_rank_90": {
+      "block0": 176,
+      "median_others": 210
+    },
+    "input_rank_90": {
+      "block0": 269,
+      "median_others": 1
+    },
+    "mean_delta_norm": {
+      "block0": 54.103050231933594,
+      "median_others": 30.856679916381836
+    },
+    "channel_util_01": {
+      "block0": 0.5931478142738342,
+      "median_others": 0.5829195976257324
+    }
+  },
+  "per_block": [
+    {
+      "block": 0,
+      "preact_rank_90": 176,
+      "input_rank_90": 269,
+      "channel_util_01": 0.5931478142738342,
+      "channel_util_10": 0.005204671062529087,
+      "mean_delta_norm": 54.103050231933594,
+      "std_delta_norm": 10.501561164855957,
+      "weight_sv_gini": 0.23709678649902344,
+      "weight_sv_top1_frac": 0.007688077632337809
+    },
+    {
+      "block": 1,
+      "preact_rank_90": 181,
+      "input_rank_90": 207,
+      "channel_util_01": 0.501249372959137,
+      "channel_util_10": 0.0021153767593204975,
+      "mean_delta_norm": 21.9219913482666,
+      "std_delta_norm": 62.52199935913086,
+      "weight_sv_gini": 0.21915996074676514,
+      "weight_sv_top1_frac": 0.007594259921461344
+    },
+    {
+      "block": 2,
+      "preact_rank_90": 172,
+      "input_rank_90": 25,
+      "channel_util_01": 0.4961562156677246,
+      "channel_util_10": 0.002485860139131546,
+      "mean_delta_norm": 52.199676513671875,
+      "std_delta_norm": 287.54669189453125,
+      "weight_sv_gini": 0.2277207374572754,
+      "weight_sv_top1_frac": 0.007515485864132643
+    },
+    {
+      "block": 3,
+      "preact_rank_90": 206,
+      "input_rank_90": 1,
+      "channel_util_01": 0.5053159594535828,
+      "channel_util_10": 0.003030497347936034,
+      "mean_delta_norm": 19.403762817382812,
+      "std_delta_norm": 20.279123306274414,
+      "weight_sv_gini": 0.2333390712738037,
+      "weight_sv_top1_frac": 0.0064352103509008884
+    },
+    {
+      "block": 4,
+      "preact_rank_90": 210,
+      "input_rank_90": 1,
+      "channel_util_01": 0.5603939890861511,
+      "channel_util_10": 0.002913818461820483,
+      "mean_delta_norm": 19.540544509887695,
+      "std_delta_norm": 16.318824768066406,
+      "weight_sv_gini": 0.24107539653778076,
+      "weight_sv_top1_frac": 0.006335648708045483
+    },
+    {
+      "block": 5,
+      "preact_rank_90": 223,
+      "input_rank_90": 1,
+      "channel_util_01": 0.5504079461097717,
+      "channel_util_10": 0.0036456298548728228,
+      "mean_delta_norm": 21.043981552124023,
+      "std_delta_norm": 10.257867813110352,
+      "weight_sv_gini": 0.24074697494506836,
+      "weight_sv_top1_frac": 0.006588590797036886
+    },
+    {
+      "block": 6,
+      "preact_rank_90": 223,
+      "input_rank_90": 1,
+      "channel_util_01": 0.5829195976257324,
+      "channel_util_10": 0.004350178875029087,
+      "mean_delta_norm": 24.252431869506836,
+      "std_delta_norm": 5.393979549407959,
+      "weight_sv_gini": 0.23851728439331055,
+      "weight_sv_top1_frac": 0.006392014212906361
+    },
+    {
+      "block": 7,
+      "preact_rank_90": 221,
+      "input_rank_90": 1,
+      "channel_util_01": 0.6073244214057922,
+      "channel_util_10": 0.0051164752803742886,
+      "mean_delta_norm": 30.856679916381836,
+      "std_delta_norm": 4.194947242736816,
+      "weight_sv_gini": 0.23868131637573242,
+      "weight_sv_top1_frac": 0.00645875558257103
+    },
+    {
+      "block": 8,
+      "preact_rank_90": 221,
+      "input_rank_90": 1,
+      "channel_util_01": 0.6127552390098572,
+      "channel_util_10": 0.005685322917997837,
+      "mean_delta_norm": 37.195316314697266,
+      "std_delta_norm": 6.143596649169922,
+      "weight_sv_gini": 0.23161160945892334,
+      "weight_sv_top1_frac": 0.006307981908321381
+    },
+    {
+      "block": 9,
+      "preact_rank_90": 216,
+      "input_rank_90": 1,
+      "channel_util_01": 0.619362473487854,
+      "channel_util_10": 0.0069605507887899876,
+      "mean_delta_norm": 50.06364440917969,
+      "std_delta_norm": 10.297749519348145,
+      "weight_sv_gini": 0.2350367307662964,
+      "weight_sv_top1_frac": 0.006363175809383392
+    },
+    {
+      "block": 10,
+      "preact_rank_90": 204,
+      "input_rank_90": 1,
+      "channel_util_01": 0.6314642429351807,
+      "channel_util_10": 0.012471212074160576,
+      "mean_delta_norm": 101.5619125366211,
+      "std_delta_norm": 18.23076629638672,
+      "weight_sv_gini": 0.23540663719177246,
+      "weight_sv_top1_frac": 0.006523260846734047
+    },
+    {
+      "block": 11,
+      "preact_rank_90": 195,
+      "input_rank_90": 2,
+      "channel_util_01": 0.6535335183143616,
+      "channel_util_10": 0.016993917524814606,
+      "mean_delta_norm": 335.7447509765625,
+      "std_delta_norm": 311.9228515625,
+      "weight_sv_gini": 0.2393563985824585,
+      "weight_sv_top1_frac": 0.007466470822691917
+    }
+  ],
+  "config": {
+    "N_SEQS": 50,
+    "SEQ_LEN": 64,
+    "N_tokens": 3200,
+    "ENERGY_THRESH": 0.9,
+    "SEED": 42
+  },
+  "verdict_note": "Block 0 input_rank_90=269 vs median_others=1 (269x). Raw token embeddings span 269 dimensions vs collapsed residual stream in later blocks."
+}
