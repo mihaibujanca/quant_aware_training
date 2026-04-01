@@ -1,6 +1,11 @@
-# Research Status — 203 Cycles (001–203)
+# Research Status — 204 Cycles (001–204)
 
-## Latest: Cycle 203
+## Latest: Cycle 204
+
+215. **3-block selection sweep** — REFUTED
+   - Best [1,4,10]=61.455, anchor [1,4,7]=61.746 (0.29 PPL gap, within noise). Block 1 dominates: all top-4 include it (input_rank=192, highest-value compressible block). Blocks starting at 2+ consistently worse (+1.8-7.6 PPL). 3-block topk+lstsq ceiling is ~+14-15% above float. P0/P1/P2 queue now empty — agenda refresh needed.
+
+## Cycle 203
 
 214. **Block subset search — supersets of [1,4,7]** — REFUTED
    - No superset achieves within 2 PPL of anchor 61.75. Adding 2 blocks costs +13-40 PPL (cascade). 3 blocks is the practical ceiling for topk+lstsq. Cascade near-symmetric: early/middle/late blocks all +40-46% degradation per extra pair. Each additional block adds ~14-15% PPL.
@@ -134,6 +139,7 @@
 19. **Sequential fitting provides negligible benefit** (197): fitting each block on compressed predecessors' I/O gains 0.135 PPL (noise-level). Distribution mismatch in fitting data is NOT the cascade bottleneck — cascade is from intrinsic information loss per compressed block.
 20. **Block 0 criticality is from high input diversity, not specialization** (198): block 0 input_rank_90=269 vs median=1 for blocks 2-11. Input rank collapse: 269→207→25→1 across blocks 0-3. Block 0 must transform high-dimensional raw embeddings (50257-type vocabulary) into the residual stream. Cannot be dropped or replaced by later-block compression approach.
 21. **Rank-1 residual stream does NOT reduce required K** (199): K-sweep for BLOCKS=[1,4,7,11] shows monotone improvement +57%→+26% above float (K=8→512) with no plateau. LayerNorm creates token-specific 768D variation after per-token centering/scaling; block input rank ≠ MLP input diversity. K=512 remains necessary baseline.
+26. **[1,4,7] is effectively optimal among 3-block selections** (204): best [1,4,10]=61.455 beats anchor 61.746 by only 0.29 PPL (noise). All top-4 include block 1 (input_rank=192). Blocks 2+ starts consistently worse. 3-block topk+lstsq ceiling ~+14-15% above float is confirmed optimal for current approach.
 25. **3 blocks is the practical ceiling for topk+lstsq compression** (203): supersets of [1,4,7] all give PPL ≥75.65 vs anchor 61.75. Adding 2 extra blocks costs +13-40 PPL regardless of position (early/middle/late all similar). Cascade is structural and symmetric across block positions. The improvement must come from a better single-block approximator or a fundamentally different approach.
 24. **Excluding block 11 improves compression by 6.4 PPL** (202): BLOCKS=[1,4,7] K=512 → +14.6% above float (61.75) vs BLOCKS=[1,4,7,11] → +26.4% (68.14). Block 11 rank-expansion (rank-2→231) cannot be approximated by topk+lstsq. New best recipe: BLOCKS=[1,4,7], K=512. Both block 0 and block 11 are bookend blocks that must not be compressed.
 23. **Block 11 is an output decompressor** (201): in_rank=2→out_rank=231 (154×). Delta_rank=1. Mirror of block 0 (which collapses high-rank input into residual). Blocks 1-10 process rank-1 residual; block 11 expands it to rank-231 for LM head. Self-correction in cycles 194/200 explained: block 11 rank-expansion absorbs upstream errors. Recommendation: exclude block 11 from compression set.
@@ -147,8 +153,8 @@
 Channel selection, joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, full-model ReLU swap, iterative bias recomputation, low-rank residual correction, compression ratio sweep (ratio-independent floor), fewer-block compression (cascade barrier persists at 2 blocks), Jacobian active subspace compression (R3 MASO hypothesis refuted — near-full-rank Jacobians), LN recalibration (per-channel stats irrelevant to per-token LN)
 
 ## Next
-- Item 215: 3-block selection sweep — is [1,4,7] optimal? (P0)
-- Item 212: Rank-1 FFN compression (P2)
+- Agenda refresh required — P0/P1/P2 queue exhausted after cycle 204
+- Item 212: Rank-1 FFN compression (P2, still in queue)
 
 ### Working Recipes (updated)
 1. **BLOCKS=[1,4,7] K=512** → +14.6% above float PPL (BEST — held-out eval)

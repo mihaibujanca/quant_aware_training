@@ -6,13 +6,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-215. **3-block selection sweep — is [1,4,7] optimal among all stride-3/4 selections?**
-   - Cycle 203 confirmed 3 is the ceiling for topk+lstsq (adding any 2 blocks costs +13+ PPL). Is [1,4,7] (stride-3) actually optimal, or could [2,5,8], [3,6,9], [1,5,9], [2,6,10] (different strides/starting points) achieve lower PPL? Test 8 evenly-spaced 3-block selections from {1,...,10} with K=512. Excluding blocks 0 and 11 (bookends).
-   - Type: empirical
-   - Confirmed if: any tested 3-block selection achieves PPL ≤60 (lower than [1,4,7]=61.75)
-   - Refuted if: no 3-block selection beats [1,4,7] by more than 1 PPL (all within noise)
-   - Inconclusive if: multiple 3-block selections within ±1 PPL of 61.75
-   - Depends on: 214 (confirmed — 3 blocks is the ceiling)
+*(queue empty — pending new approach)*
 
 ### P1
 
@@ -61,6 +55,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 204
+
+215. **3-block selection sweep** *(REFUTED — cycle 204)*
+   - [1,4,10]=61.455 best, anchor [1,4,7]=61.746 (0.29 PPL gap = within noise). Block 1 dominates: all top-4 include block 1 (input_rank=192). Blocks starting at 2+ consistently worse (+1.8-7.6 PPL). Best achievable with 3-block topk+lstsq is ~+14-15% above float. Current direction closed.
+   - Artifacts: `experiments/block3_selection_sweep_cycle204.py`, `autoresearch/results/cycle_204_block3_selection.json`
 
 ### Cycle 203
 

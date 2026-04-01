@@ -1,0 +1,7 @@
+item_number=215
+outcome=refuted
+key_metric=best_147_10=61.455_anchor_147=61.746_improvement=0.29_verdict=refuted
+commit=pending
+paths=autoresearch/results/cycle_204_block3_selection.json,experiments/block3_selection_sweep_cycle204.py
+learned=No 3-block selection beats [1,4,7] by >1 PPL. Best [1,4,10]=61.455 vs anchor 61.746 (0.29 PPL). Block 1 dominates: all top-4 selections include block 1 (input_rank=192, most valuable compressible block). Blocks 2+ starts consistently worse (+1.8-7.6 PPL). The other 2 blocks are approximately interchangeable. Best achievable with 3-block topk+lstsq is ~+14-15% above float.
+next=Further improvement requires better single-block compressor or fundamentally different approach. Current direction closed at 3-block ceiling.
