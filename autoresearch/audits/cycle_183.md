@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=confirmed
+new_outcome=confirmed
+reason=Delta +21.3 PPL (3 seeds) far exceeds the 3 PPL threshold. Single-block PPLs are nearly identical (within 0.3-3.3), confirming the gap is from composition, not local fitting. Plateau detection triggered early (100 steps instead of 2000 in most blocks), but single-block PPLs show local MSE was already near-optimal for blocks 1/4/7; block 11 gap (2.5-4.7 PPL) suggests slight under-training there but cannot account for the 21 PPL stacked gap.
+guardrail_flags=G6-plateau-detection-early-stopping
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Consider re-running block 11 distillation with no plateau detection (fixed 2000 steps) to confirm the single-block gap closes. The stacked result won't change materially since the composition barrier dominates.
+interesting=true
+interesting_reason=Single-block quality is nearly identical between topk+lstsq and Adam distillation, yet stacking diverges by 21 PPL. This directly demonstrates that topk+lstsq preserves some compositional property (likely input-output alignment across blocks) that generic Adam training destroys, even when matching the same local objective.

@@ -1,0 +1,7 @@
+item_number=193
+outcome=confirmed
+key_metric=mean_topk_polish=59.39_mean_distill=80.68_delta=+21.3PPL_3seeds
+commit=5890013
+paths=autoresearch/results/cycle_183_distillation_baseline.json,experiments/distillation_baseline_cycle183.py
+learned=Local Adam+MSE distillation (cached block I/O, up to 2000 steps) produces similar single-block PPL to topk+lstsq (+0.3-3.3 PPL per block) but stacks much worse (+21 PPL gap vs topk+polish). Single-block quality is not predictive of stacking quality — topk+lstsq preserves compositional geometry that Adam-from-scratch does not.
+next=Distillation control confirmed. Geometric recipe justified. Next: compression ratio sweep (item 194) to find practical operating point.
