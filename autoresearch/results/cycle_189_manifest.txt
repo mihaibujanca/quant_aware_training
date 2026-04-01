@@ -1,7 +1,7 @@
 item_number=199
 outcome=confirmed
 key_metric=mean_cos=0.716_all_11_layers_above_0.3_frob_grows_685_to_11472
-commit=TBD
+commit=8c74bab
 paths=autoresearch/results/cycle_189_cascade_error_direction.json,experiments/cascade_error_direction_cycle189.py
 learned=Cascade errors are DIRECTIONALLY COHERENT: cos(e_l, e_{l-1}) rises from 0.37 (layer 1) to 0.83 (layers 9-10), mean=0.716. Errors compound geometrically (||e||_F: 685→11472, 17x amplification over 12 layers). Rank_90 stays high (320-553/768) — errors are diffuse in content but directionally aligned. This reconciles with cycle 184 (diffuse rank) but adds the crucial finding: GELU→ReLU+bias errors do not cancel or diffuse in direction; they accumulate in a consistent direction. Block 11 shows anomaly: ||e||_F jumps 6054→11472 (biggest single-block amplification), rank_90 drops 518→320 (consistent with cycle 184 block-11 anomaly).
 next=Item 200 (GELU-neg+ReLU-pos hybrid) — test whether preserving GELU in negative regime prevents cascade.

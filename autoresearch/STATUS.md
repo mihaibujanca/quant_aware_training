@@ -1,6 +1,12 @@
-# Research Status — 188 Cycles (001–188)
+# Research Status — 189 Cycles (001–189)
 
-## Latest: Cycle 188
+## Latest: Cycle 189
+
+199. **Cascade error direction analysis — GELU vs ReLU+bias residual stream** — CONFIRMED
+   - Mean cos(e_l, e_{l-1})=0.716; all 11/11 inter-layer pairs exceed 0.3. Errors compound directionally: ||e||_F grows 685→11472 (17x over 12 layers). Rank_90 stays high (320-553/768) — errors are diffuse in content but directionally coherent. Block 11 anomaly: largest ||e||_F jump + rank_90 drops to 320 (consistent with cycle 184).
+   - Reconciles with cycle 184 (diffuse rank, low-rank correction not viable): both are true. Errors have structured direction despite high rank.
+
+## Cycle 188
 
 198. **Progressive C3 composition — per-channel mean replacement across all 12 blocks** — INCONCLUSIVE
    - All-12 C3: PPL=27.314 (+20.33%), between +15% and +40% thresholds. Composes much better than ReLU+bias (~42 PPL). Barrier materializes after block 6-7.
@@ -46,6 +52,7 @@
 8. **Block count matters, floor persists** (185, 186): ratio-independent compression floor ~57 PPL; 2-block gains 9 PPL over 4-block but threshold unbreached; cascade barrier is structural
 9. **Individual blocks near-redundant, cascade is not** (187): blocks 1-10 all droppable (PPL <40); multi-block drop 53 PPL despite single drops being 36-39. Superadditivity is the core problem
 10. **C3 composes better than ReLU, still breaks after block 7** (188): +20.33% all-12 vs +88% for ReLU+bias. Shape change is the larger culprit (~14.3 PPL); constant replacement alone causes ~4.6 PPL
+11. **Cascade errors are directionally coherent despite high rank** (189): mean cos(e_l,e_{l-1})=0.716, 11/11 layers. Errors are diffuse in content (rank_90=300-550) but aligned in direction. 17x Frobenius amplification over 12 layers. Not low-rank correctable (cycle 184), but directionally structured.
 
 ### Working Recipes (ranked)
 1. **topk+lstsq + corrections** -> PPL ~59 (49K correction params, total ~1.6M)
@@ -55,4 +62,4 @@
 Channel selection, joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, full-model ReLU swap, iterative bias recomputation, low-rank residual correction, compression ratio sweep (ratio-independent floor), fewer-block compression (cascade barrier persists at 2 blocks)
 
 ## Next
-- P0: 199 (cascade error direction analysis), 200 (GELU-neg+ReLU-pos hybrid)
+- P0: 200 (GELU-neg+ReLU-pos hybrid)
