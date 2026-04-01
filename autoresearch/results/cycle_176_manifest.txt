@@ -8,4 +8,5 @@ results_png=autoresearch/results/cycle_176_sign_lstsq.png
 brief=autoresearch/briefs/cycle_176.md
 plan=autoresearch/plans/cycle_176.md
 review=autoresearch/reviews/cycle_176.md
+commit=d6f9897
 key_metrics=K1_PPL=61.6 K4_PPL=74.3(+13) K8_PPL=193.0(+131) K16_PPL=137.3(+76) all_K>1_worse 2seeds_complete
