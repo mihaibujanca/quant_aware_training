@@ -1,6 +1,11 @@
-# Research Status — 211 Cycles (001–211)
+# Research Status — 212 Cycles (001–212)
 
-## Latest: Cycle 211
+## Latest: Cycle 212
+
+222. **10-block Adam correction** — REFUTED
+   - Best PPL 98.493 (+82.7% vs float). Adam scaling limit: 3-block below float, 6-block +10.7% (early stop), 10-block +82.7% (REFUTED). W_out-only correction cannot fix the 10-block cascade. Practical limit ~6 blocks.
+
+## Cycle 211
 
 221. **6-block Adam correction** — INCONCLUSIVE
    - Best PPL=59.680 at step 1500 (criterion ≤60.0 met), then overfitting to 72.250 at step 4000. More trainable params → faster overfitting: 6-block (2.36M) saturates at ~1500 steps vs 3-block (1.18M) at ~4000 steps. Early stopping mandatory.

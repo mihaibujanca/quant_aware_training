@@ -1,0 +1,55 @@
+{
+  "cycle": 212,
+  "item": 222,
+  "verdict": "REFUTED",
+  "float_ppl": 53.89489152418256,
+  "ppl_10b_init": 152.33774441139232,
+  "best_ppl": 98.49256281927381,
+  "best_step": 800,
+  "early_stopped": false,
+  "pct_vs_float": 82.74934791376347,
+  "ppl_history": [
+    {
+      "step": 200,
+      "eval_ppl": 107.93337274436806
+    },
+    {
+      "step": 400,
+      "eval_ppl": 101.30542785063109
+    },
+    {
+      "step": 600,
+      "eval_ppl": 98.96240926957148
+    },
+    {
+      "step": 800,
+      "eval_ppl": 98.49256281927381
+    },
+    {
+      "step": 1000,
+      "eval_ppl": 99.41894006713106
+    }
+  ],
+  "config": {
+    "BLOCKS": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "K": 512,
+    "MAX_STEPS": 1000,
+    "LR": 0.0001,
+    "EVAL_EVERY": 200,
+    "N_CALIB": 200,
+    "N_EVAL": 100,
+    "SEQ_LEN": 128,
+    "SEED": 42
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "cycle": 212,
+  "item": 222,
+  "verdict": "REFUTED",
+  "hypothesis": "10-block Adam correction achieves PPL \u226465.0 (+20.6% vs float)",
+  "result_summary": "Best PPL 98.493 at step 800 (+82.7% vs float). W_out-only Adam insufficient for 10-block cascade.",
+  "key_metrics": {
+    "float_ppl": 53.895,
+    "10b_init": 152.338,
+    "best_ppl": 98.493,
+    "best_step": 800,
+    "n_trainable": 3939840
+  },
+  "scaling_pattern": {
+    "3block": {
+      "init": 61.746,
+      "best": 46.556,
+      "params": 1181952
+    },
+    "6block": {
+      "init": 86.686,
+      "best": 59.68,
+      "params": 2363904
+    },
+    "10block": {
+      "init": 152.338,
+      "best": 98.493,
+      "params": 3939840
+    }
+  }
+}

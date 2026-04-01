@@ -8,14 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-222. **10-block full compression with Adam — BLOCKS=[1..10] K=512**
-   - Maximum FFN compression: all 10 compressible blocks (excluding block 0 and block 11 bookends). 10×768×512=3.93M trainable params (W_out/b_out). 2000 Adam steps. Depends on 221 (to confirm Adam can scale past 3 blocks).
-   - Type: empirical
-   - Confirmed if: 10-block Adam PPL ≤65.0 (+20.6% vs float)
-   - Refuted if: 10-block Adam PPL >75.0 (cascade remains despite correction)
-   - Inconclusive if: PPL 65-75
-   - Depends on: 221 (6-block viability)
-
 223. **Adam correction with trainable W_fc — does unfreezing fc improve over W_out-only?**
    - Cycle 206 froze fc weights and only trained W_out. Test whether also training W_fc reduces PPL further for BLOCKS=[1,4,7] K=512. Compare: (a) W_out-only (cycle 206 result: 48.111), (b) W_out+W_fc (both trainable). 1000 steps, LR=1e-4.
    - Type: empirical
@@ -59,6 +51,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 212
+
+222. **10-block full compression with Adam** *(REFUTED — cycle 212)*
+   - **Outcome: REFUTED** — Best PPL 98.493 at step 800 (+82.7% vs float). Adam W_out correction cannot fix 10-block cascade. Scaling pattern: 3-block (below float), 6-block (+10.7% early stop), 10-block (+82.7% REFUTED). Practical limit ~6 blocks with strict early stopping.
 
 ### Cycle 211
 
