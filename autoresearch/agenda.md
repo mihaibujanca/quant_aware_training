@@ -6,9 +6,45 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+220. **Adam W_out correction step-count curve — BLOCKS=[1,4,7] K=512**
+   - Cycle 206 ran 1000 steps; eval PPL was still decreasing. Test Adam at {500, 1000, 2000, 4000, 8000} steps. Measure held-out PPL at each checkpoint. Goal: find where PPL plateaus and whether more steps cause overfitting. Same config: LR=1e-4, N_CALIB=200, N_EVAL=100.
+   - Type: empirical
+   - Confirmed if: PPL plateaus (improvement <0.5 PPL in last 2000 steps) before step 4000 AND no overfitting (eval vs calib diverge <2 PPL)
+   - Refuted if: PPL still decreasing monotonically at step 8000
+   - Inconclusive if: plateau found but with >2 PPL overfitting
+
+221. **6-block Adam correction — BLOCKS=[1,2,4,5,7,8] K=512**
+   - Cycle 203 showed any superset of [1,4,7] causes cascade to 75+ PPL with topk+lstsq only. Cycle 206 dissolved [1,4,7] cascade with Adam correction. Test whether Adam can also dissolve the cascade for 6 compressed blocks. Use same protocol: topk+lstsq init, freeze fc, train W_out of 6 MLPs (6×768×512+6×768=2.36M params), 2000 Adam steps, LR=1e-4.
+   - Type: empirical
+   - Confirmed if: 6-block Adam PPL ≤60.0 (+11.3% vs float 53.895) — meaningful compression at 6 blocks
+   - Refuted if: 6-block Adam PPL >65.0 (remains catastrophic despite correction)
+   - Inconclusive if: PPL 60-65
+
 ### P1
 
+222. **10-block full compression with Adam — BLOCKS=[1..10] K=512**
+   - Maximum FFN compression: all 10 compressible blocks (excluding block 0 and block 11 bookends). 10×768×512=3.93M trainable params (W_out/b_out). 2000 Adam steps. Depends on 221 (to confirm Adam can scale past 3 blocks).
+   - Type: empirical
+   - Confirmed if: 10-block Adam PPL ≤65.0 (+20.6% vs float)
+   - Refuted if: 10-block Adam PPL >75.0 (cascade remains despite correction)
+   - Inconclusive if: PPL 65-75
+   - Depends on: 221 (6-block viability)
+
+223. **Adam correction with trainable W_fc — does unfreezing fc improve over W_out-only?**
+   - Cycle 206 froze fc weights and only trained W_out. Test whether also training W_fc reduces PPL further for BLOCKS=[1,4,7] K=512. Compare: (a) W_out-only (cycle 206 result: 48.111), (b) W_out+W_fc (both trainable). 1000 steps, LR=1e-4.
+   - Type: empirical
+   - Confirmed if: W_out+W_fc gives ≥2 PPL improvement over W_out-only (PPL ≤46.1)
+   - Refuted if: <0.5 PPL improvement
+   - Inconclusive if: 0.5-2 PPL improvement
+
 ### P2
+
+224. **Analytical W_out correction — closed-form update from calibration residuals**
+   - Cycle 206 used Adam for 1000 gradient steps. Test whether a single lstsq pass on the FULL model's residuals achieves similar correction. Protocol: (1) run compressed model on calib to collect per-block input activations and target MLP outputs (from the original float model); (2) re-solve lstsq for W_out using target = float_mlp_output - bias. This is an analytic correction pass without gradient descent.
+   - Type: empirical
+   - Confirmed if: analytic correction achieves PPL within 2 PPL of Adam correction (PPL ≤50.1) in one pass
+   - Refuted if: analytic correction PPL >55 (comparable to topk+lstsq init)
+   - Inconclusive if: PPL 50-55
 
 
 
