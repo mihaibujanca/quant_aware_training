@@ -1,7 +1,7 @@
 item_number=194
 outcome=refuted
 key_metric=k2=61.56_k4=59.42_k6=58.30_k8=57.16_PPL_all_above_55_3seeds
-commit=PENDING
+commit=b22b9e6
 paths=autoresearch/results/cycle_185_compression_ratio_sweep.json,experiments/compression_ratio_sweep_cycle185.py
 learned=PPL-vs-compression curve is nearly flat (61.6→57.2 PPL from 12x→3x, only 4.4 PPL for 4x more params). The compression floor is NOT ratio-dependent — k=8 still 57.2 PPL vs float 22.7-57.6. The cascade/composition barrier dominates regardless of per-block channel count.
 next=Diminishing returns on compression ratio confirmed. Try fewer blocks (item 195) or layer-drop (item 196) to understand if reducing block count helps more than increasing channel count.

@@ -1,6 +1,13 @@
-# Research Status — 184 Cycles (001–184)
+# Research Status — 185 Cycles (001–185)
 
-## Latest: Cycle 184
+## Latest: Cycle 185
+
+194. **Compression ratio sweep k={2,4,6,8} — GPT-2 FFN** — REFUTED
+   - PPL floor is ratio-independent: k=2→61.56, k=4→59.42, k=6→58.30, k=8→57.16 (only 4.4 PPL for 4x more params, 12x→3x compression). k=8 PPL=57.2 > 55 threshold.
+   - Per-PPL gain from doubling params is ~1.1 PPL/step (k=4→6→8), suggesting composition-driven floor not capacity-driven.
+   - Cascade/composition barrier confirmed again: increasing channel count does not break the stacking floor.
+
+## Cycle 184
 
 197. **Residual stream trajectory divergence: GELU vs ReLU+bias — GPT-2** — REFUTED
    - Divergence is exponential (R²=0.972) and α-smooth (monotone PPL 57.7→38.1 as α: ReLU→GELU), but DIFFUSE (rank_90=300-434 out of 768). Low-rank correction not viable.
@@ -26,4 +33,4 @@
 Channel selection, joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, full-model ReLU swap, iterative bias recomputation, low-rank residual correction
 
 ## Next
-- P1: 194 (compression ratio sweep k={2,4,6,8}), 195 (fewer-block compression), 196 (layer-drop baseline)
+- P2: 195 (fewer-block compression), 196 (layer-drop baseline)
