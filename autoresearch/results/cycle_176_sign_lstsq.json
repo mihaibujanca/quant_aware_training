@@ -1,0 +1,51 @@
+{
+  "cycle": 176,
+  "item": 183,
+  "verdict": "REFUTED",
+  "verdict_note": "K=8 piecewise lstsq PPL 193.0 is 131 points WORSE than K=1 baseline PPL 61.6 (2 complete seeds). All K>1 degrade: K=4 +13, K=8 +131, K=16 +76. Piecewise conditioning on sign patterns actively harms compression.",
+  "seeds": [42, 137, 7],
+  "seeds_complete": [42, 137],
+  "seed_7_note": "K=1 and K=4 complete; K=8 interrupted during polish; K=16 not reached",
+  "blocks": [1, 4, 7, 11],
+  "hidden_dim": 512,
+  "K_values": [1, 4, 8, 16],
+  "polish_steps": 500,
+  "polish_lr": 0.0001,
+  "eval_sequences": 200,
+  "min_cluster_size": 64,
+  "teacher_ppl_per_seed": {"42": 57.65, "137": 48.82, "7": 50.45},
+  "teacher_ppl_mean": 52.31,
+  "aggregated_2seeds": {
+    "1": {"mean_ppl_polished": 61.57, "per_seed": [70.83, 52.31]},
+    "4": {"mean_ppl_polished": 74.30, "per_seed": [87.39, 61.20]},
+    "8": {"mean_ppl_polished": 193.04, "per_seed": [298.74, 87.33]},
+    "16": {"mean_ppl_polished": 137.26, "per_seed": [99.43, 175.10]}
+  },
+  "per_seed_detail": {
+    "42": {
+      "baseline_ppl": 57.653,
+      "K=1": {"unpolished": 84.994, "polished": 70.826},
+      "K=4": {"unpolished": 107.105, "polished": 87.390},
+      "K=8": {"unpolished": 598.531, "polished": 298.743},
+      "K=16": {"unpolished": 125.999, "polished": 99.426}
+    },
+    "137": {
+      "baseline_ppl": 48.815,
+      "K=1": {"unpolished": 68.789, "polished": 52.306},
+      "K=4": {"unpolished": 81.396, "polished": 61.202},
+      "K=8": {"unpolished": 145.245, "polished": 87.333},
+      "K=16": {"unpolished": 506.748, "polished": 175.101}
+    },
+    "7": {
+      "baseline_ppl": 50.449,
+      "K=1": {"unpolished": 70.455, "polished": 55.033},
+      "K=4": {"unpolished": 79.400, "polished": 61.517},
+      "K=8": {"unpolished": 232.210, "polished": null},
+      "K=16": null
+    }
+  },
+  "analysis": {
+    "root_cause": "Small cluster sizes (100-1000 tokens per cluster) make per-cluster lstsq severely underdetermined: 512 hidden features x 768 output dims = 393K parameters fit from 100-1000 samples. Overfitting to cluster-specific noise destroys generalization. The problem worsens with more clusters (K=8 worse than K=4). K=16 sometimes better than K=8 due to random variation in cluster quality, but still catastrophically worse than K=1.",
+    "cycle_167_vindicated": "The sign-pattern census correctly predicted this failure: sign patterns don't cluster, so forced clustering creates arbitrary partitions that harm fitting."
+  }
+}

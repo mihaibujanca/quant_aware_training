@@ -8,15 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-
-183. **Sign-pattern-conditioned lstsq — GPT-2 FFN k=4** [EMPIRICAL]
-   - Current lstsq fits ONE linear map per block. But the FFN is piecewise-linear (via GELU ≈ ReLU): tokens in different sign patterns use different affine maps. If sign patterns cluster into K* tractable groups (item 177), fit a SEPARATE lstsq per cluster: for cluster c, W_c = argmin ||W @ X_c - Y_c||. At inference, route tokens by sign pattern to the appropriate W_c. This is a piecewise-linear compressed block. Test with K={4,8,16} clusters from k-means on sign patterns. Each cluster gets its own k=4 topk+lstsq. Total params = K * (k * d_in) but each sees cleaner signal. Compare stacked PPL vs single lstsq.
-   - Type: empirical
-   - Confirmed if: K=8 piecewise lstsq improves stacked PPL by >=3 points over single lstsq (justifying K× param overhead).
-   - Refuted if: <1 PPL improvement — sign-pattern conditioning adds no value.
-   - Inconclusive if: 1-3 PPL improvement.
-   - Depends on: 177 (informative but not blocking — can use k-means directly). ~20 min compute.
-
 ### P2
 
 
@@ -44,6 +35,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 176
+
+183. **Sign-pattern-conditioned lstsq — GPT-2 FFN k=4** *(REFUTED — cycle 176)*
+   - Piecewise lstsq conditioned on k-means sign-pattern clusters makes stacked PPL catastrophically WORSE: K=4 +13, K=8 +131, K=16 +76 PPL vs single lstsq baseline (2 seeds). Root cause: small cluster sizes (100-1000 tokens) make per-cluster lstsq underdetermined (512x768 params from <1000 samples), causing severe overfitting. Vindicates cycle 167 census: sign patterns don't cluster tractably and forced clustering destroys compression quality.
+   - Artifacts: `experiments/sign_pattern_lstsq_cycle176.py`, `autoresearch/results/cycle_176_sign_lstsq.json`, `autoresearch/results/cycle_176_sign_lstsq.png`
 
 ### Cycle 175
 
