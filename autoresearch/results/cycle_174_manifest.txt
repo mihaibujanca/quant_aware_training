@@ -1,0 +1,9 @@
+cycle: 174
+item: 185
+verdict: REFUTED
+summary: s_neg orthogonal to prediction gradients (mean|cos|=0.031 << 0.05 threshold); rank_neg > rank_pos; negative signal is unstructured noise
+artifacts:
+  - experiments/neg_signal_geometry_cycle174.py
+  - autoresearch/results/cycle_174_neg_signal_geometry.json
+  - autoresearch/briefs/cycle_174.md
+  - autoresearch/plans/cycle_174.md

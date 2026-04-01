@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-185. **Geometry of token-dependent negative signal — GPT-2 FFN** [INTERPRETABILITY]
-   - The token-dependent negative signal s_neg(x) = y_neg(x) - μ_neg has only 1.5-13% of negative-regime L2 energy but may be aimed at prediction-critical directions. For each of 12 blocks on 2048 tokens: (a) stack s_neg into S_neg ∈ R^{2048×768}, SVD it — report effective rank at 95% energy, (b) same for S_pos, compare ranks, (c) compute prediction-sensitive directions J(x) = d(CE_loss)/d(y_block) per token (768-dim gradient), (d) per-token cosine alignment cos(s_neg(x), J(x)) — does the negative signal point where predictions are sensitive?, (e) same alignment for s_pos, (f) report per-block: mean|cos(s_neg,J)| vs mean|cos(s_pos,J)|, rank(S_neg) vs rank(S_pos).
-   - Type: analysis (interpretability)
-   - Confirmed if: |cos(s_neg, J)| > 0.2 in ≥8/12 blocks AND rank(S_neg) < rank(S_pos)/4 — negative signal is precise, low-rank, prediction-aligned.
-   - Refuted if: |cos(s_neg, J)| < 0.05 — negative token signal is orthogonal to predictions (noise).
-   - Inconclusive if: moderate alignment or varies by block.
-   - Depends on: none. ~15 min (forward + backward for gradients).
-
 186. **Per-token prediction impact of negative regime — GPT-2 FFN** [INTERPRETABILITY]
    - Measure functional impact in prediction space, not hidden-state space. For each of 12 blocks independently, 2048 tokens: (a) float model P_float(next_token|context), (b) ReLU-at-block-l model P_relu(next_token|context), (c) per-token KL(P_float || P_relu), (d) top-50 tokens by KL per block — report actual tokens and contexts, (e) fraction where P_relu(correct) > P_float(correct) (negative regime HURTS), (f) correlate mean KL with ||y_neg|| and ||s_neg|| from item 184.
    - Type: analysis (interpretability)
@@ -60,6 +52,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 174
+
+185. **Geometry of token-dependent negative signal — GPT-2 FFN** *(REFUTED — cycle 174)*
+   - s_neg is orthogonal to prediction gradients: mean|cos(s_neg,J)| = 0.031 across all 12 blocks (well below 0.05 threshold). rank(S_neg) averages 469 vs rank(S_pos) 335 — negative signal is higher-rank, not lower (opposite of hypothesis). Neither s_neg nor s_pos shows meaningful per-token prediction alignment. Combined with cycle 173 (absorbable as bias), this confirms the negative regime is geometrically unstructured noise.
+   - Artifacts: `experiments/neg_signal_geometry_cycle174.py`, `autoresearch/results/cycle_174_neg_signal_geometry.json`
 
 ### Cycle 172
 
