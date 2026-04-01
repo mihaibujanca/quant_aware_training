@@ -1,0 +1,20 @@
+{
+  "cycle": 209,
+  "item": 212,
+  "verdict": "REFUTED",
+  "hypothesis": "Rank-1 parameterized FFN matches topk+lstsq PPL within 1 PPL at 50% fewer params",
+  "result_summary": "Rank-1 K=512 PPL=58.207 vs standard K=512 PPL=55.715 (gap=+2.49). REFUTED.",
+  "key_finding": "Block 4 MLP input rank_90=395 (not rank-1). LN2 per-token normalization spreads residual stream into ~395D effective variation. Rank-1 model saturates at K>=256.",
+  "key_metrics": {
+    "float_ppl": 53.895,
+    "block": 4,
+    "mlp_input_rank_90": 395,
+    "standard_k256": 56.018,
+    "standard_k512": 55.715,
+    "standard_k1024": 55.05,
+    "rank1_k256": 58.233,
+    "rank1_k512": 58.207,
+    "rank1_k1024": 58.207,
+    "gap_k512": 2.491
+  }
+}

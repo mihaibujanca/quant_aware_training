@@ -1,0 +1,47 @@
+{
+  "cycle": 209,
+  "item": 212,
+  "verdict": "REFUTED",
+  "float_ppl": 53.89489152418256,
+  "block": 4,
+  "input_rank_90": 395,
+  "results": {
+    "standard_k256": {
+      "ppl": 56.01761147807693,
+      "params": 394240
+    },
+    "rank1_k256": {
+      "ppl": 58.23253935659155,
+      "params": 199424
+    },
+    "standard_k512": {
+      "ppl": 55.71537388565313,
+      "params": 787712
+    },
+    "rank1_k512": {
+      "ppl": 58.20671872700148,
+      "params": 396544
+    },
+    "standard_k1024": {
+      "ppl": 55.05025371024507,
+      "params": 1574656
+    },
+    "rank1_k1024": {
+      "ppl": 58.20685278441611,
+      "params": 790784
+    }
+  },
+  "gap_rank1_vs_standard_k512": 2.4913448413483508,
+  "config": {
+    "BLOCK": 4,
+    "K_VALUES": [
+      256,
+      512,
+      1024
+    ],
+    "N_CALIB": 200,
+    "N_EVAL": 100,
+    "SEQ_LEN": 128,
+    "SEED": 42
+  }
+}

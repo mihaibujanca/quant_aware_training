@@ -1,0 +1,7 @@
+item_number=212
+outcome=refuted
+key_metric=standard_k512_ppl=55.715_rank1_k512_ppl=58.207_gap=+2.491_mlp_input_rank=395_verdict=refuted
+commit=pending
+paths=autoresearch/results/cycle_209_rank1_ffn.json,experiments/rank1_ffn_cycle209.py
+learned=Block 4 MLP input (after LN2) has rank_90=395, not rank-1. Residual stream rank-1 does NOT imply MLP input rank-1; LN2 per-token normalization spreads variance into ~395D. Rank-1 model hits ceiling at K>=256 (PPL=58.207 unchanged). Agenda P0/P1/P2 fully exhausted; agenda refresh needed.
+next=Agenda refresh needed — all P0/P1/P2 items exhausted (217-219, 212). New directions needed.

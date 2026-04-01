@@ -1,6 +1,11 @@
-# Research Status — 208 Cycles (001–208)
+# Research Status — 209 Cycles (001–209)
 
-## Latest: Cycle 208
+## Latest: Cycle 209
+
+212. **Rank-1 input FFN compression** — REFUTED
+   - Block 4 MLP input rank_90=395 (not rank-1). LN2 per-token normalization spreads residual stream into ~395D effective variation. Rank-1 K=512 PPL=58.207 vs standard K=512 PPL=55.715 (gap=+2.49). Key correction: residual stream rank-1 ≠ MLP input rank-1 after LayerNorm. Rank-1 model saturates at K≥256.
+
+## Cycle 208
 
 219. **PCA-conditioned lstsq for block 1** — REFUTED
    - All PCA variants worse than standard (54.770–55.074 vs 54.689). PCA adds approximation error without reducing lstsq noise. lstsq handles near-zero-variance input dimensions implicitly through numerical conditioning.

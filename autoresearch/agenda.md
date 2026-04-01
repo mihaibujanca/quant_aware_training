@@ -10,14 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-212. **Rank-1 input FFN compression — explicit 1D subspace projection**
-   - Blocks 3-11 have input_rank_90=1. The FFN input is effectively a scalar (x ≈ s·v₁ where v₁ is the top singular vector from cycle 198 data). Design a compressed FFN that explicitly parameterizes this: (1) project input to top PCA direction → scalar s; (2) learn K weight vectors w_k and scalar functions a_k(s) (parameterized as 1D lookup tables or polynomials); (3) output = Σ_k a_k(s)·w_k. Compare to topk+lstsq at matching parameter budget.
-   - Type: implementation + empirical
-   - Confirmed if: rank-1 parameterized FFN matches topk+lstsq PPL within 1 PPL at 50% fewer parameters (K/2)
-   - Refuted if: PPL is worse than topk+lstsq at equal parameter budget
-   - Inconclusive if: PPL gap is ≤2 but parameter budget comparison is unclear
-   - Depends on: none (209 REFUTED — K=512 remains baseline; compare at K=512)
-
 
 
 
@@ -45,6 +37,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 209
+
+212. **Rank-1 input FFN compression — explicit 1D subspace projection** *(REFUTED — cycle 209)*
+   - **Outcome: REFUTED** — Block 4 MLP input (after LN2) has rank_90=395, not rank-1. LN2 per-token normalization spreads residual stream into ~395D. Rank-1 K=512 PPL=58.207 vs standard K=512 PPL=55.715 (gap=+2.49). Rank-1 saturates at K≥256 (same PPL at K=256, 512, 1024). Key correction: residual stream rank-1 ≠ MLP input rank-1.
 
 ### Cycle 208
 
