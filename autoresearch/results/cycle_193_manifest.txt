@@ -1,7 +1,7 @@
 item_number=203
 outcome=inconclusive
 key_metric=c3_hybrid_all12=41.447_baseline=22.700_pct=+82.59%_simple_sum=+48%_relu_bias=+88%
-commit=TBD
+commit=6945a2f
 paths=autoresearch/results/cycle_193_c3_hybrid_combined.json,experiments/c3_hybrid_combined_cycle193.py
 learned=C3+Hybrid all-12 PPL=41.447 (+82.59%) vs ReLU+bias ~42.6 (+88%). C3+Hybrid is nearly as bad as ReLU+bias despite C3 using per-channel mean (not zero) for negative regime. Superadditivity is GENERAL — not specific to the ReLU zero-point. Simple sum prediction was +48% (33.6 PPL); actual is +83% — 35-point superadditivity. This means the interaction between modifying both activation regimes simultaneously is fundamental to the cascade failure, regardless of the specific form of negative-regime replacement. Progressive: accelerating damage k=4 onward; non-monotone at k=9-10 (same self-correction pattern as cycle 190).
 next=Item 204 (self-correction depth analysis) — P1 item.
