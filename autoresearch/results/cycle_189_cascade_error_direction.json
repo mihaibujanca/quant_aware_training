@@ -1,0 +1,94 @@
+{
+  "cycle": 189,
+  "item": 199,
+  "verdict": "CONFIRMED",
+  "verdict_note": "Mean cos=0.7160; 11/11 layers have cos>0.3 (directionally aligned)",
+  "baseline_ppl": 35.88644062501102,
+  "swapped_ppl": 44.842169712348806,
+  "mean_cos": 0.7160283164544539,
+  "n_high_cos": 11,
+  "n_low_cos": 0,
+  "layer_metrics": [
+    {
+      "layer": 0,
+      "error_frob": 685.189208984375,
+      "cos_prev_layer": null,
+      "rank_90": 371
+    },
+    {
+      "layer": 1,
+      "error_frob": 973.58935546875,
+      "cos_prev_layer": 0.3732765316963196,
+      "rank_90": 468
+    },
+    {
+      "layer": 2,
+      "error_frob": 1337.19140625,
+      "cos_prev_layer": 0.525103747844696,
+      "rank_90": 480
+    },
+    {
+      "layer": 3,
+      "error_frob": 1675.1712646484375,
+      "cos_prev_layer": 0.6687929034233093,
+      "rank_90": 503
+    },
+    {
+      "layer": 4,
+      "error_frob": 1900.761474609375,
+      "cos_prev_layer": 0.7425845265388489,
+      "rank_90": 530
+    },
+    {
+      "layer": 5,
+      "error_frob": 2228.046630859375,
+      "cos_prev_layer": 0.759911060333252,
+      "rank_90": 545
+    },
+    {
+      "layer": 6,
+      "error_frob": 2603.803466796875,
+      "cos_prev_layer": 0.7783025503158569,
+      "rank_90": 553
+    },
+    {
+      "layer": 7,
+      "error_frob": 3136.47021484375,
+      "cos_prev_layer": 0.8016087412834167,
+      "rank_90": 550
+    },
+    {
+      "layer": 8,
+      "error_frob": 3781.368896484375,
+      "cos_prev_layer": 0.8165094256401062,
+      "rank_90": 542
+    },
+    {
+      "layer": 9,
+      "error_frob": 4693.72705078125,
+      "cos_prev_layer": 0.8317309617996216,
+      "rank_90": 534
+    },
+    {
+      "layer": 10,
+      "error_frob": 6053.6103515625,
+      "cos_prev_layer": 0.8341903686523438,
+      "rank_90": 518
+    },
+    {
+      "layer": 11,
+      "error_frob": 11471.6748046875,
+      "cos_prev_layer": 0.7443006634712219,
+      "rank_90": 320
+    }
+  ],
+  "config": {
+    "n_seqs_calib": 200,
+    "n_seqs_analysis": 100,
+    "batch_size": 4,
+    "seq_len": 128,
+    "seed_calib": 1337,
+    "seed_analysis": 42,
+    "device": "mps"
+  }
+}

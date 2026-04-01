@@ -6,15 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-
-199. **Cascade error direction analysis — GELU vs ReLU+bias residual stream** [EMPIRICAL]
-   - Explains the 2.7x superadditivity in cycle 181. Collect residual stream vectors from both float and 181-progressive-swapped models at each layer. Compute per-layer error e_l = r_float_l - r_swapped_l, then measure: (a) cos(e_l, e_{l-1}) — directional alignment of successive errors, (b) ||e_l|| growth curve, (c) effective rank of error matrix E (across tokens). If errors are aligned (cos > 0.3), errors compound directionally (potentially correctable with low-rank intervention). If diffuse (cos < 0.1), each block introduces independent damage.
-   - Type: empirical
-   - Confirmed if: mean cos(e_l, e_{l-1}) > 0.3 in ≥8/12 layers (errors are directionally aligned, structured compounding).
-   - Refuted if: mean cos(e_l, e_{l-1}) < 0.1 (errors are diffuse, independent damage per block).
-   - Inconclusive if: 0.1-0.3 range.
-   - Depends on: none. ~20 min compute.
-
 200. **Positive-regime shape isolation — GELU-neg + ReLU-pos hybrid activation** [EMPIRICAL]
    - Isolate E_shape (the dominant error in cycles 181/182) from E_replacement. Create a hybrid activation: GELU(z) for z < 0 (preserves negative leak), ReLU(z) for z >= 0 (changes positive-regime shape). Apply to all 12 blocks simultaneously. This measures the cost of the positive-regime shape change alone, without any bias compensation needed (negative regime is preserved). Compare to full GELU→ReLU swap (cycle 102) and to C3 composition (item 198).
    - Type: empirical
@@ -54,6 +45,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 189
+
+199. **Cascade error direction analysis — GELU vs ReLU+bias residual stream** *(CONFIRMED — cycle 189)*
+   - Mean cos(e_l, e_{l-1})=0.716; all 11/11 inter-layer pairs exceed 0.3 threshold. Errors compound directionally: ||e||_F grows 685→11472 (17x) over 12 layers. Rank_90 stays high (320-553/768) — errors are diffuse in content but directionally coherent. Block 11 anomaly: ||e||_F jumps 6054→11472 (largest single-block amplification), rank_90 drops to 320 (consistent with cycle 184). Baseline PPL=35.9 (SEQ_LEN=128), full-swap PPL=44.8 (+25%).
+   - Artifacts: `experiments/cascade_error_direction_cycle189.py`, `autoresearch/results/cycle_189_cascade_error_direction.json`
 
 ### Cycle 188
 
