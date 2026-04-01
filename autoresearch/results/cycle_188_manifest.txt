@@ -1,7 +1,7 @@
 item_number=198
 outcome=inconclusive
 key_metric=all12_ppl=27.314_baseline=22.700_pct=+20.33%_threshold_confirmed=+15%_refuted=+40%
-commit=PENDING
+commit=4947389
 paths=autoresearch/results/cycle_188_c3_composition.json,experiments/c3_composition_cycle188.py
 learned=C3 (shape-preserving constant replacement) composes better than ReLU+bias (27.3 vs ~42 PPL for all-12). Progressive: +0.53% per block at first, accelerating to ~1.7 PPL/block after block 5. Blocks 0-6 stay under +15%; blocks 7-12 exceed it. Shape change accounts for ~14 PPL of the 42-PPL cascade failure (since C3 gives only 4.6 PPL). Constant replacement itself is not free but is the lesser problem.
 next=Item 199 (cascade error direction analysis) or item 200 (positive-regime shape isolation) to further isolate the shape-change vs constant-replacement contributions.
