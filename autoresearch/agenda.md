@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-202. **Exact dead-channel pruning baseline — GPT-2 FFN (Serra/Berzins required baseline)** [EMPIRICAL]
-   - The program (R2) mandates exact white-box pruning as the foundational baseline. Not yet done. For each FFN block: identify channels where |GELU(z)| < epsilon (say 0.01) for ALL calibration tokens — these are effectively dead. Remove them from weight matrices exactly (no retraining). Measure compression ratio and PPL. Compare to topk+lstsq best (PPL ~59). Expected: very few truly dead channels in GELU networks (GELU never exactly 0), but "near-dead" threshold may give 5-20% compression at near-zero PPL cost.
-   - Type: empirical
-   - Confirmed if: near-dead (threshold 0.01) pruning achieves >5% channel reduction at PPL <25 (+10%) for at least 8/12 blocks.
-   - Refuted if: fewer than 1% of channels are near-dead across all blocks.
-   - Inconclusive if: small number of dead channels but PPL impact unclear.
-   - Depends on: none. ~10 min compute.
-
 ### P1
 
 203. **Superadditive interaction isolation — C3+Hybrid combined modification** [EMPIRICAL]
@@ -68,6 +60,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 192
+
+202. **Exact dead-channel pruning baseline — GPT-2 FFN (Serra/Berzins)** *(REFUTED — cycle 192)*
+   - GPT-2 FFN has essentially zero dead channels. eps=0.001: 0 dead; eps=0.01: 0.003% (1 channel); eps=0.1: 0.03% (11 channels total); eps=1.0: 2.64% (974 channels) but PPL jumps 33.4→60.0 (+80% — not dead, just lightly used). Always-active: only 2 channels total. Exact dead-channel pruning not applicable to pretrained GELU networks.
+   - Artifacts: `experiments/dead_channel_pruning_cycle192.py`, `autoresearch/results/cycle_192_dead_channel_pruning.json`
 
 ### Cycle 191
 

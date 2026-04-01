@@ -1,0 +1,7 @@
+item_number=202
+outcome=refuted
+key_metric=eps0.01_dead=0.00%_eps1.0_dead=2.64%_ppl_60.0_baseline=33.440
+commit=TBD
+paths=autoresearch/results/cycle_192_dead_channel_pruning.json,experiments/dead_channel_pruning_cycle192.py
+learned=GPT-2 FFN has essentially zero dead channels. At eps=0.001: 0 dead. At eps=0.01: 0.003% (1 channel in block 0). At eps=0.1: 0.03% (11 channels total). At eps=1.0: 2.64% (974 channels) but PPL jumps from 33.4→60.0 (+80%) — those channels are not actually dead. Always-active: only 2 channels across the entire model. Serra/Berzins exact pruning is not applicable to pretrained GELU networks; the method requires hard ReLU zeros. GPT-2 appears to use nearly all 3072 hidden channels actively (no superfluous neurons at this calibration scale).
+next=Item 203 (superadditive interaction isolation) or item 204 (self-correction analysis).

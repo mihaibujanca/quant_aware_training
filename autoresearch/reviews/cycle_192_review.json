@@ -1,0 +1,8 @@
+{
+  "cycle": 192,
+  "item": 202,
+  "verdict": "APPROVED",
+  "flags": ["F1: PPL threshold for CONFIRMED should be < 38 (not < 25) — use SEQ_LEN=128 baseline ~35.9"],
+  "plan_changes": "Fix verdict criterion: CONFIRMED if n_dead_001/N_CHANNELS > 0.05 AND ppl < 38",
+  "reviewer": "automated"
+}
