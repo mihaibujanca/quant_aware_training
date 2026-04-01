@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-209. **K-sweep for near-rank-1-input blocks — does rank-1 residual enable much smaller K?**
-   - Cycle 198 found blocks 3-11 have input_rank_90=1 (near-rank-1 residual stream). If the FFN input lives on a 1D manifold, the topk channel selection need only capture a 1D→K map. Test K={8,16,32,64,128,256,512} for blocks [3,4,5,6,7,8,9,10] (all with input_rank=1). Compare PPL vs K curve to baseline K=512→30.089 PPL. Run on GPT-2 with wikitext-2 eval.
-   - Type: empirical
-   - Confirmed if: K≤64 gives PPL ≤31.5 (within 5% of K=512=30.089) for blocks 3-10 compressed
-   - Refuted if: PPL is still above 35 at K=128 (no significant rank-1 benefit)
-   - Inconclusive if: large per-run variance makes PPL comparison ambiguous
-   - Depends on: none
-
 210. **Residual stream rank trajectory under compression — does topk+lstsq preserve rank collapse?**
    - Cycle 198 found sharp rank collapse: 269→207→25→1 across blocks 0-3. If topk+lstsq compression of block 1 (input_rank=207) destroys this rank collapse, later blocks would receive wrong-rank input, amplifying cascade. Measure output rank of each compressed block vs float block. Hypothesis: block 1 compression degrades from rank 207→1 more slowly, disrupting the cascade.
    - Type: analysis
@@ -40,7 +32,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Confirmed if: rank-1 parameterized FFN matches topk+lstsq PPL within 1 PPL at 50% fewer parameters (K/2)
    - Refuted if: PPL is worse than topk+lstsq at equal parameter budget
    - Inconclusive if: PPL gap is ≤2 but parameter budget comparison is unclear
-   - Depends on: 209 (K-sweep tells us what K is the right budget baseline)
+   - Depends on: none (209 REFUTED — K=512 remains baseline; compare at K=512)
 
 
 
@@ -69,6 +61,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 199
+
+209. **K-sweep for near-rank-1-input blocks** *(REFUTED — cycle 199)*
+   - Degradation +57% at K=8 → +26% at K=512, no plateau. Rank-1 residual stream does NOT enable smaller K. LN normalization creates token-specific variation in the full 768D space regardless of residual rank. Block input rank ≠ MLP input diversity after LN.
+   - Artifacts: `experiments/k_sweep_rank1_cycle199.py`, `autoresearch/results/cycle_199_k_sweep.json`
 
 ### Cycle 198
 

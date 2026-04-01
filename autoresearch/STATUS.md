@@ -1,6 +1,11 @@
-# Research Status — 198 Cycles (001–198)
+# Research Status — 199 Cycles (001–199)
 
-## Latest: Cycle 198
+## Latest: Cycle 199
+
+209. **K-sweep for near-rank-1-input blocks** — REFUTED
+   - Degradation vs float: +57% at K=8, +47% at K=32, +26% at K=512. No plateau. Rank-1 residual stream (blocks 4,7,11 from cycle 198) does NOT enable smaller K. After LayerNorm, each token has distinct 768D variation regardless of residual rank. Block input rank ≠ MLP input diversity after LN.
+
+## Cycle 198
 
 205. **Block 0 criticality analysis — what makes block 0 unique** — CONFIRMED
    - Block 0 input_rank_90=269 vs median_others=1 (269×). Raw token embeddings span 269 dimensions; later blocks operate on near-rank-1 residual stream. Input rank collapse: b0=269→b1=207→b2=25→b3+=1. Block 0 is irreplaceable because it transforms high-diversity embeddings into the residual stream. Cannot be compressed by the same topk+lstsq approach as blocks 1-11 (which operate on rank-1 input).
@@ -108,6 +113,7 @@
 18. **LN recalibration is ineffective** (196): LN-2 recal worsens PPL by 0.248 (30.089→30.337). Per-channel cross-token statistics don't match what per-token LN normalization needs. Cascade error lives in normalized residual content, not distributional shift.
 19. **Sequential fitting provides negligible benefit** (197): fitting each block on compressed predecessors' I/O gains 0.135 PPL (noise-level). Distribution mismatch in fitting data is NOT the cascade bottleneck — cascade is from intrinsic information loss per compressed block.
 20. **Block 0 criticality is from high input diversity, not specialization** (198): block 0 input_rank_90=269 vs median=1 for blocks 2-11. Input rank collapse: 269→207→25→1 across blocks 0-3. Block 0 must transform high-dimensional raw embeddings (50257-type vocabulary) into the residual stream. Cannot be dropped or replaced by later-block compression approach.
+21. **Rank-1 residual stream does NOT reduce required K** (199): K-sweep for BLOCKS=[1,4,7,11] shows monotone improvement +57%→+26% above float (K=8→512) with no plateau. LayerNorm creates token-specific 768D variation after per-token centering/scaling; block input rank ≠ MLP input diversity. K=512 remains necessary baseline.
 
 ### Working Recipes (ranked)
 1. **topk+lstsq + corrections** -> PPL ~59 (49K correction params, total ~1.6M)
@@ -117,4 +123,6 @@
 Channel selection, joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, full-model ReLU swap, iterative bias recomputation, low-rank residual correction, compression ratio sweep (ratio-independent floor), fewer-block compression (cascade barrier persists at 2 blocks), Jacobian active subspace compression (R3 MASO hypothesis refuted — near-full-rank Jacobians), LN recalibration (per-channel stats irrelevant to per-token LN)
 
 ## Next
-- Agenda refresh required — all items exhausted after cycle 198
+- Item 210: Residual stream rank trajectory under compression (P0)
+- Item 211: Block 11 geometry deep-dive (P1)
+- Item 212: Rank-1 input FFN compression (P2)

@@ -1,0 +1,7 @@
+item_number=209
+outcome=refuted
+key_metric=k8_ppl=84.81_k512_ppl=68.14_float_ppl=53.89_no_plateau_verdict=refuted
+commit=pending
+paths=autoresearch/results/cycle_199_k_sweep.json,experiments/k_sweep_rank1_cycle199.py
+learned=Rank-1 residual stream (blocks 4,7,11) does NOT enable smaller K. PPL degrades monotonically +57% at K=8 to +26% at K=512 (vs float), with no plateau. LayerNorm creates full 768D variation per token; block input rank ≠ MLP input diversity after LN. K=512 remains necessary for the current compression approach.
+next=Item 210: Residual stream rank trajectory under compression (P0). Item 211: Block 11 geometry (P1). Item 212: rank-1 parameterized FFN (P2, dependency cleared).
