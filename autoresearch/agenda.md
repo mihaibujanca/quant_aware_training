@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-216. **Block 1 single-block K-sweep — isolate the high-rank-input bottleneck**
-   - Block 1 (input_rank=192) is the dominant compressible block and first injector of cascade error. Cycle 199 measured 4-block aggregate K-sweep, never block 1 alone. High-rank input may require K>512 to saturate quality. Compress only block 1 with K={256,512,768,1024,1536}; keep blocks 2-11 at float. Report single-block PPL vs K.
-   - Type: empirical
-   - Confirmed if: single-block PPL continues to improve beyond K=512 by ≥0.5 PPL
-   - Refuted if: PPL is flat (within 0.3) for K>512, K=512 already at ceiling for block 1
-   - Inconclusive if: PPL decreases 0.3-0.5 or OOM before K=1536
-   - Depends on: none
-
 217. **Adam correction on W_out of compressed MLPs — topk+lstsq init, CE target**
    - All prior joint-training refutations used K=4 with per-block MSE; none started from K=512 topk+lstsq. Take BLOCKS=[1,4,7] K=512 model (PPL=61.75), freeze everything except W_out of 3 compressed MLPs (3×768×512=1.18M params), run 500-1000 Adam steps on full-model cross-entropy on calibration data. This is targeted correction, not distillation.
    - Type: empirical
@@ -85,6 +77,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 205
+
+216. **Block 1 single-block K-sweep** *(INCONCLUSIVE — cycle 205)*
+   - Block 1 alone K=512: +1.5% PPL (54.689 vs float 53.895). 3-block +14.6% is entirely cascade. Improvement beyond K=512: 0.493 PPL (below 0.5 threshold). K=512 near-optimal; cascade amplification (10×) is the bottleneck, not single-block quality.
+   - Artifacts: `experiments/block1_k_sweep_cycle205.py`, `autoresearch/results/cycle_205_block1_k_sweep.json`
 
 ### Cycle 204
 

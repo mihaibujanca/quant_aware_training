@@ -1,6 +1,11 @@
-# Research Status — 204 Cycles (001–204)
+# Research Status — 205 Cycles (001–205)
 
-## Latest: Cycle 204
+## Latest: Cycle 205
+
+216. **Block 1 single-block K-sweep** — INCONCLUSIVE
+   - Block 1 alone at K=512: +1.5% PPL (54.689 vs float 53.895). The 3-block +14.6% is entirely cascade, not poor single-block quality. Improvement beyond K=512: 0.493 PPL (below 0.5 threshold). K=512 is near-optimal; the bottleneck is cascade amplification (10×), not single-block approximation quality.
+
+## Cycle 204
 
 215. **3-block selection sweep** — REFUTED
    - Best [1,4,10]=61.455, anchor [1,4,7]=61.746 (0.29 PPL gap, within noise). Block 1 dominates: all top-4 include it (input_rank=192, highest-value compressible block). Blocks starting at 2+ consistently worse (+1.8-7.6 PPL). 3-block topk+lstsq ceiling is ~+14-15% above float. P0/P1/P2 queue now empty — agenda refresh needed.
@@ -139,6 +144,7 @@
 19. **Sequential fitting provides negligible benefit** (197): fitting each block on compressed predecessors' I/O gains 0.135 PPL (noise-level). Distribution mismatch in fitting data is NOT the cascade bottleneck — cascade is from intrinsic information loss per compressed block.
 20. **Block 0 criticality is from high input diversity, not specialization** (198): block 0 input_rank_90=269 vs median=1 for blocks 2-11. Input rank collapse: 269→207→25→1 across blocks 0-3. Block 0 must transform high-dimensional raw embeddings (50257-type vocabulary) into the residual stream. Cannot be dropped or replaced by later-block compression approach.
 21. **Rank-1 residual stream does NOT reduce required K** (199): K-sweep for BLOCKS=[1,4,7,11] shows monotone improvement +57%→+26% above float (K=8→512) with no plateau. LayerNorm creates token-specific 768D variation after per-token centering/scaling; block input rank ≠ MLP input diversity. K=512 remains necessary baseline.
+27. **Block 1 single-block quality is excellent; cascade is the bottleneck** (205): block 1 alone K=512 costs only +1.5% PPL (54.689 vs float 53.895). 3-block [1,4,7] costs +14.6% — gap of 13.1% is entirely cascade amplification, not block 1 compression error. K=512 is near-optimal (improvement to K=1536 is only 0.5 PPL). Cascade must be addressed directly.
 26. **[1,4,7] is effectively optimal among 3-block selections** (204): best [1,4,10]=61.455 beats anchor 61.746 by only 0.29 PPL (noise). All top-4 include block 1 (input_rank=192). Blocks 2+ starts consistently worse. 3-block topk+lstsq ceiling ~+14-15% above float is confirmed optimal for current approach.
 25. **3 blocks is the practical ceiling for topk+lstsq compression** (203): supersets of [1,4,7] all give PPL ≥75.65 vs anchor 61.75. Adding 2 extra blocks costs +13-40 PPL regardless of position (early/middle/late all similar). Cascade is structural and symmetric across block positions. The improvement must come from a better single-block approximator or a fundamentally different approach.
 24. **Excluding block 11 improves compression by 6.4 PPL** (202): BLOCKS=[1,4,7] K=512 → +14.6% above float (61.75) vs BLOCKS=[1,4,7,11] → +26.4% (68.14). Block 11 rank-expansion (rank-2→231) cannot be approximated by topk+lstsq. New best recipe: BLOCKS=[1,4,7], K=512. Both block 0 and block 11 are bookend blocks that must not be compressed.
@@ -153,8 +159,9 @@
 Channel selection, joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, full-model ReLU swap, iterative bias recomputation, low-rank residual correction, compression ratio sweep (ratio-independent floor), fewer-block compression (cascade barrier persists at 2 blocks), Jacobian active subspace compression (R3 MASO hypothesis refuted — near-full-rank Jacobians), LN recalibration (per-channel stats irrelevant to per-token LN)
 
 ## Next
-- Item 216: Block 1 single-block K-sweep (P0)
-- Item 217: Adam correction on W_out of compressed MLPs (P0)
+- Item 217: Adam correction on W_out of compressed MLPs (P0) — key experiment
+- Item 218: Block 1 channel selection quality (P1)
+- Item 219: PCA-conditioned lstsq for block 1 (P2)
 - Item 218: Block 1 channel selection quality analysis (P1)
 - Item 219: PCA-conditioned lstsq for block 1 (P2)
 

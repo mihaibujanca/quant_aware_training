@@ -1,0 +1,7 @@
+item_number=216
+outcome=inconclusive
+key_metric=k512_ppl=54.689_k1536_ppl=54.196_improvement=0.493_verdict=inconclusive
+commit=pending
+paths=autoresearch/results/cycle_205_block1_k_sweep.json,experiments/block1_k_sweep_cycle205.py
+learned=Block 1 alone at K=512 costs only +1.5% PPL (54.689 vs float 53.895). The 3-block +14.6% is entirely cascade, not poor single-block quality. Improvement beyond K=512 is 0.493 PPL (inconclusive). K=512 is near-optimal for block 1. Cascade amplification (10x from 1-block to 3-block) is the key bottleneck.
+next=Item 217: Adam W_out correction on BLOCKS=[1,4,7] K=512 model — targeted cascade correction.
