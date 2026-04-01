@@ -1,0 +1,16 @@
+{
+  "cycle": 211,
+  "item": 221,
+  "verdict": "INCONCLUSIVE",
+  "hypothesis": "Adam W_out correction for 6 blocks achieves PPL \u226460.0",
+  "result_summary": "Best PPL 59.680 at step 1500 (criterion met), rapid overfitting to 72.250 at step 4000.",
+  "key_metrics": {
+    "float_ppl": 53.895,
+    "3b_init": 61.746,
+    "6b_init": 86.686,
+    "best_ppl": 59.68,
+    "best_step": 1500,
+    "final_ppl": 72.25,
+    "n_trainable": 2363904
+  }
+}

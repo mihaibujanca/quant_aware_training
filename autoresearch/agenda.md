@@ -6,13 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-221. **6-block Adam correction — BLOCKS=[1,2,4,5,7,8] K=512**
-   - Cycle 203 showed any superset of [1,4,7] causes cascade to 75+ PPL with topk+lstsq only. Cycle 206 dissolved [1,4,7] cascade with Adam correction. Test whether Adam can also dissolve the cascade for 6 compressed blocks. Use same protocol: topk+lstsq init, freeze fc, train W_out of 6 MLPs (6×768×512+6×768=2.36M params), 2000 Adam steps, LR=1e-4.
-   - Type: empirical
-   - Confirmed if: 6-block Adam PPL ≤60.0 (+11.3% vs float 53.895) — meaningful compression at 6 blocks
-   - Refuted if: 6-block Adam PPL >65.0 (remains catastrophic despite correction)
-   - Inconclusive if: PPL 60-65
-
 ### P1
 
 222. **10-block full compression with Adam — BLOCKS=[1..10] K=512**
@@ -66,6 +59,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 211
+
+221. **6-block Adam correction — BLOCKS=[1,2,4,5,7,8] K=512** *(INCONCLUSIVE — cycle 211)*
+   - **Outcome: INCONCLUSIVE** — Best PPL 59.680 at step 1500 (criterion ≤60.0 met), but rapid overfitting: step 2000=61.141, step 4000=72.250. More params → faster overfitting (6-block optimal 1500 steps vs 3-block 4000 steps). Achievable with strict early stopping but fragile.
 
 ### Cycle 210
 

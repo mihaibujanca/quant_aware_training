@@ -1,0 +1,7 @@
+item_number=221
+outcome=inconclusive
+key_metric=init_ppl=86.686_best_ppl=59.680_best_step=1500_final_ppl=72.250_verdict=inconclusive
+commit=pending
+paths=autoresearch/results/cycle_211_adam_6block.json,experiments/adam_6block_cycle211.py
+learned=6-block Adam achieves PPL 59.680 (+10.7% vs float) at step 1500 with early stopping. Overfitting rapid: step 2000=61.141, step 4000=72.250. More params→faster overfitting (6-block: optimal 1500 steps vs 3-block: 4000 steps). Early stopping is mandatory for 6-block compression.
+next=Item 222: 10-block full compression with Adam — test if pattern scales.

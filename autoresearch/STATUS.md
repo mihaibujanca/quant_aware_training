@@ -1,6 +1,11 @@
-# Research Status — 210 Cycles (001–210)
+# Research Status — 211 Cycles (001–211)
 
-## Latest: Cycle 210
+## Latest: Cycle 211
+
+221. **6-block Adam correction** — INCONCLUSIVE
+   - Best PPL=59.680 at step 1500 (criterion ≤60.0 met), then overfitting to 72.250 at step 4000. More trainable params → faster overfitting: 6-block (2.36M) saturates at ~1500 steps vs 3-block (1.18M) at ~4000 steps. Early stopping mandatory.
+
+## Cycle 210
 
 220. **Adam W_out step-count curve** — INCONCLUSIVE
    - Plateau between steps 2000-4000 (delta=0.25 PPL). Overfitting at step 8000 (+4.67 PPL). Best: step 4000 = PPL 46.556 (13.6% below float 53.895). Practical: early stop at ~4000 steps for N_CALIB=200.

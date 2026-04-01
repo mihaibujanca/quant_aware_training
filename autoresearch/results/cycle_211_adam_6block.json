@@ -1,0 +1,64 @@
+{
+  "cycle": 211,
+  "item": 221,
+  "verdict": "INCONCLUSIVE",
+  "float_ppl": 53.89489152418256,
+  "ppl_3b_init": 61.74645299007816,
+  "ppl_6b_init": 86.68605933718075,
+  "ppl_6b_adam": 72.25004203712598,
+  "pct_vs_float": 34.05731043118898,
+  "ppl_history": [
+    {
+      "step": 500,
+      "eval_ppl": 61.792289048657906
+    },
+    {
+      "step": 1000,
+      "eval_ppl": 60.30676904569939
+    },
+    {
+      "step": 1500,
+      "eval_ppl": 59.67974462024292
+    },
+    {
+      "step": 2000,
+      "eval_ppl": 61.141314358814874
+    },
+    {
+      "step": 2500,
+      "eval_ppl": 62.5186545726583
+    },
+    {
+      "step": 3000,
+      "eval_ppl": 65.23370738598989
+    },
+    {
+      "step": 3500,
+      "eval_ppl": 67.9859410998049
+    },
+    {
+      "step": 4000,
+      "eval_ppl": 72.25004203712598
+    }
+  ],
+  "config": {
+    "BLOCKS": [
+      1,
+      2,
+      4,
+      5,
+      7,
+      8
+    ],
+    "K": 512,
+    "N_STEPS": 4000,
+    "LR": 0.0001,
+    "N_CALIB": 200,
+    "N_EVAL": 100,
+    "SEQ_LEN": 128,
+    "SEED": 42
+  },
+  "best_ppl": 59.68,
+  "best_step": 1500,
+  "verdict_note": "Best PPL 59.680 at step 1500 (\u226460.0 criterion met), but overfitting begins at step 2000 (61.141). Without early stopping, final PPL=72.250. 6-block is achievable with strict early stopping but fragile. More trainable params \u2192 faster overfitting (1500 vs 4000 steps for 3-block)."
+}
