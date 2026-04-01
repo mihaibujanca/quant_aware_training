@@ -1,6 +1,11 @@
-# Research Status — 190 Cycles (001–190)
+# Research Status — 191 Cycles (001–191)
 
-## Latest: Cycle 190
+## Latest: Cycle 191
+
+201. **Mean residual error correction — directional coherence-based bias** — REFUTED
+   - Corrected PPL=56.781 vs uncorrected=44.842 (WORSENED by 11.938). Mean error vectors (fraction_of_frob 0.13-0.35) are non-trivial but applying as constant residual shifts hurts downstream layers. Cascade barrier is fundamental: any constant modification to the residual stream compounds through subsequent layers.
+
+## Cycle 190
 
 200. **Positive-regime shape isolation — GELU-neg + ReLU-pos hybrid activation** — INCONCLUSIVE
    - Hybrid all-12 PPL=28.980 (+27.67%, baseline 22.700) — just above the refuted threshold (28). Positive-regime shape change alone (+27.67%) costs nearly as much as C3 negative-regime replacement (+20.33%). Full ReLU+bias swap (+88%) implies ~40% superadditive interaction when both regimes are modified simultaneously.
@@ -60,6 +65,7 @@
 10. **C3 composes better than ReLU, still breaks after block 7** (188): +20.33% all-12 vs +88% for ReLU+bias. Shape change is the larger culprit (~14.3 PPL); constant replacement alone causes ~4.6 PPL
 11. **Cascade errors are directionally coherent despite high rank** (189): mean cos(e_l,e_{l-1})=0.716, 11/11 layers. Errors are diffuse in content (rank_90=300-550) but aligned in direction. 17x Frobenius amplification over 12 layers. Not low-rank correctable (cycle 184), but directionally structured.
 12. **Both activation error types cost equally; interaction is superadditive** (190): positive-regime shape change alone +27.67%, negative-regime constant replacement alone (C3) +20.33%. Full modification (ReLU+bias) +88% — ~40% extra from superadditive interaction between both types simultaneously. Neither type dominates.
+13. **Residual stream corrections are counterproductive without downstream re-calibration** (191): first-moment correction worsens PPL by 12 PPL. Cascade barrier fundamental — any modification to residual stream at depth l compounds through subsequent layers.
 
 ### Working Recipes (ranked)
 1. **topk+lstsq + corrections** -> PPL ~59 (49K correction params, total ~1.6M)
@@ -69,4 +75,4 @@
 Channel selection, joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, full-model ReLU swap, iterative bias recomputation, low-rank residual correction, compression ratio sweep (ratio-independent floor), fewer-block compression (cascade barrier persists at 2 blocks)
 
 ## Next
-- P0 queue empty — agenda refresh required
+- P0: 202 (exact dead-channel pruning baseline)
