@@ -1,4 +1,4 @@
-# Research Status — 214 Cycles (001–214)
+# Research Status — 214 Cycles (001–214) [agenda refreshed after cycle 214]
 
 ## Latest: Cycle 214
 

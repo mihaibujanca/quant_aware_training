@@ -6,9 +6,45 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+225. **Iterative block-by-block Adam correction — sequential refinement**
+   - Cycles 206-212 corrected all compressed blocks simultaneously. Alternative: correct blocks sequentially (block 1 first, then fix block 4 given block 1 corrected, then block 7). Each block's W_out is corrected in isolation using the already-corrected downstream context. May reduce overfitting by keeping each optimization smaller. BLOCKS=[1,4,7] K=512, 2000 Adam steps per block.
+   - Type: empirical
+   - Confirmed if: sequential correction PPL ≤46.0 (at or below joint Adam best 46.556) without overfitting
+   - Refuted if: sequential correction PPL ≥60 (worse than joint Adam)
+   - Inconclusive if: PPL 46-60
+
+226. **Adam correction for 6 blocks with proper early stopping — confirm INCONCLUSIVE**
+   - Cycle 211 showed 6-block best at step 1500 (PPL=59.68) but used fixed 4000 steps. Rerun with eval every 100 steps and early stopping to reliably find the optimal step count. This settles the INCONCLUSIVE from cycle 211.
+   - Type: empirical
+   - Confirmed if: 6-block PPL ≤58.0 with proper early stopping
+   - Refuted if: 6-block PPL >62.0 even with early stopping
+   - Inconclusive if: PPL 58-62 (same as cycle 211)
+   - Depends on: none
+
 ### P1
 
+227. **Frobenius-weighted channel selection — select channels that minimize output Frobenius error**
+   - Current topk scores = act_std × W_proj_norm (cycles 207 showed this is near-optimal for single-block PPL). But for the CASCADE context, the damage accumulates block-by-block. Select channels that minimize the full-model Frobenius error of the block output (||float_out - compressed_out||_F), using cross-validation on a held-out calibration split. May give better cascade resistance.
+   - Type: empirical
+   - Confirmed if: Frobenius-optimal selection improves 3-block init PPL by ≥1 PPL (≤60.75)
+   - Refuted if: improvement <0.3 PPL vs standard init
+   - Inconclusive if: 0.3-1 PPL improvement
+
+228. **Lower K with Adam correction — compression efficiency curve**
+   - All Adam experiments used K=512 (50% of full FFN). Test K=256 (25%) and K=128 (12.5%) with Adam correction for BLOCKS=[1,4,7]. If Adam can correct lower K, we get higher compression at similar PPL.
+   - Type: empirical
+   - Confirmed if: K=256 + Adam achieves PPL ≤52.0 (+3.5% vs float)
+   - Refuted if: K=256 + Adam PPL >58.0
+   - Inconclusive if: PPL 52-58
+
 ### P2
+
+229. **Distillation baseline for 3-block compression — matched budget**
+   - Establish a distillation upper bound for comparison: KD from float GPT-2 to compressed GPT-2 with BLOCKS=[1,4,7] K=512 (same architecture as cycle 206). Train W_out + W_fc for 10k steps with KD loss. This is the "trained compressor" ceiling for this architecture.
+   - Type: empirical
+   - Confirmed if: KD achieves PPL ≤44.0 (meaningfully better than Adam W_out correction 46.556)
+   - Refuted if: KD PPL ≥47.0 (Adam W_out correction is already at the ceiling)
+   - Inconclusive if: PPL 44-47
 
 
 
