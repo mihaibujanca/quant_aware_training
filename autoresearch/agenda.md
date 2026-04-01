@@ -4,15 +4,27 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## NEXT EXPERIMENTS
 
-### P1
+### P0
 
-189. **PruneNet spectral channel selection — GPT-2 FFN k=4**
+191. **Full-model ReLU + per-block bias vector swap — GPT-2** [INTERPRETABILITY]
+   - Cycle 173 (item 184) confirmed: replacing GELU with ReLU in a single block, then adding a per-block constant vector μ_neg_l ∈ R^768 to that block's output, recovers within 2% PPL. That was tested one block at a time (all other blocks kept GELU). This tests ALL 12 simultaneously.
+   - Setup: for each FFN block l ∈ {0..11}, precompute μ_neg_l = E_x[W_down @ (GELU(z) ⊙ 𝟙[z≤0])] on 2048 OWT tokens using the float GELU model. This is one 768-dim vector per block (the mean output contribution of the negative regime). Then replace all 12 blocks: activation becomes ReLU instead of GELU, and add μ_neg_l as a constant to block l's output. The modified block computes: y_l(x) = W_down @ ReLU(W_up @ x + b_up) + b_down + μ_neg_l. Measure full-model PPL.
+   - Total added params: 12 × 768 = 9,216 (trivial).
    - Type: empirical
-   - Replace activation-magnitude topk with a spectral selection criterion: for each candidate channel subset, compute the KS-distance between the singular value distribution of the pruned W_down and the full W_down. Select the k groups that minimize spectral distortion. Compare stacked PPL to activation-norm topk at k=4, 4 blocks, with and without lstsq+polish. This is calibration-free (weight-only). Baseline: topk stacked PPL ~87.7 (no lstsq), ~70.7 (with lstsq). If spectral beats topk by ≥2 PPL, CONFIRMED.
-   - Confirmed: spectral selection stacked PPL ≤ topk - 2 PPL (either raw or with lstsq)
-   - Refuted: spectral selection ≥ topk + 2 PPL
-   - Inconclusive: within ±2 PPL
-   - Depends on: none (weight-only criterion, no calibration data needed)
+   - Confirmed if: full-model ReLU + per-block bias PPL within +10% of float.
+   - Refuted if: PPL > +50% (per-block biases don't compose).
+   - Inconclusive if: +10-50%.
+   - Depends on: none. ~5 min compute.
+
+192. **Iterative bias recomputation for ReLU swap — GPT-2** [INTERPRETABILITY]
+   - Only run if item 191 is REFUTED or INCONCLUSIVE (precomputed biases don't compose well). The precomputed μ_neg_l from item 191 were computed on the float GELU model's activations. When upstream blocks are swapped to ReLU, the residual stream changes, so downstream blocks receive different inputs than what μ_neg_l was computed on. Fix: swap blocks sequentially and recompute each bias on the partially-swapped model. Swap block 0 to ReLU, recompute μ_neg_1 on the now-ReLU-block-0 model, swap block 1 to ReLU+μ_neg_1, recompute μ_neg_2, etc. Measure full-model PPL after all 12 swaps. Compare to item 191's precomputed result.
+   - Type: empirical
+   - Confirmed if: iterative PPL is ≥10 PPL points better than precomputed (input shift is the problem, iterative fixes it).
+   - Refuted if: iterative PPL within 3 PPL points of precomputed (input shift isn't the issue).
+   - Inconclusive if: 3-10 PPL points improvement.
+   - Depends on: 191 (only run if 191 is not CONFIRMED). ~10 min compute.
+
+### P1
 
 190. **FLAP-style bias compensation for topk pruning — GPT-2 FFN k=4**
    - Type: empirical
@@ -49,6 +61,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 179
+
+189. **PruneNet spectral channel selection — GPT-2 FFN k=4** *(REFUTED — cycle 179)*
+   - Spectral greedy selection (minimizing KS-distance of W_down singular value distribution) selects very different channels from activation-magnitude topk (overlap: 7-38% depending on block) but performs consistently worse. Mean spectral PPL 53.8 vs topk 50.1 (+3.78 PPL, above +2 threshold). Pre-polish: spectral 76.2 vs topk 74.7 (+1.5). The weight-only spectral criterion misses data-dependent activation importance — channels with large W_down column norms don't necessarily carry high activation variance.
+   - Artifacts: `experiments/spectral_channel_selection_cycle179.py`, `autoresearch/results/cycle_179_spectral_selection.json`, `autoresearch/results/cycle_179_spectral_selection.png`
 
 ### Cycle 178
 
