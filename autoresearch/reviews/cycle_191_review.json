@@ -1,0 +1,8 @@
+{
+  "cycle": 191,
+  "item": 201,
+  "verdict": "APPROVED",
+  "flags": ["Mean error may be small if error distribution is symmetric — experiment measures this via fraction_of_frobenius"],
+  "plan_changes": "none",
+  "reviewer": "automated"
+}

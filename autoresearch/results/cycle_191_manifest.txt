@@ -1,0 +1,7 @@
+item_number=201
+outcome=refuted
+key_metric=corrected_ppl=56.781_uncorrected=44.842_baseline=35.886_delta=-11.938
+commit=TBD
+paths=autoresearch/results/cycle_191_mean_error_correction.json,experiments/mean_error_correction_cycle191.py
+learned=Mean residual error correction WORSENS PPL (44.842→56.781, -11.938). The first-moment correction computed from calibration data acts as a constant residual stream shift. This shifts the inputs to subsequent layers outside their operating distribution, causing cascading damage. Layer 0 correction=0.0 (bias vectors already compensate first-order). Layers 1-11: mean_corr_norm grows 1.09→35.9, fraction_of_frob 0.13→0.35 — so the mean accounts for a non-trivial fraction of error, but applying it as a constant bias hurts rather than helps. Confirms: local corrections to the residual stream without re-calibrating downstream layers are counterproductive.
+next=Item 202 (exact dead-channel pruning baseline).

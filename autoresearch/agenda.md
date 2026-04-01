@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-201. **Mean residual error correction — directional coherence-based bias (9216 params)** [EMPIRICAL]
-   - Cycle 189: cascade errors are directionally coherent (mean cos=0.716). Even though high-rank (not low-rank correctable), the MEAN error vector per layer should be nonzero and correctable. Build full-swap ReLU+bias model (all 12 blocks). Calibrate: for each layer l, compute mean_error[l] = mean(r_float[l] - r_swapped[l]) over tokens (shape: 768). Apply as bias to the block output (residual stream). Cost: 12×768=9216 params. Test: does first-moment correction reduce PPL below the 44.8 achieved without correction?
-   - Type: empirical
-   - Confirmed if: corrected full-swap PPL < 38 (saves >6 PPL from 44.8 baseline, >15% improvement).
-   - Refuted if: corrected PPL within 1 PPL of uncorrected (44.8). First moment is not useful.
-   - Inconclusive if: 1-6 PPL improvement.
-   - Depends on: 199 (done). ~15 min compute.
-
 202. **Exact dead-channel pruning baseline — GPT-2 FFN (Serra/Berzins required baseline)** [EMPIRICAL]
    - The program (R2) mandates exact white-box pruning as the foundational baseline. Not yet done. For each FFN block: identify channels where |GELU(z)| < epsilon (say 0.01) for ALL calibration tokens — these are effectively dead. Remove them from weight matrices exactly (no retraining). Measure compression ratio and PPL. Compare to topk+lstsq best (PPL ~59). Expected: very few truly dead channels in GELU networks (GELU never exactly 0), but "near-dead" threshold may give 5-20% compression at near-zero PPL cost.
    - Type: empirical
@@ -76,6 +68,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 191
+
+201. **Mean residual error correction — directional coherence-based bias (9216 params)** *(REFUTED — cycle 191)*
+   - Corrected PPL=56.781 vs uncorrected=44.842 (WORSENED by 11.938 PPL). Mean error vectors computed from calibration data, applied as constant residual stream shifts, hurt subsequent layers by shifting their inputs outside operating range. Layer 0 correction≈0 (bias already compensates), layers 1-11 fraction_of_frob 0.13-0.35 (non-trivial mean) but applying it as constant bias is counterproductive. Confirms: residual stream corrections require downstream re-calibration.
+   - Artifacts: `experiments/mean_error_correction_cycle191.py`, `autoresearch/results/cycle_191_mean_error_correction.json`
 
 ### Cycle 190
 
