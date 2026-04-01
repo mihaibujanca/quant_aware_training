@@ -1,0 +1,18 @@
+{
+  "cycle": 202,
+  "item": 213,
+  "verdict": "CONFIRMED",
+  "float_ppl": 53.89489152418256,
+  "ppl_blocks_147": 61.746429582895075,
+  "ppl_blocks_14711": 68.13782925728043,
+  "improvement_from_exclusion": 6.3913996743853545,
+  "pct_above_float_147": 14.56824169539248,
+  "pct_above_float_14711": 26.427250023700456,
+  "config": {
+    "K": 512,
+    "N_CALIB": 200,
+    "N_EVAL": 100,
+    "SEQ_LEN": 128,
+    "SEED": 42
+  }
+}

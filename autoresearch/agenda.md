@@ -6,13 +6,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-213. **BLOCKS=[1,4,7] compression — exclude block 11 (output decompressor)**
-   - Cycle 201 confirmed block 11 is an output decompressor: input_rank=2→output_rank=231 (154× expansion, mirror of block 0). Current recipe uses BLOCKS=[1,4,7,11]; block 11 is the anomalous bookend. Test: compress only BLOCKS=[1,4,7] (K=512) and compare PPL to current [1,4,7,11] baseline (~30 PPL corrected, ~68 PPL on held-out). Hypothesis: removing block 11 from the compression set will improve PPL by not disrupting the rank-expansion step.
+214. **Block subset search — more compressible blocks from {2,3,5,6,8,9,10}**
+   - BLOCKS=[1,4,7] at K=512 gives +14.6% above float (cycle 202). Can we reduce this further by also compressing some of blocks {2,3,5,6,8,9,10} (all rank-1 input, individually near-redundant per cycle 187)? Test: BLOCKS=[1,2,3,4,5,6,7] (7 blocks) and BLOCKS=[1,2,4,5,7,8] (6 blocks, evenly spaced) with K=512. Compare to BLOCKS=[1,4,7] baseline (61.75 PPL) and to individual-block cascade behavior.
    - Type: empirical
-   - Confirmed if: BLOCKS=[1,4,7] K=512 PPL is lower than BLOCKS=[1,4,7,11] K=512 PPL on the same eval data
-   - Refuted if: BLOCKS=[1,4,7] PPL is higher (fewer compressed blocks → worse, block 11 compression is not the bottleneck)
-   - Inconclusive if: difference is within ±1 PPL (noise-level)
-   - Depends on: 211 (confirmed — block 11 is bookend)
+   - Confirmed if: any tested superset of [1,4,7] achieves PPL ≤63 (within 2 PPL of [1,4,7])
+   - Refuted if: all tested supersets give PPL >66 (significantly worse than [1,4,7])
+   - Inconclusive if: results are mixed (some better, some worse)
+   - Depends on: 213 (confirmed — [1,4,7] is new anchor)
 
 ### P1
 
@@ -53,6 +53,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 202
+
+213. **BLOCKS=[1,4,7] compression (exclude block 11)** *(CONFIRMED — cycle 202)*
+   - Excluding block 11 improves PPL by 6.4 (68.14→61.75; +14.6% vs +26.4% above float). Block 11 rank-expansion (rank-2→231) cannot be approximated by K=512 topk+lstsq from rank-2 input. New best recipe: BLOCKS=[1,4,7], K=512 → +14.6% above float.
+   - Artifacts: `experiments/block11_exclusion_cycle202.py`, `autoresearch/results/cycle_202_block11_exclusion.json`
 
 ### Cycle 201
 

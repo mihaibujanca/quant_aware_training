@@ -1,7 +1,7 @@
 item_number=211
 outcome=confirmed
 key_metric=block11_output_rank=231_delta_rank=1_top20_token_delta=848.7_verdict=confirmed
-commit=pending
+commit=eaf7800
 paths=autoresearch/results/cycle_201_block11_geometry.json,experiments/block11_geometry_cycle201.py
 learned=Block 11 is an output decompressor: in_rank=2→out_rank=231 (154x expansion). Mirror of block 0 (in_rank=244→collapse). Delta_rank=1 (rank-1 perturbation, 97% energy in top-3 SVs). Top-20 token delta 848.7 vs overall 335.7 (2.5x). Block 11 expands rank-1/2 residual for LM head. Borderline droppability (cycle 187 PPL=41.4) is because LM head receives rank-2 instead of rank-231 residual. Self-correction (cycles 194/200) is block 11 actively absorbing upstream errors during rank expansion.
 next=Test BLOCKS=[1,4,7] excluding block 11 from compression set. Item 212: Rank-1 FFN compression (P2).
