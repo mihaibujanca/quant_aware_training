@@ -1,0 +1,7 @@
+item_number=224
+outcome=refuted
+key_metric=init_ppl=61.746_analytical_ppl=61.767_improvement=-0.021_gap_vs_adam=+13.656_verdict=refuted
+commit=pending
+paths=autoresearch/results/cycle_214_analytical_correction.json,experiments/analytical_correction_cycle214.py
+learned=Analytical lstsq correction is completely ineffective (PPL 61.767 vs init 61.746). Distribution mismatch: compressed-context activations ≠ float-context activations. Cascade correction is non-local; CE gradient (Adam) required to capture downstream effects. Analytical correction cannot replace Adam.
+next=Agenda P0/P1/P2 exhausted again. Refresh needed: new directions beyond W_out-only Adam correction.

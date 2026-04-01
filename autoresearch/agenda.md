@@ -10,13 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-224. **Analytical W_out correction — closed-form update from calibration residuals**
-   - Cycle 206 used Adam for 1000 gradient steps. Test whether a single lstsq pass on the FULL model's residuals achieves similar correction. Protocol: (1) run compressed model on calib to collect per-block input activations and target MLP outputs (from the original float model); (2) re-solve lstsq for W_out using target = float_mlp_output - bias. This is an analytic correction pass without gradient descent.
-   - Type: empirical
-   - Confirmed if: analytic correction achieves PPL within 2 PPL of Adam correction (PPL ≤50.1) in one pass
-   - Refuted if: analytic correction PPL >55 (comparable to topk+lstsq init)
-   - Inconclusive if: PPL 50-55
-
 
 
 
@@ -44,6 +37,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 214
+
+224. **Analytical W_out correction** *(REFUTED — cycle 214)*
+   - **Outcome: REFUTED** — Analytical PPL=61.767 ≈ init 61.746 (no improvement). Distribution mismatch: compressed-context activations ≠ float-context activations. Cascade correction is non-local and requires CE gradient descent. Analytical lstsq cannot replace Adam.
 
 ### Cycle 213
 

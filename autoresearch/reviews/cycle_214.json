@@ -1,0 +1,16 @@
+{
+  "cycle": 214,
+  "item": 224,
+  "verdict": "REFUTED",
+  "hypothesis": "Analytical lstsq (one pass) achieves PPL within 2 PPL of Adam correction",
+  "result_summary": "Analytical PPL 61.767 \u2248 init 61.746 (no improvement). Adam: 48.111 (13.7 PPL better).",
+  "key_finding": "Distribution mismatch: compressed-context activations \u2260 float-context activations. Cascade correction is non-local and requires CE gradient.",
+  "key_metrics": {
+    "float_ppl": 53.895,
+    "init_ppl": 61.746,
+    "analytical_ppl": 61.767,
+    "improvement": -0.021,
+    "adam_1000_ref": 48.111,
+    "gap_vs_adam": 13.656
+  }
+}

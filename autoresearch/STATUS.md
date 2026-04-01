@@ -1,6 +1,11 @@
-# Research Status — 213 Cycles (001–213)
+# Research Status — 214 Cycles (001–214)
 
-## Latest: Cycle 213
+## Latest: Cycle 214
+
+224. **Analytical W_out correction** — REFUTED
+   - Analytical PPL=61.767 ≈ init 61.746 (no improvement). Distribution mismatch: compressed-context activations ≠ float-context activations. Cascade correction requires CE gradient (Adam); analytical lstsq cannot replace it.
+
+## Cycle 213
 
 223. **Adam W_out+W_fc correction** — INCONCLUSIVE
    - W_out+W_fc best=46.424 vs W_out-only best=46.556 (delta=0.13 PPL, negligible). Converges faster (1500 vs 4000 steps) to same quality. W_fc training adds no meaningful advantage; W_out-only Adam is preferred.
