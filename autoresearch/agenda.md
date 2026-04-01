@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-200. **Positive-regime shape isolation — GELU-neg + ReLU-pos hybrid activation** [EMPIRICAL]
-   - Isolate E_shape (the dominant error in cycles 181/182) from E_replacement. Create a hybrid activation: GELU(z) for z < 0 (preserves negative leak), ReLU(z) for z >= 0 (changes positive-regime shape). Apply to all 12 blocks simultaneously. This measures the cost of the positive-regime shape change alone, without any bias compensation needed (negative regime is preserved). Compare to full GELU→ReLU swap (cycle 102) and to C3 composition (item 198).
-   - Type: empirical
-   - Confirmed if: hybrid all-12 PPL > 35 (+54%). Proves positive-regime shape change IS the dominant composition error.
-   - Refuted if: hybrid all-12 PPL < 28 (+23%). Means the negative-regime loss matters more than the shape change.
-   - Inconclusive if: 28-35 PPL range.
-   - Depends on: none. ~10 min compute.
-
 ### P1
 
 ### P2
@@ -45,6 +37,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 190
+
+200. **Positive-regime shape isolation — GELU-neg + ReLU-pos hybrid activation** *(INCONCLUSIVE — cycle 190)*
+   - Hybrid (GELU for z<0, ReLU for z>=0) all-12 PPL=28.980 (+27.67%) — in the inconclusive 28-35 range. Positive-regime shape change alone costs +27.67%, comparable to negative-regime constant replacement (C3 +20.33%). Full ReLU+bias swap +88% implies superadditive interaction between both modifications. Non-monotone progressive: peaks at k=7 (28.484), decreases through k=10 (27.851), rises at k=11 (28.980) — some deep-layer self-correction.
+   - Artifacts: `experiments/gelu_neg_relu_pos_cycle190.py`, `autoresearch/results/cycle_190_gelu_neg_relu_pos.json`
 
 ### Cycle 189
 

@@ -1,0 +1,92 @@
+{
+  "cycle": 190,
+  "item": 200,
+  "verdict": "INCONCLUSIVE",
+  "verdict_note": "Hybrid all-12 PPL=28.980 (+27.67%) in 28-35 range.",
+  "baseline_ppl": 22.69985207563429,
+  "hybrid_all12_ppl": 28.980167846145164,
+  "hybrid_pct_increase": 27.666769587684136,
+  "reference_c3_all12_ppl": 27.314,
+  "reference_relu_bias_all12_ppl": 42.6,
+  "progressive": [
+    {
+      "k": 0,
+      "blocks_swapped": 1,
+      "ppl": 23.28524294483276,
+      "pct_increase": 2.5788312066879966
+    },
+    {
+      "k": 1,
+      "blocks_swapped": 2,
+      "ppl": 23.358794888747312,
+      "pct_increase": 2.90285069223126
+    },
+    {
+      "k": 2,
+      "blocks_swapped": 3,
+      "ppl": 23.652010773726026,
+      "pct_increase": 4.194559043465179
+    },
+    {
+      "k": 3,
+      "blocks_swapped": 4,
+      "ppl": 24.262609634614126,
+      "pct_increase": 6.884439395344248
+    },
+    {
+      "k": 4,
+      "blocks_swapped": 5,
+      "ppl": 25.67667348970609,
+      "pct_increase": 13.113836178990256
+    },
+    {
+      "k": 5,
+      "blocks_swapped": 6,
+      "ppl": 26.96693568300227,
+      "pct_increase": 18.797847638611746
+    },
+    {
+      "k": 6,
+      "blocks_swapped": 7,
+      "ppl": 28.045297009588655,
+      "pct_increase": 23.54836902083645
+    },
+    {
+      "k": 7,
+      "blocks_swapped": 8,
+      "ppl": 28.483823331905256,
+      "pct_increase": 25.48021562871505
+    },
+    {
+      "k": 8,
+      "blocks_swapped": 9,
+      "ppl": 28.45686833696829,
+      "pct_increase": 25.361470383824674
+    },
+    {
+      "k": 9,
+      "blocks_swapped": 10,
+      "ppl": 28.127180684699653,
+      "pct_increase": 23.909092407218736
+    },
+    {
+      "k": 10,
+      "blocks_swapped": 11,
+      "ppl": 27.850813020263665,
+      "pct_increase": 22.691605775521094
+    },
+    {
+      "k": 11,
+      "blocks_swapped": 12,
+      "ppl": 28.980167846145164,
+      "pct_increase": 27.666769587684136
+    }
+  ],
+  "config": {
+    "n_seqs": 200,
+    "batch_size": 4,
+    "seq_len": 1024,
+    "seed": 42,
+    "device": "mps"
+  }
+}
