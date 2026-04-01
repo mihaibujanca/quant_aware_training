@@ -6,13 +6,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-192. **Iterative bias recomputation for ReLU swap — GPT-2** [INTERPRETABILITY]
-   - Only run if item 191 is REFUTED or INCONCLUSIVE (precomputed biases don't compose well). The precomputed μ_neg_l from item 191 were computed on the float GELU model's activations. When upstream blocks are swapped to ReLU, the residual stream changes, so downstream blocks receive different inputs than what μ_neg_l was computed on. Fix: swap blocks sequentially and recompute each bias on the partially-swapped model. Swap block 0 to ReLU, recompute μ_neg_1 on the now-ReLU-block-0 model, swap block 1 to ReLU+μ_neg_1, recompute μ_neg_2, etc. Measure full-model PPL after all 12 swaps. Compare to item 191's precomputed result.
-   - Type: empirical
-   - Confirmed if: iterative PPL is ≥10 PPL points better than precomputed (input shift is the problem, iterative fixes it).
-   - Refuted if: iterative PPL within 3 PPL points of precomputed (input shift isn't the issue).
-   - Inconclusive if: 3-10 PPL points improvement.
-   - Depends on: 191 (only run if 191 is not CONFIRMED). ~10 min compute.
+~~192. **Iterative bias recomputation for ReLU swap — GPT-2**~~ INCONCLUSIVE — cycle 182
 
 ### P1
 
@@ -77,6 +71,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 182
+
+192. **Iterative bias recomputation for ReLU swap — GPT-2** *(INCONCLUSIVE — cycle 182)*
+   - Iterative PPL 37.0 vs precomputed 42.6 — 5.6 PPL improvement (+63% vs baseline). Distribution shift is real (iterative helps) but not the dominant error source. Constant-bias correction insufficient even with correct input distributions. Later blocks still degrade: blocks 0-6 at +44%, all 12 at +63%. Block 11 μ_neg norm grows to 134.9 (vs 120.3 precomputed) — iterative sees larger negative-regime signals as upstream ReLU changes propagate.
+   - Artifacts: `experiments/iterative_relu_bias_swap_cycle182.py`, `autoresearch/results/cycle_182_iterative_relu_swap.json`, `autoresearch/results/cycle_182_iterative_relu_swap.png`
 
 ### Cycle 181
 

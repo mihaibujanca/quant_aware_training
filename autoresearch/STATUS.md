@@ -1,11 +1,11 @@
-# Research Status — 181 Cycles (001–181)
+# Research Status — 182 Cycles (001–182)
 
-## Latest: Cycle 181
+## Latest: Cycle 182
 
-191. **Full-model ReLU + per-block bias vector swap — GPT-2** — REFUTED
-   - PPL 42.6 (+87.9% vs float 22.7). Single-block within +6% but 12-block cascade severe.
-   - Distribution shift: biases precomputed on float model stale for downstream blocks.
-   - Item 192 (iterative recomputation) now eligible as follow-up.
+192. **Iterative bias recomputation for ReLU swap — GPT-2** — INCONCLUSIVE
+   - Iterative PPL 37.0 vs precomputed 42.6 — 5.6 PPL improvement (within 3-10 range).
+   - Distribution shift is real but not the dominant error: constant-bias correction insufficient even with correct inputs.
+   - Full-model still +63% vs float baseline (22.7). Constant bias can't capture token-dependent GELU→ReLU error.
 
 ## Session 125-181 (57 cycles this session)
 
@@ -22,9 +22,8 @@
 2. **topk+lstsq+polish** -> PPL ~70.7 (1.58M params)
 
 ### Exhausted Directions
-Channel selection (topk optimal), joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, per-block concentration, full-model precomputed bias swap
+Channel selection (topk optimal), joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, per-block concentration, full-model precomputed bias swap, iterative bias recomputation (inconclusive — 5.6 PPL gain, not enough)
 
 ## Next
-- P0: 192 (iterative bias recomputation — eligible after 181 refuted)
 - P1: 193 (distillation control baseline), 194 (compression ratio sweep)
 - P2: 195 (fewer-block compression), 196 (layer-drop baseline)

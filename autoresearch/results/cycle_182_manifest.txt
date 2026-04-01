@@ -1,0 +1,13 @@
+cycle: 182
+item: 192
+verdict: INCONCLUSIVE
+description: Iterative bias recomputation for ReLU swap — GPT-2
+ppl_base: 22.700
+ppl_iterative: 37.025
+ppl_precomputed: 42.643
+improvement_ppl_points: 5.618
+delta_base_pct: +63.1%
+artifacts:
+  - experiments/iterative_relu_bias_swap_cycle182.py
+  - autoresearch/results/cycle_182_iterative_relu_swap.json
+  - autoresearch/results/cycle_182_iterative_relu_swap.png
