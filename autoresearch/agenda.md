@@ -8,14 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-218. **Block 1 channel selection — magnitude topk vs output-contribution topk**
-   - Standard topk uses act_std × W_proj_norm. For block 1's high-rank input (rank=192), magnitude may poorly proxy output contribution. Measure per-channel: (1) current score; (2) mean output contribution ||W_proj[:,k]|| × act_std. Compute Kendall-tau rank correlation; measure single-block PPL under each criterion at K=512.
-   - Type: analysis + empirical
-   - Confirmed if: Kendall-tau <0.7 AND output-contribution topk gives ≥1 PPL improvement for block 1 single-block PPL
-   - Refuted if: Kendall-tau ≥0.85 OR PPL difference <0.3
-   - Inconclusive if: orderings differ (tau<0.7) but PPL gap <0.5
-   - Depends on: none
-
 ### P2
 
 219. **PCA-conditioned lstsq for block 1 — reduce input dimension before regression**
@@ -69,6 +61,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 207
+
+218. **Block 1 channel selection — magnitude topk vs output-contribution topk** *(REFUTED — cycle 207)*
+   - **Outcome: REFUTED** — All 4 criteria within 1 PPL (range 54.629–55.679). Best alternative (pure act_std, S3) improves by 0.06 PPL despite orderings being genuinely different (min Kendall-tau=−0.13). lstsq W_out adapts to whichever 512 channels are selected. Selection criterion irrelevant at K=512.
 
 ### Cycle 206
 

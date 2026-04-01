@@ -1,0 +1,7 @@
+item_number=218
+outcome=refuted
+key_metric=s1_ppl=54.689_s3_ppl=54.629_improvement=0.060_min_tau=-0.132_verdict=refuted
+commit=pending
+paths=autoresearch/results/cycle_207_block1_channel_selection.json,experiments/block1_channel_selection_cycle207.py
+learned=Channel selection criterion is irrelevant at K=512 block 1. lstsq W_out adapts to any reasonable 512-channel subset. Best alternative improves by 0.06 PPL despite orderings differing (min Kendall-tau=-0.13). Pure weight scoring (S4) is worst (+1.0 PPL); act_std or joint criterion are equivalent.
+next=Item 219: PCA-conditioned lstsq for block 1.

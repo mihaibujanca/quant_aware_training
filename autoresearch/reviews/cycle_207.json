@@ -1,0 +1,22 @@
+{
+  "cycle": 207,
+  "item": 218,
+  "verdict": "REFUTED",
+  "hypothesis": "For block 1 (input_rank=192), output-contribution topk improves channel selection by >=1 PPL vs current act_std x W_proj_norm",
+  "result_summary": "All 4 criteria within 1 PPL (range 54.629-55.679). Best: S3 pure act_std=54.629, improvement=0.06 PPL. REFUTED.",
+  "key_metrics": {
+    "float_ppl": 53.895,
+    "S1_baseline": 54.689,
+    "S2_mean_abs_x_wproj": 54.853,
+    "S3_pure_act_std": 54.629,
+    "S4_pure_weight": 55.679,
+    "best_improvement": 0.06,
+    "min_kendall_tau": -0.132
+  },
+  "interpretation": [
+    "lstsq optimizes W_out globally for the selected K channels, compensating for non-ideal selection.",
+    "Channel ordering matters only if there is a quality cliff in the top-K selection. At K=512 (near-optimal), any reasonable subset works.",
+    "Pure weight norm (S4) is slightly worse (+1.0 PPL): the weight-only criterion occasionally selects channels with high W_proj norm but near-zero activation.",
+    "act_std (S3) alone matches the joint criterion (S1) \u2014 the W_proj_norm term adds no benefit at K=512."
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "cycle": 207,
+  "item": 218,
+  "verdict": "REFUTED",
+  "float_ppl": 53.89489152418256,
+  "ppl_by_criterion": {
+    "S1_std_x_wproj": 54.689250899938756,
+    "S2_mean_abs_x_wproj": 54.85331439840123,
+    "S3_pure_act_std": 54.62930129774964,
+    "S4_pure_weight": 55.679271385042775
+  },
+  "tau_matrix": {
+    "S1_std_x_wproj_vs_S2_mean_abs_x_wproj": 0.45830476236711903,
+    "S1_std_x_wproj_vs_S3_pure_act_std": 0.6540624760510062,
+    "S1_std_x_wproj_vs_S4_pure_weight": 0.21401974176475252,
+    "S2_mean_abs_x_wproj_vs_S3_pure_act_std": 0.31886371499511557,
+    "S2_mean_abs_x_wproj_vs_S4_pure_weight": 0.19690205077065015,
+    "S3_pure_act_std_vs_S4_pure_weight": -0.13191787419950068
+  },
+  "best_alt_criterion": "S3_pure_act_std",
+  "best_alt_ppl": 54.62930129774964,
+  "baseline_ppl_s1": 54.689250899938756,
+  "improvement_vs_s1": 0.05994960218911416,
+  "min_kendall_tau": -0.13191787419950068,
+  "config": {
+    "BLOCK": 1,
+    "K": 512,
+    "N_CALIB": 200,
+    "N_EVAL": 100,
+    "SEQ_LEN": 128,
+    "SEED": 42
+  }
+}
