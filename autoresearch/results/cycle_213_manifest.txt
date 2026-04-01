@@ -1,7 +1,7 @@
 item_number=223
 outcome=inconclusive
 key_metric=wfc_wout_best=46.424_wout_only_best=46.556_improvement=0.132_improvement_vs_1000steps=1.749_verdict=inconclusive
-commit=pending
+commit=f289727
 paths=autoresearch/results/cycle_213_adam_full_correction.json,experiments/adam_full_correction_cycle213.py
 learned=W_out+W_fc reaches same final PPL as W_out-only (46.424 vs 46.556) but 2.5x faster (1500 vs 4000 steps). Training W_fc provides no quality advantage. For production use, W_out-only Adam is preferred (simpler, faster per step, same quality).
 next=Item 224: Analytical W_out correction — can lstsq replace Adam?
