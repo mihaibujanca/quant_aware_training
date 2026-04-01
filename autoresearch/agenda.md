@@ -4,16 +4,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## NEXT EXPERIMENTS
 
-### P0
-
-188. **Negative-regime bias absorption + positive-only compression — GPT-2 FFN k=4**
-   - Type: empirical
-   - Absorb constant negative GELU output as a 768-dim bias vector per block (from cycle 173: max +1.4% PPL per block). Then apply topk+lstsq compression only to the positive-regime channels (~9-13% active). Measure: (a) stacked PPL of bias-absorbed model (all 12 blocks, no compression), (b) stacked PPL of bias-absorbed + topk+lstsq on positive regime (4 blocks, k=4). Baseline: topk+lstsq PPL ~70.7. If positive-only compression at same k gives better PPL (smaller effective problem), CONFIRMED. If absorption cascade degrades baseline too much (>5 PPL), REFUTED.
-   - Confirmed: bias-absorbed + positive-only compression PPL ≤ 68 at same params as topk+lstsq
-   - Refuted: absorption cascade >5 PPL degradation before compression, or positive-only worse than full
-   - Inconclusive: absorption stable but positive-only ≈ full topk+lstsq
-   - Depends on: none (uses cycle 166/173 bias computation + existing topk)
-
 ### P1
 
 189. **PruneNet spectral channel selection — GPT-2 FFN k=4**
@@ -59,6 +49,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 178
+
+188. **Negative-regime bias absorption + positive-only compression — GPT-2 FFN k=4** *(REFUTED — cycle 178)*
+   - Two failure modes: (1) GELU->ReLU+b_leak absorption in 4 blocks costs +12.3% PPL (mean 58.7 vs 52.3 baseline), failing the <5% absorption criterion; (2) positive-only topk+lstsq with ReLU gives mean PPL 70.5 vs 50.1 for standard GELU topk (+34.7% worse). Root cause: ~94-99% of channels are sometimes positive (not ~9-13% as estimated), so there's no meaningful channel reduction. The GELU-to-ReLU substitution destroys the positive-regime shape near z=0, which cycle 175 showed is where the real prediction impact lies.
+   - Artifacts: `experiments/neg_bias_absorption_compression_cycle178.py`, `autoresearch/results/cycle_178_neg_absorption.json`, `autoresearch/results/cycle_178_neg_absorption.png`
 
 ### Cycle 177
 

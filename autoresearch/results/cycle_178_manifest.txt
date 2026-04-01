@@ -1,0 +1,5 @@
+item_number: 188
+outcome: refuted
+key_metric: mean_ppl_B=70.5_vs_A=50.1_absorption_delta=+12.3%_n_positive_channels=2880-3050/3072
+commit: PENDING
+paths: experiments/neg_bias_absorption_compression_cycle178.py, autoresearch/results/cycle_178_neg_absorption.json, autoresearch/results/cycle_178_neg_absorption.png
