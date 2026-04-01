@@ -1,0 +1,4366 @@
+{
+  "baseline_ppl": 22.090479792647145,
+  "n_tokens": 2048,
+  "blocks": [
+    {
+      "block": 0,
+      "mean_kl": 1.4189003705978394,
+      "median_kl": 1.1147217750549316,
+      "max_kl": 9.393961906433105,
+      "frac_relu_better": 0.18017578125,
+      "y_neg_norm": 16.116943359375,
+      "s_neg_norm": 6.002359867095947,
+      "top_50": [
+        {
+          "kl": 9.393961906433105,
+          "context": " Curbed\n\nT",
+          "target": "ou",
+          "p_float": 0.8044248819351196,
+          "p_relu": 2.253110142191872e-05
+        },
+        {
+          "kl": 9.183979034423828,
+          "context": "bed\n\nTou",
+          "target": "hey",
+          "p_float": 0.9983698725700378,
+          "p_relu": 0.0001005703816190362
+        },
+        {
+          "kl": 9.138500213623047,
+          "context": " travellers would have experienced in",
+          "target": " 1962",
+          "p_float": 0.9160287380218506,
+          "p_relu": 5.763749504694715e-05
+        },
+        {
+          "kl": 8.477660179138184,
+          "context": " is possible that liberals and",
+          "target": " conservatives",
+          "p_float": 0.862586498260498,
+          "p_relu": 7.700122660025954e-05
+        },
+        {
+          "kl": 8.364389419555664,
+          "context": " the fourth dimension.\n",
+          "target": "\n",
+          "p_float": 0.9995902180671692,
+          "p_relu": 0.00023180553398560733
+        },
+        {
+          "kl": 8.277506828308105,
+          "context": " during this time.\n",
+          "target": "\n",
+          "p_float": 0.9994031190872192,
+          "p_relu": 0.000251975521678105
+        },
+        {
+          "kl": 7.613099575042725,
+          "context": " experienced in 1962.\n",
+          "target": "\n",
+          "p_float": 0.9997125267982483,
+          "p_relu": 0.0004922774969600141
+        },
+        {
+          "kl": 7.530770301818848,
+          "context": " physics, Ricochet v",
+          "target": "aults",
+          "p_float": 0.7651964426040649,
+          "p_relu": 0.00015008884656708688
+        },
+        {
+          "kl": 7.389358997344971,
+          "context": " officials have said.\n",
+          "target": "\n",
+          "p_float": 0.9996808767318726,
+          "p_relu": 0.0006154754664748907
+        },
+        {
+          "kl": 7.286496162414551,
+          "context": " that demolished everything in their",
+          "target": " path",
+          "p_float": 0.7964949607849121,
+          "p_relu": 0.00019222100672777742
+        },
+        {
+          "kl": 7.285844326019287,
+          "context": " transporting you back to what",
+          "target": " travellers",
+          "p_float": 0.7555923461914062,
+          "p_relu": 0.00011605900363065302
+        },
+        {
+          "kl": 7.2654805183410645,
+          "context": " and I quit as a",
+          "target": " waiter",
+          "p_float": 0.8433119058609009,
+          "p_relu": 0.00024018027761485428
+        },
+        {
+          "kl": 7.2351555824279785,
+          "context": " is 180 \u2014 the death",
+          "target": " on",
+          "p_float": 3.637304689618759e-05,
+          "p_relu": 0.0010185767896473408
+        },
+        {
+          "kl": 7.113398551940918,
+          "context": "erer (not his or",
+          "target": " her",
+          "p_float": 0.9521104097366333,
+          "p_relu": 0.0006463156314566731
+        },
+        {
+          "kl": 7.024194717407227,
+          "context": " I got cast in '",
+          "target": "Sc",
+          "p_float": 0.8123440146446228,
+          "p_relu": 0.0002626224886626005
+        },
+        {
+          "kl": 6.976495265960693,
+          "context": " Rolling Stones, Jimi",
+          "target": " Hend",
+          "p_float": 0.999686598777771,
+          "p_relu": 0.0009297275682911277
+        },
+        {
+          "kl": 6.856551647186279,
+          "context": " many simply disappeared.\n",
+          "target": "\n",
+          "p_float": 0.9995065927505493,
+          "p_relu": 0.0010459973709657788
+        },
+        {
+          "kl": 6.788837432861328,
+          "context": "aults and rebounds and straight",
+          "target": "-",
+          "p_float": 0.1119445264339447,
+          "p_relu": 0.029968436807394028
+        },
+        {
+          "kl": 6.643082141876221,
+          "context": " about what New Japan Pro",
+          "target": " Wrestling",
+          "p_float": 0.9023151397705078,
+          "p_relu": 0.0006524563068524003
+        },
+        {
+          "kl": 6.495419502258301,
+          "context": " images by photographer Max Tou",
+          "target": "hey",
+          "p_float": 0.9993534684181213,
+          "p_relu": 0.0014988216571509838
+        },
+        {
+          "kl": 6.473008155822754,
+          "context": " as to whether and to",
+          "target": " what",
+          "p_float": 0.8778706789016724,
+          "p_relu": 0.0009236319456249475
+        },
+        {
+          "kl": 6.314014911651611,
+          "context": " in a thick gray m",
+          "target": "uck",
+          "p_float": 0.3523992896080017,
+          "p_relu": 0.001276177354156971
+        },
+        {
+          "kl": 6.256704807281494,
+          "context": "\n\nScroll down for",
+          "target": " video",
+          "p_float": 0.9665138721466064,
+          "p_relu": 0.0016793138347566128
+        },
+        {
+          "kl": 6.117193698883057,
+          "context": "\u201d\n\nH",
+          "target": "ue",
+          "p_float": 0.9041969180107117,
+          "p_relu": 0.0013864273205399513
+        },
+        {
+          "kl": 5.8648176193237305,
+          "context": ", perhaps never to be",
+          "target": " seen",
+          "p_float": 0.7852826714515686,
+          "p_relu": 0.0010571491438895464
+        },
+        {
+          "kl": 5.849292278289795,
+          "context": " best information available at the",
+          "target": " time",
+          "p_float": 0.9973239898681641,
+          "p_relu": 0.002822082256898284
+        },
+        {
+          "kl": 5.794867038726807,
+          "context": " fees\n\nVG <",
+          "target": "\u2013",
+          "p_float": 0.9222095608711243,
+          "p_relu": 0.0017821545479819179
+        },
+        {
+          "kl": 5.742197513580322,
+          "context": " to whether and to what",
+          "target": " extent",
+          "p_float": 0.8424237370491028,
+          "p_relu": 0.0017213753890246153
+        },
+        {
+          "kl": 5.707088470458984,
+          "context": " their owed prize mone",
+          "target": "ys",
+          "p_float": 0.9939377307891846,
+          "p_relu": 0.003143876791000366
+        },
+        {
+          "kl": 5.655974388122559,
+          "context": " departures board at the T",
+          "target": "WA",
+          "p_float": 0.988775372505188,
+          "p_relu": 0.003189868526533246
+        },
+        {
+          "kl": 5.647590637207031,
+          "context": " death on such a wide",
+          "target": " scale",
+          "p_float": 0.9111052751541138,
+          "p_relu": 0.0018000530544668436
+        },
+        {
+          "kl": 5.640167713165283,
+          "context": "\n\nVG <\u2013",
+          "target": ">",
+          "p_float": 0.9612457156181335,
+          "p_relu": 0.002734777284786105
+        },
+        {
+          "kl": 5.6335954666137695,
+          "context": " contract is exchanged for H",
+          "target": "ao",
+          "p_float": 0.9897388815879822,
+          "p_relu": 0.0032755667343735695
+        },
+        {
+          "kl": 5.5493245124816895,
+          "context": ".\n\nFor two",
+          "target": " tiny",
+          "p_float": 3.110050965915434e-05,
+          "p_relu": 0.00018152508710045367
+        },
+        {
+          "kl": 5.471822738647461,
+          "context": "ial evidence makes it at",
+          "target": " least",
+          "p_float": 0.993809163570404,
+          "p_relu": 0.004020232241600752
+        },
+        {
+          "kl": 5.295454978942871,
+          "context": "up zooms around the",
+          "target": " air",
+          "p_float": 0.0005698254099115729,
+          "p_relu": 0.0007086818804964423
+        },
+        {
+          "kl": 5.281296253204346,
+          "context": " perhaps never to be seen",
+          "target": " again",
+          "p_float": 0.9780625700950623,
+          "p_relu": 0.004224940203130245
+        },
+        {
+          "kl": 5.278872013092041,
+          "context": " with fascinating images by photographer",
+          "target": " Max",
+          "p_float": 0.9635137319564819,
+          "p_relu": 0.0037297112867236137
+        },
+        {
+          "kl": 5.243891716003418,
+          "context": " them liars for sm",
+          "target": "other",
+          "p_float": 0.003463900648057461,
+          "p_relu": 0.0016066818498075008
+        },
+        {
+          "kl": 5.219700813293457,
+          "context": " the operations moved to May",
+          "target": "adin",
+          "p_float": 0.9983738660812378,
+          "p_relu": 0.00533638522028923
+        },
+        {
+          "kl": 5.216367721557617,
+          "context": " balls that demolished everything in",
+          "target": " their",
+          "p_float": 0.5445138812065125,
+          "p_relu": 0.004252111539244652
+        },
+        {
+          "kl": 5.192832946777344,
+          "context": "no\u201d.\n",
+          "target": "\n",
+          "p_float": 0.9997770190238953,
+          "p_relu": 0.005542137660086155
+        },
+        {
+          "kl": 5.157219409942627,
+          "context": "\n\nMuch could be",
+          "target": " said",
+          "p_float": 0.6544189453125,
+          "p_relu": 0.0019627290312200785
+        },
+        {
+          "kl": 5.153866767883301,
+          "context": " to what travellers would have",
+          "target": " experienced",
+          "p_float": 0.7618813514709473,
+          "p_relu": 0.0013610157184302807
+        },
+        {
+          "kl": 5.002765655517578,
+          "context": " famous musicians such as The",
+          "target": " Beatles",
+          "p_float": 0.3554743528366089,
+          "p_relu": 0.0002786884142551571
+        },
+        {
+          "kl": 4.949270725250244,
+          "context": "\nAnd if for any",
+          "target": " reason",
+          "p_float": 0.9012600183486938,
+          "p_relu": 0.00397496810182929
+        },
+        {
+          "kl": 4.908810138702393,
+          "context": "attah al-S",
+          "target": "isi",
+          "p_float": 0.79581618309021,
+          "p_relu": 0.002994758542627096
+        },
+        {
+          "kl": 4.874626636505127,
+          "context": "ration by Ben Passmore",
+          "target": "\n",
+          "p_float": 0.664153516292572,
+          "p_relu": 0.0011437322245910764
+        },
+        {
+          "kl": 4.856659889221191,
+          "context": "ao their owed prize m",
+          "target": "one",
+          "p_float": 0.3061770498752594,
+          "p_relu": 0.00034794548992067575
+        },
+        {
+          "kl": 4.801138877868652,
+          "context": "\n\nAnd if for",
+          "target": " any",
+          "p_float": 0.2079380601644516,
+          "p_relu": 0.00815474335104227
+        }
+      ]
+    },
+    {
+      "block": 1,
+      "mean_kl": 0.07931063324213028,
+      "median_kl": 0.04957693815231323,
+      "max_kl": 1.4311037063598633,
+      "frac_relu_better": 0.38671875,
+      "y_neg_norm": 13.137142181396484,
+      "s_neg_norm": 5.8739495277404785,
+      "top_50": [
+        {
+          "kl": 1.4311037063598633,
+          "context": "s\n\n4.",
+          "target": " i",
+          "p_float": 0.04197224974632263,
+          "p_relu": 0.10797535628080368
+        },
+        {
+          "kl": 1.3386772871017456,
+          "context": " charging the specific sland",
+          "target": "erer",
+          "p_float": 0.19607128202915192,
+          "p_relu": 0.051408927887678146
+        },
+        {
+          "kl": 1.1874462366104126,
+          "context": " Richardson 1935 JOE DI",
+          "target": " MAG",
+          "p_float": 0.0002249978278996423,
+          "p_relu": 0.00011383310629753396
+        },
+        {
+          "kl": 1.1138482093811035,
+          "context": ",\u201d Huebs",
+          "target": "ch",
+          "p_float": 0.3286658227443695,
+          "p_relu": 0.022362545132637024
+        },
+        {
+          "kl": 1.0498378276824951,
+          "context": " the opinion poll in question",
+          "target": ",",
+          "p_float": 0.023122940212488174,
+          "p_relu": 0.010270027443766594
+        },
+        {
+          "kl": 0.9885918498039246,
+          "context": " other ISIS infrastructure in (",
+          "target": "May",
+          "p_float": 0.31146278977394104,
+          "p_relu": 0.011021588928997517
+        },
+        {
+          "kl": 0.9628241062164307,
+          "context": " Mayadin, about 50",
+          "target": " miles",
+          "p_float": 0.37416699528694153,
+          "p_relu": 0.017787043005228043
+        },
+        {
+          "kl": 0.9501543045043945,
+          "context": " actually had to do with",
+          "target": " how",
+          "p_float": 0.014955705031752586,
+          "p_relu": 0.0005008570733480155
+        },
+        {
+          "kl": 0.9330224394798279,
+          "context": " said about what New Japan",
+          "target": " Pro",
+          "p_float": 0.4173000752925873,
+          "p_relu": 0.03052460215985775
+        },
+        {
+          "kl": 0.8652706146240234,
+          "context": " it actually had to do",
+          "target": " with",
+          "p_float": 0.21177983283996582,
+          "p_relu": 0.0026429647114127874
+        },
+        {
+          "kl": 0.8524578213691711,
+          "context": "\n\nI\u2019",
+          "target": "d",
+          "p_float": 0.03794978931546211,
+          "p_relu": 0.00905446894466877
+        },
+        {
+          "kl": 0.8268003463745117,
+          "context": "remacists Attackback by",
+          "target": " charging",
+          "p_float": 1.9054923541261815e-05,
+          "p_relu": 0.00014045457646716386
+        },
+        {
+          "kl": 0.7597441077232361,
+          "context": " strength/involvement",
+          "target": " is",
+          "p_float": 0.13843338191509247,
+          "p_relu": 0.2809153199195862
+        },
+        {
+          "kl": 0.739346981048584,
+          "context": " the world\u2019s",
+          "target": " most",
+          "p_float": 0.2362356185913086,
+          "p_relu": 0.08515764772891998
+        },
+        {
+          "kl": 0.7247593402862549,
+          "context": " I guess I\u2019",
+          "target": "d",
+          "p_float": 0.007498329505324364,
+          "p_relu": 0.0006730577442795038
+        },
+        {
+          "kl": 0.7154523134231567,
+          "context": " the next caller going to",
+          "target": " ask",
+          "p_float": 0.20033717155456543,
+          "p_relu": 0.0810173824429512
+        },
+        {
+          "kl": 0.7150890827178955,
+          "context": "\nI\u2019d",
+          "target": " been",
+          "p_float": 0.026810815557837486,
+          "p_relu": 0.0026182064320892096
+        },
+        {
+          "kl": 0.6955236792564392,
+          "context": " continental and regional origins,",
+          "target": " of",
+          "p_float": 0.5226802229881287,
+          "p_relu": 0.09202392399311066
+        },
+        {
+          "kl": 0.6652901768684387,
+          "context": "Mayadin), Syria,",
+          "target": " June",
+          "p_float": 0.0024199075996875763,
+          "p_relu": 0.0007402420742437243
+        },
+        {
+          "kl": 0.6493838429450989,
+          "context": "\n\nIt\u2019",
+          "target": "s",
+          "p_float": 0.2262444645166397,
+          "p_relu": 0.027048753574490547
+        },
+        {
+          "kl": 0.6251847743988037,
+          "context": "\u2019s\n\n",
+          "target": "4",
+          "p_float": 0.3997216522693634,
+          "p_relu": 0.5221439003944397
+        },
+        {
+          "kl": 0.6182992458343506,
+          "context": " temporarily lifted on the preserved",
+          "target": " T",
+          "p_float": 0.3026868402957916,
+          "p_relu": 0.03507264703512192
+        },
+        {
+          "kl": 0.6087844371795654,
+          "context": "VG <\u2013> Rising",
+          "target": "Stars",
+          "p_float": 0.012811667285859585,
+          "p_relu": 0.004394497722387314
+        },
+        {
+          "kl": 0.6003119349479675,
+          "context": "4. iG and",
+          "target": " Tong",
+          "p_float": 0.42277562618255615,
+          "p_relu": 0.7719553709030151
+        },
+        {
+          "kl": 0.5972115993499756,
+          "context": " Curbed\n\nT",
+          "target": "ou",
+          "p_float": 0.8044248819351196,
+          "p_relu": 0.3113746643066406
+        },
+        {
+          "kl": 0.5946954488754272,
+          "context": " have,\u201d he",
+          "target": " said",
+          "p_float": 0.3086282014846802,
+          "p_relu": 0.13852576911449432
+        },
+        {
+          "kl": 0.57520991563797,
+          "context": ". Bullies Call them",
+          "target": " bullies",
+          "p_float": 0.007177604828029871,
+          "p_relu": 0.012512307614088058
+        },
+        {
+          "kl": 0.5601072907447815,
+          "context": "-to-the-",
+          "target": "public",
+          "p_float": 0.29310351610183716,
+          "p_relu": 0.041580528020858765
+        },
+        {
+          "kl": 0.5593547821044922,
+          "context": " opinion poll in question,",
+          "target": " which",
+          "p_float": 0.20527364313602448,
+          "p_relu": 0.10214130580425262
+        },
+        {
+          "kl": 0.5478931069374084,
+          "context": " you have,\u201d",
+          "target": " he",
+          "p_float": 0.01059404294937849,
+          "p_relu": 0.002838761080056429
+        },
+        {
+          "kl": 0.5339804887771606,
+          "context": " haters. Liars",
+          "target": "\n",
+          "p_float": 0.1461469829082489,
+          "p_relu": 0.19039243459701538
+        },
+        {
+          "kl": 0.5316681861877441,
+          "context": " closed-to-the",
+          "target": "-",
+          "p_float": 0.7324548959732056,
+          "p_relu": 0.9393216371536255
+        },
+        {
+          "kl": 0.5066461563110352,
+          "context": " realize filming wouldn't start",
+          "target": " for",
+          "p_float": 0.02749478816986084,
+          "p_relu": 0.03872884437441826
+        },
+        {
+          "kl": 0.4760967791080475,
+          "context": "\n\nI\u2019",
+          "target": "m",
+          "p_float": 0.5687730312347412,
+          "p_relu": 0.2023719847202301
+        },
+        {
+          "kl": 0.45562079548835754,
+          "context": " infrastructure in (Mayadin",
+          "target": "),",
+          "p_float": 0.17772595584392548,
+          "p_relu": 0.1971900314092636
+        },
+        {
+          "kl": 0.4142081141471863,
+          "context": " character\u2014some lazy programmer",
+          "target": " forgot",
+          "p_float": 0.0011836030753329396,
+          "p_relu": 0.00021603560890071094
+        },
+        {
+          "kl": 0.4081701934337616,
+          "context": " west of the Iraqi border",
+          "target": ",",
+          "p_float": 0.8248971700668335,
+          "p_relu": 0.47534534335136414
+        },
+        {
+          "kl": 0.4023585617542267,
+          "context": " Nolan Richardson 1935 JOE",
+          "target": " DI",
+          "p_float": 0.22735919058322906,
+          "p_relu": 0.03147641196846962
+        },
+        {
+          "kl": 0.4001907706260681,
+          "context": " is unimaginable. Bogged",
+          "target": " down",
+          "p_float": 0.18062663078308105,
+          "p_relu": 0.020967010408639908
+        },
+        {
+          "kl": 0.381502628326416,
+          "context": " in such a way as",
+          "target": " to",
+          "p_float": 0.9020835161209106,
+          "p_relu": 0.5113245248794556
+        },
+        {
+          "kl": 0.38056620955467224,
+          "context": " on the super bowl this",
+          "target": " Sunday",
+          "p_float": 0.0011915161740034819,
+          "p_relu": 0.0027970753144472837
+        },
+        {
+          "kl": 0.3741297125816345,
+          "context": " banana\n\nTong",
+          "target": "Fu",
+          "p_float": 0.006869104690849781,
+          "p_relu": 0.0007395114516839385
+        },
+        {
+          "kl": 0.37051892280578613,
+          "context": " been temporarily lifted on the",
+          "target": " preserved",
+          "p_float": 1.2105960195185617e-05,
+          "p_relu": 2.2903730496182106e-05
+        },
+        {
+          "kl": 0.3683549165725708,
+          "context": " two U.S.",
+          "target": " intelligence",
+          "p_float": 0.015628576278686523,
+          "p_relu": 0.02205224707722664
+        },
+        {
+          "kl": 0.36430275440216064,
+          "context": ", and you\u2019",
+          "target": "ve",
+          "p_float": 0.002207848010584712,
+          "p_relu": 0.000599377672187984
+        },
+        {
+          "kl": 0.3576209545135498,
+          "context": " while not our primary purpose",
+          "target": ",",
+          "p_float": 0.531417965888977,
+          "p_relu": 0.2963878810405731
+        },
+        {
+          "kl": 0.3533289134502411,
+          "context": "\nTongFu <",
+          "target": "\u2013",
+          "p_float": 0.000630970869679004,
+          "p_relu": 0.0006203813245519996
+        },
+        {
+          "kl": 0.3524680733680725,
+          "context": " iG and TongFu",
+          "target": " agree",
+          "p_float": 0.00048446570872329175,
+          "p_relu": 0.00017618932179175317
+        },
+        {
+          "kl": 0.35137683153152466,
+          "context": " guess I\u2019d",
+          "target": " say",
+          "p_float": 0.037931643426418304,
+          "p_relu": 0.02471228688955307
+        },
+        {
+          "kl": 0.34375908970832825,
+          "context": " and you\u2019ve",
+          "target": " certainly",
+          "p_float": 0.001388503354974091,
+          "p_relu": 0.001114162732847035
+        }
+      ]
+    },
+    {
+      "block": 2,
+      "mean_kl": 0.17293521761894226,
+      "median_kl": 0.11438165605068207,
+      "max_kl": 5.516444206237793,
+      "frac_relu_better": 0.35693359375,
+      "y_neg_norm": 27.596240997314453,
+      "s_neg_norm": 6.905095100402832,
+      "top_50": [
+        {
+          "kl": 5.516444206237793,
+          "context": " charging the specific sland",
+          "target": "erer",
+          "p_float": 0.19607128202915192,
+          "p_relu": 0.0012721183011308312
+        },
+        {
+          "kl": 3.621931552886963,
+          "context": "1931 Frank Crosett",
+          "target": "i",
+          "p_float": 0.06974297761917114,
+          "p_relu": 0.4881810247898102
+        },
+        {
+          "kl": 3.4645938873291016,
+          "context": " their owed prize mone",
+          "target": "ys",
+          "p_float": 0.9939377307891846,
+          "p_relu": 0.029853252694010735
+        },
+        {
+          "kl": 1.9308308362960815,
+          "context": " Curbed\n\nT",
+          "target": "ou",
+          "p_float": 0.8044248819351196,
+          "p_relu": 0.06265328079462051
+        },
+        {
+          "kl": 1.7728508710861206,
+          "context": " Mayadin, about 50",
+          "target": " miles",
+          "p_float": 0.37416699528694153,
+          "p_relu": 0.9253247380256653
+        },
+        {
+          "kl": 1.735482096672058,
+          "context": " realize filming wouldn't start",
+          "target": " for",
+          "p_float": 0.02749478816986084,
+          "p_relu": 0.015182401984930038
+        },
+        {
+          "kl": 1.7201145887374878,
+          "context": " (for a summary,",
+          "target": " see",
+          "p_float": 0.7549818754196167,
+          "p_relu": 0.06326458603143692
+        },
+        {
+          "kl": 1.598394751548767,
+          "context": ", Guns N\u2019",
+          "target": " Roses",
+          "p_float": 7.352183456532657e-05,
+          "p_relu": 1.971534948097542e-05
+        },
+        {
+          "kl": 1.5910781621932983,
+          "context": "7.5 million to",
+          "target": " repair",
+          "p_float": 0.06222882121801376,
+          "p_relu": 0.3094034492969513
+        },
+        {
+          "kl": 1.5406383275985718,
+          "context": "ars\n\nCall them",
+          "target": " li",
+          "p_float": 0.697075605392456,
+          "p_relu": 0.05295857414603233
+        },
+        {
+          "kl": 1.5352072715759277,
+          "context": " topics they hold strong attitudes",
+          "target": " on",
+          "p_float": 0.028216000646352768,
+          "p_relu": 0.0635080561041832
+        },
+        {
+          "kl": 1.4256466627120972,
+          "context": "s\n\n4.",
+          "target": " i",
+          "p_float": 0.04197224974632263,
+          "p_relu": 0.06571890413761139
+        },
+        {
+          "kl": 1.3607138395309448,
+          "context": " the opinion poll in question",
+          "target": ",",
+          "p_float": 0.023122940212488174,
+          "p_relu": 0.00927955936640501
+        },
+        {
+          "kl": 1.1546218395233154,
+          "context": " swallowed by the land,",
+          "target": " perhaps",
+          "p_float": 0.0010573220206424594,
+          "p_relu": 0.0014324856456369162
+        },
+        {
+          "kl": 1.1545820236206055,
+          "context": " favorite color?\u201d",
+          "target": "\n",
+          "p_float": 0.043283917009830475,
+          "p_relu": 0.006395649164915085
+        },
+        {
+          "kl": 1.150846004486084,
+          "context": " toiletry, and warm",
+          "target": " clothing",
+          "p_float": 0.07728725671768188,
+          "p_relu": 0.005272001959383488
+        },
+        {
+          "kl": 1.1496522426605225,
+          "context": " 180 \u2014 the death on",
+          "target": " such",
+          "p_float": 0.0005063909920863807,
+          "p_relu": 0.003708796575665474
+        },
+        {
+          "kl": 1.1483447551727295,
+          "context": "io Bob Meusel",
+          "target": " 1929",
+          "p_float": 4.342450665717479e-06,
+          "p_relu": 2.483100615791045e-05
+        },
+        {
+          "kl": 1.1377696990966797,
+          "context": " as reported by Curbed",
+          "target": "\n",
+          "p_float": 0.6871092319488525,
+          "p_relu": 0.09258543699979782
+        },
+        {
+          "kl": 1.1159330606460571,
+          "context": " cent of people oppose another",
+          "target": " independence",
+          "p_float": 0.006293801125138998,
+          "p_relu": 0.00024924258468672633
+        },
+        {
+          "kl": 1.1096305847167969,
+          "context": " other ISIS infrastructure in (",
+          "target": "May",
+          "p_float": 0.31146278977394104,
+          "p_relu": 0.007072026841342449
+        },
+        {
+          "kl": 1.0779476165771484,
+          "context": " an attackback. Sup",
+          "target": "rem",
+          "p_float": 0.9129745960235596,
+          "p_relu": 0.2357698380947113
+        },
+        {
+          "kl": 1.0527125597000122,
+          "context": " Supremacists Attackback",
+          "target": " by",
+          "p_float": 0.004317769315093756,
+          "p_relu": 0.003068165387958288
+        },
+        {
+          "kl": 0.9724071025848389,
+          "context": " thick gray muck,",
+          "target": " swallowed",
+          "p_float": 6.541468610521406e-05,
+          "p_relu": 0.00017894103075377643
+        },
+        {
+          "kl": 0.9631949663162231,
+          "context": " population is 1,400",
+          "target": " and",
+          "p_float": 0.13305824995040894,
+          "p_relu": 0.04446456953883171
+        },
+        {
+          "kl": 0.9591686129570007,
+          "context": " continental and regional origins,",
+          "target": " of",
+          "p_float": 0.5226802229881287,
+          "p_relu": 0.05469333007931709
+        },
+        {
+          "kl": 0.9516176581382751,
+          "context": "\u201d\n\nH",
+          "target": "ue",
+          "p_float": 0.9041969180107117,
+          "p_relu": 0.27500030398368835
+        },
+        {
+          "kl": 0.9437215924263,
+          "context": " as you meet this guy",
+          "target": "'s",
+          "p_float": 0.7093832492828369,
+          "p_relu": 0.1278730034828186
+        },
+        {
+          "kl": 0.9126502871513367,
+          "context": " you have,\u201d",
+          "target": " he",
+          "p_float": 0.01059404294937849,
+          "p_relu": 0.003028400242328644
+        },
+        {
+          "kl": 0.8908110857009888,
+          "context": ",400 and Oso",
+          "target": "\ufffd",
+          "p_float": 0.08375433087348938,
+          "p_relu": 0.099122554063797
+        },
+        {
+          "kl": 0.867882490158081,
+          "context": " I guess I\u2019",
+          "target": "d",
+          "p_float": 0.007498329505324364,
+          "p_relu": 0.013500804081559181
+        },
+        {
+          "kl": 0.8624928593635559,
+          "context": " death on such a wide",
+          "target": " scale",
+          "p_float": 0.9111052751541138,
+          "p_relu": 0.2960277795791626
+        },
+        {
+          "kl": 0.8519237637519836,
+          "context": " emerge\n\nAfterwards",
+          "target": ",",
+          "p_float": 0.39466026425361633,
+          "p_relu": 0.04771539568901062
+        },
+        {
+          "kl": 0.8483499884605408,
+          "context": " closed-to-the",
+          "target": "-",
+          "p_float": 0.7324548959732056,
+          "p_relu": 0.9320791363716125
+        },
+        {
+          "kl": 0.8466407656669617,
+          "context": "-to-the-",
+          "target": "public",
+          "p_float": 0.29310351610183716,
+          "p_relu": 0.03612370416522026
+        },
+        {
+          "kl": 0.8345293998718262,
+          "context": ". Apparently untethered",
+          "target": " from",
+          "p_float": 0.34393036365509033,
+          "p_relu": 0.05430106818675995
+        },
+        {
+          "kl": 0.8254234194755554,
+          "context": ". Bullies Call them",
+          "target": " bullies",
+          "p_float": 0.007177604828029871,
+          "p_relu": 0.0452633760869503
+        },
+        {
+          "kl": 0.8193942308425903,
+          "context": "\u2019s most famous",
+          "target": " musicians",
+          "p_float": 0.05552995577454567,
+          "p_relu": 0.003224800806492567
+        },
+        {
+          "kl": 0.810153603553772,
+          "context": " that the damage to the",
+          "target": " building",
+          "p_float": 0.3204123377799988,
+          "p_relu": 0.02889469638466835
+        },
+        {
+          "kl": 0.8016248345375061,
+          "context": "\u2019s\n\n",
+          "target": "4",
+          "p_float": 0.3997216522693634,
+          "p_relu": 0.6838220357894897
+        },
+        {
+          "kl": 0.800517201423645,
+          "context": " TWA Terminal at JFK",
+          "target": ",",
+          "p_float": 0.1563757061958313,
+          "p_relu": 0.09949091076850891
+        },
+        {
+          "kl": 0.795373797416687,
+          "context": " strength/involvement",
+          "target": " is",
+          "p_float": 0.13843338191509247,
+          "p_relu": 0.2118232399225235
+        },
+        {
+          "kl": 0.7844940423965454,
+          "context": " opinion poll in question,",
+          "target": " which",
+          "p_float": 0.20527364313602448,
+          "p_relu": 0.07028615474700928
+        },
+        {
+          "kl": 0.7773369550704956,
+          "context": " while not our primary purpose",
+          "target": ",",
+          "p_float": 0.531417965888977,
+          "p_relu": 0.13433441519737244
+        },
+        {
+          "kl": 0.7656958103179932,
+          "context": "s is 180 \u2014 the",
+          "target": " death",
+          "p_float": 0.019014611840248108,
+          "p_relu": 0.004367938730865717
+        },
+        {
+          "kl": 0.762726366519928,
+          "context": " filming wouldn't start for",
+          "target": " another",
+          "p_float": 0.09999126940965652,
+          "p_relu": 0.020248893648386
+        },
+        {
+          "kl": 0.7554925084114075,
+          "context": " Darrington\u2019s",
+          "target": " population",
+          "p_float": 0.00018827925669029355,
+          "p_relu": 1.358547160634771e-05
+        },
+        {
+          "kl": 0.7205679416656494,
+          "context": " its secret cymbal",
+          "target": " formula",
+          "p_float": 0.00017104644211940467,
+          "p_relu": 0.00017921344260685146
+        },
+        {
+          "kl": 0.7204990983009338,
+          "context": " demographic affinity group) with",
+          "target": " claiming",
+          "p_float": 0.00026079677627421916,
+          "p_relu": 0.00012490358494687825
+        },
+        {
+          "kl": 0.7138797044754028,
+          "context": " principal themes to use in",
+          "target": " an",
+          "p_float": 0.007438434287905693,
+          "p_relu": 0.0071070222184062
+        }
+      ]
+    },
+    {
+      "block": 3,
+      "mean_kl": 0.24522191286087036,
+      "median_kl": 0.1764015257358551,
+      "max_kl": 3.7268214225769043,
+      "frac_relu_better": 0.32421875,
+      "y_neg_norm": 34.30843734741211,
+      "s_neg_norm": 7.125885963439941,
+      "top_50": [
+        {
+          "kl": 3.7268214225769043,
+          "context": "ars\n\nCall them",
+          "target": " li",
+          "p_float": 0.697075605392456,
+          "p_relu": 0.002471987623721361
+        },
+        {
+          "kl": 2.9532971382141113,
+          "context": " (for a summary,",
+          "target": " see",
+          "p_float": 0.7549818754196167,
+          "p_relu": 0.016484279185533524
+        },
+        {
+          "kl": 2.332592725753784,
+          "context": " What\u2019s my",
+          "target": " favorite",
+          "p_float": 0.16375097632408142,
+          "p_relu": 0.0020441808737814426
+        },
+        {
+          "kl": 2.14494252204895,
+          "context": " 1937-1942,",
+          "target": " 1946",
+          "p_float": 0.11492615193128586,
+          "p_relu": 0.0011733953142538667
+        },
+        {
+          "kl": 1.7905503511428833,
+          "context": " is part of the transfer",
+          "target": " terms",
+          "p_float": 0.00010268332698615268,
+          "p_relu": 4.199964314466342e-05
+        },
+        {
+          "kl": 1.7626078128814697,
+          "context": "1966 Charlie Smith 1967-",
+          "target": "1968",
+          "p_float": 0.28448307514190674,
+          "p_relu": 0.01927008479833603
+        },
+        {
+          "kl": 1.5236232280731201,
+          "context": "1931 Frank Crosett",
+          "target": "i",
+          "p_float": 0.06974297761917114,
+          "p_relu": 0.3634186387062073
+        },
+        {
+          "kl": 1.4759634733200073,
+          "context": "What\u2019s the",
+          "target": " next",
+          "p_float": 0.0016141074011102319,
+          "p_relu": 0.0021350153256207705
+        },
+        {
+          "kl": 1.4580039978027344,
+          "context": " caller going to ask me",
+          "target": ":",
+          "p_float": 0.0007027307874523103,
+          "p_relu": 0.004179303999990225
+        },
+        {
+          "kl": 1.4578907489776611,
+          "context": " Johnson 1961 Clete Boy",
+          "target": "er",
+          "p_float": 0.1914386749267578,
+          "p_relu": 0.034335751086473465
+        },
+        {
+          "kl": 1.4431403875350952,
+          "context": " Deer Park 16.7",
+          "target": " oz",
+          "p_float": 0.18864336609840393,
+          "p_relu": 0.013313567265868187
+        },
+        {
+          "kl": 1.4326969385147095,
+          "context": " said about what New Japan",
+          "target": " Pro",
+          "p_float": 0.4173000752925873,
+          "p_relu": 0.011585664004087448
+        },
+        {
+          "kl": 1.3950754404067993,
+          "context": "-1936 Nolan Richardson",
+          "target": " 1935",
+          "p_float": 0.06195985525846481,
+          "p_relu": 0.013175098225474358
+        },
+        {
+          "kl": 1.3644378185272217,
+          "context": "Fu respectively pay to Zhou",
+          "target": " and",
+          "p_float": 0.020130235701799393,
+          "p_relu": 0.06130559369921684
+        },
+        {
+          "kl": 1.342814564704895,
+          "context": ". \u201cThat being",
+          "target": " said",
+          "p_float": 0.965719997882843,
+          "p_relu": 0.22030498087406158
+        },
+        {
+          "kl": 1.3405416011810303,
+          "context": " to Zhou and Hao",
+          "target": " their",
+          "p_float": 0.016703415662050247,
+          "p_relu": 0.0018512203823775053
+        },
+        {
+          "kl": 1.2999541759490967,
+          "context": " the question is phrased",
+          "target": ",",
+          "p_float": 0.12315286695957184,
+          "p_relu": 0.06384678184986115
+        },
+        {
+          "kl": 1.2494553327560425,
+          "context": "), Syria, June 25",
+          "target": " and",
+          "p_float": 0.22887727618217468,
+          "p_relu": 0.009942742995917797
+        },
+        {
+          "kl": 1.2424992322921753,
+          "context": "oms around the air at",
+          "target": " will",
+          "p_float": 0.02554704248905182,
+          "p_relu": 0.0024826345033943653
+        },
+        {
+          "kl": 1.2364821434020996,
+          "context": " topics they hold strong attitudes",
+          "target": " on",
+          "p_float": 0.028216000646352768,
+          "p_relu": 0.033105865120887756
+        },
+        {
+          "kl": 1.2249634265899658,
+          "context": " (not his or her",
+          "target": " demographic",
+          "p_float": 0.00019101437646895647,
+          "p_relu": 3.584353908081539e-05
+        },
+        {
+          "kl": 1.2077913284301758,
+          "context": " inquisitive audience you",
+          "target": " have",
+          "p_float": 0.5224019289016724,
+          "p_relu": 0.06121610477566719
+        },
+        {
+          "kl": 1.1951253414154053,
+          "context": ",\u201d Huebs",
+          "target": "ch",
+          "p_float": 0.3286658227443695,
+          "p_relu": 0.02320694923400879
+        },
+        {
+          "kl": 1.1930025815963745,
+          "context": " whatever way the question is",
+          "target": " phr",
+          "p_float": 0.17062853276729584,
+          "p_relu": 0.04319606348872185
+        },
+        {
+          "kl": 1.184800386428833,
+          "context": " on themed promotional product(",
+          "target": "s",
+          "p_float": 0.9709171056747437,
+          "p_relu": 0.26867204904556274
+        },
+        {
+          "kl": 1.1537129878997803,
+          "context": "WA Terminal at JFK offer",
+          "target": " a",
+          "p_float": 0.04147423058748245,
+          "p_relu": 0.1710057556629181
+        },
+        {
+          "kl": 1.1464289426803589,
+          "context": " continental and regional origins,",
+          "target": " of",
+          "p_float": 0.5226802229881287,
+          "p_relu": 0.06348153948783875
+        },
+        {
+          "kl": 1.140648365020752,
+          "context": "\ufffds not even as",
+          "target": " though",
+          "p_float": 0.06753040850162506,
+          "p_relu": 0.003782130079343915
+        },
+        {
+          "kl": 1.132392168045044,
+          "context": ".\n\nI\ufffd",
+          "target": "\ufffd",
+          "p_float": 0.4102872312068939,
+          "p_relu": 0.9299125671386719
+        },
+        {
+          "kl": 1.1232908964157104,
+          "context": " other ISIS infrastructure in (",
+          "target": "May",
+          "p_float": 0.31146278977394104,
+          "p_relu": 0.006857042200863361
+        },
+        {
+          "kl": 1.1172531843185425,
+          "context": ", which he says was",
+          "target": " the",
+          "p_float": 0.027582867071032524,
+          "p_relu": 0.029038213193416595
+        },
+        {
+          "kl": 1.0951642990112305,
+          "context": " Zhou and Hao their",
+          "target": " owed",
+          "p_float": 2.575204416643828e-05,
+          "p_relu": 2.8285325242904946e-05
+        },
+        {
+          "kl": 1.0880534648895264,
+          "context": " population is 1,400",
+          "target": " and",
+          "p_float": 0.13305824995040894,
+          "p_relu": 0.036514364182949066
+        },
+        {
+          "kl": 1.08744215965271,
+          "context": " the world\u2019s",
+          "target": " most",
+          "p_float": 0.2362356185913086,
+          "p_relu": 0.07998032867908478
+        },
+        {
+          "kl": 1.0806596279144287,
+          "context": ",400 and Oso",
+          "target": "\ufffd",
+          "p_float": 0.08375433087348938,
+          "p_relu": 0.08626344799995422
+        },
+        {
+          "kl": 1.0755752325057983,
+          "context": ", Jay Leno spoke",
+          "target": ".",
+          "p_float": 0.11542796343564987,
+          "p_relu": 0.0389019250869751
+        },
+        {
+          "kl": 1.0719640254974365,
+          "context": "setti 1932-19",
+          "target": "36",
+          "p_float": 0.004559805616736412,
+          "p_relu": 0.02315807342529297
+        },
+        {
+          "kl": 1.0674681663513184,
+          "context": "s\n\n4.",
+          "target": " i",
+          "p_float": 0.04197224974632263,
+          "p_relu": 0.2659624218940735
+        },
+        {
+          "kl": 1.0656365156173706,
+          "context": " have,\u201d he",
+          "target": " said",
+          "p_float": 0.3086282014846802,
+          "p_relu": 0.08673954010009766
+        },
+        {
+          "kl": 1.0612350702285767,
+          "context": "te Boyer 1961-",
+          "target": "1966",
+          "p_float": 0.029366683214902878,
+          "p_relu": 0.01379843894392252
+        },
+        {
+          "kl": 1.0452195405960083,
+          "context": "2. iG pays",
+          "target": " Tong",
+          "p_float": 0.1649077832698822,
+          "p_relu": 0.0004713951493613422
+        },
+        {
+          "kl": 1.039367437362671,
+          "context": "\n2. iG",
+          "target": " pays",
+          "p_float": 0.0030253808945417404,
+          "p_relu": 0.0002608122013043612
+        },
+        {
+          "kl": 1.0349453687667847,
+          "context": " the next caller going to",
+          "target": " ask",
+          "p_float": 0.20033717155456543,
+          "p_relu": 0.05394680052995682
+        },
+        {
+          "kl": 1.0021440982818604,
+          "context": " rebounds and straight-up",
+          "target": " zo",
+          "p_float": 0.00045899205724708736,
+          "p_relu": 5.581124423770234e-05
+        },
+        {
+          "kl": 0.9791430234909058,
+          "context": " 6 Tony Lazzeri",
+          "target": " 1929",
+          "p_float": 0.001626650569960475,
+          "p_relu": 0.01785035990178585
+        },
+        {
+          "kl": 0.9788678884506226,
+          "context": ". Bullies Call them",
+          "target": " bullies",
+          "p_float": 0.007177604828029871,
+          "p_relu": 0.00148497661575675
+        },
+        {
+          "kl": 0.9716120958328247,
+          "context": "\" and \"intelligence\"",
+          "target": " are",
+          "p_float": 0.3522684872150421,
+          "p_relu": 0.20492355525493622
+        },
+        {
+          "kl": 0.9589812755584717,
+          "context": " closed-to-the",
+          "target": "-",
+          "p_float": 0.7324548959732056,
+          "p_relu": 0.9403774738311768
+        },
+        {
+          "kl": 0.9566283822059631,
+          "context": "7.5 million to",
+          "target": " repair",
+          "p_float": 0.06222882121801376,
+          "p_relu": 0.0786760076880455
+        },
+        {
+          "kl": 0.9502540826797485,
+          "context": " 16.7 oz waters",
+          "target": ".",
+          "p_float": 0.009240120649337769,
+          "p_relu": 0.03976070508360863
+        }
+      ]
+    },
+    {
+      "block": 4,
+      "mean_kl": 0.28289803862571716,
+      "median_kl": 0.19283908605575562,
+      "max_kl": 4.396347522735596,
+      "frac_relu_better": 0.3134765625,
+      "y_neg_norm": 34.15790557861328,
+      "s_neg_norm": 7.146093368530273,
+      "top_50": [
+        {
+          "kl": 4.396347522735596,
+          "context": "ars\n\nCall them",
+          "target": " li",
+          "p_float": 0.697075605392456,
+          "p_relu": 0.0011178792919963598
+        },
+        {
+          "kl": 3.7853894233703613,
+          "context": " the reason it\u2019",
+          "target": "s",
+          "p_float": 0.9911561012268066,
+          "p_relu": 0.021340595558285713
+        },
+        {
+          "kl": 3.017371892929077,
+          "context": " Richardson 1935 JOE DI",
+          "target": " MAG",
+          "p_float": 0.0002249978278996423,
+          "p_relu": 6.530155951622874e-05
+        },
+        {
+          "kl": 2.8010034561157227,
+          "context": ". Supremacists Attack",
+          "target": "back",
+          "p_float": 0.29971301555633545,
+          "p_relu": 0.002223233226686716
+        },
+        {
+          "kl": 2.5314676761627197,
+          "context": " said about what New Japan",
+          "target": " Pro",
+          "p_float": 0.4173000752925873,
+          "p_relu": 0.001082350267097354
+        },
+        {
+          "kl": 2.328341245651245,
+          "context": "4. iG and",
+          "target": " Tong",
+          "p_float": 0.42277562618255615,
+          "p_relu": 0.7176785469055176
+        },
+        {
+          "kl": 2.1899936199188232,
+          "context": "s meaningless is because it",
+          "target": " takes",
+          "p_float": 0.0033329278230667114,
+          "p_relu": 0.004855904262512922
+        },
+        {
+          "kl": 1.9890592098236084,
+          "context": " transporting you back to what",
+          "target": " travellers",
+          "p_float": 0.7555923461914062,
+          "p_relu": 0.05654599517583847
+        },
+        {
+          "kl": 1.9411225318908691,
+          "context": "aggio Bob Meu",
+          "target": "sel",
+          "p_float": 0.01158761978149414,
+          "p_relu": 0.00016283229342661798
+        },
+        {
+          "kl": 1.866464614868164,
+          "context": "1966 Charlie Smith 1967-",
+          "target": "1968",
+          "p_float": 0.28448307514190674,
+          "p_relu": 0.022620677947998047
+        },
+        {
+          "kl": 1.8548145294189453,
+          "context": " and Oso\u2019",
+          "target": "s",
+          "p_float": 0.8108603358268738,
+          "p_relu": 0.08855519443750381
+        },
+        {
+          "kl": 1.8474982976913452,
+          "context": "What\u2019s the",
+          "target": " next",
+          "p_float": 0.0016141074011102319,
+          "p_relu": 0.001738479477353394
+        },
+        {
+          "kl": 1.7928839921951294,
+          "context": " uneasy few seconds, Jay",
+          "target": " Len",
+          "p_float": 0.06359028816223145,
+          "p_relu": 0.7997135519981384
+        },
+        {
+          "kl": 1.7801295518875122,
+          "context": " TongFu respectively pay to",
+          "target": " Zhou",
+          "p_float": 0.23076871037483215,
+          "p_relu": 0.0018258653581142426
+        },
+        {
+          "kl": 1.769822120666504,
+          "context": ", Guns N\u2019",
+          "target": " Roses",
+          "p_float": 7.352183456532657e-05,
+          "p_relu": 2.3265076379175298e-05
+        },
+        {
+          "kl": 1.7517271041870117,
+          "context": " and its limited command and",
+          "target": " control",
+          "p_float": 0.9615365266799927,
+          "p_relu": 0.1412987858057022
+        },
+        {
+          "kl": 1.7409863471984863,
+          "context": "up zooms around the",
+          "target": " air",
+          "p_float": 0.0005698254099115729,
+          "p_relu": 0.0003509163507260382
+        },
+        {
+          "kl": 1.6525390148162842,
+          "context": "oms around the air at",
+          "target": " will",
+          "p_float": 0.02554704248905182,
+          "p_relu": 0.0003943594347219914
+        },
+        {
+          "kl": 1.6361535787582397,
+          "context": " JOE DI MAGG",
+          "target": "IO",
+          "p_float": 0.09943504631519318,
+          "p_relu": 0.013196129351854324
+        },
+        {
+          "kl": 1.5923150777816772,
+          "context": " (for a summary,",
+          "target": " see",
+          "p_float": 0.7549818754196167,
+          "p_relu": 0.07853896915912628
+        },
+        {
+          "kl": 1.5870832204818726,
+          "context": " the 1,000-",
+          "target": "year",
+          "p_float": 0.6177690625190735,
+          "p_relu": 0.04903114587068558
+        },
+        {
+          "kl": 1.578543782234192,
+          "context": " it\u2019s meaningless",
+          "target": " is",
+          "p_float": 0.8376081585884094,
+          "p_relu": 0.10759859532117844
+        },
+        {
+          "kl": 1.5580395460128784,
+          "context": "\n\nAnd if for",
+          "target": " any",
+          "p_float": 0.2079380601644516,
+          "p_relu": 0.15225926041603088
+        },
+        {
+          "kl": 1.5142860412597656,
+          "context": "\n\nI\u2019",
+          "target": "m",
+          "p_float": 0.5687730312347412,
+          "p_relu": 0.13102801144123077
+        },
+        {
+          "kl": 1.5004712343215942,
+          "context": " Oso\u2019s",
+          "target": " is",
+          "p_float": 0.42367279529571533,
+          "p_relu": 0.01883092150092125
+        },
+        {
+          "kl": 1.470372200012207,
+          "context": "othering the diversity and",
+          "target": " nationality",
+          "p_float": 2.2277716198004782e-05,
+          "p_relu": 8.131212962325662e-05
+        },
+        {
+          "kl": 1.4149419069290161,
+          "context": " Deer Park 16.7",
+          "target": " oz",
+          "p_float": 0.18864336609840393,
+          "p_relu": 0.024679243564605713
+        },
+        {
+          "kl": 1.406662106513977,
+          "context": " \u201cWhat\u2019",
+          "target": "s",
+          "p_float": 0.10437621176242828,
+          "p_relu": 0.021238217130303383
+        },
+        {
+          "kl": 1.391958475112915,
+          "context": " off a highway in their",
+          "target": " cars",
+          "p_float": 0.1778424084186554,
+          "p_relu": 0.008526047691702843
+        },
+        {
+          "kl": 1.3583145141601562,
+          "context": " closed-to-the",
+          "target": "-",
+          "p_float": 0.7324548959732056,
+          "p_relu": 0.9519580006599426
+        },
+        {
+          "kl": 1.338247537612915,
+          "context": " Capitol is a huge amount",
+          "target": ",",
+          "p_float": 0.1515244096517563,
+          "p_relu": 0.013549108058214188
+        },
+        {
+          "kl": 1.3288953304290771,
+          "context": " audience you have,\ufffd",
+          "target": "\ufffd",
+          "p_float": 0.001027172664180398,
+          "p_relu": 0.00043810883653350174
+        },
+        {
+          "kl": 1.3190207481384277,
+          "context": " inquisitive audience you",
+          "target": " have",
+          "p_float": 0.5224019289016724,
+          "p_relu": 0.05238032341003418
+        },
+        {
+          "kl": 1.3084461688995361,
+          "context": "\ufffd he said his voice",
+          "target": " dripping",
+          "p_float": 0.0006820860435254872,
+          "p_relu": 7.610965258209035e-05
+        },
+        {
+          "kl": 1.3076285123825073,
+          "context": "\ufffdWhat\u2019s",
+          "target": " the",
+          "p_float": 0.1854752153158188,
+          "p_relu": 0.05765794962644577
+        },
+        {
+          "kl": 1.2971820831298828,
+          "context": "Fu respectively pay to Zhou",
+          "target": " and",
+          "p_float": 0.020130235701799393,
+          "p_relu": 0.07344993948936462
+        },
+        {
+          "kl": 1.2912393808364868,
+          "context": "-to-the-",
+          "target": "public",
+          "p_float": 0.29310351610183716,
+          "p_relu": 0.008021611720323563
+        },
+        {
+          "kl": 1.284264087677002,
+          "context": "aults and rebounds and straight",
+          "target": "-",
+          "p_float": 0.1119445264339447,
+          "p_relu": 0.14758335053920746
+        },
+        {
+          "kl": 1.2163803577423096,
+          "context": "s\n\n4.",
+          "target": " i",
+          "p_float": 0.04197224974632263,
+          "p_relu": 0.16047526895999908
+        },
+        {
+          "kl": 1.203751802444458,
+          "context": " to Zhou and Hao",
+          "target": " their",
+          "p_float": 0.016703415662050247,
+          "p_relu": 0.0015283504035323858
+        },
+        {
+          "kl": 1.1938385963439941,
+          "context": " me: What\u2019",
+          "target": "s",
+          "p_float": 0.3147473633289337,
+          "p_relu": 0.11961144208908081
+        },
+        {
+          "kl": 1.190567135810852,
+          "context": "anderer (not his",
+          "target": " or",
+          "p_float": 0.0796305388212204,
+          "p_relu": 0.0025926164817065
+        },
+        {
+          "kl": 1.189487338066101,
+          "context": " is part of the transfer",
+          "target": " terms",
+          "p_float": 0.00010268332698615268,
+          "p_relu": 0.0003280230739619583
+        },
+        {
+          "kl": 1.1646130084991455,
+          "context": "-1952 Mickey M",
+          "target": "antle",
+          "p_float": 0.9687991142272949,
+          "p_relu": 0.2660152316093445
+        },
+        {
+          "kl": 1.1562401056289673,
+          "context": " Nolan Richardson 1935 JOE",
+          "target": " DI",
+          "p_float": 0.22735919058322906,
+          "p_relu": 0.004922150634229183
+        },
+        {
+          "kl": 1.1494040489196777,
+          "context": "\u2019s meaningless is",
+          "target": " because",
+          "p_float": 0.5193549394607544,
+          "p_relu": 0.04351651668548584
+        },
+        {
+          "kl": 1.129105806350708,
+          "context": "jian, the world",
+          "target": " awaited",
+          "p_float": 0.0001621249393792823,
+          "p_relu": 0.0003788077156059444
+        },
+        {
+          "kl": 1.1203041076660156,
+          "context": " Johnson 1961 Clete Boy",
+          "target": "er",
+          "p_float": 0.1914386749267578,
+          "p_relu": 0.03982865810394287
+        },
+        {
+          "kl": 1.114241361618042,
+          "context": " the death of the final",
+          "target": " grandson",
+          "p_float": 6.586929521290585e-05,
+          "p_relu": 3.279844167991541e-05
+        },
+        {
+          "kl": 1.0934942960739136,
+          "context": "te Boyer 1961-",
+          "target": "1966",
+          "p_float": 0.029366683214902878,
+          "p_relu": 0.017144927754998207
+        }
+      ]
+    },
+    {
+      "block": 5,
+      "mean_kl": 0.25350338220596313,
+      "median_kl": 0.1973716914653778,
+      "max_kl": 1.9898600578308105,
+      "frac_relu_better": 0.29248046875,
+      "y_neg_norm": 33.84190368652344,
+      "s_neg_norm": 7.933773040771484,
+      "top_50": [
+        {
+          "kl": 1.9898600578308105,
+          "context": " Deer Park 16.7",
+          "target": " oz",
+          "p_float": 0.18864336609840393,
+          "p_relu": 0.0053066713735461235
+        },
+        {
+          "kl": 1.9485435485839844,
+          "context": ".\n\nI\ufffd",
+          "target": "\ufffd",
+          "p_float": 0.4102872312068939,
+          "p_relu": 0.0040371413342654705
+        },
+        {
+          "kl": 1.7643157243728638,
+          "context": "ars\n\nCall them",
+          "target": " li",
+          "p_float": 0.697075605392456,
+          "p_relu": 0.04331357777118683
+        },
+        {
+          "kl": 1.517139196395874,
+          "context": "aults and rebounds and straight",
+          "target": "-",
+          "p_float": 0.1119445264339447,
+          "p_relu": 0.1615326702594757
+        },
+        {
+          "kl": 1.5126997232437134,
+          "context": " did not regret making the",
+          "target": " estimate",
+          "p_float": 0.43743497133255005,
+          "p_relu": 0.02707064338028431
+        },
+        {
+          "kl": 1.4591351747512817,
+          "context": "s meaningless is because it",
+          "target": " takes",
+          "p_float": 0.0033329278230667114,
+          "p_relu": 0.0037762336432933807
+        },
+        {
+          "kl": 1.452878475189209,
+          "context": "oms around the air at",
+          "target": " will",
+          "p_float": 0.02554704248905182,
+          "p_relu": 0.00042970615322701633
+        },
+        {
+          "kl": 1.430234670639038,
+          "context": " the 1,000-",
+          "target": "year",
+          "p_float": 0.6177690625190735,
+          "p_relu": 0.060665313154459
+        },
+        {
+          "kl": 1.4259998798370361,
+          "context": " \u201cWhat\u2019",
+          "target": "s",
+          "p_float": 0.10437621176242828,
+          "p_relu": 0.06457721441984177
+        },
+        {
+          "kl": 1.3987656831741333,
+          "context": "-1936 Nolan Richardson",
+          "target": " 1935",
+          "p_float": 0.06195985525846481,
+          "p_relu": 0.014766551554203033
+        },
+        {
+          "kl": 1.353547215461731,
+          "context": " off a highway in their",
+          "target": " cars",
+          "p_float": 0.1778424084186554,
+          "p_relu": 0.010718774050474167
+        },
+        {
+          "kl": 1.3271188735961914,
+          "context": "up zooms around the",
+          "target": " air",
+          "p_float": 0.0005698254099115729,
+          "p_relu": 0.0007828650414012372
+        },
+        {
+          "kl": 1.3079077005386353,
+          "context": " Oso\u2019s",
+          "target": " is",
+          "p_float": 0.42367279529571533,
+          "p_relu": 0.020739641040563583
+        },
+        {
+          "kl": 1.2599726915359497,
+          "context": " said about what New Japan",
+          "target": " Pro",
+          "p_float": 0.4173000752925873,
+          "p_relu": 0.016363073140382767
+        },
+        {
+          "kl": 1.259185791015625,
+          "context": "VG <\u2013> Rising",
+          "target": "Stars",
+          "p_float": 0.012811667285859585,
+          "p_relu": 0.0024557451251894236
+        },
+        {
+          "kl": 1.2430384159088135,
+          "context": " them so. Bullies",
+          "target": " Call",
+          "p_float": 0.0033434859942644835,
+          "p_relu": 0.0010885150404646993
+        },
+        {
+          "kl": 1.2358099222183228,
+          "context": "\n\nI\u2019",
+          "target": "m",
+          "p_float": 0.5687730312347412,
+          "p_relu": 0.10199965536594391
+        },
+        {
+          "kl": 1.226078987121582,
+          "context": ", and you\u2019",
+          "target": "ve",
+          "p_float": 0.002207848010584712,
+          "p_relu": 0.00014467653818428516
+        },
+        {
+          "kl": 1.1972694396972656,
+          "context": "-to-the-",
+          "target": "public",
+          "p_float": 0.29310351610183716,
+          "p_relu": 0.02991611696779728
+        },
+        {
+          "kl": 1.1567572355270386,
+          "context": " rebounds and straight-up",
+          "target": " zo",
+          "p_float": 0.00045899205724708736,
+          "p_relu": 7.676197856198996e-05
+        },
+        {
+          "kl": 1.1540353298187256,
+          "context": " in such a way as",
+          "target": " to",
+          "p_float": 0.9020835161209106,
+          "p_relu": 0.2128974348306656
+        },
+        {
+          "kl": 1.1538050174713135,
+          "context": " to Zhou and Hao",
+          "target": " their",
+          "p_float": 0.016703415662050247,
+          "p_relu": 0.003354883985593915
+        },
+        {
+          "kl": 1.1389333009719849,
+          "context": " as you meet this guy",
+          "target": "'s",
+          "p_float": 0.7093832492828369,
+          "p_relu": 0.09317811578512192
+        },
+        {
+          "kl": 1.1179614067077637,
+          "context": " known ISIS command and control",
+          "target": " facilities",
+          "p_float": 0.15297120809555054,
+          "p_relu": 0.044126465916633606
+        },
+        {
+          "kl": 1.0854132175445557,
+          "context": " claiming supremacy in naming the",
+          "target": " other",
+          "p_float": 0.005066972225904465,
+          "p_relu": 0.002331772120669484
+        },
+        {
+          "kl": 1.082381248474121,
+          "context": ", Guns N\u2019",
+          "target": " Roses",
+          "p_float": 7.352183456532657e-05,
+          "p_relu": 2.3252323444467038e-05
+        },
+        {
+          "kl": 1.0734105110168457,
+          "context": " what \"race\" and",
+          "target": " \"",
+          "p_float": 0.9254910349845886,
+          "p_relu": 0.26248711347579956
+        },
+        {
+          "kl": 1.0668662786483765,
+          "context": " topics they hold strong attitudes",
+          "target": " on",
+          "p_float": 0.028216000646352768,
+          "p_relu": 0.06671831011772156
+        },
+        {
+          "kl": 1.0579135417938232,
+          "context": " measured other variables (for",
+          "target": " a",
+          "p_float": 0.02147926390171051,
+          "p_relu": 0.02181076817214489
+        },
+        {
+          "kl": 1.033251166343689,
+          "context": "Fu respectively pay to Zhou",
+          "target": " and",
+          "p_float": 0.020130235701799393,
+          "p_relu": 0.054522424936294556
+        },
+        {
+          "kl": 1.007597804069519,
+          "context": " physics, Ricochet v",
+          "target": "aults",
+          "p_float": 0.7651964426040649,
+          "p_relu": 0.1942538619041443
+        },
+        {
+          "kl": 1.0051043033599854,
+          "context": "io Bob Meusel",
+          "target": " 1929",
+          "p_float": 4.342450665717479e-06,
+          "p_relu": 8.301932211907115e-06
+        },
+        {
+          "kl": 0.9924067258834839,
+          "context": "G and TongFu respectively",
+          "target": " pay",
+          "p_float": 0.02423398569226265,
+          "p_relu": 0.014624722301959991
+        },
+        {
+          "kl": 0.9834351539611816,
+          "context": " to some estimates army controls",
+          "target": " 40",
+          "p_float": 0.006949896924197674,
+          "p_relu": 0.00044816499575972557
+        },
+        {
+          "kl": 0.97407466173172,
+          "context": " transporting you back to what",
+          "target": " travellers",
+          "p_float": 0.7555923461914062,
+          "p_relu": 0.18311943113803864
+        },
+        {
+          "kl": 0.9649590253829956,
+          "context": "\n\nI\u2019",
+          "target": "d",
+          "p_float": 0.03794978931546211,
+          "p_relu": 0.011517483741044998
+        },
+        {
+          "kl": 0.9512631297111511,
+          "context": " their owed prize mone",
+          "target": "ys",
+          "p_float": 0.9939377307891846,
+          "p_relu": 0.37395262718200684
+        },
+        {
+          "kl": 0.9488727450370789,
+          "context": "arden State\" during this",
+          "target": " time",
+          "p_float": 0.6816802024841309,
+          "p_relu": 0.22356079518795013
+        },
+        {
+          "kl": 0.9402786493301392,
+          "context": " the next caller going to",
+          "target": " ask",
+          "p_float": 0.20033717155456543,
+          "p_relu": 0.04910559579730034
+        },
+        {
+          "kl": 0.935045063495636,
+          "context": " Lazzeri 1930-",
+          "target": "19",
+          "p_float": 0.16935354471206665,
+          "p_relu": 0.17669567465782166
+        },
+        {
+          "kl": 0.926994264125824,
+          "context": "erer (not his or",
+          "target": " her",
+          "p_float": 0.9521104097366333,
+          "p_relu": 0.3349307179450989
+        },
+        {
+          "kl": 0.919157087802887,
+          "context": " ask me: What\ufffd",
+          "target": "\ufffd",
+          "p_float": 0.5034617781639099,
+          "p_relu": 0.053297534584999084
+        },
+        {
+          "kl": 0.9130642414093018,
+          "context": " pack of Deer Park 16",
+          "target": ".",
+          "p_float": 0.01567615009844303,
+          "p_relu": 0.03403209522366524
+        },
+        {
+          "kl": 0.9088171720504761,
+          "context": " on what topics they hold",
+          "target": " strong",
+          "p_float": 0.000944300671108067,
+          "p_relu": 0.0013907437678426504
+        },
+        {
+          "kl": 0.9023619890213013,
+          "context": " \"race\" and \"",
+          "target": "intelligence",
+          "p_float": 0.00981433317065239,
+          "p_relu": 0.05140967667102814
+        },
+        {
+          "kl": 0.893290102481842,
+          "context": " by the land, perhaps",
+          "target": " never",
+          "p_float": 0.0018278497736901045,
+          "p_relu": 0.0012853466905653477
+        },
+        {
+          "kl": 0.8901910781860352,
+          "context": "anderer (not his",
+          "target": " or",
+          "p_float": 0.0796305388212204,
+          "p_relu": 0.005544228479266167
+        },
+        {
+          "kl": 0.8823844790458679,
+          "context": "-coded video-game",
+          "target": " character",
+          "p_float": 0.4252243638038635,
+          "p_relu": 0.04816392809152603
+        },
+        {
+          "kl": 0.8668349981307983,
+          "context": " camper ie: One",
+          "target": " who",
+          "p_float": 0.21624219417572021,
+          "p_relu": 0.015096704475581646
+        },
+        {
+          "kl": 0.8630475401878357,
+          "context": "aggio Bob Meu",
+          "target": "sel",
+          "p_float": 0.01158761978149414,
+          "p_relu": 0.0012934821425005794
+        }
+      ]
+    },
+    {
+      "block": 6,
+      "mean_kl": 0.18955528736114502,
+      "median_kl": 0.13977394998073578,
+      "max_kl": 2.4208922386169434,
+      "frac_relu_better": 0.31396484375,
+      "y_neg_norm": 30.555870056152344,
+      "s_neg_norm": 8.675063133239746,
+      "top_50": [
+        {
+          "kl": 2.4208922386169434,
+          "context": ", I guess I\ufffd",
+          "target": "\ufffd",
+          "p_float": 0.000299747014651075,
+          "p_relu": 3.6607456422643736e-05
+        },
+        {
+          "kl": 2.137275218963623,
+          "context": " transporting you back to what",
+          "target": " travellers",
+          "p_float": 0.7555923461914062,
+          "p_relu": 0.04325246438384056
+        },
+        {
+          "kl": 1.9625731706619263,
+          "context": ".\n\nI\ufffd",
+          "target": "\ufffd",
+          "p_float": 0.4102872312068939,
+          "p_relu": 0.004151560366153717
+        },
+        {
+          "kl": 1.7852383852005005,
+          "context": "ars\n\nCall them",
+          "target": " li",
+          "p_float": 0.697075605392456,
+          "p_relu": 0.038280587643384933
+        },
+        {
+          "kl": 1.6378700733184814,
+          "context": "aults and rebounds and straight",
+          "target": "-",
+          "p_float": 0.1119445264339447,
+          "p_relu": 0.09168203175067902
+        },
+        {
+          "kl": 1.4694151878356934,
+          "context": "i Hendrix, Guns",
+          "target": " N",
+          "p_float": 0.8725019693374634,
+          "p_relu": 0.13662096858024597
+        },
+        {
+          "kl": 1.3727567195892334,
+          "context": " that demolished everything in their",
+          "target": " path",
+          "p_float": 0.7964949607849121,
+          "p_relu": 0.1540699303150177
+        },
+        {
+          "kl": 1.2736903429031372,
+          "context": "-1936 Nolan Richardson",
+          "target": " 1935",
+          "p_float": 0.06195985525846481,
+          "p_relu": 0.0160090122371912
+        },
+        {
+          "kl": 1.243999719619751,
+          "context": " they hold strong attitudes on",
+          "target": ",",
+          "p_float": 0.27975791692733765,
+          "p_relu": 0.09793460369110107
+        },
+        {
+          "kl": 1.237988829612732,
+          "context": " ask me: What\ufffd",
+          "target": "\ufffd",
+          "p_float": 0.5034617781639099,
+          "p_relu": 0.03144458681344986
+        },
+        {
+          "kl": 1.2135779857635498,
+          "context": "so\u2019s is",
+          "target": " 180",
+          "p_float": 0.00124769052490592,
+          "p_relu": 0.00014568795450031757
+        },
+        {
+          "kl": 1.0921128988265991,
+          "context": " it actually had to do",
+          "target": " with",
+          "p_float": 0.21177983283996582,
+          "p_relu": 0.6847141981124878
+        },
+        {
+          "kl": 1.0920113325119019,
+          "context": " Deer Park 16.7",
+          "target": " oz",
+          "p_float": 0.18864336609840393,
+          "p_relu": 0.034263793379068375
+        },
+        {
+          "kl": 1.0887587070465088,
+          "context": " I got cast in '",
+          "target": "Sc",
+          "p_float": 0.8123440146446228,
+          "p_relu": 0.1754801869392395
+        },
+        {
+          "kl": 1.0708098411560059,
+          "context": " did not regret making the",
+          "target": " estimate",
+          "p_float": 0.43743497133255005,
+          "p_relu": 0.05876373127102852
+        },
+        {
+          "kl": 1.0626955032348633,
+          "context": "400 and Oso\ufffd",
+          "target": "\ufffd",
+          "p_float": 0.883202314376831,
+          "p_relu": 0.2130015790462494
+        },
+        {
+          "kl": 1.043646216392517,
+          "context": " on what topics they hold",
+          "target": " strong",
+          "p_float": 0.000944300671108067,
+          "p_relu": 0.002243821043521166
+        },
+        {
+          "kl": 0.9490411877632141,
+          "context": " say \u201cno\ufffd",
+          "target": "\ufffd",
+          "p_float": 9.512536053080112e-05,
+          "p_relu": 3.0040591809665784e-05
+        },
+        {
+          "kl": 0.9153605699539185,
+          "context": " topics they hold strong attitudes",
+          "target": " on",
+          "p_float": 0.028216000646352768,
+          "p_relu": 0.044994570314884186
+        },
+        {
+          "kl": 0.914989173412323,
+          "context": ", and up to 30",
+          "target": " more",
+          "p_float": 0.2616981565952301,
+          "p_relu": 0.03760846331715584
+        },
+        {
+          "kl": 0.8812861442565918,
+          "context": "ao\n\n3.",
+          "target": " Zhou",
+          "p_float": 2.6789255571202375e-05,
+          "p_relu": 9.811145719140768e-05
+        },
+        {
+          "kl": 0.8656384348869324,
+          "context": "-to-the-",
+          "target": "public",
+          "p_float": 0.29310351610183716,
+          "p_relu": 0.02910170704126358
+        },
+        {
+          "kl": 0.8651028275489807,
+          "context": "up zooms around the",
+          "target": " air",
+          "p_float": 0.0005698254099115729,
+          "p_relu": 0.003434809623286128
+        },
+        {
+          "kl": 0.8627097010612488,
+          "context": "Fu respectively pay to Zhou",
+          "target": " and",
+          "p_float": 0.020130235701799393,
+          "p_relu": 0.05958530306816101
+        },
+        {
+          "kl": 0.8561685681343079,
+          "context": " two tiny logging towns \u2014",
+          "target": " Dar",
+          "p_float": 0.0003281995595898479,
+          "p_relu": 0.0001510568254161626
+        },
+        {
+          "kl": 0.8423079252243042,
+          "context": " off a highway in their",
+          "target": " cars",
+          "p_float": 0.1778424084186554,
+          "p_relu": 0.027148190885782242
+        },
+        {
+          "kl": 0.8340444564819336,
+          "context": " of its leaders to May",
+          "target": "adin",
+          "p_float": 0.0006641685031354427,
+          "p_relu": 0.0002124523452948779
+        },
+        {
+          "kl": 0.8125388026237488,
+          "context": " a genetic component will eventually",
+          "target": " be",
+          "p_float": 0.0954253301024437,
+          "p_relu": 0.10410062968730927
+        },
+        {
+          "kl": 0.8105295300483704,
+          "context": " Oso\u2019s",
+          "target": " is",
+          "p_float": 0.42367279529571533,
+          "p_relu": 0.07754865288734436
+        },
+        {
+          "kl": 0.8014025688171387,
+          "context": "VG <\u2013> Rising",
+          "target": "Stars",
+          "p_float": 0.012811667285859585,
+          "p_relu": 0.0030734105966985226
+        },
+        {
+          "kl": 0.7971689701080322,
+          "context": "arden State\" during this",
+          "target": " time",
+          "p_float": 0.6816802024841309,
+          "p_relu": 0.23792418837547302
+        },
+        {
+          "kl": 0.7912445068359375,
+          "context": " and the reason it\ufffd",
+          "target": "\ufffd",
+          "p_float": 0.7579673528671265,
+          "p_relu": 0.21241015195846558
+        },
+        {
+          "kl": 0.7894353270530701,
+          "context": " them so. Bullies",
+          "target": " Call",
+          "p_float": 0.0033434859942644835,
+          "p_relu": 0.0011532447533681989
+        },
+        {
+          "kl": 0.7882139086723328,
+          "context": " evidence for a genetic component",
+          "target": " will",
+          "p_float": 0.007381093222647905,
+          "p_relu": 0.019253365695476532
+        },
+        {
+          "kl": 0.7873101830482483,
+          "context": " a cheat-coded video",
+          "target": "-",
+          "p_float": 0.01299857534468174,
+          "p_relu": 0.02336248569190502
+        },
+        {
+          "kl": 0.7448877096176147,
+          "context": " regarding access to the Capitol",
+          "target": " that",
+          "p_float": 0.2589089572429657,
+          "p_relu": 0.016293467953801155
+        },
+        {
+          "kl": 0.7395504117012024,
+          "context": ", as well as to",
+          "target": " the",
+          "p_float": 0.17380878329277039,
+          "p_relu": 0.2010108381509781
+        },
+        {
+          "kl": 0.731613278388977,
+          "context": " \u2014 Darrington\u2019",
+          "target": "s",
+          "p_float": 0.015644831582903862,
+          "p_relu": 0.028594063594937325
+        },
+        {
+          "kl": 0.7263036966323853,
+          "context": " and Oso\u2019",
+          "target": "s",
+          "p_float": 0.8108603358268738,
+          "p_relu": 0.26582765579223633
+        },
+        {
+          "kl": 0.725534200668335,
+          "context": " public or scrutin",
+          "target": "ised",
+          "p_float": 0.056150659918785095,
+          "p_relu": 0.016348637640476227
+        },
+        {
+          "kl": 0.7143881916999817,
+          "context": " known ISIS command and control",
+          "target": " facilities",
+          "p_float": 0.15297120809555054,
+          "p_relu": 0.09756717085838318
+        },
+        {
+          "kl": 0.712637722492218,
+          "context": " is part of the transfer",
+          "target": " terms",
+          "p_float": 0.00010268332698615268,
+          "p_relu": 0.0002702109341043979
+        },
+        {
+          "kl": 0.6963623762130737,
+          "context": " said about what New Japan",
+          "target": " Pro",
+          "p_float": 0.4173000752925873,
+          "p_relu": 0.061206210404634476
+        },
+        {
+          "kl": 0.696234941482544,
+          "context": " highway in their cars,",
+          "target": " others",
+          "p_float": 0.5818084478378296,
+          "p_relu": 0.13712815940380096
+        },
+        {
+          "kl": 0.6873920559883118,
+          "context": "aggio Bob Meu",
+          "target": "sel",
+          "p_float": 0.01158761978149414,
+          "p_relu": 0.0055124396458268166
+        },
+        {
+          "kl": 0.6828606724739075,
+          "context": " Mantaur head-p",
+          "target": "aint",
+          "p_float": 0.10177005082368851,
+          "p_relu": 0.20348970592021942
+        },
+        {
+          "kl": 0.6807065606117249,
+          "context": " were crushed by huge mud",
+          "target": " balls",
+          "p_float": 0.0006414823001250625,
+          "p_relu": 0.001062912866473198
+        },
+        {
+          "kl": 0.6796408891677856,
+          "context": "othering the diversity and",
+          "target": " nationality",
+          "p_float": 2.2277716198004782e-05,
+          "p_relu": 4.7328278014902025e-05
+        },
+        {
+          "kl": 0.6645272970199585,
+          "context": " \"race\" and \"",
+          "target": "intelligence",
+          "p_float": 0.00981433317065239,
+          "p_relu": 0.04369555413722992
+        },
+        {
+          "kl": 0.6644755005836487,
+          "context": " Carey 1953-1960 Der",
+          "target": "on",
+          "p_float": 0.058608394116163254,
+          "p_relu": 0.01447843387722969
+        }
+      ]
+    },
+    {
+      "block": 7,
+      "mean_kl": 0.10942818224430084,
+      "median_kl": 0.08351820707321167,
+      "max_kl": 1.274006962776184,
+      "frac_relu_better": 0.38330078125,
+      "y_neg_norm": 30.069053649902344,
+      "s_neg_norm": 9.697318077087402,
+      "top_50": [
+        {
+          "kl": 1.274006962776184,
+          "context": "ars\n\nCall them",
+          "target": " li",
+          "p_float": 0.697075605392456,
+          "p_relu": 0.07603074610233307
+        },
+        {
+          "kl": 1.0094918012619019,
+          "context": " that demolished everything in their",
+          "target": " path",
+          "p_float": 0.7964949607849121,
+          "p_relu": 0.17830181121826172
+        },
+        {
+          "kl": 0.9502045512199402,
+          "context": " it actually had to do",
+          "target": " with",
+          "p_float": 0.21177983283996582,
+          "p_relu": 0.772973895072937
+        },
+        {
+          "kl": 0.9043574929237366,
+          "context": "-to-the-",
+          "target": "public",
+          "p_float": 0.29310351610183716,
+          "p_relu": 0.052348241209983826
+        },
+        {
+          "kl": 0.8034159541130066,
+          "context": " in a thick gray m",
+          "target": "uck",
+          "p_float": 0.3523992896080017,
+          "p_relu": 0.1432846635580063
+        },
+        {
+          "kl": 0.7974279522895813,
+          "context": " did not regret making the",
+          "target": " estimate",
+          "p_float": 0.43743497133255005,
+          "p_relu": 0.09281865507364273
+        },
+        {
+          "kl": 0.7426819205284119,
+          "context": ", I guess I\ufffd",
+          "target": "\ufffd",
+          "p_float": 0.000299747014651075,
+          "p_relu": 8.805010293144733e-05
+        },
+        {
+          "kl": 0.7426430583000183,
+          "context": " is part of the transfer",
+          "target": " terms",
+          "p_float": 0.00010268332698615268,
+          "p_relu": 0.0003325423749629408
+        },
+        {
+          "kl": 0.7406390905380249,
+          "context": " and joins TongFu from",
+          "target": " i",
+          "p_float": 0.07314705103635788,
+          "p_relu": 0.0009739294764585793
+        },
+        {
+          "kl": 0.7395420670509338,
+          "context": " the 1,000-",
+          "target": "year",
+          "p_float": 0.6177690625190735,
+          "p_relu": 0.15002818405628204
+        },
+        {
+          "kl": 0.7156897783279419,
+          "context": " as you meet this guy",
+          "target": "'s",
+          "p_float": 0.7093832492828369,
+          "p_relu": 0.173701211810112
+        },
+        {
+          "kl": 0.6991177797317505,
+          "context": " now wearing Mantaur head",
+          "target": "-",
+          "p_float": 0.007593250367790461,
+          "p_relu": 0.021106820553541183
+        },
+        {
+          "kl": 0.6981508731842041,
+          "context": "Made in Turkey, Istanbul",
+          "target": "\ufffd",
+          "p_float": 0.04936894029378891,
+          "p_relu": 0.004408963490277529
+        },
+        {
+          "kl": 0.6898425221443176,
+          "context": " were crushed by huge mud",
+          "target": " balls",
+          "p_float": 0.0006414823001250625,
+          "p_relu": 0.00246115168556571
+        },
+        {
+          "kl": 0.5989059209823608,
+          "context": " transfer terms, and joins",
+          "target": " Tong",
+          "p_float": 0.23632410168647766,
+          "p_relu": 0.026517394930124283
+        },
+        {
+          "kl": 0.5951036810874939,
+          "context": " other ISIS infrastructure in (",
+          "target": "May",
+          "p_float": 0.31146278977394104,
+          "p_relu": 0.03934526443481445
+        },
+        {
+          "kl": 0.5871999859809875,
+          "context": " Bogged down by relentless",
+          "target": " rain",
+          "p_float": 0.05059900879859924,
+          "p_relu": 0.014671267941594124
+        },
+        {
+          "kl": 0.5811247229576111,
+          "context": " shows a hate-filled",
+          "target": " mind",
+          "p_float": 0.0010661224368959665,
+          "p_relu": 0.0013295924291014671
+        },
+        {
+          "kl": 0.5616288185119629,
+          "context": " respectively pay to Zhou and",
+          "target": " H",
+          "p_float": 0.033061347901821136,
+          "p_relu": 0.08255082368850708
+        },
+        {
+          "kl": 0.5606763958930969,
+          "context": "up zooms around the",
+          "target": " air",
+          "p_float": 0.0005698254099115729,
+          "p_relu": 0.0012330275494605303
+        },
+        {
+          "kl": 0.5529481172561646,
+          "context": " Mayadin, about 50",
+          "target": " miles",
+          "p_float": 0.37416699528694153,
+          "p_relu": 0.613113522529602
+        },
+        {
+          "kl": 0.5369014143943787,
+          "context": " 30 more are likely ent",
+          "target": "omb",
+          "p_float": 0.9885868430137634,
+          "p_relu": 0.5538435578346252
+        },
+        {
+          "kl": 0.5219862461090088,
+          "context": "Garden State\" during",
+          "target": " this",
+          "p_float": 0.04058576747775078,
+          "p_relu": 0.007653538603335619
+        },
+        {
+          "kl": 0.520808756351471,
+          "context": " the transfer terms, and",
+          "target": " joins",
+          "p_float": 7.080600335029885e-05,
+          "p_relu": 6.545500218635425e-05
+        },
+        {
+          "kl": 0.508793294429779,
+          "context": "ao\n\n3.",
+          "target": " Zhou",
+          "p_float": 2.6789255571202375e-05,
+          "p_relu": 8.121409337036312e-05
+        },
+        {
+          "kl": 0.5015786290168762,
+          "context": " Mantaur head-p",
+          "target": "aint",
+          "p_float": 0.10177005082368851,
+          "p_relu": 0.11070986092090607
+        },
+        {
+          "kl": 0.4956105947494507,
+          "context": " to say \u201cno",
+          "target": "\ufffd",
+          "p_float": 0.5952963829040527,
+          "p_relu": 0.21400107443332672
+        },
+        {
+          "kl": 0.4940147399902344,
+          "context": " I guess I\u2019",
+          "target": "d",
+          "p_float": 0.007498329505324364,
+          "p_relu": 0.005497138947248459
+        },
+        {
+          "kl": 0.4784819185733795,
+          "context": " and other ISIS infrastructure in",
+          "target": " (",
+          "p_float": 0.00030860118567943573,
+          "p_relu": 0.0001670664787525311
+        },
+        {
+          "kl": 0.4626409411430359,
+          "context": " of its leaders to May",
+          "target": "adin",
+          "p_float": 0.0006641685031354427,
+          "p_relu": 0.00018279376672580838
+        },
+        {
+          "kl": 0.4601713716983795,
+          "context": ", were its online propaganda",
+          "target": " operation",
+          "p_float": 0.0041801887564361095,
+          "p_relu": 0.003215415868908167
+        },
+        {
+          "kl": 0.4594334363937378,
+          "context": " them haters. Li",
+          "target": "ars",
+          "p_float": 0.7745592594146729,
+          "p_relu": 0.36155712604522705
+        },
+        {
+          "kl": 0.45256444811820984,
+          "context": " population is 1,400",
+          "target": " and",
+          "p_float": 0.13305824995040894,
+          "p_relu": 0.12311799079179764
+        },
+        {
+          "kl": 0.4423471689224243,
+          "context": " the death of the final",
+          "target": " grandson",
+          "p_float": 6.586929521290585e-05,
+          "p_relu": 4.501390139921568e-05
+        },
+        {
+          "kl": 0.44175150990486145,
+          "context": " two tiny logging towns \u2014",
+          "target": " Dar",
+          "p_float": 0.0003281995595898479,
+          "p_relu": 0.0003016339032910764
+        },
+        {
+          "kl": 0.4394615590572357,
+          "context": ", which he says was",
+          "target": " the",
+          "p_float": 0.027582867071032524,
+          "p_relu": 0.08035442233085632
+        },
+        {
+          "kl": 0.4358574151992798,
+          "context": " is negatively related to dialect",
+          "target": "ical",
+          "p_float": 0.4076623320579529,
+          "p_relu": 0.7759419679641724
+        },
+        {
+          "kl": 0.43200260400772095,
+          "context": " closed-to-the",
+          "target": "-",
+          "p_float": 0.7324548959732056,
+          "p_relu": 0.9615927338600159
+        },
+        {
+          "kl": 0.4188823103904724,
+          "context": "Fu respectively pay to Zhou",
+          "target": " and",
+          "p_float": 0.020130235701799393,
+          "p_relu": 0.06782404333353043
+        },
+        {
+          "kl": 0.4164057970046997,
+          "context": " evidence makes it at least",
+          "target": " plausible",
+          "p_float": 0.4720461070537567,
+          "p_relu": 0.17547635734081268
+        },
+        {
+          "kl": 0.4079288840293884,
+          "context": " balls that demolished everything in",
+          "target": " their",
+          "p_float": 0.5445138812065125,
+          "p_relu": 0.6669608354568481
+        },
+        {
+          "kl": 0.40715518593788147,
+          "context": " Deer Park 16.7",
+          "target": " oz",
+          "p_float": 0.18864336609840393,
+          "p_relu": 0.08561903983354568
+        },
+        {
+          "kl": 0.40370017290115356,
+          "context": " to Zhou and Hao",
+          "target": " their",
+          "p_float": 0.016703415662050247,
+          "p_relu": 0.013750426471233368
+        },
+        {
+          "kl": 0.4034106731414795,
+          "context": " off a highway in their",
+          "target": " cars",
+          "p_float": 0.1778424084186554,
+          "p_relu": 0.26730749011039734
+        },
+        {
+          "kl": 0.4020957052707672,
+          "context": " temporarily lifted on the preserved",
+          "target": " T",
+          "p_float": 0.3026868402957916,
+          "p_relu": 0.052496057003736496
+        },
+        {
+          "kl": 0.398962140083313,
+          "context": " positively beg people to say",
+          "target": " \ufffd",
+          "p_float": 0.0001999546802835539,
+          "p_relu": 8.910815085982904e-05
+        },
+        {
+          "kl": 0.3981875479221344,
+          "context": " as well as the continental",
+          "target": " and",
+          "p_float": 0.042165037244558334,
+          "p_relu": 0.02120431885123253
+        },
+        {
+          "kl": 0.39760276675224304,
+          "context": "Maggio Bob Me",
+          "target": "u",
+          "p_float": 3.9903883589431643e-05,
+          "p_relu": 3.242334787501022e-05
+        },
+        {
+          "kl": 0.3952674865722656,
+          "context": "(s)\n\n",
+          "target": "2",
+          "p_float": 0.440677285194397,
+          "p_relu": 0.1134844422340393
+        },
+        {
+          "kl": 0.3846341073513031,
+          "context": " wearing Mantaur head-",
+          "target": "p",
+          "p_float": 0.00527883879840374,
+          "p_relu": 0.008583679795265198
+        }
+      ]
+    },
+    {
+      "block": 8,
+      "mean_kl": 0.10653814673423767,
+      "median_kl": 0.08331537991762161,
+      "max_kl": 1.3731356859207153,
+      "frac_relu_better": 0.400390625,
+      "y_neg_norm": 29.63571548461914,
+      "s_neg_norm": 11.21743106842041,
+      "top_50": [
+        {
+          "kl": 1.3731356859207153,
+          "context": " in 'Scrubs",
+          "target": ",'",
+          "p_float": 0.15181685984134674,
+          "p_relu": 0.0631067231297493
+        },
+        {
+          "kl": 1.2953953742980957,
+          "context": " in a thick gray m",
+          "target": "uck",
+          "p_float": 0.3523992896080017,
+          "p_relu": 0.0632404237985611
+        },
+        {
+          "kl": 1.1982080936431885,
+          "context": " wearing Mantaur head-",
+          "target": "p",
+          "p_float": 0.00527883879840374,
+          "p_relu": 0.0007614925852976739
+        },
+        {
+          "kl": 1.1910187005996704,
+          "context": " respectively pay to Zhou and",
+          "target": " H",
+          "p_float": 0.033061347901821136,
+          "p_relu": 0.05233159288764
+        },
+        {
+          "kl": 0.9378793835639954,
+          "context": " the 1,000-",
+          "target": "year",
+          "p_float": 0.6177690625190735,
+          "p_relu": 0.09317758679389954
+        },
+        {
+          "kl": 0.8667225241661072,
+          "context": "attah al-S",
+          "target": "isi",
+          "p_float": 0.79581618309021,
+          "p_relu": 0.19984884560108185
+        },
+        {
+          "kl": 0.8271393179893494,
+          "context": " TongFu respectively pay to",
+          "target": " Zhou",
+          "p_float": 0.23076871037483215,
+          "p_relu": 0.3100844919681549
+        },
+        {
+          "kl": 0.7287318706512451,
+          "context": "1931 Frank Crosett",
+          "target": "i",
+          "p_float": 0.06974297761917114,
+          "p_relu": 0.07401210814714432
+        },
+        {
+          "kl": 0.7271448373794556,
+          "context": " is part of the transfer",
+          "target": " terms",
+          "p_float": 0.00010268332698615268,
+          "p_relu": 0.00023820597562007606
+        },
+        {
+          "kl": 0.6358159780502319,
+          "context": " I guess I\u2019",
+          "target": "d",
+          "p_float": 0.007498329505324364,
+          "p_relu": 0.014586146920919418
+        },
+        {
+          "kl": 0.6177658438682556,
+          "context": "ao their owed prize m",
+          "target": "one",
+          "p_float": 0.3061770498752594,
+          "p_relu": 0.09157142788171768
+        },
+        {
+          "kl": 0.6129764914512634,
+          "context": " best way they could,",
+          "target": " and",
+          "p_float": 0.09264512360095978,
+          "p_relu": 0.08551736176013947
+        },
+        {
+          "kl": 0.6071378588676453,
+          "context": "\ufffd and later in modern",
+          "target": " times",
+          "p_float": 0.09138709306716919,
+          "p_relu": 0.10607623308897018
+        },
+        {
+          "kl": 0.5771749019622803,
+          "context": ".\n\nI\ufffd",
+          "target": "\ufffd",
+          "p_float": 0.4102872312068939,
+          "p_relu": 0.06871578842401505
+        },
+        {
+          "kl": 0.5637658834457397,
+          "context": "us and Luke Gall",
+          "target": "ows",
+          "p_float": 0.10159564763307571,
+          "p_relu": 0.06156476214528084
+        },
+        {
+          "kl": 0.5430364012718201,
+          "context": ", I guess I\ufffd",
+          "target": "\ufffd",
+          "p_float": 0.000299747014651075,
+          "p_relu": 5.37073501618579e-05
+        },
+        {
+          "kl": 0.542600691318512,
+          "context": " grandson Mikal Zild",
+          "target": "j",
+          "p_float": 0.15539668500423431,
+          "p_relu": 0.07834002375602722
+        },
+        {
+          "kl": 0.49643129110336304,
+          "context": " is negatively related to dialect",
+          "target": "ical",
+          "p_float": 0.4076623320579529,
+          "p_relu": 0.7639440298080444
+        },
+        {
+          "kl": 0.4870513081550598,
+          "context": " and joins TongFu from",
+          "target": " i",
+          "p_float": 0.07314705103635788,
+          "p_relu": 0.00346500426530838
+        },
+        {
+          "kl": 0.47684645652770996,
+          "context": "\n\nPlease bring toilet",
+          "target": "ry",
+          "p_float": 0.005612378008663654,
+          "p_relu": 0.009187780320644379
+        },
+        {
+          "kl": 0.4638691842556,
+          "context": " and TongFu respectively pay",
+          "target": " to",
+          "p_float": 0.008373674936592579,
+          "p_relu": 0.009617757983505726
+        },
+        {
+          "kl": 0.4632616341114044,
+          "context": " now wearing Mantaur head",
+          "target": "-",
+          "p_float": 0.007593250367790461,
+          "p_relu": 0.01230895146727562
+        },
+        {
+          "kl": 0.46185994148254395,
+          "context": " did not regret making the",
+          "target": " estimate",
+          "p_float": 0.43743497133255005,
+          "p_relu": 0.140145942568779
+        },
+        {
+          "kl": 0.46087419986724854,
+          "context": " 16.7 oz waters",
+          "target": ".",
+          "p_float": 0.009240120649337769,
+          "p_relu": 0.0036832315381616354
+        },
+        {
+          "kl": 0.45362555980682373,
+          "context": " supremacy in naming the other",
+          "target": ".",
+          "p_float": 0.08080458641052246,
+          "p_relu": 0.11578722298145294
+        },
+        {
+          "kl": 0.44661009311676025,
+          "context": "-to-the-",
+          "target": "public",
+          "p_float": 0.29310351610183716,
+          "p_relu": 0.23288652300834656
+        },
+        {
+          "kl": 0.4463219940662384,
+          "context": " Lazzeri 1930-",
+          "target": "19",
+          "p_float": 0.16935354471206665,
+          "p_relu": 0.11251469701528549
+        },
+        {
+          "kl": 0.4451207220554352,
+          "context": "ouhey captured a round",
+          "target": " capsule",
+          "p_float": 7.97347747720778e-05,
+          "p_relu": 2.8167152777314186e-05
+        },
+        {
+          "kl": 0.4394274950027466,
+          "context": " \"Scrubs\"",
+          "target": " job",
+          "p_float": 0.005288634914904833,
+          "p_relu": 0.003415214829146862
+        },
+        {
+          "kl": 0.4309828281402588,
+          "context": ": Abdul Fattah",
+          "target": " al",
+          "p_float": 0.4559750556945801,
+          "p_relu": 0.805505633354187
+        },
+        {
+          "kl": 0.42804425954818726,
+          "context": " the death of the final",
+          "target": " grandson",
+          "p_float": 6.586929521290585e-05,
+          "p_relu": 2.8788817871827632e-05
+        },
+        {
+          "kl": 0.4198766052722931,
+          "context": " the final grandson Mikal",
+          "target": " Z",
+          "p_float": 0.0059406571090221405,
+          "p_relu": 0.003828189102932811
+        },
+        {
+          "kl": 0.4146381914615631,
+          "context": " when I got cast in",
+          "target": " '",
+          "p_float": 0.04446714371442795,
+          "p_relu": 0.02002856321632862
+        },
+        {
+          "kl": 0.41400378942489624,
+          "context": " you have,\u201d",
+          "target": " he",
+          "p_float": 0.01059404294937849,
+          "p_relu": 0.0015585932414978743
+        },
+        {
+          "kl": 0.40759536623954773,
+          "context": " it's powerful. H",
+          "target": "aters",
+          "p_float": 0.2731599807739258,
+          "p_relu": 0.060182105749845505
+        },
+        {
+          "kl": 0.39687564969062805,
+          "context": " first test showing differences in",
+          "target": " IQ",
+          "p_float": 0.39368167519569397,
+          "p_relu": 0.7598645687103271
+        },
+        {
+          "kl": 0.3919515013694763,
+          "context": ". \u201cWhat\ufffd",
+          "target": "\ufffd",
+          "p_float": 0.050108104944229126,
+          "p_relu": 0.015068584121763706
+        },
+        {
+          "kl": 0.3890564739704132,
+          "context": "8. Bra",
+          "target": "ff",
+          "p_float": 0.001493048039264977,
+          "p_relu": 0.0016050110571086407
+        },
+        {
+          "kl": 0.3872203528881073,
+          "context": "\ufffds my favorite color",
+          "target": "?",
+          "p_float": 0.4699665904045105,
+          "p_relu": 0.20538458228111267
+        },
+        {
+          "kl": 0.38497960567474365,
+          "context": " could, and you\ufffd",
+          "target": "\ufffd",
+          "p_float": 0.00022773993259761482,
+          "p_relu": 9.038890857482329e-05
+        },
+        {
+          "kl": 0.3843728005886078,
+          "context": "\n\n1 Book of",
+          "target": " Choice",
+          "p_float": 4.149949018028565e-05,
+          "p_relu": 8.49236166686751e-05
+        },
+        {
+          "kl": 0.3796002268791199,
+          "context": "al Zildjian",
+          "target": ",",
+          "p_float": 0.2999716103076935,
+          "p_relu": 0.31870022416114807
+        },
+        {
+          "kl": 0.3671204447746277,
+          "context": " owed prize moneys",
+          "target": " and",
+          "p_float": 0.04419915750622749,
+          "p_relu": 0.02650088630616665
+        },
+        {
+          "kl": 0.3636707067489624,
+          "context": ",400 and Oso",
+          "target": "\ufffd",
+          "p_float": 0.08375433087348938,
+          "p_relu": 0.00829799473285675
+        },
+        {
+          "kl": 0.36279547214508057,
+          "context": " population is 1,400",
+          "target": " and",
+          "p_float": 0.13305824995040894,
+          "p_relu": 0.10066236555576324
+        },
+        {
+          "kl": 0.35855767130851746,
+          "context": ". Supremacists Attack",
+          "target": "back",
+          "p_float": 0.29971301555633545,
+          "p_relu": 0.4662490487098694
+        },
+        {
+          "kl": 0.3581920266151428,
+          "context": "aults and rebounds and straight",
+          "target": "-",
+          "p_float": 0.1119445264339447,
+          "p_relu": 0.01561047788709402
+        },
+        {
+          "kl": 0.3574039936065674,
+          "context": " round capsule departures board at",
+          "target": " the",
+          "p_float": 0.4208188056945801,
+          "p_relu": 0.15077950060367584
+        },
+        {
+          "kl": 0.3517707884311676,
+          "context": " bullies seeking to push diverse",
+          "target": " white",
+          "p_float": 0.004505680873990059,
+          "p_relu": 0.0012991114053875208
+        },
+        {
+          "kl": 0.3508695960044861,
+          "context": " and empirically, attitude",
+          "target": " strength",
+          "p_float": 0.7346538305282593,
+          "p_relu": 0.9222612380981445
+        }
+      ]
+    },
+    {
+      "block": 9,
+      "mean_kl": 0.0667669028043747,
+      "median_kl": 0.05046191066503525,
+      "max_kl": 0.7543520927429199,
+      "frac_relu_better": 0.51904296875,
+      "y_neg_norm": 31.25571060180664,
+      "s_neg_norm": 13.125710487365723,
+      "top_50": [
+        {
+          "kl": 0.7543520927429199,
+          "context": "MB for the rights to",
+          "target": " H",
+          "p_float": 0.00030205590883269906,
+          "p_relu": 7.032496796455234e-05
+        },
+        {
+          "kl": 0.7327532172203064,
+          "context": " the transfer terms, and",
+          "target": " joins",
+          "p_float": 7.080600335029885e-05,
+          "p_relu": 1.5239461390592624e-05
+        },
+        {
+          "kl": 0.6853029727935791,
+          "context": " in a thick gray m",
+          "target": "uck",
+          "p_float": 0.3523992896080017,
+          "p_relu": 0.14017626643180847
+        },
+        {
+          "kl": 0.49341559410095215,
+          "context": "io Bob Meusel",
+          "target": " 1929",
+          "p_float": 4.342450665717479e-06,
+          "p_relu": 5.47689296581666e-07
+        },
+        {
+          "kl": 0.47536203265190125,
+          "context": "ao\n\n3.",
+          "target": " Zhou",
+          "p_float": 2.6789255571202375e-05,
+          "p_relu": 2.7700659757101675e-06
+        },
+        {
+          "kl": 0.3882957398891449,
+          "context": " towns \u2014 Darrington\ufffd",
+          "target": "\ufffd",
+          "p_float": 0.00029131880728527904,
+          "p_relu": 0.0007518206839449704
+        },
+        {
+          "kl": 0.3797854781150818,
+          "context": " wearing Mantaur head-",
+          "target": "p",
+          "p_float": 0.00527883879840374,
+          "p_relu": 0.0016172914765775204
+        },
+        {
+          "kl": 0.3666934370994568,
+          "context": "Garden State\" press",
+          "target": " tour",
+          "p_float": 0.5252448320388794,
+          "p_relu": 0.22176343202590942
+        },
+        {
+          "kl": 0.36639899015426636,
+          "context": ",\" Colonel Joe Scro",
+          "target": "cca",
+          "p_float": 0.44501587748527527,
+          "p_relu": 0.1174439936876297
+        },
+        {
+          "kl": 0.35136252641677856,
+          "context": " and 26,\" Colonel Joe",
+          "target": " Sc",
+          "p_float": 0.0022207230795174837,
+          "p_relu": 0.0018801738042384386
+        },
+        {
+          "kl": 0.3369731903076172,
+          "context": " evidence that these differences in",
+          "target": " test",
+          "p_float": 0.12934403121471405,
+          "p_relu": 0.015864429995417595
+        },
+        {
+          "kl": 0.3337882459163666,
+          "context": ",\u201d Huebs",
+          "target": "ch",
+          "p_float": 0.3286658227443695,
+          "p_relu": 0.3204413652420044
+        },
+        {
+          "kl": 0.3294888734817505,
+          "context": "d say a Philly cheese",
+          "target": "-",
+          "p_float": 0.03032701648771763,
+          "p_relu": 0.04836665093898773
+        },
+        {
+          "kl": 0.32453644275665283,
+          "context": "us and Luke Gall",
+          "target": "ows",
+          "p_float": 0.10159564763307571,
+          "p_relu": 0.029072795063257217
+        },
+        {
+          "kl": 0.3240024447441101,
+          "context": "\nVG <\u2013>",
+          "target": " Rising",
+          "p_float": 8.709896974323783e-06,
+          "p_relu": 1.452073206564819e-06
+        },
+        {
+          "kl": 0.31897056102752686,
+          "context": " first test showing differences in",
+          "target": " IQ",
+          "p_float": 0.39368167519569397,
+          "p_relu": 0.6421405076980591
+        },
+        {
+          "kl": 0.31834396719932556,
+          "context": " and rebounds and straight-",
+          "target": "up",
+          "p_float": 0.6391170620918274,
+          "p_relu": 0.8604689836502075
+        },
+        {
+          "kl": 0.31390702724456787,
+          "context": " transfer terms, and joins",
+          "target": " Tong",
+          "p_float": 0.23632410168647766,
+          "p_relu": 0.5695435404777527
+        },
+        {
+          "kl": 0.30972251296043396,
+          "context": " is a real craigslist",
+          "target": " ad",
+          "p_float": 0.06783951818943024,
+          "p_relu": 0.11345487087965012
+        },
+        {
+          "kl": 0.3073689341545105,
+          "context": " 16.7 oz waters",
+          "target": ".",
+          "p_float": 0.009240120649337769,
+          "p_relu": 0.003129782387986779
+        },
+        {
+          "kl": 0.30084994435310364,
+          "context": "\u2019s\n\n",
+          "target": "4",
+          "p_float": 0.3997216522693634,
+          "p_relu": 0.7157522439956665
+        },
+        {
+          "kl": 0.30045950412750244,
+          "context": " grandson Mikal Zild",
+          "target": "j",
+          "p_float": 0.15539668500423431,
+          "p_relu": 0.2326832413673401
+        },
+        {
+          "kl": 0.3001386523246765,
+          "context": " said about what New Japan",
+          "target": " Pro",
+          "p_float": 0.4173000752925873,
+          "p_relu": 0.4879264831542969
+        },
+        {
+          "kl": 0.29586654901504517,
+          "context": "ates your duty as a",
+          "target": " cam",
+          "p_float": 0.15831530094146729,
+          "p_relu": 0.47747331857681274
+        },
+        {
+          "kl": 0.29169395565986633,
+          "context": " is part of the transfer",
+          "target": " terms",
+          "p_float": 0.00010268332698615268,
+          "p_relu": 0.0001133768746512942
+        },
+        {
+          "kl": 0.28552961349487305,
+          "context": " to say \u201cno",
+          "target": "\ufffd",
+          "p_float": 0.5952963829040527,
+          "p_relu": 0.30596232414245605
+        },
+        {
+          "kl": 0.27905356884002686,
+          "context": " awaited the end of the",
+          "target": " legend",
+          "p_float": 0.0006921540480107069,
+          "p_relu": 0.0005233275005593896
+        },
+        {
+          "kl": 0.27767395973205566,
+          "context": "ao their owed prize m",
+          "target": "one",
+          "p_float": 0.3061770498752594,
+          "p_relu": 0.23233389854431152
+        },
+        {
+          "kl": 0.2776116132736206,
+          "context": "o spoke. \u201c",
+          "target": "Well",
+          "p_float": 0.0008349282434210181,
+          "p_relu": 0.00024164747446775436
+        },
+        {
+          "kl": 0.27576833963394165,
+          "context": " supremacy in naming the other",
+          "target": ".",
+          "p_float": 0.08080458641052246,
+          "p_relu": 0.04841785505414009
+        },
+        {
+          "kl": 0.2754180431365967,
+          "context": " round capsule departures board at",
+          "target": " the",
+          "p_float": 0.4208188056945801,
+          "p_relu": 0.19340766966342926
+        },
+        {
+          "kl": 0.27312809228897095,
+          "context": " measured other variables (for",
+          "target": " a",
+          "p_float": 0.02147926390171051,
+          "p_relu": 0.006149934604763985
+        },
+        {
+          "kl": 0.2720041573047638,
+          "context": " relentless rain that continued Saturday",
+          "target": ",",
+          "p_float": 0.37392863631248474,
+          "p_relu": 0.18828850984573364
+        },
+        {
+          "kl": 0.26970890164375305,
+          "context": " I guess I\u2019",
+          "target": "d",
+          "p_float": 0.007498329505324364,
+          "p_relu": 0.016657616943120956
+        },
+        {
+          "kl": 0.2692702114582062,
+          "context": " miles west of the Iraqi",
+          "target": " border",
+          "p_float": 0.3320009708404541,
+          "p_relu": 0.6677032113075256
+        },
+        {
+          "kl": 0.26585960388183594,
+          "context": " Pink Floyd, Deep Purple",
+          "target": ",",
+          "p_float": 0.600027322769165,
+          "p_relu": 0.6701030135154724
+        },
+        {
+          "kl": 0.26111191511154175,
+          "context": ")\n\n2.",
+          "target": " i",
+          "p_float": 0.23048318922519684,
+          "p_relu": 0.26060953736305237
+        },
+        {
+          "kl": 0.2569281756877899,
+          "context": " Grand Imam summoned rival political",
+          "target": " factions",
+          "p_float": 0.12193550169467926,
+          "p_relu": 0.03591401129961014
+        },
+        {
+          "kl": 0.2560359835624695,
+          "context": "s\n\n4.",
+          "target": " i",
+          "p_float": 0.04197224974632263,
+          "p_relu": 0.0536196231842041
+        },
+        {
+          "kl": 0.2503862679004669,
+          "context": " be said about what New",
+          "target": " Japan",
+          "p_float": 0.17262718081474304,
+          "p_relu": 0.060770194977521896
+        },
+        {
+          "kl": 0.25031134486198425,
+          "context": "\u2019s the next",
+          "target": " caller",
+          "p_float": 2.0530202164081857e-05,
+          "p_relu": 2.131763903889805e-05
+        },
+        {
+          "kl": 0.24929653108119965,
+          "context": "\n\n\u201cThe",
+          "target": " DO",
+          "p_float": 1.3190025129006244e-05,
+          "p_relu": 1.377801709168125e-05
+        },
+        {
+          "kl": 0.24924175441265106,
+          "context": " seeking to push diverse white",
+          "target": " American",
+          "p_float": 0.003755692159757018,
+          "p_relu": 0.004092132207006216
+        },
+        {
+          "kl": 0.24860018491744995,
+          "context": " photographer Max Touhey transporting",
+          "target": " you",
+          "p_float": 0.004886958748102188,
+          "p_relu": 0.0010902963113039732
+        },
+        {
+          "kl": 0.24779856204986572,
+          "context": ", Deep Purple, Cream",
+          "target": ",",
+          "p_float": 0.4630199074745178,
+          "p_relu": 0.3290821611881256
+        },
+        {
+          "kl": 0.24381817877292633,
+          "context": " the final grandson Mikal",
+          "target": " Z",
+          "p_float": 0.0059406571090221405,
+          "p_relu": 0.005405850242823362
+        },
+        {
+          "kl": 0.239945650100708,
+          "context": " Hao\u2019s",
+          "target": "\n",
+          "p_float": 0.21733668446540833,
+          "p_relu": 0.3738084137439728
+        },
+        {
+          "kl": 0.23910197615623474,
+          "context": " his contract is exchanged for",
+          "target": " H",
+          "p_float": 0.030454222112894058,
+          "p_relu": 0.038342706859111786
+        },
+        {
+          "kl": 0.23569990694522858,
+          "context": " 1953-1960 Deron",
+          "target": " Johnson",
+          "p_float": 0.010132525116205215,
+          "p_relu": 0.010406756773591042
+        },
+        {
+          "kl": 0.23292428255081177,
+          "context": " what extent differences in intelligence",
+          "target": " test",
+          "p_float": 0.003044733079150319,
+          "p_relu": 0.005670331418514252
+        }
+      ]
+    },
+    {
+      "block": 10,
+      "mean_kl": 0.05354880541563034,
+      "median_kl": 0.04114208742976189,
+      "max_kl": 0.935760498046875,
+      "frac_relu_better": 0.54736328125,
+      "y_neg_norm": 54.93476486206055,
+      "s_neg_norm": 15.86871337890625,
+      "top_50": [
+        {
+          "kl": 0.935760498046875,
+          "context": "Made in Turkey, Istanbul",
+          "target": "\ufffd",
+          "p_float": 0.04936894029378891,
+          "p_relu": 0.003386011114344001
+        },
+        {
+          "kl": 0.7297229170799255,
+          "context": "us and Luke Gall",
+          "target": "ows",
+          "p_float": 0.10159564763307571,
+          "p_relu": 0.06131122261285782
+        },
+        {
+          "kl": 0.6556299328804016,
+          "context": " moves like a cheat-",
+          "target": "coded",
+          "p_float": 2.96298494504299e-05,
+          "p_relu": 4.998933582101017e-05
+        },
+        {
+          "kl": 0.5547860860824585,
+          "context": " of economy Profile: Abdul",
+          "target": " F",
+          "p_float": 0.06689054518938065,
+          "p_relu": 0.01683036796748638
+        },
+        {
+          "kl": 0.4659539759159088,
+          "context": " closed-to-the",
+          "target": "-",
+          "p_float": 0.7324548959732056,
+          "p_relu": 0.9781181216239929
+        },
+        {
+          "kl": 0.4493385851383209,
+          "context": " 26,\" Colonel Joe Sc",
+          "target": "ro",
+          "p_float": 0.0015178413596004248,
+          "p_relu": 0.00038863869849592447
+        },
+        {
+          "kl": 0.4350089430809021,
+          "context": "2. iG pays",
+          "target": " Tong",
+          "p_float": 0.1649077832698822,
+          "p_relu": 0.00803526770323515
+        },
+        {
+          "kl": 0.3979310095310211,
+          "context": " said about what New Japan",
+          "target": " Pro",
+          "p_float": 0.4173000752925873,
+          "p_relu": 0.16973072290420532
+        },
+        {
+          "kl": 0.3974027633666992,
+          "context": " transfer terms, and joins",
+          "target": " Tong",
+          "p_float": 0.23632410168647766,
+          "p_relu": 0.03398718312382698
+        },
+        {
+          "kl": 0.37146589159965515,
+          "context": " respectively pay to Zhou and",
+          "target": " H",
+          "p_float": 0.033061347901821136,
+          "p_relu": 0.0418575182557106
+        },
+        {
+          "kl": 0.3645488917827606,
+          "context": " TongFu respectively pay to",
+          "target": " Zhou",
+          "p_float": 0.23076871037483215,
+          "p_relu": 0.09957456588745117
+        },
+        {
+          "kl": 0.3393815755844116,
+          "context": " Pink Floyd, Deep Purple",
+          "target": ",",
+          "p_float": 0.600027322769165,
+          "p_relu": 0.6455374360084534
+        },
+        {
+          "kl": 0.3269639015197754,
+          "context": " Mikal Zildj",
+          "target": "ian",
+          "p_float": 0.9143692255020142,
+          "p_relu": 0.5750503540039062
+        },
+        {
+          "kl": 0.30615150928497314,
+          "context": "d say a Philly cheese",
+          "target": "-",
+          "p_float": 0.03032701648771763,
+          "p_relu": 0.050046391785144806
+        },
+        {
+          "kl": 0.3033086359500885,
+          "context": "hered from earth physics,",
+          "target": " Ric",
+          "p_float": 0.05240223556756973,
+          "p_relu": 0.010840645991265774
+        },
+        {
+          "kl": 0.301462322473526,
+          "context": ", Deep Purple, Cream",
+          "target": ",",
+          "p_float": 0.4630199074745178,
+          "p_relu": 0.33592358231544495
+        },
+        {
+          "kl": 0.2953646779060364,
+          "context": " be said about what New",
+          "target": " Japan",
+          "p_float": 0.17262718081474304,
+          "p_relu": 0.04825804382562637
+        },
+        {
+          "kl": 0.2803723216056824,
+          "context": "Fu from iG,",
+          "target": " his",
+          "p_float": 0.0009780849795788527,
+          "p_relu": 0.0007030555279925466
+        },
+        {
+          "kl": 0.2773878276348114,
+          "context": " of its leaders to May",
+          "target": "adin",
+          "p_float": 0.0006641685031354427,
+          "p_relu": 0.0003814908559434116
+        },
+        {
+          "kl": 0.2762977182865143,
+          "context": " city fighting a curfew Q",
+          "target": "&",
+          "p_float": 0.03815997391939163,
+          "p_relu": 0.00888132955878973
+        },
+        {
+          "kl": 0.2747002840042114,
+          "context": ",\u201d Huebs",
+          "target": "ch",
+          "p_float": 0.3286658227443695,
+          "p_relu": 0.32052019238471985
+        },
+        {
+          "kl": 0.27394333481788635,
+          "context": " and TongFu respectively pay",
+          "target": " to",
+          "p_float": 0.008373674936592579,
+          "p_relu": 0.00871973391622305
+        },
+        {
+          "kl": 0.27074870467185974,
+          "context": " to say \u201cno",
+          "target": "\ufffd",
+          "p_float": 0.5952963829040527,
+          "p_relu": 0.2798559069633484
+        },
+        {
+          "kl": 0.26311635971069336,
+          "context": " reason it\u2019s",
+          "target": " meaningless",
+          "p_float": 0.03558516502380371,
+          "p_relu": 0.021641211584210396
+        },
+        {
+          "kl": 0.2530197203159332,
+          "context": " Mantaur head-p",
+          "target": "aint",
+          "p_float": 0.10177005082368851,
+          "p_relu": 0.07332978397607803
+        },
+        {
+          "kl": 0.25200894474983215,
+          "context": " grandson Mikal Zild",
+          "target": "j",
+          "p_float": 0.15539668500423431,
+          "p_relu": 0.1504068821668625
+        },
+        {
+          "kl": 0.251280814409256,
+          "context": "-1931 Frank Cro",
+          "target": "sett",
+          "p_float": 0.0050293318927288055,
+          "p_relu": 0.00533376494422555
+        },
+        {
+          "kl": 0.2510976493358612,
+          "context": "aggio Bob Meu",
+          "target": "sel",
+          "p_float": 0.01158761978149414,
+          "p_relu": 0.025761159136891365
+        },
+        {
+          "kl": 0.24685335159301758,
+          "context": " in a thick gray m",
+          "target": "uck",
+          "p_float": 0.3523992896080017,
+          "p_relu": 0.3913993537425995
+        },
+        {
+          "kl": 0.24061137437820435,
+          "context": " capture the closed-to",
+          "target": "-",
+          "p_float": 0.8437351584434509,
+          "p_relu": 0.9835121035575867
+        },
+        {
+          "kl": 0.22700725495815277,
+          "context": " to use in an attack",
+          "target": "back",
+          "p_float": 1.407241938977677e-06,
+          "p_relu": 1.1731042377505219e-06
+        },
+        {
+          "kl": 0.22637392580509186,
+          "context": " round capsule departures board at",
+          "target": " the",
+          "p_float": 0.4208188056945801,
+          "p_relu": 0.6223446130752563
+        },
+        {
+          "kl": 0.2235109955072403,
+          "context": " and 26,\" Colonel Joe",
+          "target": " Sc",
+          "p_float": 0.0022207230795174837,
+          "p_relu": 0.0022226967848837376
+        },
+        {
+          "kl": 0.21669018268585205,
+          "context": " of the final grandson Mik",
+          "target": "al",
+          "p_float": 0.01870342344045639,
+          "p_relu": 0.01982528530061245
+        },
+        {
+          "kl": 0.21379679441452026,
+          "context": " on opinion",
+          "target": " polls",
+          "p_float": 0.14739882946014404,
+          "p_relu": 0.031343523412942886
+        },
+        {
+          "kl": 0.21029646694660187,
+          "context": "more\n\nMuch could",
+          "target": " be",
+          "p_float": 0.5904295444488525,
+          "p_relu": 0.8477369546890259
+        },
+        {
+          "kl": 0.20804880559444427,
+          "context": "\ufffdd say a Philly",
+          "target": " cheese",
+          "p_float": 0.0001785283675417304,
+          "p_relu": 0.0003076520224567503
+        },
+        {
+          "kl": 0.2046394646167755,
+          "context": " WWE, now wearing Mant",
+          "target": "aur",
+          "p_float": 0.0006678196368739009,
+          "p_relu": 0.0016075270250439644
+        },
+        {
+          "kl": 0.20323894917964935,
+          "context": " Illustration by Ben Pass",
+          "target": "more",
+          "p_float": 0.055204588919878006,
+          "p_relu": 0.04806827753782272
+        },
+        {
+          "kl": 0.20029248297214508,
+          "context": " of the transfer terms,",
+          "target": " and",
+          "p_float": 0.1840837597846985,
+          "p_relu": 0.31115031242370605
+        },
+        {
+          "kl": 0.19991052150726318,
+          "context": " Leno spoke. \ufffd",
+          "target": "\ufffd",
+          "p_float": 0.0012893194798380136,
+          "p_relu": 0.0015646233223378658
+        },
+        {
+          "kl": 0.19431844353675842,
+          "context": " at least plausible that hard",
+          "target": " evidence",
+          "p_float": 0.023410096764564514,
+          "p_relu": 0.009263555519282818
+        },
+        {
+          "kl": 0.190870001912117,
+          "context": "\ufffds the next caller",
+          "target": " going",
+          "p_float": 0.013844441622495651,
+          "p_relu": 0.01149432547390461
+        },
+        {
+          "kl": 0.19022341072559357,
+          "context": "sel 1929 Tony Lazz",
+          "target": "eri",
+          "p_float": 0.062138013541698456,
+          "p_relu": 0.01614764891564846
+        },
+        {
+          "kl": 0.18985427916049957,
+          "context": " control facilities and other ISIS",
+          "target": " infrastructure",
+          "p_float": 0.04138730466365814,
+          "p_relu": 0.023856690153479576
+        },
+        {
+          "kl": 0.18240126967430115,
+          "context": " whether and to what extent",
+          "target": " differences",
+          "p_float": 0.0012698261998593807,
+          "p_relu": 0.0006096261786296964
+        },
+        {
+          "kl": 0.18158508837223053,
+          "context": " moneys and promotional",
+          "target": " fees",
+          "p_float": 0.0611075684428215,
+          "p_relu": 0.04569883644580841
+        },
+        {
+          "kl": 0.18085643649101257,
+          "context": " Choice\n\n1 24",
+          "target": " pack",
+          "p_float": 0.00035264744656160474,
+          "p_relu": 0.0002302175562363118
+        },
+        {
+          "kl": 0.18064291775226593,
+          "context": " factory elsewhere. The cy",
+          "target": "mb",
+          "p_float": 0.023425746709108353,
+          "p_relu": 0.027271490544080734
+        },
+        {
+          "kl": 0.18056704103946686,
+          "context": " 16.7 oz waters",
+          "target": ".",
+          "p_float": 0.009240120649337769,
+          "p_relu": 0.005883371457457542
+        }
+      ]
+    },
+    {
+      "block": 11,
+      "mean_kl": 0.25645822286605835,
+      "median_kl": 0.18111027777194977,
+      "max_kl": 2.218254566192627,
+      "frac_relu_better": 0.31591796875,
+      "y_neg_norm": 124.73220825195312,
+      "s_neg_norm": 18.651395797729492,
+      "top_50": [
+        {
+          "kl": 2.218254566192627,
+          "context": ".\n\nThis craft",
+          "target": " passed",
+          "p_float": 5.4066931625129655e-05,
+          "p_relu": 0.0001898082555271685
+        },
+        {
+          "kl": 1.687198519706726,
+          "context": " city fighting a curfew Q",
+          "target": "&",
+          "p_float": 0.03815997391939163,
+          "p_relu": 0.04174252226948738
+        },
+        {
+          "kl": 1.6528512239456177,
+          "context": " of people oppose another independence",
+          "target": " referendum",
+          "p_float": 0.786806046962738,
+          "p_relu": 0.08669498562812805
+        },
+        {
+          "kl": 1.6498266458511353,
+          "context": " physics, Ricochet v",
+          "target": "aults",
+          "p_float": 0.7651964426040649,
+          "p_relu": 0.08139948546886444
+        },
+        {
+          "kl": 1.5764386653900146,
+          "context": " at will; his convention",
+          "target": "ally",
+          "p_float": 0.8324138522148132,
+          "p_relu": 0.09988600015640259
+        },
+        {
+          "kl": 1.5221378803253174,
+          "context": " now wearing Mantaur head",
+          "target": "-",
+          "p_float": 0.007593250367790461,
+          "p_relu": 0.11111343652009964
+        },
+        {
+          "kl": 1.4643977880477905,
+          "context": " about what New Japan Pro",
+          "target": " Wrestling",
+          "p_float": 0.9023151397705078,
+          "p_relu": 0.15708735585212708
+        },
+        {
+          "kl": 1.4323948621749878,
+          "context": " even as though the opinion",
+          "target": " poll",
+          "p_float": 0.061554986983537674,
+          "p_relu": 0.041993360966444016
+        },
+        {
+          "kl": 1.391817331314087,
+          "context": " were crushed by huge mud",
+          "target": " balls",
+          "p_float": 0.0006414823001250625,
+          "p_relu": 0.0008542484138160944
+        },
+        {
+          "kl": 1.3643214702606201,
+          "context": " charging the specific sland",
+          "target": "erer",
+          "p_float": 0.19607128202915192,
+          "p_relu": 0.0673048123717308
+        },
+        {
+          "kl": 1.355074167251587,
+          "context": " in Syria's Euphrates",
+          "target": " Valley",
+          "p_float": 0.35738980770111084,
+          "p_relu": 0.0361076183617115
+        },
+        {
+          "kl": 1.3330376148223877,
+          "context": " Tell them so. Bull",
+          "target": "ies",
+          "p_float": 0.04811558499932289,
+          "p_relu": 0.05372776836156845
+        },
+        {
+          "kl": 1.3291172981262207,
+          "context": "us and Luke Gall",
+          "target": "ows",
+          "p_float": 0.10159564763307571,
+          "p_relu": 0.007713220082223415
+        },
+        {
+          "kl": 1.3171943426132202,
+          "context": " this is a real cra",
+          "target": "igslist",
+          "p_float": 0.32539471983909607,
+          "p_relu": 0.012416860088706017
+        },
+        {
+          "kl": 1.3035955429077148,
+          "context": " 16.7 oz waters",
+          "target": ".",
+          "p_float": 0.009240120649337769,
+          "p_relu": 0.040102727711200714
+        },
+        {
+          "kl": 1.3021445274353027,
+          "context": " something flickering through the fourth",
+          "target": " dimension",
+          "p_float": 0.4641285240650177,
+          "p_relu": 0.05155625566840172
+        },
+        {
+          "kl": 1.3010629415512085,
+          "context": " pays TongFu a transfer",
+          "target": " fee",
+          "p_float": 0.8589557409286499,
+          "p_relu": 0.14913862943649292
+        },
+        {
+          "kl": 1.291587233543396,
+          "context": " as The Beatles, Pink",
+          "target": " Floyd",
+          "p_float": 0.9953526258468628,
+          "p_relu": 0.26632389426231384
+        },
+        {
+          "kl": 1.2566412687301636,
+          "context": "aggio Bob Meu",
+          "target": "sel",
+          "p_float": 0.01158761978149414,
+          "p_relu": 0.002412875648587942
+        },
+        {
+          "kl": 1.2434169054031372,
+          "context": " whether they want another independence",
+          "target": " referendum",
+          "p_float": 0.880546510219574,
+          "p_relu": 0.18250396847724915
+        },
+        {
+          "kl": 1.2116061449050903,
+          "context": " people whether they want another",
+          "target": " independence",
+          "p_float": 0.13018573820590973,
+          "p_relu": 0.04039300978183746
+        },
+        {
+          "kl": 1.204537034034729,
+          "context": " factory elsewhere. The cy",
+          "target": "mb",
+          "p_float": 0.023425746709108353,
+          "p_relu": 0.017530672252178192
+        },
+        {
+          "kl": 1.1911059617996216,
+          "context": " of military chiefs and cabinet",
+          "target": " members",
+          "p_float": 0.07415211945772171,
+          "p_relu": 0.11849019676446915
+        },
+        {
+          "kl": 1.1696784496307373,
+          "context": " of its leaders to May",
+          "target": "adin",
+          "p_float": 0.0006641685031354427,
+          "p_relu": 0.00026428524870425463
+        },
+        {
+          "kl": 1.1661162376403809,
+          "context": " of the final grandson Mik",
+          "target": "al",
+          "p_float": 0.01870342344045639,
+          "p_relu": 0.0230302382260561
+        },
+        {
+          "kl": 1.1468199491500854,
+          "context": " banana\n\nTong",
+          "target": "Fu",
+          "p_float": 0.006869104690849781,
+          "p_relu": 0.0005605589831247926
+        },
+        {
+          "kl": 1.1068164110183716,
+          "context": "8. Bra",
+          "target": "ff",
+          "p_float": 0.001493048039264977,
+          "p_relu": 0.0020696986466646194
+        },
+        {
+          "kl": 1.1012874841690063,
+          "context": " and I quit as a",
+          "target": " waiter",
+          "p_float": 0.8433119058609009,
+          "p_relu": 0.19331806898117065
+        },
+        {
+          "kl": 1.085270881652832,
+          "context": " about 50 miles west of",
+          "target": " the",
+          "p_float": 0.21196645498275757,
+          "p_relu": 0.5666147470474243
+        },
+        {
+          "kl": 1.0668385028839111,
+          "context": " tiny logging towns \u2014 Dar",
+          "target": "rington",
+          "p_float": 0.010136148892343044,
+          "p_relu": 0.0021145411301404238
+        },
+        {
+          "kl": 1.0514063835144043,
+          "context": "-1936 Nolan Richardson",
+          "target": " 1935",
+          "p_float": 0.06195985525846481,
+          "p_relu": 0.012744661420583725
+        },
+        {
+          "kl": 1.0380024909973145,
+          "context": " TWA Terminal at JFK",
+          "target": " offer",
+          "p_float": 1.703694323396121e-07,
+          "p_relu": 2.0852123725489946e-06
+        },
+        {
+          "kl": 1.027944803237915,
+          "context": "\n\nExperienced cam",
+          "target": "per",
+          "p_float": 0.8473901152610779,
+          "p_relu": 0.21288734674453735
+        },
+        {
+          "kl": 1.0273070335388184,
+          "context": " It is overseen by National",
+          "target": " Defence",
+          "p_float": 0.011092999950051308,
+          "p_relu": 0.0040961927734315395
+        },
+        {
+          "kl": 1.0267789363861084,
+          "context": " is negatively related to dialect",
+          "target": "ical",
+          "p_float": 0.4076623320579529,
+          "p_relu": 0.06126028671860695
+        },
+        {
+          "kl": 1.01656174659729,
+          "context": " since the inception of IQ",
+          "target": " testing",
+          "p_float": 0.2479017972946167,
+          "p_relu": 0.02029854990541935
+        },
+        {
+          "kl": 0.9989903569221497,
+          "context": " is possible that liberals and",
+          "target": " conservatives",
+          "p_float": 0.862586498260498,
+          "p_relu": 0.24376758933067322
+        },
+        {
+          "kl": 0.99537593126297,
+          "context": " hired for \"Scr",
+          "target": "ubs",
+          "p_float": 0.7102687358856201,
+          "p_relu": 0.14870983362197876
+        },
+        {
+          "kl": 0.9889034628868103,
+          "context": " amount,\u201d Hue",
+          "target": "bs",
+          "p_float": 0.0004873417492490262,
+          "p_relu": 0.00036493351217359304
+        },
+        {
+          "kl": 0.988237202167511,
+          "context": " toiletry, and warm",
+          "target": " clothing",
+          "p_float": 0.07728725671768188,
+          "p_relu": 0.012495827861130238
+        },
+        {
+          "kl": 0.9772183895111084,
+          "context": " transporting you back to what",
+          "target": " travellers",
+          "p_float": 0.7555923461914062,
+          "p_relu": 0.17702870070934296
+        },
+        {
+          "kl": 0.9736473560333252,
+          "context": " 1937-1942,",
+          "target": " 1946",
+          "p_float": 0.11492615193128586,
+          "p_relu": 0.009698919951915741
+        },
+        {
+          "kl": 0.9731375575065613,
+          "context": " 5 - Ret",
+          "target": "ired",
+          "p_float": 0.12510739266872406,
+          "p_relu": 0.022575270384550095
+        },
+        {
+          "kl": 0.9668320417404175,
+          "context": ", youth groups and church",
+          "target": " officials",
+          "p_float": 0.011153465136885643,
+          "p_relu": 0.007756261620670557
+        },
+        {
+          "kl": 0.9616124629974365,
+          "context": " a given domain's attitude",
+          "target": " strength",
+          "p_float": 4.594183701556176e-05,
+          "p_relu": 9.232325101038441e-05
+        },
+        {
+          "kl": 0.9562430381774902,
+          "context": " an attackback. Sup",
+          "target": "rem",
+          "p_float": 0.9129745960235596,
+          "p_relu": 0.2818525731563568
+        },
+        {
+          "kl": 0.9545958638191223,
+          "context": ",\u201d Huebs",
+          "target": "ch",
+          "p_float": 0.3286658227443695,
+          "p_relu": 0.05550047755241394
+        },
+        {
+          "kl": 0.9526903629302979,
+          "context": "\nFor two tiny logging",
+          "target": " towns",
+          "p_float": 0.2191590964794159,
+          "p_relu": 0.041037119925022125
+        },
+        {
+          "kl": 0.9521965980529785,
+          "context": "\n\nPlease bring toilet",
+          "target": "ry",
+          "p_float": 0.005612378008663654,
+          "p_relu": 0.007590610999614
+        },
+        {
+          "kl": 0.9504849314689636,
+          "context": "4. iG and",
+          "target": " Tong",
+          "p_float": 0.42277562618255615,
+          "p_relu": 0.13809072971343994
+        }
+      ]
+    }
+  ],
+  "corr_kl_yneg": -0.16446374526859836,
+  "corr_kl_sneg": -0.3285475267526659,
+  "repeated_top_targets": {
+    "-": 12,
+    "\ufffd": 9,
+    ",": 8,
+    "and": 8,
+    "the": 8,
+    "public": 7,
+    "Tong": 7,
+    "i": 7,
+    "Pro": 7,
+    "d": 6,
+    "li": 6,
+    ".": 6,
+    "terms": 6,
+    "Zhou": 6,
+    "travellers": 5,
+    "on": 5,
+    "adin": 5,
+    "their": 5,
+    "uck": 5,
+    "air": 5
+  },
+  "has_semantic_pattern": true,
+  "verdict": "confirmed",
+  "n_above_01": 9,
+  "n_below_001": 0
+}

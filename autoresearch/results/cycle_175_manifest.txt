@@ -1,0 +1,19 @@
+cycle: 175
+item: 186
+verdict: confirmed
+summary: GELU→ReLU per-block substitution produces mean KL>0.1 in 9/12 blocks, but NOT driven by negative regime (r=-0.16 with ||y_neg||). Impact from positive-regime shape difference.
+artifacts:
+  - experiments/prediction_impact_gelu_relu_cycle175.py
+  - autoresearch/results/cycle_175_prediction_impact.json
+  - autoresearch/results/cycle_175_prediction_impact.png
+  - autoresearch/briefs/cycle_175.md
+  - autoresearch/plans/cycle_175.md
+  - autoresearch/reviews/cycle_175.md
+  - autoresearch/audits/cycle_175.md
+key_metrics:
+  mean_kl_block0: 1.419
+  mean_kl_block11: 0.257
+  blocks_above_0.1: 9/12
+  corr_kl_yneg: -0.165
+  corr_kl_sneg: -0.329
+  frac_relu_better_range: [0.18, 0.55]

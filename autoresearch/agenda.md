@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-186. **Per-token prediction impact of negative regime — GPT-2 FFN** [INTERPRETABILITY]
-   - Measure functional impact in prediction space, not hidden-state space. For each of 12 blocks independently, 2048 tokens: (a) float model P_float(next_token|context), (b) ReLU-at-block-l model P_relu(next_token|context), (c) per-token KL(P_float || P_relu), (d) top-50 tokens by KL per block — report actual tokens and contexts, (e) fraction where P_relu(correct) > P_float(correct) (negative regime HURTS), (f) correlate mean KL with ||y_neg|| and ||s_neg|| from item 184.
-   - Type: analysis (interpretability)
-   - Confirmed if: mean KL > 0.1 nats in ≥8/12 blocks AND top-50 tokens show semantic pattern.
-   - Refuted if: mean KL < 0.01 nats — negligible per-block prediction impact.
-   - Inconclusive if: moderate KL or no semantic pattern.
-   - Depends on: none. ~10 min (forward passes only).
-
 ### P1
 
 
@@ -52,6 +44,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 175
+
+186. **Per-token prediction impact of negative regime — GPT-2 FFN** *(CONFIRMED — cycle 175)*
+   - GELU→ReLU substitution produces mean KL > 0.1 nats in 9/12 blocks. Block 0 dominates (KL=1.42). However, KL does NOT correlate with negative-regime norms (r=-0.16 with ||y_neg||, r=-0.33 with ||s_neg||). The prediction impact comes from the positive-regime shape difference (GELU≠ReLU near z=0), not from the negative regime. ReLU hurts 60-80% of tokens in early blocks but is coin-flip in blocks 9-10. Top-50 tokens show common-token overlap, not genuine semantic pattern.
+   - Artifacts: `experiments/prediction_impact_gelu_relu_cycle175.py`, `autoresearch/results/cycle_175_prediction_impact.json`, `autoresearch/results/cycle_175_prediction_impact.png`
 
 ### Cycle 174
 
