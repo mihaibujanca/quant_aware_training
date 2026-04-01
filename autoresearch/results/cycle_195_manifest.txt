@@ -1,0 +1,7 @@
+item_number=206
+outcome=refuted
+key_metric=overall_mean_rank_90=472.4/768_n_low_rank_blocks=0/12_verdict=refuted
+commit=TBD
+paths=autoresearch/results/cycle_195_jacobian_rank.json,experiments/jacobian_rank_census_cycle195.py
+learned=FFN block Jacobians are high-rank (near full-rank) for all 12 blocks. Blocks 1-11 mean_rank_90=387-543/768 (50-71%). Block 0 lower at 166.8/768 (22%) but still not low-rank. Stacked rank 359-642. Rank gradient: low early → high middle (block 9 peaks at 543) → slight drop block 11 (459 — consistent with block 11 anomaly from 184/189). R3 MASO active-subspace hypothesis is REFUTED: GPT-2 FFN blocks operate in near-full-rank subspaces. No exploitable low-rank active subspace exists.
+next=Item 207: LayerNorm recalibration as lightweight cascade fix (P0). Block 0's lower rank (22%) may be exploitable locally but full-model approach is blocked.

@@ -1,0 +1,7 @@
+{
+  "cycle": 195,
+  "item": 206,
+  "verdict": "REFUTED",
+  "quality": "valid",
+  "notes": "jacfwd+vmap on CPU with CHUNK=8. 5 seqs (160 tokens). Cross-validated: 30-seq run for block 0 gave mean_rank=169.9 vs 5-seq run 166.8 — consistent. All 12 blocks high-rank; 0/12 blocks meet low-rank criterion. R3 MASO active-subspace hypothesis refuted for GPT-2 FFN."
+}

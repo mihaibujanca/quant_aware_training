@@ -1,6 +1,11 @@
-# Research Status — 194 Cycles (001–194)
+# Research Status — 195 Cycles (001–195)
 
-## Latest: Cycle 194
+## Latest: Cycle 195
+
+206. **Jacobian effective rank census — data-active rank of GPT-2 FFN blocks** — REFUTED
+   - overall_mean_rank_90=472.4/768 (61%). 0/12 blocks below 100/768 low-rank threshold. Blocks 1-11: mean 387-543. Block 0 lower (166.8/768=22%) but not exploitable. Rank gradient: low early → high middle (b9 peaks at 543) → slight drop b11 (459). Stacked ranks 359-642. R3 MASO active-subspace hypothesis REFUTED: GPT-2 FFN blocks are near-full-rank. Consistent with cycles 184/189 (diffuse high-rank error structure).
+
+## Cycle 194
 
 204. **Self-correction depth analysis — blocks 8-10 partial compensation** — REFUTED
    - max_decrease=2/12 layers. Error magnitude generally keeps growing; PPL improvement at k=8-10 is error REDIRECTION to low-PPL subspace (error rotates into less PPL-sensitive dimensions), not cancellation. Self-correction is passive, not active. Cascade barrier cannot be broken by relying on self-correction.
@@ -84,13 +89,16 @@
 14. **Exact dead-channel pruning not applicable to GELU networks** (192): GPT-2 has near-zero dead channels (0.003% at eps=0.01). GELU never reaches exactly zero. Serra/Berzins exact pruning requires ReLU hard zeros. R2 baseline is closed.
 15. **Superadditivity is general — not specific to zero-point** (193): C3+Hybrid (non-zero neg replacement) PPL=41.4 ≈ ReLU+bias PPL=42.6. Combining both-regime modifications produces ~35% extra damage beyond simple sum, regardless of the specific form of negative-regime replacement.
 16. **Self-correction at k=8-10 is passive error rotation, not cancellation** (194): max 2/12 layers show magnitude decrease. PPL improves because errors rotate into low-PPL subspace (consistent with diffuse high-rank structure from cycle 184). Self-correction is a statistical artifact, not exploitable.
+17. **FFN Jacobians are near-full-rank — no active subspace** (195): overall_mean_rank_90=472.4/768 (61%). 0/12 blocks low-rank (<100). Rank gradient: b0=166 → b9=543 → b11=459. Stacked ranks 359-642. R3 MASO active-subspace hypothesis fully refuted. Consistent with cycles 184/189 (diffuse errors). GPT-2 FFN functions are globally distributed across nearly all 768 dimensions.
 
 ### Working Recipes (ranked)
 1. **topk+lstsq + corrections** -> PPL ~59 (49K correction params, total ~1.6M)
 2. **topk+lstsq+polish** -> PPL ~70.7 (1.58M params)
 
 ### Exhausted Directions
-Channel selection, joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, full-model ReLU swap, iterative bias recomputation, low-rank residual correction, compression ratio sweep (ratio-independent floor), fewer-block compression (cascade barrier persists at 2 blocks)
+Channel selection, joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, full-model ReLU swap, iterative bias recomputation, low-rank residual correction, compression ratio sweep (ratio-independent floor), fewer-block compression (cascade barrier persists at 2 blocks), Jacobian active subspace compression (R3 MASO hypothesis refuted — near-full-rank Jacobians)
 
 ## Next
-- P0/P1/P2 queue empty — agenda refresh required
+- Item 207: LayerNorm recalibration (P0)
+- Item 208: Block-pair joint compression (P1)
+- Item 205: Block 0 criticality analysis (P2)

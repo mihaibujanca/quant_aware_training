@@ -6,13 +6,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-206. **Jacobian effective rank census — data-active rank of GPT-2 FFN blocks** [EMPIRICAL]
-   - Core MASO/R3 measurement. For each FFN block, compute per-token Jacobians df/dx using torch.func.jacrev (x is the block input, shape 768; J shape 768×768). On calibration data (N=200 seqs, SEQ_LEN=64 for speed), compute the singular values of the stacked Jacobian matrix. Measure: (a) effective rank at 90% energy across tokens per block, (b) variance of Jacobians across tokens (low variance = more compressible), (c) alignment between top singular vectors and topk selected channel directions. If FFN Jacobians have low effective rank (<100/768), this opens a new compression path: compress in the null space of the active subspace.
-   - Type: empirical
-   - Confirmed if: effective Jacobian rank < 100/768 (< 13%) for ≥6/12 blocks.
-   - Refuted if: effective rank > 300/768 for all blocks (Jacobians are full-rank).
-   - Inconclusive if: 100-300 range.
-   - Depends on: none. ~15 min compute (may need torch.func.jacrev on CPU).
+206. **Jacobian effective rank census — data-active rank of GPT-2 FFN blocks** *(REFUTED — cycle 195)*
+   - overall_mean_rank_90=472.4/768. All 12 blocks high-rank; 0/12 meet <100 criterion. Blocks 1-11: mean_rank 387-543/768 (50-71%). Block 0 lower at 166.8/768. R3 MASO active-subspace hypothesis refuted: GPT-2 FFN blocks operate in near-full-rank subspaces.
+   - Artifacts: `experiments/jacobian_rank_census_cycle195.py`, `autoresearch/results/cycle_195_jacobian_rank.json`
 
 207. **LayerNorm recalibration for stacked compressed blocks** [EMPIRICAL]
    - The cascade barrier (cycles 181-194) arises because each compressed block shifts the residual stream distribution, and subsequent LN layers receive shifted inputs. Hypothesis: recalibrating LN γ/β parameters at each block's input (after fitting topk+lstsq on all 12 blocks) restores distribution alignment. Method: (1) fit all-12 topk+lstsq model (as in cycle 181); (2) run calibration through both float and compressed models; (3) for each block, compute mean and std of compressed model's LN input vs float model's; (4) adjust LN parameters to match float statistics: γ' = γ × std_float/std_comp, β' = β + (mean_float - mean_comp)/std_comp. Cost: 2×768×12 = 18,432 params. No training needed.
@@ -67,6 +63,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 195
+
+206. **Jacobian effective rank census — data-active rank of GPT-2 FFN blocks** *(REFUTED — cycle 195)*
+   - overall_mean_rank_90=472.4/768. All 12 blocks high-rank; 0/12 meet <100 criterion. Blocks 1-11: mean_rank 387-543/768 (50-71%). Block 0 lower at 166.8/768 (22%). Rank gradient: low early (b0: 166) → high middle (b9: 543) → slight drop (b11: 459 — consistent with block 11 anomaly). R3 MASO active-subspace hypothesis refuted: GPT-2 FFN blocks operate in near-full-rank subspaces. No exploitable low-rank active subspace.
+   - Artifacts: `experiments/jacobian_rank_census_cycle195.py`, `autoresearch/results/cycle_195_jacobian_rank.json`
 
 ### Cycle 194
 
