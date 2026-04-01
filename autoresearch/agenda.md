@@ -6,7 +6,30 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+206. **Jacobian effective rank census — data-active rank of GPT-2 FFN blocks** [EMPIRICAL]
+   - Core MASO/R3 measurement. For each FFN block, compute per-token Jacobians df/dx using torch.func.jacrev (x is the block input, shape 768; J shape 768×768). On calibration data (N=200 seqs, SEQ_LEN=64 for speed), compute the singular values of the stacked Jacobian matrix. Measure: (a) effective rank at 90% energy across tokens per block, (b) variance of Jacobians across tokens (low variance = more compressible), (c) alignment between top singular vectors and topk selected channel directions. If FFN Jacobians have low effective rank (<100/768), this opens a new compression path: compress in the null space of the active subspace.
+   - Type: empirical
+   - Confirmed if: effective Jacobian rank < 100/768 (< 13%) for ≥6/12 blocks.
+   - Refuted if: effective rank > 300/768 for all blocks (Jacobians are full-rank).
+   - Inconclusive if: 100-300 range.
+   - Depends on: none. ~15 min compute (may need torch.func.jacrev on CPU).
+
+207. **LayerNorm recalibration for stacked compressed blocks** [EMPIRICAL]
+   - The cascade barrier (cycles 181-194) arises because each compressed block shifts the residual stream distribution, and subsequent LN layers receive shifted inputs. Hypothesis: recalibrating LN γ/β parameters at each block's input (after fitting topk+lstsq on all 12 blocks) restores distribution alignment. Method: (1) fit all-12 topk+lstsq model (as in cycle 181); (2) run calibration through both float and compressed models; (3) for each block, compute mean and std of compressed model's LN input vs float model's; (4) adjust LN parameters to match float statistics: γ' = γ × std_float/std_comp, β' = β + (mean_float - mean_comp)/std_comp. Cost: 2×768×12 = 18,432 params. No training needed.
+   - Type: empirical
+   - Confirmed if: LN-recalibrated compressed PPL < 50 (saves >9 PPL from ~59 baseline).
+   - Refuted if: LN-recalibrated PPL within 2 PPL of ~59.
+   - Inconclusive if: 2-9 PPL improvement.
+   - Depends on: existing topk+lstsq recipe. ~15 min compute.
+
 ### P1
+
+208. **Block-pair joint compression — consecutive block pairs as single units** [EMPIRICAL]
+   - The cascade barrier might be reducible by compressing pairs of consecutive blocks jointly. For each pair (l, l+1), run topk+lstsq on the COMPOSITION f_{l+1}(f_l(x)) with combined student. Compare to: 2× single-block cascade (known ~12% PPL each → cascade cost). Key test: does joint compression of 2 blocks give lower PPL than compressing each independently and stacking? Run on all 6 non-overlapping pairs (0+1, 2+3, 4+5, 6+7, 8+9, 10+11).
+   - Type: empirical
+   - Confirmed if: best joint-pair PPL < sum(individual) by >2 PPL (joint compression reduces cascade).
+   - Refuted if: joint PPL ≥ stacked individual PPL.
+   - Depends on: existing topk+lstsq recipe. ~20 min compute.
 
 ### P2
 
