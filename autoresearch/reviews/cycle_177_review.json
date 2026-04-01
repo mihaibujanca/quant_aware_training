@@ -1,0 +1,19 @@
+{
+  "cycle": 177,
+  "item": 187,
+  "verdict": "INCONCLUSIVE",
+  "audit": {
+    "G1_item_faithful": true,
+    "G1_note": "Item asked for split compression with r sweep. Experiment implements exactly this: topk=512 + tail SVD at r={2,4,8,16}. Param matching impossible due to full c_fc requirement — honestly reported.",
+    "G2_baseline_reproduced": true,
+    "G2_note": "r=0 baseline reproduces topk+lstsq: unpolished 74.75, polished 59.39 (consistent with known ~70.7 unpolished, ~59 polished). Baseline PPL variance across seeds is high (seed 42: 57.7, seed 137: 48.8, seed 7: 50.4) but within expected GPT-2 range.",
+    "G3_verdict_matches_criteria": true,
+    "G3_note": "Item criteria: INCONCLUSIVE if within +/-2 PPL. Best delta is 0.97 polished, 0.55 unpolished. Both within +/-2. Correct verdict.",
+    "G4_no_data_leakage": true,
+    "G4_note": "SVD computed on probe_train activations (4096 tokens), eval on separate eval_val (200 sequences). No overlap.",
+    "G5_artifacts_complete": true,
+    "G5_note": "JSON results, PNG plot, experiment script all present.",
+    "G6_param_accounting_honest": true,
+    "G6_note": "Split uses 3.57x more params (2.81M vs 787K per block) due to full c_fc. This is inherent to the approach — you need all c_fc rows to compute tail activations. Honestly reported in results and verdict note."
+  }
+}

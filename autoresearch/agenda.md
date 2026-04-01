@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-187. **SoLA-style split compression — GPT-2 FFN k=4**
-   - Type: empirical
-   - Instead of topk+lstsq (keep k groups, drop rest), keep k groups full-rank AND SVD-compress the remaining 20 groups at rank r. Compare stacked PPL to topk+lstsq at matched total parameter count. Sweep r ∈ {2, 4, 8, 16} for the compressed tail. Baseline: topk+lstsq PPL ~70.7 (no corrections). If split beats topk+lstsq by ≥2 PPL at same params, CONFIRMED. If within ±2 PPL, INCONCLUSIVE. If worse, REFUTED.
-   - Confirmed: stacked PPL ≤ 68.7 at matched params (≥2 PPL improvement over topk+lstsq 70.7)
-   - Refuted: stacked PPL ≥ 72.7 or worse than topk+lstsq at all rank settings
-   - Inconclusive: within ±2 PPL of topk+lstsq
-   - Depends on: none (uses existing topk infrastructure + torch.linalg.svd)
-
 188. **Negative-regime bias absorption + positive-only compression — GPT-2 FFN k=4**
    - Type: empirical
    - Absorb constant negative GELU output as a 768-dim bias vector per block (from cycle 173: max +1.4% PPL per block). Then apply topk+lstsq compression only to the positive-regime channels (~9-13% active). Measure: (a) stacked PPL of bias-absorbed model (all 12 blocks, no compression), (b) stacked PPL of bias-absorbed + topk+lstsq on positive regime (4 blocks, k=4). Baseline: topk+lstsq PPL ~70.7. If positive-only compression at same k gives better PPL (smaller effective problem), CONFIRMED. If absorption cascade degrades baseline too much (>5 PPL), REFUTED.
@@ -67,6 +59,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 177
+
+187. **SoLA-style split compression — GPT-2 FFN k=4** *(INCONCLUSIVE — cycle 177)*
+   - Keep 512 top channels full-rank + SVD-compress remaining 2560 tail channels at rank r={2,4,8,16}. Best r=16 improves polished PPL by only 0.97 (58.42 vs 59.39) and unpolished by 0.55 (74.20 vs 74.75) — within ±2 PPL threshold. The split approach uses 3.57x more params per block (2.81M vs 787K) because it must keep the full c_fc to compute tail activations. The tail SVD captures only 15-22% of tail variance at r=16; the additional information is real but marginal for stacked PPL. Polish absorbs most of the local fit improvement, narrowing the gap.
+   - Artifacts: `experiments/split_compression_cycle177.py`, `autoresearch/results/cycle_177_split_compression.json`, `autoresearch/results/cycle_177_split_compression.png`
 
 ### Cycle 176
 
