@@ -6,17 +6,15 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-*(queue empty — see P1)*
+213. **BLOCKS=[1,4,7] compression — exclude block 11 (output decompressor)**
+   - Cycle 201 confirmed block 11 is an output decompressor: input_rank=2→output_rank=231 (154× expansion, mirror of block 0). Current recipe uses BLOCKS=[1,4,7,11]; block 11 is the anomalous bookend. Test: compress only BLOCKS=[1,4,7] (K=512) and compare PPL to current [1,4,7,11] baseline (~30 PPL corrected, ~68 PPL on held-out). Hypothesis: removing block 11 from the compression set will improve PPL by not disrupting the rank-expansion step.
+   - Type: empirical
+   - Confirmed if: BLOCKS=[1,4,7] K=512 PPL is lower than BLOCKS=[1,4,7,11] K=512 PPL on the same eval data
+   - Refuted if: BLOCKS=[1,4,7] PPL is higher (fewer compressed blocks → worse, block 11 compression is not the bottleneck)
+   - Inconclusive if: difference is within ±1 PPL (noise-level)
+   - Depends on: 211 (confirmed — block 11 is bookend)
 
 ### P1
-
-211. **Block 11 geometry deep-dive — anomalous delta_norm and rank drop**
-   - Cycle 198: block 11 delta_norm=335 (11× median of other blocks). Cycle 184: rank_90 drops 434→215 at block 11 (possible self-correction). Cycle 187: block 11 borderline droppable (PPL 41.4, highest of non-block-0 blocks). Analyze: (a) block 11 input/output rank, (b) what token types drive the large delta, (c) whether block 11 is performing a final "projection to output space" role analogous to block 0 input role.
-   - Type: analysis
-   - Confirmed if: block 11 input/output rank is anomalous (>3× median of blocks 2-10), OR token-type breakdown shows concentrated usage pattern (e.g. specific token positions or frequent tokens)
-   - Refuted if: block 11 metrics are within 2× of the median of blocks 2-10 across all three sub-analyses
-   - Inconclusive if: only one sub-analysis shows anomaly without a coherent explanation
-   - Depends on: none
 
 ### P2
 
@@ -55,6 +53,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 201
+
+211. **Block 11 geometry deep-dive** *(CONFIRMED — cycle 201)*
+   - Block 11 output decompressor: in_rank=2→out_rank=231 (154× expansion, mirror of block 0). Delta_rank=1 (rank-1 perturbation, 97% top-3 SV energy). Token-type concentration: top-20 mean delta 848.7 vs overall 335.7 (2.5×). Block 11 expands rank-1/2 residual for LM head. Borderline droppability explained: LM head receives rank-2 not rank-231.
+   - Artifacts: `experiments/block11_geometry_cycle201.py`, `autoresearch/results/cycle_201_block11_geometry.json`
 
 ### Cycle 200
 

@@ -1,7 +1,7 @@
 item_number=210
 outcome=refuted
 key_metric=max_rank_disruption=1.0_rank_ratio_b3=1.0_frob_div_peak=0.240_at_block8_verdict=refuted
-commit=pending
+commit=19070e2
 paths=autoresearch/results/cycle_200_rank_trajectory.json,experiments/rank_trajectory_cycle200.py
 learned=Rank-1 residual stream is robustly preserved by topk+lstsq compression. Float ranks 244→192→23→1; compressed ranks 244→192→20→1. Max rank ratio=1.0. Cascade barrier is purely from Frobenius content error (diffuse, not rank-structural). Consistent with cycle 189 (directionally coherent diffuse errors). Frob div peaks at block 8-9 (~0.24) then decreases at blocks 10-11 (consistent with cycle 194 passive self-correction).
 next=Item 211: Block 11 geometry deep-dive (P1). Item 212: Rank-1 FFN compression (P2).

@@ -1,6 +1,11 @@
-# Research Status — 200 Cycles (001–200)
+# Research Status — 201 Cycles (001–201)
 
-## Latest: Cycle 200
+## Latest: Cycle 201
+
+211. **Block 11 geometry deep-dive** — CONFIRMED
+   - Block 11 is an output decompressor (mirror of block 0): in_rank=2→out_rank=231 (154× expansion). Delta rank=1 (rank-1 perturbation, 97% energy in top-3 SVs). Token-type delta concentration: top-20 mean 848.7 vs overall 335.7 (2.5×). Block 11 expands rank-1/2 residual stream for LM head projection. Borderline droppability (PPL 41.4, cycle 187) explained: LM head receives rank-2 instead of rank-231. Self-correction in Frobenius divergence (cycles 194/200) is block 11's rank-expansion absorbing upstream errors.
+
+## Cycle 200
 
 210. **Residual stream rank trajectory under compression** — REFUTED
    - Float ranks 244→192→23→1; compressed ranks 244→192→20→1 (max ratio=1.0). Rank-1 collapse is robustly preserved. Cascade barrier is PURELY from Frobenius content error, not rank disruption. Frob div peaks at blocks 8-9 (~0.24) then decreases (consistent with cycle 194 passive self-correction). Closes the "rank disruption" hypothesis.
@@ -119,6 +124,7 @@
 19. **Sequential fitting provides negligible benefit** (197): fitting each block on compressed predecessors' I/O gains 0.135 PPL (noise-level). Distribution mismatch in fitting data is NOT the cascade bottleneck — cascade is from intrinsic information loss per compressed block.
 20. **Block 0 criticality is from high input diversity, not specialization** (198): block 0 input_rank_90=269 vs median=1 for blocks 2-11. Input rank collapse: 269→207→25→1 across blocks 0-3. Block 0 must transform high-dimensional raw embeddings (50257-type vocabulary) into the residual stream. Cannot be dropped or replaced by later-block compression approach.
 21. **Rank-1 residual stream does NOT reduce required K** (199): K-sweep for BLOCKS=[1,4,7,11] shows monotone improvement +57%→+26% above float (K=8→512) with no plateau. LayerNorm creates token-specific 768D variation after per-token centering/scaling; block input rank ≠ MLP input diversity. K=512 remains necessary baseline.
+23. **Block 11 is an output decompressor** (201): in_rank=2→out_rank=231 (154×). Delta_rank=1. Mirror of block 0 (which collapses high-rank input into residual). Blocks 1-10 process rank-1 residual; block 11 expands it to rank-231 for LM head. Self-correction in cycles 194/200 explained: block 11 rank-expansion absorbs upstream errors. Recommendation: exclude block 11 from compression set.
 22. **Rank collapse is robustly preserved by topk+lstsq** (200): Float ranks 244→192→23→1; compressed ranks 244→192→20→1. Max rank ratio=1.0. Cascade barrier is from Frobenius content error, not rank structure disruption. Frob div grows 0→0.24 (blocks 0-9) then decreases 0.17 (blocks 10-11), consistent with cycles 189 (directional coherence) and 194 (passive self-correction).
 
 ### Working Recipes (ranked)
@@ -129,5 +135,5 @@
 Channel selection, joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, full-model ReLU swap, iterative bias recomputation, low-rank residual correction, compression ratio sweep (ratio-independent floor), fewer-block compression (cascade barrier persists at 2 blocks), Jacobian active subspace compression (R3 MASO hypothesis refuted — near-full-rank Jacobians), LN recalibration (per-channel stats irrelevant to per-token LN)
 
 ## Next
-- Item 211: Block 11 geometry deep-dive (P1, now highest priority)
+- Item 213: BLOCKS=[1,4,7] compression excluding block 11 (P0)
 - Item 212: Rank-1 FFN compression (P2)
