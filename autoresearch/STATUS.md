@@ -1,6 +1,11 @@
-# Research Status — 199 Cycles (001–199)
+# Research Status — 200 Cycles (001–200)
 
-## Latest: Cycle 199
+## Latest: Cycle 200
+
+210. **Residual stream rank trajectory under compression** — REFUTED
+   - Float ranks 244→192→23→1; compressed ranks 244→192→20→1 (max ratio=1.0). Rank-1 collapse is robustly preserved. Cascade barrier is PURELY from Frobenius content error, not rank disruption. Frob div peaks at blocks 8-9 (~0.24) then decreases (consistent with cycle 194 passive self-correction). Closes the "rank disruption" hypothesis.
+
+## Cycle 199
 
 209. **K-sweep for near-rank-1-input blocks** — REFUTED
    - Degradation vs float: +57% at K=8, +47% at K=32, +26% at K=512. No plateau. Rank-1 residual stream (blocks 4,7,11 from cycle 198) does NOT enable smaller K. After LayerNorm, each token has distinct 768D variation regardless of residual rank. Block input rank ≠ MLP input diversity after LN.
@@ -114,6 +119,7 @@
 19. **Sequential fitting provides negligible benefit** (197): fitting each block on compressed predecessors' I/O gains 0.135 PPL (noise-level). Distribution mismatch in fitting data is NOT the cascade bottleneck — cascade is from intrinsic information loss per compressed block.
 20. **Block 0 criticality is from high input diversity, not specialization** (198): block 0 input_rank_90=269 vs median=1 for blocks 2-11. Input rank collapse: 269→207→25→1 across blocks 0-3. Block 0 must transform high-dimensional raw embeddings (50257-type vocabulary) into the residual stream. Cannot be dropped or replaced by later-block compression approach.
 21. **Rank-1 residual stream does NOT reduce required K** (199): K-sweep for BLOCKS=[1,4,7,11] shows monotone improvement +57%→+26% above float (K=8→512) with no plateau. LayerNorm creates token-specific 768D variation after per-token centering/scaling; block input rank ≠ MLP input diversity. K=512 remains necessary baseline.
+22. **Rank collapse is robustly preserved by topk+lstsq** (200): Float ranks 244→192→23→1; compressed ranks 244→192→20→1. Max rank ratio=1.0. Cascade barrier is from Frobenius content error, not rank structure disruption. Frob div grows 0→0.24 (blocks 0-9) then decreases 0.17 (blocks 10-11), consistent with cycles 189 (directional coherence) and 194 (passive self-correction).
 
 ### Working Recipes (ranked)
 1. **topk+lstsq + corrections** -> PPL ~59 (49K correction params, total ~1.6M)
@@ -123,6 +129,5 @@
 Channel selection, joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, full-model ReLU swap, iterative bias recomputation, low-rank residual correction, compression ratio sweep (ratio-independent floor), fewer-block compression (cascade barrier persists at 2 blocks), Jacobian active subspace compression (R3 MASO hypothesis refuted — near-full-rank Jacobians), LN recalibration (per-channel stats irrelevant to per-token LN)
 
 ## Next
-- Item 210: Residual stream rank trajectory under compression (P0)
-- Item 211: Block 11 geometry deep-dive (P1)
-- Item 212: Rank-1 input FFN compression (P2)
+- Item 211: Block 11 geometry deep-dive (P1, now highest priority)
+- Item 212: Rank-1 FFN compression (P2)

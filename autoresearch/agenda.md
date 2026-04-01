@@ -6,13 +6,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-210. **Residual stream rank trajectory under compression — does topk+lstsq preserve rank collapse?**
-   - Cycle 198 found sharp rank collapse: 269→207→25→1 across blocks 0-3. If topk+lstsq compression of block 1 (input_rank=207) destroys this rank collapse, later blocks would receive wrong-rank input, amplifying cascade. Measure output rank of each compressed block vs float block. Hypothesis: block 1 compression degrades from rank 207→1 more slowly, disrupting the cascade.
-   - Type: analysis
-   - Confirmed if: compressed block 1 output rank differs from float block 1 output rank by >10× at 90% energy threshold
-   - Refuted if: output rank at each compressed block is within 2× of the float model's corresponding block
-   - Inconclusive if: rank measurements are noisy / dominated by numerical precision
-   - Depends on: none
+*(queue empty — see P1)*
 
 ### P1
 
@@ -61,6 +55,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 200
+
+210. **Residual stream rank trajectory under compression** *(REFUTED — cycle 200)*
+   - Float ranks 244→192→23→1; compressed ranks 244→192→20→1. Max rank ratio=1.0. Rank-1 collapse robustly preserved. Cascade barrier is from Frobenius CONTENT error, not rank disruption. Frob div peaks at block 8-9 (~0.24), consistent with cycle 194 passive self-correction.
+   - Artifacts: `experiments/rank_trajectory_cycle200.py`, `autoresearch/results/cycle_200_rank_trajectory.json`
 
 ### Cycle 199
 
