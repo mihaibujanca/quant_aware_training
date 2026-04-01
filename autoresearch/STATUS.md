@@ -1,6 +1,13 @@
-# Research Status — 185 Cycles (001–185)
+# Research Status — 186 Cycles (001–186)
 
-## Latest: Cycle 185
+## Latest: Cycle 186
+
+195. **Fewer-block compression — GPT-2 FFN k=4 on 2 blocks vs 4 blocks** — REFUTED
+   - Best 2-block pair (1,4): mean PPL 50.4 ±5.3 vs 4-block 59.4 ±8.2. Halving block count gains 9 PPL but stays above threshold 48.
+   - All 6 pairs tightly clustered (50.4–54.8); block pair (1,4) consistently best.
+   - High cross-seed variance driven by seed-42 teacher PPL 57.6 (vs 48.8/50.4 for other seeds).
+
+## Cycle 185
 
 194. **Compression ratio sweep k={2,4,6,8} — GPT-2 FFN** — REFUTED
    - PPL floor is ratio-independent: k=2→61.56, k=4→59.42, k=6→58.30, k=8→57.16 (only 4.4 PPL for 4x more params, 12x→3x compression). k=8 PPL=57.2 > 55 threshold.
@@ -24,13 +31,15 @@
 5. **Topk+lstsq+corrections remains best**: PPL ~59 at 1.6M + 49K params
 6. **Distillation control confirmed** (183): topk beats local Adam+MSE by +21 PPL; single-block quality ≠ stacking quality
 7. **Divergence is exponential but diffuse** (184): rank_90=300-434/768, low-rank correction not viable; α-smooth interpolation confirms shape-mismatch as continuous, not phase-transition
+8. **Block count matters, floor persists** (185, 186): ratio-independent compression floor ~57 PPL; 2-block gains 9 PPL over 4-block but threshold unbreached; cascade barrier is structural
 
 ### Working Recipes (ranked)
 1. **topk+lstsq + corrections** -> PPL ~59 (49K correction params, total ~1.6M)
 2. **topk+lstsq+polish** -> PPL ~70.7 (1.58M params)
 
 ### Exhausted Directions
-Channel selection, joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, full-model ReLU swap, iterative bias recomputation, low-rank residual correction
+Channel selection, joint training (5 refutations), dead channel pruning (5 refutations), block-adaptive ratio, correction transfer, lstsq targets, sign-pattern partitioning, SoLA split, negative absorption, spectral selection, FLAP bias, wider-shallower, full-model ReLU swap, iterative bias recomputation, low-rank residual correction, compression ratio sweep (ratio-independent floor), fewer-block compression (cascade barrier persists at 2 blocks)
 
 ## Next
-- P2: 195 (fewer-block compression), 196 (layer-drop baseline)
+- P0: 198 (C3 composition all-12 blocks), 199 (cascade error direction analysis), 200 (GELU-neg+ReLU-pos hybrid)
+- P2: 196 (layer-drop baseline)

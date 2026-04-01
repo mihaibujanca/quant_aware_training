@@ -1,7 +1,7 @@
 item_number=195
 outcome=refuted
 key_metric=best_pair=(1,4)_best_mean_ppl=50.44_4block_mean_ppl=59.42_3seeds
-commit=PENDING
+commit=8a96b62
 paths=autoresearch/results/cycle_186_fewer_blocks.json,experiments/fewer_blocks_cycle186.py
 learned=Fewer blocks does help (2-block best 50.4 vs 4-block 59.4, -9 PPL), but not below threshold. High cross-seed variance (std ~5-8 PPL) driven by seed-42 high teacher PPL (57.6). Block pair (1,4) is consistently best. Cascade compression floor persists even with 2 blocks.
 next=Both remaining P2 items done after cycle 187 (item 196). Trigger agenda refresh with new items.
