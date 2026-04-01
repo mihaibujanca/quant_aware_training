@@ -1,0 +1,94 @@
+{
+  "cycle": 193,
+  "item": 203,
+  "verdict": "INCONCLUSIVE",
+  "verdict_note": "C3+Hybrid all-12 PPL=41.447 (+82.59%) in 34-45 range. Partial superadditivity.",
+  "baseline_ppl": 22.69985207563429,
+  "c3_hybrid_all12_ppl": 41.44660156801453,
+  "c3_hybrid_all12_pct": 82.58533769258675,
+  "simple_sum_prediction_ppl": 33.595781071938745,
+  "reference_c3_ppl": 27.314,
+  "reference_hybrid_ppl": 28.98,
+  "reference_relu_bias_ppl": 42.6,
+  "progressive": [
+    {
+      "k": 0,
+      "blocks_swapped": 1,
+      "ppl": 23.37940110465655,
+      "pct_increase": 2.9936275653165167
+    },
+    {
+      "k": 1,
+      "blocks_swapped": 2,
+      "ppl": 23.99683424176357,
+      "pct_increase": 5.7136150570841915
+    },
+    {
+      "k": 2,
+      "blocks_swapped": 3,
+      "ppl": 25.166841874036617,
+      "pct_increase": 10.867867289101678
+    },
+    {
+      "k": 3,
+      "blocks_swapped": 4,
+      "ppl": 26.840803115339448,
+      "pct_increase": 18.24219393988914
+    },
+    {
+      "k": 4,
+      "blocks_swapped": 5,
+      "ppl": 30.7621256450334,
+      "pct_increase": 35.51685509903849
+    },
+    {
+      "k": 5,
+      "blocks_swapped": 6,
+      "ppl": 33.33853257541117,
+      "pct_increase": 46.86673932644828
+    },
+    {
+      "k": 6,
+      "blocks_swapped": 7,
+      "ppl": 36.04554946092912,
+      "pct_increase": 58.79200155502298
+    },
+    {
+      "k": 7,
+      "blocks_swapped": 8,
+      "ppl": 37.407453429970175,
+      "pct_increase": 64.79161760760029
+    },
+    {
+      "k": 8,
+      "blocks_swapped": 9,
+      "ppl": 38.344702679790764,
+      "pct_increase": 68.92049583419727
+    },
+    {
+      "k": 9,
+      "blocks_swapped": 10,
+      "ppl": 38.39339746401773,
+      "pct_increase": 69.13501170004838
+    },
+    {
+      "k": 10,
+      "blocks_swapped": 11,
+      "ppl": 38.282598520060645,
+      "pct_increase": 68.64690744462014
+    },
+    {
+      "k": 11,
+      "blocks_swapped": 12,
+      "ppl": 41.44660156801453,
+      "pct_increase": 82.58533769258675
+    }
+  ],
+  "config": {
+    "n_seqs": 200,
+    "batch_size": 4,
+    "seq_len": 1024,
+    "seed": 42,
+    "device": "mps"
+  }
+}

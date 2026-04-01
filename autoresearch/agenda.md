@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-203. **Superadditive interaction isolation — C3+Hybrid combined modification** [EMPIRICAL]
-   - Cycles 188, 190: C3 alone +20.33%, hybrid alone +27.67%, full ReLU+bias +88%. If errors were independent: C3+Hybrid ≈ 48%. Actual: +88% → ~40% superadditive penalty. But C3+Hybrid is not exactly ReLU+bias (C3 uses per-channel mean for z<0, not zero). Experiment: apply C3 (negative regime) + Hybrid (positive regime) simultaneously to all 12 blocks. Measure PPL. If C3+Hybrid ≈ 48% (sum), interaction requires zero-point for negative regime (not just shape). If C3+Hybrid is also near 88%, the interaction is general.
-   - Type: empirical
-   - Confirmed if: C3+Hybrid PPL > 45 (superadditivity is general, not specific to ReLU zero-point).
-   - Refuted if: C3+Hybrid PPL ≈ 28-35 (close to simple sum, no superadditivity with non-zero negative replacement).
-   - Inconclusive if: 35-45 range.
-   - Depends on: 198 (done), 200 (done). ~10 min compute.
-
 ### P1
 
 204. **Self-correction depth analysis — where and why blocks 8-10 partially compensate** [ANALYSIS]
@@ -60,6 +52,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 193
+
+203. **Superadditive interaction isolation — C3+Hybrid combined modification** *(INCONCLUSIVE — cycle 193)*
+   - C3+Hybrid all-12 PPL=41.447 (+82.59%) vs ReLU+bias ~42.6 (+88%). Nearly identical to full ReLU+bias. Simple sum prediction was +48% (33.6 PPL); actual +83% — 35-point superadditivity. Confirms superadditivity is GENERAL (not specific to zero-point). Both-regime modification is the root cause regardless of specific form of negative replacement. Progressive non-monotone at k=9-10 (self-correction pattern).
+   - Artifacts: `experiments/c3_hybrid_combined_cycle193.py`, `autoresearch/results/cycle_193_c3_hybrid_combined.json`
 
 ### Cycle 192
 
