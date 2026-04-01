@@ -1,7 +1,7 @@
 item_number=217
 outcome=confirmed
 key_metric=ppl_before=61.746_ppl_after=48.111_improvement=13.635_vs_float=-10.7pct_verdict=confirmed
-commit=pending
+commit=08eaf0e
 paths=autoresearch/results/cycle_206_adam_wout_correction.json,experiments/adam_wout_correction_cycle206.py
 learned=Adam on W_out/b_out only (1.18M params) drops PPL from 61.75→48.11, which is 10.7% BELOW float (53.90). Cascade barrier is not structural: it is purely suboptimal W_out init correctable with targeted Adam. Eval still decreasing at step 1000.
 next=Item 218: block 1 channel selection (structured pruning beyond topk); Item 219: PCA-conditioned lstsq.
