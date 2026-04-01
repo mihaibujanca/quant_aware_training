@@ -1,0 +1,8 @@
+item_number: 182
+outcome: REFUTED
+cycle: 172
+experiment: experiments/lstsq_target_alt_cycle172.py
+result_json: autoresearch/results/cycle_172_lstsq_targets.json
+brief: autoresearch/briefs/cycle_172.md
+plan: autoresearch/plans/cycle_172.md
+verdict_note: all alternatives within 1 PPL of raw lstsq or worse; best alt norm_wt delta=-0.12

@@ -1,0 +1,161 @@
+{
+  "cycle": 172,
+  "item": 182,
+  "verdict": "REFUTED",
+  "verdict_note": "best alt 'norm_wt' delta=-0.1 (within 1 PPL of raw)",
+  "seeds": [
+    42,
+    137,
+    7
+  ],
+  "blocks": [
+    1,
+    4,
+    7,
+    11
+  ],
+  "hidden_dim": 512,
+  "svd_rank": 64,
+  "polish_steps": 500,
+  "polish_lr": 0.0001,
+  "eval_sequences": 200,
+  "teacher_ppl_mean": 52.3055936291863,
+  "teacher_ppl_per_seed": {
+    "42": 57.65287371228062,
+    "137": 48.81508639388072,
+    "7": 50.44882078139756
+  },
+  "targets": {
+    "raw": {
+      "mean_ppl_unpolished": 74.74590064057561,
+      "std_ppl_unpolished": 7.278421449801221,
+      "mean_ppl_polished": 59.38846959843909,
+      "std_ppl_polished": 8.164141971899635,
+      "per_seed_unpolished": [
+        84.99407301713437,
+        68.78853754355386,
+        70.4550913610386
+      ],
+      "per_seed_polished": [
+        70.82638662067944,
+        52.305560263330705,
+        55.03346191130711
+      ]
+    },
+    "norm_wt": {
+      "mean_ppl_unpolished": 74.62614508270545,
+      "std_ppl_unpolished": 7.249501311038846,
+      "mean_ppl_polished": 59.26971387797733,
+      "std_ppl_polished": 8.126578358154957,
+      "per_seed_unpolished": [
+        84.83191274697883,
+        68.67790116440145,
+        70.36862133673607
+      ],
+      "per_seed_polished": [
+        70.6540150798922,
+        52.21367973180482,
+        54.94144682223497
+      ]
+    },
+    "svd_sub": {
+      "mean_ppl_unpolished": 79.18943860991948,
+      "std_ppl_unpolished": 7.020079688668572,
+      "mean_ppl_polished": 59.88360203865776,
+      "std_ppl_polished": 8.039486155516332,
+      "per_seed_unpolished": [
+        89.09144378478764,
+        73.6179536371201,
+        74.8589184078507
+      ],
+      "per_seed_polished": [
+        71.14695346862453,
+        52.909282517258326,
+        55.59457013009044
+      ]
+    },
+    "freq_wt": {
+      "mean_ppl_unpolished": 77.42803589144656,
+      "std_ppl_unpolished": 7.512644297452793,
+      "mean_ppl_polished": 61.561383764313234,
+      "std_ppl_polished": 8.493366579038053,
+      "per_seed_unpolished": [
+        87.99341750266116,
+        71.1761856215966,
+        73.11450455008189
+      ],
+      "per_seed_polished": [
+        73.43998794417028,
+        54.07936140726144,
+        57.164801941507996
+      ]
+    }
+  },
+  "best_alternative": "norm_wt",
+  "best_delta": -0.1187557204617562,
+  "per_seed_detail": {
+    "42": {
+      "baseline_ppl": 57.65287371228062,
+      "targets": {
+        "raw": {
+          "ppl_unpolished": 84.99407301713437,
+          "ppl_polished": 70.82638662067944
+        },
+        "norm_wt": {
+          "ppl_unpolished": 84.83191274697883,
+          "ppl_polished": 70.6540150798922
+        },
+        "svd_sub": {
+          "ppl_unpolished": 89.09144378478764,
+          "ppl_polished": 71.14695346862453
+        },
+        "freq_wt": {
+          "ppl_unpolished": 87.99341750266116,
+          "ppl_polished": 73.43998794417028
+        }
+      }
+    },
+    "137": {
+      "baseline_ppl": 48.81508639388072,
+      "targets": {
+        "raw": {
+          "ppl_unpolished": 68.78853754355386,
+          "ppl_polished": 52.305560263330705
+        },
+        "norm_wt": {
+          "ppl_unpolished": 68.67790116440145,
+          "ppl_polished": 52.21367973180482
+        },
+        "svd_sub": {
+          "ppl_unpolished": 73.6179536371201,
+          "ppl_polished": 52.909282517258326
+        },
+        "freq_wt": {
+          "ppl_unpolished": 71.1761856215966,
+          "ppl_polished": 54.07936140726144
+        }
+      }
+    },
+    "7": {
+      "baseline_ppl": 50.44882078139756,
+      "targets": {
+        "raw": {
+          "ppl_unpolished": 70.4550913610386,
+          "ppl_polished": 55.03346191130711
+        },
+        "norm_wt": {
+          "ppl_unpolished": 70.36862133673607,
+          "ppl_polished": 54.94144682223497
+        },
+        "svd_sub": {
+          "ppl_unpolished": 74.8589184078507,
+          "ppl_polished": 55.59457013009044
+        },
+        "freq_wt": {
+          "ppl_unpolished": 73.11450455008189,
+          "ppl_polished": 57.164801941507996
+        }
+      }
+    }
+  }
+}

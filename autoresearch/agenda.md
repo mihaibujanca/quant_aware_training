@@ -32,13 +32,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-182. **Lstsq regression target: residual-stream delta vs raw output — GPT-2 FFN k=4** [EMPIRICAL]
-   - Current lstsq fits W_compressed @ x ≈ W_float @ x (raw block output). But FFN output enters a residual stream: y_block = FFN(x) is ADDED to x. The compositionally relevant quantity is x + FFN(x), not FFN(x) alone. Alternative targets: (a) fit the residual-stream delta normalized by ||x|| (scale-invariant), (b) fit in the subspace of top-k SVD directions of the Jacobian (geometry-preserving), (c) fit with token-frequency weighting (common tokens matter more). Compare stacked PPL of each target vs raw lstsq at k=4 across 4 blocks. If (a) helps, the lstsq step was wasting capacity matching irrelevant output scale.
-   - Type: empirical
-   - Confirmed if: any alternative target improves stacked PPL by >=2 points over raw lstsq.
-   - Refuted if: all alternatives within 1 PPL of raw lstsq or worse.
-   - Inconclusive if: improvement 1-2 PPL.
-   - Depends on: none. ~15 min compute.
 
 183. **Sign-pattern-conditioned lstsq — GPT-2 FFN k=4** [EMPIRICAL]
    - Current lstsq fits ONE linear map per block. But the FFN is piecewise-linear (via GELU ≈ ReLU): tokens in different sign patterns use different affine maps. If sign patterns cluster into K* tractable groups (item 177), fit a SEPARATE lstsq per cluster: for cluster c, W_c = argmin ||W @ X_c - Y_c||. At inference, route tokens by sign pattern to the appropriate W_c. This is a piecewise-linear compressed block. Test with K={4,8,16} clusters from k-means on sign patterns. Each cluster gets its own k=4 topk+lstsq. Total params = K * (k * d_in) but each sees cleaner signal. Compare stacked PPL vs single lstsq.
@@ -75,6 +68,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 172
+
+182. **Lstsq regression target: residual-stream delta vs raw output — GPT-2 FFN k=4** *(REFUTED — cycle 172)*
+   - All alternatives within 1 PPL of raw lstsq or worse. norm_wt (1/||x|| weighting): -0.12 PPL (noise). svd_sub (top-64 SVD subspace): +0.50 PPL (slightly worse). freq_wt (token-frequency weighting): +2.17 PPL (actively harmful). Polish absorbs initial differences, confirming the raw lstsq target is already near-optimal for the c_proj fitting step.
+   - Artifacts: `experiments/lstsq_target_alt_cycle172.py`, `autoresearch/results/cycle_172_lstsq_targets.json`
 
 ### Cycle 171
 
