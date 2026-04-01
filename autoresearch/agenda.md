@@ -28,7 +28,39 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ~~190. **FLAP-style bias compensation for topk pruning — GPT-2 FFN k=4**~~ INCONCLUSIVE — cycle 180
 
+193. **Matched-budget distillation control baseline — GPT-2 FFN k=4** [EMPIRICAL]
+   - program.md requires distillation as a control baseline; we have never run it. Train a student FFN block (same architecture as topk+lstsq: 768→k*128→768 with GELU) using KL-divergence distillation from the float teacher on 2048 OWT tokens, for each of blocks [1,4,7,11]. Student gets 500 Adam steps (same budget as polish). Compare single-block swap PPL and stacked 4-block PPL against topk+lstsq+polish (PPL ~70) and topk+lstsq+corrections (PPL ~59). This is NOT a new method — it is the missing control that tells us whether our geometric recipe actually beats naive distillation at matched params and compute.
+   - Type: empirical
+   - Confirmed if: topk+lstsq+polish beats distillation by ≥3 PPL (geometric compression justified).
+   - Refuted if: distillation matches or beats topk+lstsq+polish (geometric approach adds no value over SGD).
+   - Inconclusive if: within ±3 PPL.
+   - Depends on: none. ~10 min compute.
+
+194. **Compression ratio sweep — GPT-2 FFN k={2,4,6,8} on blocks [1,4,7,11]** [EMPIRICAL]
+   - We always use k=4 (6x compression). Map the PPL-vs-compression curve by running topk+lstsq+polish at k=2 (12x), k=4 (6x), k=6 (4x), k=8 (3x) on the standard 4 blocks. This reveals whether the recipe is operating in a steep or flat region of the tradeoff curve, and whether lighter compression (k=6 or k=8) closes the gap to float (PPL ~30) enough to be practically useful. Report: stacked PPL, total FFN params, and compression ratio for each k.
+   - Type: empirical
+   - Confirmed if: PPL decreases monotonically with k AND k=6 or k=8 achieves PPL <45 (practical operating point exists).
+   - Refuted if: diminishing returns — k=8 still >55 PPL (compression approach has a floor unrelated to ratio).
+   - Inconclusive if: non-monotonic or only marginal improvement at higher k.
+   - Depends on: none. ~15 min compute.
+
 ### P2
+
+195. **Fewer-block compression — GPT-2 FFN k=4 on 2 blocks vs 4 blocks** [EMPIRICAL]
+   - Cycle 171 showed block count is the primary cascade cost (12@3x=183 vs 4@6x=59). Test whether compressing only 2 blocks gives a better PPL/compression tradeoff. Run topk+lstsq+polish+corrections on all 6 pairs from {1,4,7,11}. Compare best 2-block PPL vs 4-block PPL (~59). If 2 blocks at 6x achieves PPL <42, the cascade cost insight suggests compressing fewer blocks harder is better than compressing more blocks lightly.
+   - Type: empirical
+   - Confirmed if: best 2-block pair achieves PPL <42 (better than 4-block pro-rata expectation).
+   - Refuted if: all 2-block pairs give PPL >48 (no meaningful improvement in PPL/compression tradeoff).
+   - Inconclusive if: 42-48 PPL range.
+   - Depends on: none. ~15 min compute.
+
+196. **Layer-drop baseline — GPT-2 FFN skip blocks [1,4,7,11]** [EMPIRICAL]
+   - Instead of compressing FFN blocks, skip them entirely (zero out their residual-stream contribution). This is the extreme of "fewer blocks" — compress to zero params. Run on single blocks first (12 single-block drops), then the standard 4-block set [1,4,7,11]. Compare single-block-drop PPL ranking against single-block-swap-damage from cycle 005. If some blocks are droppable (PPL <40 for single drop), this identifies blocks where compression effort is wasted.
+   - Type: empirical
+   - Confirmed if: ≥3 blocks have single-drop PPL <40 (dropping viable, compression effort should focus elsewhere).
+   - Refuted if: all single-drop PPL >60 (every block carries essential signal, no free drops).
+   - Inconclusive if: 1-2 blocks droppable.
+   - Depends on: none. ~5 min compute.
 
 
 
