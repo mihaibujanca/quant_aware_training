@@ -6,8 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-### P1
-
 203. **Superadditive interaction isolation — C3+Hybrid combined modification** [EMPIRICAL]
    - Cycles 188, 190: C3 alone +20.33%, hybrid alone +27.67%, full ReLU+bias +88%. If errors were independent: C3+Hybrid ≈ 48%. Actual: +88% → ~40% superadditive penalty. But C3+Hybrid is not exactly ReLU+bias (C3 uses per-channel mean for z<0, not zero). Experiment: apply C3 (negative regime) + Hybrid (positive regime) simultaneously to all 12 blocks. Measure PPL. If C3+Hybrid ≈ 48% (sum), interaction requires zero-point for negative regime (not just shape). If C3+Hybrid is also near 88%, the interaction is general.
    - Type: empirical
@@ -15,6 +13,8 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Refuted if: C3+Hybrid PPL ≈ 28-35 (close to simple sum, no superadditivity with non-zero negative replacement).
    - Inconclusive if: 35-45 range.
    - Depends on: 198 (done), 200 (done). ~10 min compute.
+
+### P1
 
 204. **Self-correction depth analysis — where and why blocks 8-10 partially compensate** [ANALYSIS]
    - Cycle 190: hybrid progressive shows non-monotone PPL (peak k=7, decrease k=8-10, rise k=11). This suggests late blocks partially compensate for accumulated errors. Analysis: rerun hybrid progressive sweep with residual error collection. For each k, measure ||e_l||_F per layer and the block-l contribution to PPL change. Determine if error MAGNITUDE decreases at layers 8-10, or if the error is present but redirected to low-PPL subspace. Compare error direction (cos with k=7 error) at layers 8-10.
