@@ -1,0 +1,13 @@
+{
+  "cycle": 186,
+  "item": 195,
+  "recommendation": "proceed",
+  "flags": [
+    "R1: Hypothesis is testable but mechanism (cascade depth vs reduced compression scope) is confounded by design — acceptable for exploratory",
+    "R2: Best-pair selection from 6 pairs inflates CONFIRMED risk with only 3 seeds; no unpolished 2-block baseline anchors interpretation",
+    "R3: Polish on probe_holdout (200 seqs) is consistent with cycle 185 but small; pair_seed formula verified collision-free",
+    "R4: 3 seeds thin for min-of-6 statistic; recommend flagging pairs with std_across_seeds > 10 PPL as unreliable",
+    "R5: Verify _joint_polish(block_ids=list(pair)) does not touch c_proj of uncompressed GPT-2 blocks — only risk if ALL_BLOCKS is accidentally passed instead of pair"
+  ],
+  "approved": true
+}

@@ -6,17 +6,34 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+198. **Progressive C3 composition — per-channel mean replacement across all 12 blocks** [EMPIRICAL]
+   - The critical missing experiment from the GELU bump investigation (see `docs/gelu_bump_audit.md`). Cycle 173 C3 (replace negative GELU output with per-channel conditional mean, 3072-dim, token-dependent mask, GELU preserved for z>0) works within +1.4% per block. But nobody tested C3 applied to ALL 12 blocks simultaneously. This directly tests whether per-channel replacement composes — without the confound of the GELU→ReLU shape change that made cycles 181/182 fail. Install C3 hooks on blocks 0..k for k=0..11, evaluate PPL at each step. Fork `experiments/regime_ablation_table_cycle173.py`.
+   - Type: empirical
+   - Confirmed if: C3-all-12 PPL < 26.1 (+15% over baseline 22.7). Means the cycle 181 failure is caused by the shape change, not composition of constant replacements.
+   - Refuted if: C3-all-12 PPL > 31.8 (+40% over baseline). Means even token-dependent per-channel replacement doesn't compose — the token-dependent negative signal (s_leak, 18-48% of output norm) matters for cross-block coherence.
+   - Inconclusive if: between +15% and +40%.
+   - Depends on: none. ~15 min compute.
+
+199. **Cascade error direction analysis — GELU vs ReLU+bias residual stream** [EMPIRICAL]
+   - Explains the 2.7x superadditivity in cycle 181. Collect residual stream vectors from both float and 181-progressive-swapped models at each layer. Compute per-layer error e_l = r_float_l - r_swapped_l, then measure: (a) cos(e_l, e_{l-1}) — directional alignment of successive errors, (b) ||e_l|| growth curve, (c) effective rank of error matrix E (across tokens). If errors are aligned (cos > 0.3), errors compound directionally (potentially correctable with low-rank intervention). If diffuse (cos < 0.1), each block introduces independent damage.
+   - Type: empirical
+   - Confirmed if: mean cos(e_l, e_{l-1}) > 0.3 in ≥8/12 layers (errors are directionally aligned, structured compounding).
+   - Refuted if: mean cos(e_l, e_{l-1}) < 0.1 (errors are diffuse, independent damage per block).
+   - Inconclusive if: 0.1-0.3 range.
+   - Depends on: none. ~20 min compute.
+
+200. **Positive-regime shape isolation — GELU-neg + ReLU-pos hybrid activation** [EMPIRICAL]
+   - Isolate E_shape (the dominant error in cycles 181/182) from E_replacement. Create a hybrid activation: GELU(z) for z < 0 (preserves negative leak), ReLU(z) for z >= 0 (changes positive-regime shape). Apply to all 12 blocks simultaneously. This measures the cost of the positive-regime shape change alone, without any bias compensation needed (negative regime is preserved). Compare to full GELU→ReLU swap (cycle 102) and to C3 composition (item 198).
+   - Type: empirical
+   - Confirmed if: hybrid all-12 PPL > 35 (+54%). Proves positive-regime shape change IS the dominant composition error.
+   - Refuted if: hybrid all-12 PPL < 28 (+23%). Means the negative-regime loss matters more than the shape change.
+   - Inconclusive if: 28-35 PPL range.
+   - Depends on: none. ~10 min compute.
+
 ### P1
 
 ### P2
 
-195. **Fewer-block compression — GPT-2 FFN k=4 on 2 blocks vs 4 blocks** [EMPIRICAL]
-   - Cycle 171 showed block count is the primary cascade cost (12@3x=183 vs 4@6x=59). Test whether compressing only 2 blocks gives a better PPL/compression tradeoff. Run topk+lstsq+polish+corrections on all 6 pairs from {1,4,7,11}. Compare best 2-block PPL vs 4-block PPL (~59). If 2 blocks at 6x achieves PPL <42, the cascade cost insight suggests compressing fewer blocks harder is better than compressing more blocks lightly.
-   - Type: empirical
-   - Confirmed if: best 2-block pair achieves PPL <42 (better than 4-block pro-rata expectation).
-   - Refuted if: all 2-block pairs give PPL >48 (no meaningful improvement in PPL/compression tradeoff).
-   - Inconclusive if: 42-48 PPL range.
-   - Depends on: none. ~15 min compute.
 
 196. **Layer-drop baseline — GPT-2 FFN skip blocks [1,4,7,11]** [EMPIRICAL]
    - Instead of compressing FFN blocks, skip them entirely (zero out their residual-stream contribution). This is the extreme of "fewer blocks" — compress to zero params. Run on single blocks first (12 single-block drops), then the standard 4-block set [1,4,7,11]. Compare single-block-drop PPL ranking against single-block-swap-damage from cycle 005. If some blocks are droppable (PPL <40 for single drop), this identifies blocks where compression effort is wasted.
@@ -51,6 +68,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 186
+
+195. **Fewer-block compression — GPT-2 FFN k=4 on 2 blocks vs 4 blocks** *(REFUTED — cycle 186)*
+   - Best 2-block pair (1,4) achieves mean PPL 50.4 ±5.3 vs 4-block 59.4 ±8.2 — 9 PPL improvement from halving block count, but still above 48 threshold. High cross-seed variance (std ~5-8 PPL) driven by seed-42 teacher PPL of 57.6. All 6 pairs range 50.4–54.8, tightly clustered. Block pair (1,4) consistently best.
+   - Artifacts: `experiments/fewer_blocks_cycle186.py`, `autoresearch/results/cycle_186_fewer_blocks.json`
 
 ### Cycle 185
 
