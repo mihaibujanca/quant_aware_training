@@ -1,0 +1,47 @@
+{
+  "cycle": 213,
+  "item": 223,
+  "verdict": "INCONCLUSIVE",
+  "float_ppl": 53.89489152418256,
+  "ppl_init": 61.74645122349798,
+  "best_ppl_wfc_wout": 46.42357168178644,
+  "best_step": 1500,
+  "early_stopped": false,
+  "wout_only_ref_1000steps": 48.173,
+  "wout_only_ref_best": 46.556,
+  "improvement_vs_wout_1000": 1.7494283182135604,
+  "improvement_vs_wout_best": 0.13242831821355594,
+  "ppl_history": [
+    {
+      "step": 500,
+      "eval_ppl": 48.017934125856094
+    },
+    {
+      "step": 1000,
+      "eval_ppl": 46.866879618304225
+    },
+    {
+      "step": 1500,
+      "eval_ppl": 46.42357168178644
+    },
+    {
+      "step": 2000,
+      "eval_ppl": 47.37815878477645
+    }
+  ],
+  "config": {
+    "BLOCKS": [
+      1,
+      4,
+      7
+    ],
+    "K": 512,
+    "MAX_STEPS": 2000,
+    "LR": 0.0001,
+    "EVAL_EVERY": 500,
+    "N_CALIB": 200,
+    "N_EVAL": 100,
+    "SEQ_LEN": 128,
+    "SEED": 42
+  }
+}

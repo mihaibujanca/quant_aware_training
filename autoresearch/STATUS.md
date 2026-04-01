@@ -1,6 +1,11 @@
-# Research Status — 212 Cycles (001–212)
+# Research Status — 213 Cycles (001–213)
 
-## Latest: Cycle 212
+## Latest: Cycle 213
+
+223. **Adam W_out+W_fc correction** — INCONCLUSIVE
+   - W_out+W_fc best=46.424 vs W_out-only best=46.556 (delta=0.13 PPL, negligible). Converges faster (1500 vs 4000 steps) to same quality. W_fc training adds no meaningful advantage; W_out-only Adam is preferred.
+
+## Cycle 212
 
 222. **10-block Adam correction** — REFUTED
    - Best PPL 98.493 (+82.7% vs float). Adam scaling limit: 3-block below float, 6-block +10.7% (early stop), 10-block +82.7% (REFUTED). W_out-only correction cannot fix the 10-block cascade. Practical limit ~6 blocks.

@@ -8,13 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-223. **Adam correction with trainable W_fc — does unfreezing fc improve over W_out-only?**
-   - Cycle 206 froze fc weights and only trained W_out. Test whether also training W_fc reduces PPL further for BLOCKS=[1,4,7] K=512. Compare: (a) W_out-only (cycle 206 result: 48.111), (b) W_out+W_fc (both trainable). 1000 steps, LR=1e-4.
-   - Type: empirical
-   - Confirmed if: W_out+W_fc gives ≥2 PPL improvement over W_out-only (PPL ≤46.1)
-   - Refuted if: <0.5 PPL improvement
-   - Inconclusive if: 0.5-2 PPL improvement
-
 ### P2
 
 224. **Analytical W_out correction — closed-form update from calibration residuals**
@@ -51,6 +44,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 213
+
+223. **Adam with trainable W_fc — does unfreezing fc improve?** *(INCONCLUSIVE — cycle 213)*
+   - **Outcome: INCONCLUSIVE** — W_out+W_fc best PPL=46.424 vs W_out-only best=46.556 (delta=0.13 PPL). Faster convergence (1500 vs 4000 steps) but same quality. W_fc training adds no meaningful advantage.
 
 ### Cycle 212
 

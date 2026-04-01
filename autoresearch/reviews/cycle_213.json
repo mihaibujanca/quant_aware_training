@@ -1,0 +1,17 @@
+{
+  "cycle": 213,
+  "item": 223,
+  "verdict": "INCONCLUSIVE",
+  "hypothesis": "W_out+W_fc gives \u22652 PPL improvement over W_out-only",
+  "result_summary": "W_out+W_fc best=46.424 at step 1500. W_out-only best=46.556 at step 4000. Delta=0.132 PPL (negligible).",
+  "key_metrics": {
+    "float_ppl": 53.895,
+    "wfc_wout_best": 46.424,
+    "wfc_wout_best_step": 1500,
+    "wout_only_best": 46.556,
+    "wout_only_best_step": 4000,
+    "wout_only_ref_1000": 48.173,
+    "improvement_vs_1000": 1.749,
+    "improvement_vs_best": 0.132
+  }
+}
