@@ -6,19 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-194. **Residual stream trajectory divergence: GELU vs ReLU+bias — GPT-2** [INTERPRETABILITY]
-   - Cycle 192 showed iterative ReLU+bias still fails at +63% PPL despite correct per-block biases. The bias calibration is fixed; the remaining damage must come from the SHAPE difference between GELU and ReLU near z=0. This experiment measures HOW the residual stream diverges across 12 blocks. For 2048 OWT tokens, run three models: (a) float GELU, (b) full-model ReLU+iterative bias (from cycle 192), (c) full-model ReLU (no bias, cycle 102). At each block boundary (12 points), capture the residual stream vector r_l ∈ R^768. Measure:
-   - (1) Per-layer divergence: ||r_gelu_l - r_relu+bias_l|| / ||r_gelu_l|| — how fast does the trajectory diverge?
-   - (2) Divergence direction: SVD of the divergence matrix D_l = [r_gelu - r_relu+bias] across tokens. What rank is the divergence? Is it concentrated in a few directions or diffuse?
-   - (3) Divergence growth rate: fit ||D_l|| vs layer index. Linear (additive per-block error) or exponential (compounding)?
-   - (4) Where does GELU vs ReLU differ most ON THE TOKENS THAT ACTUALLY DIVERGE? For the top-50 most-divergent tokens at each layer: what fraction of their channels are in |z| < 1 (the transition zone)? Compare to the bottom-50 (least-divergent).
-   - (5) Smooth interpolation test: replace GELU with GELU_α(z) = α·GELU(z) + (1-α)·ReLU(z) for α ∈ {0, 0.25, 0.5, 0.75, 1.0}, all with iterative bias. Measure PPL. If the damage is smooth in α, it's about the activation shape. If there's a sharp threshold, there's a phase transition.
-   - Type: analysis (interpretability)
-   - Confirmed if: divergence grows exponentially (R² > 0.8 for exp fit) AND divergence rank ≤ 32 (concentrated) AND α interpolation is smooth.
-   - Refuted if: divergence is diffuse (rank > 256) or α has a sharp transition.
-   - Inconclusive if: growth is linear or rank varies wildly by layer.
-   - Depends on: none. ~15 min compute.
-
 ### P1
 
 194. **Compression ratio sweep — GPT-2 FFN k={2,4,6,8} on blocks [1,4,7,11]** [EMPIRICAL]
@@ -72,6 +59,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 184
+
+197. **Residual stream trajectory divergence: GELU vs ReLU+bias — GPT-2** *(REFUTED — cycle 184)*
+   - Divergence is exponential (R²=0.972, rate a=0.223/block) and α-smooth (monotone PPL from 57.7→38.1, sharp_ratio=2.17), but DIFFUSE (rank_90=300-434 out of 768 max). Low-rank correction would need ~434 dims to capture 90% of damage. Transition-zone fraction ~0.49 for both divergent and non-divergent tokens — transition zone does NOT predict which tokens diverge.
+   - Artifacts: `experiments/trajectory_divergence_cycle184.py`, `autoresearch/results/cycle_184_trajectory_divergence.json`, `autoresearch/results/cycle_184_trajectory_divergence.png`
 
 ### Cycle 183
 
