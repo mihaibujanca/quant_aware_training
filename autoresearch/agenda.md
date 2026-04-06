@@ -10,16 +10,6 @@ GELU bump interpretability items (230-234) reorient the investigation from activ
 
 All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces a report with plots/tables plus a 1-sentence plain-language claim, not a PPL threshold. `Confirmed/Refuted` criteria are phrased as whether the interpretable claim holds with a clear pattern, not numeric thresholds.
 
-232. **Where does Δ point? — Δ alignment with next block's reading directions**
-   - Extends 231. For each block l, compute cos(top_k singular vectors of Δ_l, rows of W_up_{l+1}) and cos(top_k singular vectors of Δ_l, rows of W_Q/W_K/W_V of the attention block between l and l+1). Also project Δ_l onto the top principal components of the residual stream at layer l+1 input. Test whether Δ lives in directions the downstream components actually read, vs directions orthogonal to all downstream readers (in which case Δ is wasted computation, which would be surprising).
-   - Output: alignment heatmap (Δ directions × downstream reader directions) per block. One-sentence conclusion: "The bump writes into X; block l+1 reads it via Y."
-   - Type: interpretability / inter-block communication
-   - Claim to test: "The bump's top Δ directions have significant overlap with the next block's W_up reading subspace — the bump is inter-block communication that downstream blocks explicitly depend on."
-   - Confirmed if: principal angles between top-20 Δ directions and top-100 W_up rows of block l+1 are smaller than the random baseline (drawn from Gaussian vectors of the same dimension) with p < 0.01 in ≥ 8 of 11 cross-block pairs.
-   - Refuted if: Δ's top directions are orthogonal to next block's readers (alignment not distinguishable from random).
-   - Inconclusive if: weak but present alignment.
-   - Depends on: 231 (uses its Δ SVD outputs)
-
 233. **Anti-podal channel twin census — does activation pattern match column geometry?**
    - For each block, list all (c, c') channel pairs where cos(W_down[:,c], W_down[:,c']) < −0.9 (from item 230). For each such pair, measure across 200 OWT sequences: (a) corr(z_c, z_{c'}), (b) joint distribution of (z_c, z_{c'}) — do they fire in complementary regimes (one positive, one negative)?, (c) for how many tokens is sign(z_c) ≠ sign(z_{c'})? Test the hypothesis that anti-podal W_down twins have anti-correlated pre-activations — i.e., the model is actually using them as mirror channels where only one fires at a time.
    - Output: per-block twin list with activation statistics, scatter plots of (z_c, z_{c'}) for top-5 most anti-podal pairs. One-sentence conclusion: "Anti-podal W_down pairs fire complementarily in X% of cases, confirming/refuting the mirror-channel hypothesis."
@@ -100,6 +90,12 @@ All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 218
+
+232. **Where does Δ point? — centred Δ̃ alignment with next block's reading directions** *(CONFIRMED — cycle 218)*
+   - **Outcome: CONFIRMED** — After centring Δ̃ = Δ − mean(Δ), top-20 right singular vectors of Δ̃_l exceed the random baseline (10 seeds Gaussian orthonormal 20×768, mean+3σ threshold ≈ 3.0) against at least one downstream reader in **11/11** cross-block pairs. Per-reader significant counts: c_fc 11/11, Q 10/11, K 6/11, V 8/11, residual-PC 11/11. Centred rank_95 jumps from raw median 1 (c217) to 552 (range 489-567 across blocks) — the per-block constant bias was hiding the true per-token geometry. σ₀ (centred) 260-1293 (block 11 highest), σ₁ 193-503. Mean ||Δ|| per block 16-153. Top-3 SV vocab projection: SV0 in blocks 2/3/10 loads on stopwords/punctuation (expected, the dominant per-token axis correlates with unigram frequency after centring); SV1-2 show mixed word/tokenizer-noise clusters (vocab heuristic counts all 12 blocks but that's primarily via SV2 word tokens, not semantically clean clusters). **Key finding**: the bump IS structured inter-block communication — downstream c_fc and residual stream both read from the Δ̃ subspace with margin, and Q/K/V attention reads partially from it. Connects to cycle 216 W_down→c_fc alignment baseline 0.649. Item 234 (surgical bump removal) is now well-motivated: killing the bump should disrupt cross-block information flow.
+   - Artifacts: `experiments/delta_centred_alignment_cycle218.py`, `autoresearch/results/cycle_218_delta_centred_alignment.json`, `autoresearch/results/cycle_218_summary.md`
 
 ### Cycle 217
 
