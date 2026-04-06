@@ -10,16 +10,6 @@ GELU bump interpretability items (230-234) reorient the investigation from activ
 
 All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces a report with plots/tables plus a 1-sentence plain-language claim, not a PPL threshold. `Confirmed/Refuted` criteria are phrased as whether the interpretable claim holds with a clear pattern, not numeric thresholds.
 
-231. **Per-token Δ(x) = GELU_FFN − ReLU_FFN — rank, subspace, logit impact**
-   - For a 200-sequence OWT calibration batch, at each of 12 blocks, compute per-token Δ_l(x) = y_GELU_l(x) − y_ReLU_l(x) ∈ R^768. Measurements: (a) SVD of the per-token Δ matrix (tokens × 768) — rank_95 and rank_99, (b) ratio ||E[Δ]||² / E[||Δ||²] (token-independent vs token-dependent split), (c) top 5 right singular vectors of Δ projected onto unembedding rows W_U — which vocabulary tokens does each top direction of Δ boost/suppress, (d) top singular vectors projected onto next block's W_up rows (does Δ_l write to directions block l+1 reads).
-   - Output: per-block rank histogram, top-10 boosted/suppressed vocabulary tokens per top-3 Δ directions, cross-block read/write alignment matrix. One-sentence conclusion.
-   - Type: interpretability / mechanism
-   - Claim to test: "Δ(x) lives in a low-rank subspace (K << 768). The bump is not a full-dimensional correction; it's a structured token-dependent message in K specific directions, and those directions are semantically interpretable via unembedding projection."
-   - Confirmed if: rank_95(Δ) ≤ 64 in ≥ 6 of 12 blocks, AND top singular vectors produce interpretable token shifts (visible clusters of related vocabulary items).
-   - Refuted if: rank_95(Δ) > 400 in all blocks (Δ is essentially full-rank noise).
-   - Inconclusive if: low rank but no semantic structure in vocabulary projection, or vice versa.
-   - Depends on: none
-
 232. **Where does Δ point? — Δ alignment with next block's reading directions**
    - Extends 231. For each block l, compute cos(top_k singular vectors of Δ_l, rows of W_up_{l+1}) and cos(top_k singular vectors of Δ_l, rows of W_Q/W_K/W_V of the attention block between l and l+1). Also project Δ_l onto the top principal components of the residual stream at layer l+1 input. Test whether Δ lives in directions the downstream components actually read, vs directions orthogonal to all downstream readers (in which case Δ is wasted computation, which would be surprising).
    - Output: alignment heatmap (Δ directions × downstream reader directions) per block. One-sentence conclusion: "The bump writes into X; block l+1 reads it via Y."
@@ -110,6 +100,12 @@ All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 217
+
+231. **Per-token Δ(x) = GELU_FFN − ReLU_FFN — rank, subspace, logit impact** *(CONFIRMED — cycle 217)*
+   - **Outcome: CONFIRMED** — 9/12 blocks have rank_95(Δ) ≤ 64 (median rank_95 = 1; 3 exceptions: blocks 1/8/9 at 73-132). TI/TD ratio 0.87-0.99 across all blocks means Δ is dominated by a token-independent mean direction (SV0 boosts `,`/` the`/` and`/`.`, suppresses tokenizer-artefact tokens). Token-dependent residual lives in SV1+ (σ ≈ 200-350 vs σ0 ≈ 3k-7k) with weaker but present clusters. Cross-block top-3 principal cosines Δ_l → c_fc_{l+1} top-20 left SVs: mean **0.369** vs random **0.168** — above baseline, below cycle 216's W_down→c_fc **0.649**. Caveat: "low-rank interpretable message" reduces largely to "constant bias per block"; follow-ups should look at Δ − mean(Δ).
+   - Artifacts: `experiments/delta_per_token_cycle217.py`, `autoresearch/results/cycle_217_delta_per_token.json`, `autoresearch/results/cycle_217_summary.md`
 
 ### Cycle 216
 
