@@ -103,9 +103,9 @@ All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces
 
 ### Cycle 217
 
-231. **Per-token Δ(x) = GELU_FFN − ReLU_FFN — rank, subspace, logit impact** *(CONFIRMED — cycle 217)*
-   - **Outcome: CONFIRMED** — 9/12 blocks have rank_95(Δ) ≤ 64 (median rank_95 = 1; 3 exceptions: blocks 1/8/9 at 73-132). TI/TD ratio 0.87-0.99 across all blocks means Δ is dominated by a token-independent mean direction (SV0 boosts `,`/` the`/` and`/`.`, suppresses tokenizer-artefact tokens). Token-dependent residual lives in SV1+ (σ ≈ 200-350 vs σ0 ≈ 3k-7k) with weaker but present clusters. Cross-block top-3 principal cosines Δ_l → c_fc_{l+1} top-20 left SVs: mean **0.369** vs random **0.168** — above baseline, below cycle 216's W_down→c_fc **0.649**. Caveat: "low-rank interpretable message" reduces largely to "constant bias per block"; follow-ups should look at Δ − mean(Δ).
-   - Artifacts: `experiments/delta_per_token_cycle217.py`, `autoresearch/results/cycle_217_delta_per_token.json`, `autoresearch/results/cycle_217_summary.md`
+231. **Per-token Δ(x) = GELU_FFN − ReLU_FFN — rank, subspace, logit impact** *(INCONCLUSIVE — corrected from CONFIRMED — cycle 217)*
+   - **Outcome: INCONCLUSIVE** (audit-corrected from CONFIRMED; semantic-cluster clause not met in spirit). Rank clause ✓: rank_95 ≤ 64 in 9/12 blocks (median 1; exceptions blocks 1/8/9 at 73-132). Interpretability clause ✗: TI/TD ratio 0.87-0.99 shows Δ is dominated by a **per-block constant bias**, not a structured token-dependent message. SV0 in rank_95=1 blocks is the mean direction projecting trivially to the unigram-frequency axis (stopwords boosted, tokenizer artefacts suppressed, or its sign-flip). σ₁ ≈ 200-350 vs σ₀ ≈ 3k-7k (3-9%). The per-token component lives in SV1+ and is untested here. Cross-block top-3 principal cosines Δ_l → c_fc_{l+1} left SVs: mean 0.369 vs random 0.168 vs cycle 216 W_down→c_fc baseline 0.649 — above noise but does not exceed structural baseline. Connects cycles 188 (C3 mean replacement +20.33% PPL) and 191 (constant residual correction +12 PPL): the constant IS the dominant Δ component but the model depends on the small SV1+ residual. Item 232 must centre Δ̃ = Δ − mean(Δ) to actually test the hypothesis. Audit: `autoresearch/audits/cycle_217.md`.
+   - Artifacts: `experiments/delta_per_token_cycle217.py`, `autoresearch/results/cycle_217_delta_per_token.json`, `autoresearch/results/cycle_217_summary.md`, `autoresearch/audits/cycle_217.md`
 
 ### Cycle 216
 

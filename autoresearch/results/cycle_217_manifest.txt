@@ -1,8 +1,10 @@
 item_number=231
-outcome=confirmed
-key_metric=rank95_median=1_n_blocks_le64=9of12_TIoverTD=0.87-0.99_cross_block_cos_top3=0.369_random=0.168
+outcome=inconclusive
+key_metric=rank95_median=1_n_blocks_le64=9of12_TIoverTD=0.87-0.99_sigma1_over_sigma0=0.03-0.09_cross_block_cos_top3=0.369_random=0.168_w216_baseline=0.649
 commit=ddfdc45e502c48f8f383b4b56444cf45ac0c407e
-paths=experiments/delta_per_token_cycle217.py,autoresearch/results/cycle_217_delta_per_token.json,autoresearch/results/cycle_217_summary.md
-learned=Δ(x)=GELU_FFN−ReLU_FFN is extremely low-rank (median rank_95=1, 9/12 blocks ≤64) but this reflects a token-independent mean direction (TI/TD 0.87-0.99): SV0 in most blocks boosts stopwords/punctuation and suppresses tokenizer-artefact tokens. Per-token residual lives in SV1+ (σ≈200-350 vs σ0≈3k-7k). Cross-block Δ_l top-3 SVs align with c_fc_{l+1} top-20 left SVs at mean cos 0.369 (random baseline 0.168; cycle 216 W_down→c_fc baseline 0.649).
-next=Item 232 should SVD the centred Δ_l − mean(Δ_l) to isolate the truly per-token component and re-check cross-block alignment with next-block W_Q/W_K/W_V readers, not just c_fc. Items 233/234 independent.
+paths=experiments/delta_per_token_cycle217.py,autoresearch/results/cycle_217_delta_per_token.json,autoresearch/results/cycle_217_summary.md,autoresearch/audits/cycle_217.md
+learned=Δ(x)=GELU_FFN−ReLU_FFN is dominated in every block by a per-block TOKEN-INDEPENDENT CONSTANT BIAS (TI/TD ratio 0.87-0.99). The rank_95=1 in 9/12 blocks is a direct consequence: SV0 is ≈ mean(Δ)/||mean(Δ)||, and projecting it through lm_head recovers the unigram-frequency axis (common stopwords/punctuation boosted, tokenizer-artefact tokens suppressed — or sign-flipped). σ₁/σ₀ ≈ 0.03-0.09. The per-token component lives in SV1+ and is NOT tested by this experiment. Rank criterion met but semantic-structure criterion not met in spirit → INCONCLUSIVE (audit-corrected from CONFIRMED). Connects cycles 188 and 191: the constant bias is the dominant Δ component (hence absorbable in isolation) but GPT-2's loss depends on the small SV1+ residual that constant-replacement destroys. Cross-block Δ_l top-3 SVs align with c_fc_{l+1} top-20 left SVs at mean cos 0.369 (random 0.168; cycle 216 W_down→c_fc baseline 0.649) — above noise, below structural baseline.
+next=Item 232 MUST SVD the centred residual Δ̃_l = Δ_l − mean(Δ_l) per block and report rank_95(Δ̃), rank_99(Δ̃), σ₁(Δ̃), and top-k SV vocab projection. This is the experiment that actually tests the "rich token-dependent low-rank routing message" hypothesis. Also extend cross-block alignment to next-block W_Q/W_K/W_V left SVs, not just c_fc. Do NOT revisit constant-bias absorption (cycles 188/191/217 SV0 are three independent confirmations that the constant is absorbable in isolation but unusable without the per-token residual). Items 233/234 independent.
+audit=autoresearch/audits/cycle_217.md
+audit_status=CORRECTED
 tsv_path=autoresearch/logs/experiments.tsv
