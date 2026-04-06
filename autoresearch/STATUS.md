@@ -1,6 +1,11 @@
-# Research Status — 227 Cycles (001–227)
+# Research Status — 228 Cycles (001–228)
 
-## Latest: Cycle 227
+## Latest: Cycle 228
+
+238. **gelu_noneg + per-channel first-moment correction** — INCONCLUSIVE (interesting=true)
+   - Precomputed μ_l = E[gelu(z) − relu(gelu(z))] per (block, channel) on calibration set, patched all 12 blocks with relu(gelu(z)) + μ_l. **corrected_noneg_ppl = 61.664** vs uncorrected cycle 220 = 2093.296 (~34× recovery, ~99.2% of the absolute cycle 220 gap), still +16.6 PPL above baseline 45.064 (+36.84%). μ ≤ 0 elementwise; per-block mean(μ) -0.070 to -0.095 (~0.5× cycle 184's −0.17). Residual 16.6 PPL is higher-order beyond per-channel mean. Same family as cycles 188 (C3 +20.3%), 190 (hybrid +27.7%), strictly better than 184 (ReLU+bias +87.7%). First moment is necessary but not sufficient.
+
+## Cycle 227
 
 237. **Δ̃ specificity control vs non-adjacent c_fc(j)** — INCONCLUSIVE (interesting=true)
    - For each l ∈ {0..10}, top-20 right SVs of centred Δ̃_l vs top-20 left SVs of c_fc(j) for ALL j > l. **median_specificity = 0.791** (max@l+1 − mean over j>l+1, top-5 cos_sum) ∈ [0.3, 1.0) → INCONCLUSIVE. **0/10 rows have quiet non-adjacent entries** — ALL 55/55 non-adjacent (l, j) pairs clear 3σ random threshold. Sanity: adjacent top-5 mean reproduces cycle 218 exactly (2.9687). **Cycle 218's "Δ̃ targets next block" interpretation is partially walked back**: alignment is broadly distributed across all downstream c_fc reading subspaces with mild (+0.79 cos_sum) adjacency preference, not specifically inter-block targeting.
