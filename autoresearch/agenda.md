@@ -10,14 +10,6 @@ GELU bump interpretability items (230-234) reorient the investigation from activ
 
 All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces a report with plots/tables plus a 1-sentence plain-language claim, not a PPL threshold. `Confirmed/Refuted` criteria are phrased as whether the interpretable claim holds with a clear pattern, not numeric thresholds.
 
-226. **Adam correction for 6 blocks with proper early stopping — confirm INCONCLUSIVE**
-   - Cycle 211 showed 6-block best at step 1500 (PPL=59.68) but used fixed 4000 steps. Rerun with eval every 100 steps and early stopping to reliably find the optimal step count. This settles the INCONCLUSIVE from cycle 211.
-   - Type: empirical
-   - Confirmed if: 6-block PPL ≤58.0 with proper early stopping
-   - Refuted if: 6-block PPL >62.0 even with early stopping
-   - Inconclusive if: PPL 58-62 (same as cycle 211)
-   - Depends on: none
-
 ### P1
 
 227. **Frobenius-weighted channel selection — select channels that minimize output Frobenius error**
@@ -70,6 +62,12 @@ All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 221
+
+226. **Adam 6-block + early stopping** *(INCONCLUSIVE — cycle 221)*
+   - **Outcome: INCONCLUSIVE** — 3 seeds (42/137/2024), BLOCKS=[1,2,4,5,7,8] K=512, LR=1e-4, 4000 steps, eval every 100, best-state restore. best_ppl_mean = 59.515 ± 0.094 (best_step_mean = 1367 ± 170). Falls inside 58-62 window — matches cycle 211's single-seed 59.680 implicit best (Δ = -0.165). Overfitting reproduced: final@4000 mean = 71.054. Early stopping settles cycle 211's INCONCLUSIVE as a reproducible 59.5-PPL ceiling for this 6-block architecture.
+   - Artifacts: `experiments/adam_6block_earlystop_cycle221.py`, `autoresearch/results/cycle_221_adam_6block_earlystop.json`, `autoresearch/results/cycle_221_summary.md`
 
 ### Cycle 220
 
