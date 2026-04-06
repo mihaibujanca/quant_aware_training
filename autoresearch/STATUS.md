@@ -1,6 +1,11 @@
-# Research Status — 214 Cycles (001–214) [agenda refreshed after cycle 214]
+# Research Status — 215 Cycles (001–215)
 
-## Latest: Cycle 214
+## Latest: Cycle 215
+
+225. **Iterative block-by-block Adam W_out correction** — INCONCLUSIVE
+   - Sequential per-block Adam (BLOCKS=[1,4,7] K=512, 2000 steps each, best-state restore per block, 3 seeds): final_ppl 47.253 ± 0.047 (init 61.746 → after b1 51.486 → after b4 48.503 → after b7 47.253). Monotone no collapse. 0.7 PPL worse than joint Adam best 46.556 (cycle 210). Per-block best-state restoration freezes each block against downstream blocks' eventual trajectories — joint optimization wins. Best-step at 2000 for nearly every block-seed (under-trained at budget cap).
+
+## Cycle 214
 
 224. **Analytical W_out correction** — REFUTED
    - Analytical PPL=61.767 ≈ init 61.746 (no improvement). Distribution mismatch: compressed-context activations ≠ float-context activations. Cascade correction requires CE gradient (Adam); analytical lstsq cannot replace it.
