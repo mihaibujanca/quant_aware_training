@@ -1,6 +1,11 @@
-# Research Status — 219 Cycles (001–219)
+# Research Status — 220 Cycles (001–220)
 
-## Latest: Cycle 219
+## Latest: Cycle 220
+
+234. **Surgical bump removal — GELU_noneg vs GELU_nobump** — INCONCLUSIVE (interesting=true)
+   - All-12 patch on GPT-2 small. baseline=45.064 PPL (in-cycle, wikitext-2 val N=200). gelu_noneg = max(0, GELU(z)) → **2093 PPL (+4545%)**. gelu_nobump = piecewise-linear (z>2: id; z<-2: 0; mid: (z+2)/2) → **11456 PPL (+25321%)**. Both variants destroy the model catastrophically; nobump ~5.5× worse than noneg. Sanity-after-restore matches baseline exactly. Verdict literal-INCONCLUSIVE (neither variant is below low_thresh=49.57; |delta|=9362 PPL ≠ ≤3 PPL). **Real finding**: GELU's negative leak and positive-zone bump are BOTH individually necessary; "decomposable GELU" hypothesis is wrong. Audit (G4): the gelu_noneg result is ~46× harsher than cycle 184's ReLU+bias (+88%) because gelu_noneg has NO mean/bias correction — the negative leak's mean shift cascades through 12 blocks. Recommended: rerun with per-channel first-moment correction to test "near-linearizable" claim fairly, OR reframe hypothesis to "double necessity + cascade fragility".
+
+## Cycle 219
 
 233. **Anti-podal channel twin census** — INCONCLUSIVE (PLAN INVALID)
    - Dependency 230 (cycle 216) found NO blocks with ≥100 anti-podal pairs (total ~31 across all 12 blocks). Confirmed criterion unmeasurable. No experiment run; commit=NONE.
