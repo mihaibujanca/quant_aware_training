@@ -16,12 +16,7 @@ All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces
 
 ### P2
 
-229. **Distillation baseline for 3-block compression — matched budget**
-   - Establish a distillation upper bound for comparison: KD from float GPT-2 to compressed GPT-2 with BLOCKS=[1,4,7] K=512 (same architecture as cycle 206). Train W_out + W_fc for 10k steps with KD loss. This is the "trained compressor" ceiling for this architecture.
-   - Type: empirical
-   - Confirmed if: KD achieves PPL ≤44.0 (meaningfully better than Adam W_out correction 46.556)
-   - Refuted if: KD PPL ≥47.0 (Adam W_out correction is already at the ceiling)
-   - Inconclusive if: PPL 44-47
+(no items)
 
 
 
@@ -50,6 +45,12 @@ All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 224
+
+229. **Distillation baseline for 3-block compression — matched budget** *(REFUTED — cycle 224)*
+   - **Outcome: REFUTED** — BLOCKS=[1,4,7] K=512, train W_fc+b_fc+W_out+b_out (2.36M params, same as cycle 213) on 50/50 KD+CE loss with float GPT-2 teacher, tau=2.0, LR=1e-4, 10000 steps × 3 seeds (42/137/2024), eval every 500, best-state restore. best_mean = **60.938 ± 0.103** (seeds 61.075 / 60.915 / 60.825; best_step_mean = 3500). Init = 61.746 (matches cycle 206). Float = 53.895. CE-only baselines: cycle 213 W_out+W_fc CE = 46.424, cycle 210 W_out CE = 46.556, cycle 206 W_out CE @1000 = 48.111. KD+CE underperforms CE-only by **+14.51 PPL** at the same trainable surface — KD signal at tau=2.0 essentially keeps the student near init: best PPL is only 0.6-0.9 below init across seeds and never approaches the CE-trained optimum. Refuted criterion ≥47.0 met by ~14 PPL margin. Distillation is not a free upper bound at this budget; the KD KL pulls toward float teacher's softened logits, which is a much weaker gradient than hard-token CE on this near-saturated optimum.
+   - Artifacts: `experiments/distillation_baseline_cycle224.py`, `autoresearch/results/cycle_224_distillation.json`, `autoresearch/results/cycle_224_summary.md`
 
 ### Cycle 223
 
