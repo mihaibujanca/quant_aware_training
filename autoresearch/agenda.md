@@ -4,11 +4,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## NEXT EXPERIMENTS
 
-### P0 — GELU bump interpretability (priority over compression items below)
+### P0
 
-These reorient the GELU bump investigation from activation statistics toward the W_down column geometry and the per-token difference vector Δ(x) = GELU_FFN(x) − ReLU_FFN(x). See `docs/gelu_bump_audit.md` §11 for why activation-only analysis has stalled. The goal is interpretable claims a layperson can parse ("the bump pushes in direction X / writes into block l+1's reading subspace / uses anti-podal channel pairs"), not more statistics.
+GELU bump interpretability items (230-234) reorient the investigation from activation statistics toward the W_down column geometry and the per-token difference vector Δ(x) = GELU_FFN(x) − ReLU_FFN(x). See `docs/gelu_bump_audit.md` §11 for why activation-only analysis has stalled. The goal is interpretable claims a layperson can parse ("the bump pushes in direction X / writes into block l+1's reading subspace / uses anti-podal channel pairs"), not more statistics. Items 230-234 take priority over the compression item 226 below.
 
-All items below operate on GPT-2 small on OWT validation tokens. Each produces a report with plots/tables plus a 1-sentence plain-language claim, not a PPL threshold. `Confirmed/Refuted` criteria are phrased as whether the interpretable claim holds with a clear pattern, not numeric thresholds.
+All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces a report with plots/tables plus a 1-sentence plain-language claim, not a PPL threshold. `Confirmed/Refuted` criteria are phrased as whether the interpretable claim holds with a clear pattern, not numeric thresholds.
 
 230. **W_down column geometry census — anti-podal pairs, clusters, cross-block alignment**
    - For each of the 12 blocks, take W_down ∈ R^(768×3072) and analyze the 3072 columns as vectors in R^768. Compute: (a) pairwise cosine histogram, (b) count of anti-podal pairs with cos(W_down[:,c], W_down[:,c']) < −0.9, (c) top-20 singular values of W_down (structure of reachable subspace), (d) k-means clustering of columns (k=32), (e) alignment between block l's W_down columns and block l+1's W_up rows (do the top right singular vectors of W_down_l overlap with the top right singular vectors of W_up_{l+1}? Principal angles).
@@ -59,8 +59,6 @@ All items below operate on GPT-2 small on OWT validation tokens. Each produces a
    - Refuted if: both variants degrade similarly (within 3 PPL of each other) — the two sub-regions are entangled.
    - Inconclusive if: both degrade 20-50% with no clean separation.
    - Depends on: none
-
-### P0
 
 226. **Adam correction for 6 blocks with proper early stopping — confirm INCONCLUSIVE**
    - Cycle 211 showed 6-block best at step 1500 (PPL=59.68) but used fixed 4000 steps. Rerun with eval every 100 steps and early stopping to reliably find the optimal step count. This settles the INCONCLUSIVE from cycle 211.
