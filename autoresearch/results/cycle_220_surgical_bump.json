@@ -1,0 +1,26 @@
+{
+  "cycle": 220,
+  "item": 234,
+  "verdict": "INCONCLUSIVE",
+  "baseline_ppl": 45.06370070356173,
+  "gelu_noneg_ppl": 2093.2961268100125,
+  "gelu_nobump_ppl": 11455.595369668086,
+  "noneg_delta": 2048.232426106451,
+  "noneg_pct": 4545.1935685001645,
+  "nobump_delta": 11410.531668964524,
+  "nobump_pct": 25320.89351477222,
+  "low_thresh": 49.570070773917905,
+  "high_thresh": 69.84873609052069,
+  "sanity_ppl_after_restore": 45.06370070356173,
+  "prior_baselines": {
+    "cycle_184_relu_bias_pct": 87.7,
+    "cycle_188_c3_mean_pct": 20.33,
+    "cycle_190_hybrid_pct": 27.67
+  },
+  "config": {
+    "N_EVAL": 200,
+    "SEQ_LEN": 128,
+    "SEED": 42,
+    "DEVICE": "mps"
+  }
+}

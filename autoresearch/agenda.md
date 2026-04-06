@@ -10,16 +10,6 @@ GELU bump interpretability items (230-234) reorient the investigation from activ
 
 All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces a report with plots/tables plus a 1-sentence plain-language claim, not a PPL threshold. `Confirmed/Refuted` criteria are phrased as whether the interpretable claim holds with a clear pattern, not numeric thresholds.
 
-234. **Surgical bump removal — isolate the negative leak from the positive-zone bump**
-   - Past experiments conflated two sub-effects: (i) the negative leak (GELU(z) < 0 for z < 0), and (ii) the positive-zone bump (GELU(z) < z for 0 < z < 2). Cycle 190 did one hybrid split but not the complementary clamping. Define two new activations: (A) `GELU_noneg(z) = max(0, GELU(z))` — kills the negative leak, keeps the positive bump shape; (B) `GELU_nobump(z) = z * 1[z > 2] + 0 * 1[z < −2] + linear_interp(z) for z in [−2, 2]` — kills the bump knee, keeps the asymptotic regimes. Run each all-12-blocks and measure PPL + Δ(x) to isolate which sub-region of the bump carries the functional load.
-   - Output: 4-point comparison table {baseline, hybrid (190), GELU_noneg, GELU_nobump} per block + all-12. Rank of Δ(x) under each variant. One-sentence conclusion: "The negative leak carries X%, the positive-zone bump carries Y% of the GELU-vs-ReLU functional advantage."
-   - Type: empirical / decomposition
-   - Claim to test: "The negative leak and positive-zone bump contribute unequally to model performance. One of them is functionally dominant; the other is near-linearizable."
-   - Confirmed if: one of {GELU_noneg, GELU_nobump} all-12 PPL ≤ 25 (within 10% of float) AND the other ≥ 35 (>55% degraded) — clean separation.
-   - Refuted if: both variants degrade similarly (within 3 PPL of each other) — the two sub-regions are entangled.
-   - Inconclusive if: both degrade 20-50% with no clean separation.
-   - Depends on: none
-
 226. **Adam correction for 6 blocks with proper early stopping — confirm INCONCLUSIVE**
    - Cycle 211 showed 6-block best at step 1500 (PPL=59.68) but used fixed 4000 steps. Rerun with eval every 100 steps and early stopping to reliably find the optimal step count. This settles the INCONCLUSIVE from cycle 211.
    - Type: empirical
@@ -80,6 +70,12 @@ All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 220
+
+234. **Surgical bump removal — GELU_noneg vs GELU_nobump** *(INCONCLUSIVE — cycle 220)*
+   - **Outcome: INCONCLUSIVE** — All-12-block patch, N=200, SEQ_LEN=128, baseline PPL 45.06. GELU_noneg PPL 2093.3 (+4545%), GELU_nobump PPL 11455.6 (+25321%). Neither variant sits within the ≤10% "near-float" band (thresholds 49.57 / 69.85), so the clean-separation criterion does not fire. But the ratio is large: linearizing the positive-zone bump is ~5.5× more destructive than clipping the negative leak, so the fine-grained curvature near zero carries more functional load than the leak — neither sub-region is independently linearizable.
+   - Artifacts: `experiments/surgical_bump_removal_cycle220.py`, `autoresearch/results/cycle_220_surgical_bump.json`, `autoresearch/results/cycle_220_summary.md`
 
 ### Cycle 219
 
