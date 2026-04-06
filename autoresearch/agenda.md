@@ -6,17 +6,49 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-GELU bump interpretability items (230-234) reorient the investigation from activation statistics toward the W_down column geometry and the per-token difference vector Δ(x) = GELU_FFN(x) − ReLU_FFN(x). See `docs/gelu_bump_audit.md` §11 for why activation-only analysis has stalled. The goal is interpretable claims a layperson can parse ("the bump pushes in direction X / writes into block l+1's reading subspace / uses anti-podal channel pairs"), not more statistics. Items 230-234 take priority over the compression item 226 below.
+235. **K=64/32/16 Adam compression cliff sweep**
+   - Cycle 223 confirmed K=128 still beats float with Adam W_out correction (best_mean 48.989 vs float 53.895). The compression efficiency curve was monotone but very flat between K=512 → K=128. Push the curve until it breaks. BLOCKS=[1,4,7], K ∈ {64, 32, 16}, Adam W_out+b_out, 3 seeds (42/137/2024), 4000 steps, eval every 100, best-state restore. Same calib/eval split as cycle 223 (`all_ids[:200]` / `all_ids[200:300]`, SEQ_LEN=128).
+   - Type: empirical
+   - Confirmed if: at least one K ≤ 64 still beats float (best_mean ≤ 53.0) — channel capacity is not the bottleneck even at 8× lower than K=512
+   - Refuted if: all three K give best_mean ≥ 60.0 — there is a real channel-capacity floor below K=128
+   - Inconclusive if: best_mean lies in 53-60 PPL for the smallest viable K
+   - Depends on: none
 
-All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces a report with plots/tables plus a 1-sentence plain-language claim, not a PPL threshold. `Confirmed/Refuted` criteria are phrased as whether the interpretable claim holds with a clear pattern, not numeric thresholds.
+236. **KD distillation baseline rerun with corrected loss normalization**
+   - Cycle 224's distillation experiment was downgraded to INCONCLUSIVE because `F.kl_div(..., reduction='batchmean')` on `(B=1, T=128, V=50257)` divides only by B=1, returning the SUM over T·V ≈ 6.4M entries (~30-50) while CE averages over tokens (~4). The 50/50 mix was ~10× KD-weighted in practice. Rerun with `logits.reshape(B*T, V)` before `kl_div` (or `reduction='mean'`) so KD and CE are on the same per-token scale. Same trainable surface as cycle 224 (BLOCKS=[1,4,7] K=512, W_out+b_out+W_fc+b_fc, ≈2.36M params), tau=2.0, LR=1e-4. Run a short KD-weight sweep (α ∈ {0.0, 0.5, 1.0}) at 2000 steps × 1 seed to verify the loss is wired correctly, then 4000 steps × 3 seeds at the best α.
+   - Type: empirical
+   - Confirmed if: best_mean ≤ 44.0 PPL (meaningfully better than cycle 213's pure-CE W_out+W_fc 46.424 — KD signal helps)
+   - Refuted if: best_mean ≥ 47.0 PPL (no advantage over pure CE; cycle 213 is the ceiling for this surface)
+   - Inconclusive if: 44.0 < best_mean < 47.0
+   - Depends on: none
+
+237. **Cycle 218 specificity control — Δ̃_l alignment with non-adjacent c_fc(j)**
+   - Cycle 218 showed centred Δ̃_l's top-20 right SVs align with block l+1's c_fc reading subspace at +17 to +33σ above random in 11/11 cross-block pairs, but never tested non-adjacent destinations. Audit (G3) flagged this missing control: if Δ̃_l also aligns with c_fc(j) for j ≠ l+1, the alignment is generic ("Δ̃ leaks into a universal reading basis") rather than specifically inter-block communication. For each l ∈ {0..10}, compute the top-20 right SVs of centred Δ̃_l and measure top-5 principal cosine sums against c_fc(j) for ALL j > l (not just j=l+1). Plot a heatmap (l, j) and compare each row's max-at-j=l+1 against the row's mean over j>l+1. Use the same random baseline (10 seeds Gaussian orthonormal 20×768).
+   - Type: analysis
+   - Confirmed if: median (l, l+1) cos_sum exceeds the per-row mean over non-adjacent j by ≥ 1.0 (specificity peak at l+1) AND non-adjacent (l, j) cos_sums sit within mean+3σ of the random baseline in ≥ 7/11 rows
+   - Refuted if: non-adjacent (l, j) cos_sums are within 0.3 of (l, l+1) on average across rows — alignment is generic, not adjacency-specific
+   - Inconclusive if: peak-vs-mean gap is 0.3-1.0
+   - Depends on: 232 (cycle 218, done)
 
 ### P1
 
-(no items)
+238. **Cycle 220 fair gelu_noneg rerun with per-channel first-moment correction**
+   - Cycle 220's gelu_noneg variant (max(0, GELU(z))) gave +4545% PPL on the all-12-block patch. Audit (G4) flagged that gelu_noneg removes GELU's negative leak ≈ −0.17 (the asymptotic leak mean) without ANY mean-shift compensation, so the residual stream picks up a per-channel constant bias that cascades through 12 blocks — cycle 184's ReLU+bias rerun with first-moment correction was 46× milder for the same surgical idea. For each block l and each FFN hidden channel c, precompute the mean leak μ_{l,c} = E_x[GELU(z_{l,c}(x)) − max(0, GELU(z_{l,c}(x)))] on the calibration split (N=200, SEQ_LEN=128) and add μ_{l,c} as a per-channel bias on the c_fc post-activation. Re-evaluate PPL on the same eval split as cycle 220 (N=200 wikitext-2 val) with all 12 blocks patched.
+   - Type: empirical
+   - Confirmed if: corrected gelu_noneg PPL is within 10% of float baseline (≤49.57, the same near-float band cycle 220 used) — the negative leak was mostly a first-moment artefact
+   - Refuted if: corrected PPL ≥ 100 (>2× float) — removing the negative-zone curvature still destroys the model even after first-moment correction
+   - Inconclusive if: 49.57 < PPL < 100
+   - Depends on: 234 (cycle 220, done)
 
 ### P2
 
-(no items)
+239. **Sequential vs joint Adam at 6 blocks — does sequential help where joint stalls?**
+   - Cycle 215 showed sequential per-block Adam ≈ joint Adam at 3 blocks (47.253 vs 46.556, joint wins by 0.7 PPL). Cycle 221 showed 6-block joint Adam ceilings at best_mean=59.515 (1.5 PPL above the 58.0 confirmed threshold) with severe overfitting. Cycle 215's audit explicitly recommended retesting sequential at 6 blocks. Apply the cycle 215 recipe to BLOCKS=[1,2,4,5,7,8] K=512: sequentially correct each block (Adam W_out+b_out, 2000 steps, best-state restore per block), 3 seeds (42/137/2024). This is one cycle (~25 min: 6 blocks × 2000 steps × 3 seeds).
+   - Type: empirical
+   - Confirmed if: sequential 6-block best_mean ≤ 58.0 PPL (clears cycle 221's joint ceiling AND the 58.0 confirmed threshold)
+   - Refuted if: sequential best_mean ≥ 60.0 PPL (no improvement over joint 59.515; sequential cannot rescue 6-block)
+   - Inconclusive if: 58.0 < best_mean < 60.0
+   - Depends on: 225 (cycle 215, done), 226 (cycle 221, done)
 
 
 
