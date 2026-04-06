@@ -1,6 +1,11 @@
-# Research Status — 224 Cycles (001–224)
+# Research Status — 225 Cycles (001–225)
 
-## Latest: Cycle 224
+## Latest: Cycle 225
+
+235. **K=64/32/16 Adam compression cliff sweep** — CONFIRMED (interesting=true)
+   - BLOCKS=[1,4,7], 3 seeds. **K=64 best_mean = 50.781 ± 0.021** (-3.11 PPL vs float). **K=32 = 53.038 ± 0.009** (-0.86 PPL vs float, still beats it). K=16 = 55.133 ± 0.010 (+2.30% above float — the cliff). Extended efficiency curve {512, 256, 128, 64, 32, 16} → {46.556, 47.509, 48.989, 50.781, 53.038, 55.133}. Monotone, ~1-2 PPL per halving. **Cliff sits between K=32 and K=16.** K=32 = ~1% of intermediate width (32/3072), only 25K trainable params per block (75K total) → still beats float. Channel capacity is not the bottleneck even at 32× compression.
+
+## Cycle 224
 
 229. **Distillation baseline (KD+CE)** — INCONCLUSIVE (audit-corrected from REFUTED, G6 method failure)
    - **best_mean=60.938 ± 0.103** (init 61.746) — barely moves. **Method failure**: `F.kl_div(..., reduction='batchmean')` on (B=1, T=128, V=50257) divides only by B, returning the SUM over T·V ≈ 6.4M entries (~30-50), while CE averages over tokens (~4). Effective 50/50 mix is ~10× KD-weighted, swamping CE. The same trainable surface (W_out+W_fc on blocks [1,4,7]) reached 46.424 under pure CE in cycle 213 — capacity is fine; the loss formulation is broken. Audit downgrade per G6. Fix: reshape `(B*T, V)` before kl_div, or use `reduction='mean'`, or weight by 1/(T·V); sweep KD/CE ratios on a short budget before recommitting 10k-step distillation.
