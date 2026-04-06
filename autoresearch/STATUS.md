@@ -1,6 +1,11 @@
-# Research Status — 220 Cycles (001–220)
+# Research Status — 221 Cycles (001–221)
 
-## Latest: Cycle 220
+## Latest: Cycle 221
+
+226. **Adam 6-block correction with proper early stopping** — INCONCLUSIVE
+   - 3-seed (42, 137, 2024) formal early-stop rerun of cycle 211. best_ppl_mean=**59.515 ± 0.094** at best_step_mean=1367 ± 170. -0.165 PPL vs cycle 211's 59.680 single-seed. Overfitting reproduced (final@4000 = 71.054). Confirms 6-block ceiling at ~59.5 PPL — 1.5 PPL above the 58.0 Confirmed threshold. **13 PPL cascade gap**: 3-block joint Adam (46.556) → 6-block joint Adam (59.5). Sequential Adam unlikely to help (cycle 215 showed sequential ≈ joint at 3 blocks).
+
+## Cycle 220
 
 234. **Surgical bump removal — GELU_noneg vs GELU_nobump** — INCONCLUSIVE (interesting=true)
    - All-12 patch on GPT-2 small. baseline=45.064 PPL (in-cycle, wikitext-2 val N=200). gelu_noneg = max(0, GELU(z)) → **2093 PPL (+4545%)**. gelu_nobump = piecewise-linear (z>2: id; z<-2: 0; mid: (z+2)/2) → **11456 PPL (+25321%)**. Both variants destroy the model catastrophically; nobump ~5.5× worse than noneg. Sanity-after-restore matches baseline exactly. Verdict literal-INCONCLUSIVE (neither variant is below low_thresh=49.57; |delta|=9362 PPL ≠ ≤3 PPL). **Real finding**: GELU's negative leak and positive-zone bump are BOTH individually necessary; "decomposable GELU" hypothesis is wrong. Audit (G4): the gelu_noneg result is ~46× harsher than cycle 184's ReLU+bias (+88%) because gelu_noneg has NO mean/bias correction — the negative leak's mean shift cascades through 12 blocks. Recommended: rerun with per-channel first-moment correction to test "near-linearizable" claim fairly, OR reframe hypothesis to "double necessity + cascade fragility".
