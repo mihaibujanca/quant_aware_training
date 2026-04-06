@@ -1,6 +1,11 @@
-# Research Status — 226 Cycles (001–226)
+# Research Status — 227 Cycles (001–227)
 
-## Latest: Cycle 226
+## Latest: Cycle 227
+
+237. **Δ̃ specificity control vs non-adjacent c_fc(j)** — INCONCLUSIVE (interesting=true)
+   - For each l ∈ {0..10}, top-20 right SVs of centred Δ̃_l vs top-20 left SVs of c_fc(j) for ALL j > l. **median_specificity = 0.791** (max@l+1 − mean over j>l+1, top-5 cos_sum) ∈ [0.3, 1.0) → INCONCLUSIVE. **0/10 rows have quiet non-adjacent entries** — ALL 55/55 non-adjacent (l, j) pairs clear 3σ random threshold. Sanity: adjacent top-5 mean reproduces cycle 218 exactly (2.9687). **Cycle 218's "Δ̃ targets next block" interpretation is partially walked back**: alignment is broadly distributed across all downstream c_fc reading subspaces with mild (+0.79 cos_sum) adjacency preference, not specifically inter-block targeting.
+
+## Cycle 226
 
 236. **KD distillation rerun with corrected KD normalization** — INCONCLUSIVE
    - Loss fix verified: KD now O(0.5-0.8) vs cycle 224's broken O(30-50). α-sweep (SEED=42, 2000 steps): α=0.0 → 46.430 (best step 1200), α=0.5 → 47.096, α=1.0 → 61.746 (no learning). Pure CE wins. Full run (3 seeds, α=0): best_mean=**46.364 ± 0.047**, reproducing cycle 213 (46.424) within 0.06 PPL. **KD provides no benefit at matched budget on this trainable surface.** INCONCLUSIVE per criterion (46.364 ∈ (44, 47]); KD direction effectively closed for this setting.
