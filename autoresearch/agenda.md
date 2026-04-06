@@ -10,13 +10,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-238. **Cycle 220 fair gelu_noneg rerun with per-channel first-moment correction**
-   - Cycle 220's gelu_noneg variant (max(0, GELU(z))) gave +4545% PPL on the all-12-block patch. Audit (G4) flagged that gelu_noneg removes GELU's negative leak ≈ −0.17 (the asymptotic leak mean) without ANY mean-shift compensation, so the residual stream picks up a per-channel constant bias that cascades through 12 blocks — cycle 184's ReLU+bias rerun with first-moment correction was 46× milder for the same surgical idea. For each block l and each FFN hidden channel c, precompute the mean leak μ_{l,c} = E_x[GELU(z_{l,c}(x)) − max(0, GELU(z_{l,c}(x)))] on the calibration split (N=200, SEQ_LEN=128) and add μ_{l,c} as a per-channel bias on the c_fc post-activation. Re-evaluate PPL on the same eval split as cycle 220 (N=200 wikitext-2 val) with all 12 blocks patched.
-   - Type: empirical
-   - Confirmed if: corrected gelu_noneg PPL is within 10% of float baseline (≤49.57, the same near-float band cycle 220 used) — the negative leak was mostly a first-moment artefact
-   - Refuted if: corrected PPL ≥ 100 (>2× float) — removing the negative-zone curvature still destroys the model even after first-moment correction
-   - Inconclusive if: 49.57 < PPL < 100
-   - Depends on: 234 (cycle 220, done)
+
 
 ### P2
 
@@ -55,6 +49,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 228
+
+238. **Cycle 220 fair gelu_noneg rerun with per-channel first-moment correction** *(INCONCLUSIVE — cycle 228)*
+   - **Outcome: INCONCLUSIVE** — Same eval split as cycle 220 (N=200 wikitext-2 val, SEQ_LEN=128, seed 42). Phase 1: precomputed μ_l ∈ R^3072 = E_x[GELU(z) − relu(GELU(z))] on the calibration split via forward hook on c_fc input. μ ≤ 0 elementwise across all 12 blocks (sanity OK); per-block mean(μ) ranges from −0.0701 (block 1) to −0.0950 (block 9), grand mean ≈ −0.0874, comparable to cycle 184's ≈ −0.17 reference (~0.5×). Phase 2: patched all 12 blocks with `relu(GELU(z)) + μ_l` (distinct instance per block). **corrected_noneg_ppl = 61.664 PPL** (Δ = +16.600 vs baseline 45.064, +36.84%). Recovers **2031.6 PPL** of the cycle 220 gap (uncorrected 2093 → corrected 61.66 — a ~34× reduction in the relative degradation) but lands in the INCONCLUSIVE band 49.57 < 61.66 < 100. First-moment correction explains MOST but not all of the cycle 220 catastrophe; ~16.6 PPL of residual gap remains. The negative-zone GELU curvature carries higher-order moments beyond the constant per-channel mean shift. Restore-and-eval sanity matched baseline exactly (45.0637 == 45.0637). For comparison: cycle 184 ReLU+bias correction had +87.7%, cycle 188 c3_mean correction had +20.3%, cycle 190 hybrid had +27.7%. Cycle 228 (+36.8%) is in the same family as 188/190 — first-moment correction is necessary but not sufficient for all-12-block surgical activation patches.
+   - Artifacts: `experiments/gelu_noneg_corrected_cycle228.py`, `autoresearch/results/cycle_228_gelu_noneg_corrected.json`, `autoresearch/results/cycle_228_summary.md`
 
 ### Cycle 227
 
