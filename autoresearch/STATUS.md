@@ -1,6 +1,12 @@
-# Research Status — 216 Cycles (001–216)
+# Research Status — 217 Cycles (001–217)
 
-## Latest: Cycle 216
+## Latest: Cycle 217
+
+231. **Per-token Δ(x) = GELU_FFN − ReLU_FFN — rank, subspace, logit impact** — INCONCLUSIVE *(audit-corrected from CONFIRMED)*
+   - Literal rank clause met (rank_95 ≤ 64 in 9/12 blocks; per-block ranks [10,132,1,1,1,1,1,8,73,110,1,1]) BUT semantic clause failed: TI/TD ratio 0.87-0.99 shows Δ is dominated by a per-block token-independent constant bias. SV0 is essentially mean(Δ) projected to unigram-frequency tokens (commas, articles, tokenizer artefacts). σ₁/σ₀ ≈ 0.03-0.09 — the per-token component the hypothesis tested lives in SV1+ and is much smaller. Cross-block Δ_l top-3 → c_fc_{l+1} top-20 left SV alignment: 0.369 vs random 0.168 (vs cycle 216 W_down→c_fc 0.649). **Connects cycles 188 (C3 mean-replacement +20.33% PPL) and 191 (constant residual correction worsens PPL by 12)**: same object — constant Δ component absorbable alone, but GPT-2 needs the small SV1+ residual that this measurement did not isolate.
+   - Recommended next: SVD CENTRED Δ̃ = Δ − mean(Δ) per block (item 232 should be rewritten to do this).
+
+## Cycle 216
 
 230. **W_down column geometry census** — REFUTED
    - Anti-podal mirror-channel hypothesis killed: max anti-podal fraction (cos<-0.9) in blocks 1-5 is 0.26%; max across all 12 blocks 1.17% (block 0); random R^768 baseline = 0. Within-cluster cos 0.03-0.07 — W_down columns are near-random on the sphere with no k=32 cluster structure. **Notable secondary positive finding (interesting=true)**: cross-block alignment between block l's W_down writing subspace (top-20 right SVs of c_proj) and block l+1's c_fc reading subspace (top-20 left SVs of c_fc) has top-5 principal cosines averaging 0.649 (peak 0.778 at l=4→5). Adjacent blocks DO share writing/reading directions, but not via columnwise anti-podal pairs.
