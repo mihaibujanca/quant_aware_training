@@ -1,0 +1,8 @@
+item_number=225
+outcome=inconclusive
+key_metric=final_ppl_mean=47.253_init_ppl_mean=61.746_joint_baseline=46.556
+commit=53af25f8b3d62d88dff32cf73600d9ad2d12b899
+paths=experiments/adam_sequential_cycle215.py,autoresearch/results/cycle_215_sequential_adam.json
+learned=Sequential per-block Adam correction (1->4->7, 2000 steps each, best-state restore per block) converges monotonically from 61.746 to 47.253 ± 0.047 across 3 seeds, but stays 0.7 PPL above the joint Adam baseline 46.556 — joint optimisation of all three W_outs wins because sequential best-state restoration freezes each block against the downstream blocks' eventual trajectories.
+next=Try sequential with a lightweight joint-polish pass at the end (all 3 W_outs trained jointly for ~500 steps after sequential init), or sequential without best-state restore but with shared LR schedule across blocks, to see if the 0.7 PPL gap to joint can be closed.
+tsv_path=autoresearch/logs/experiments.tsv
