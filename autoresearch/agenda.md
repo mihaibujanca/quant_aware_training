@@ -4,14 +4,63 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## NEXT EXPERIMENTS
 
-### P0
+### P0 — GELU bump interpretability (priority over compression items below)
 
-225. **Iterative block-by-block Adam correction — sequential refinement**
-   - Cycles 206-212 corrected all compressed blocks simultaneously. Alternative: correct blocks sequentially (block 1 first, then fix block 4 given block 1 corrected, then block 7). Each block's W_out is corrected in isolation using the already-corrected downstream context. May reduce overfitting by keeping each optimization smaller. BLOCKS=[1,4,7] K=512, 2000 Adam steps per block.
-   - Type: empirical
-   - Confirmed if: sequential correction PPL ≤46.0 (at or below joint Adam best 46.556) without overfitting
-   - Refuted if: sequential correction PPL ≥60 (worse than joint Adam)
-   - Inconclusive if: PPL 46-60
+These reorient the GELU bump investigation from activation statistics toward the W_down column geometry and the per-token difference vector Δ(x) = GELU_FFN(x) − ReLU_FFN(x). See `docs/gelu_bump_audit.md` §11 for why activation-only analysis has stalled. The goal is interpretable claims a layperson can parse ("the bump pushes in direction X / writes into block l+1's reading subspace / uses anti-podal channel pairs"), not more statistics.
+
+All items below operate on GPT-2 small on OWT validation tokens. Each produces a report with plots/tables plus a 1-sentence plain-language claim, not a PPL threshold. `Confirmed/Refuted` criteria are phrased as whether the interpretable claim holds with a clear pattern, not numeric thresholds.
+
+230. **W_down column geometry census — anti-podal pairs, clusters, cross-block alignment**
+   - For each of the 12 blocks, take W_down ∈ R^(768×3072) and analyze the 3072 columns as vectors in R^768. Compute: (a) pairwise cosine histogram, (b) count of anti-podal pairs with cos(W_down[:,c], W_down[:,c']) < −0.9, (c) top-20 singular values of W_down (structure of reachable subspace), (d) k-means clustering of columns (k=32), (e) alignment between block l's W_down columns and block l+1's W_up rows (do the top right singular vectors of W_down_l overlap with the top right singular vectors of W_up_{l+1}? Principal angles).
+   - Output: one report with 12 × (cosine histogram, cluster sizes, SVD, cross-block alignment matrix). One-sentence conclusion per block. Per-block JSON with the numeric artifacts.
+   - Type: interpretability / structural
+   - Claim to test: "GPT-2 W_down contains enough anti-podal column pairs that GELU's bump effectively doubles channel capacity via bidirectional pushes."
+   - Confirmed if: ≥20% of columns in blocks 1-5 have a near-anti-podal twin (cos < −0.9), AND column clusters are geometrically distinct (mean within-cluster cos > 0.5, between-cluster cos < 0.2 at k=32).
+   - Refuted if: <5% anti-podal pairs in any block, AND columns are near-uniformly distributed on the sphere (no cluster structure).
+   - Inconclusive if: some structure but no clean story.
+   - Depends on: none (operates on W_down weights directly)
+
+231. **Per-token Δ(x) = GELU_FFN − ReLU_FFN — rank, subspace, logit impact**
+   - For a 200-sequence OWT calibration batch, at each of 12 blocks, compute per-token Δ_l(x) = y_GELU_l(x) − y_ReLU_l(x) ∈ R^768. Measurements: (a) SVD of the per-token Δ matrix (tokens × 768) — rank_95 and rank_99, (b) ratio ||E[Δ]||² / E[||Δ||²] (token-independent vs token-dependent split), (c) top 5 right singular vectors of Δ projected onto unembedding rows W_U — which vocabulary tokens does each top direction of Δ boost/suppress, (d) top singular vectors projected onto next block's W_up rows (does Δ_l write to directions block l+1 reads).
+   - Output: per-block rank histogram, top-10 boosted/suppressed vocabulary tokens per top-3 Δ directions, cross-block read/write alignment matrix. One-sentence conclusion.
+   - Type: interpretability / mechanism
+   - Claim to test: "Δ(x) lives in a low-rank subspace (K << 768). The bump is not a full-dimensional correction; it's a structured token-dependent message in K specific directions, and those directions are semantically interpretable via unembedding projection."
+   - Confirmed if: rank_95(Δ) ≤ 64 in ≥ 6 of 12 blocks, AND top singular vectors produce interpretable token shifts (visible clusters of related vocabulary items).
+   - Refuted if: rank_95(Δ) > 400 in all blocks (Δ is essentially full-rank noise).
+   - Inconclusive if: low rank but no semantic structure in vocabulary projection, or vice versa.
+   - Depends on: none
+
+232. **Where does Δ point? — Δ alignment with next block's reading directions**
+   - Extends 231. For each block l, compute cos(top_k singular vectors of Δ_l, rows of W_up_{l+1}) and cos(top_k singular vectors of Δ_l, rows of W_Q/W_K/W_V of the attention block between l and l+1). Also project Δ_l onto the top principal components of the residual stream at layer l+1 input. Test whether Δ lives in directions the downstream components actually read, vs directions orthogonal to all downstream readers (in which case Δ is wasted computation, which would be surprising).
+   - Output: alignment heatmap (Δ directions × downstream reader directions) per block. One-sentence conclusion: "The bump writes into X; block l+1 reads it via Y."
+   - Type: interpretability / inter-block communication
+   - Claim to test: "The bump's top Δ directions have significant overlap with the next block's W_up reading subspace — the bump is inter-block communication that downstream blocks explicitly depend on."
+   - Confirmed if: principal angles between top-20 Δ directions and top-100 W_up rows of block l+1 are smaller than the random baseline (drawn from Gaussian vectors of the same dimension) with p < 0.01 in ≥ 8 of 11 cross-block pairs.
+   - Refuted if: Δ's top directions are orthogonal to next block's readers (alignment not distinguishable from random).
+   - Inconclusive if: weak but present alignment.
+   - Depends on: 231 (uses its Δ SVD outputs)
+
+233. **Anti-podal channel twin census — does activation pattern match column geometry?**
+   - For each block, list all (c, c') channel pairs where cos(W_down[:,c], W_down[:,c']) < −0.9 (from item 230). For each such pair, measure across 200 OWT sequences: (a) corr(z_c, z_{c'}), (b) joint distribution of (z_c, z_{c'}) — do they fire in complementary regimes (one positive, one negative)?, (c) for how many tokens is sign(z_c) ≠ sign(z_{c'})? Test the hypothesis that anti-podal W_down twins have anti-correlated pre-activations — i.e., the model is actually using them as mirror channels where only one fires at a time.
+   - Output: per-block twin list with activation statistics, scatter plots of (z_c, z_{c'}) for top-5 most anti-podal pairs. One-sentence conclusion: "Anti-podal W_down pairs fire complementarily in X% of cases, confirming/refuting the mirror-channel hypothesis."
+   - Type: interpretability / mechanism confirmation
+   - Claim to test: "Anti-podal W_down pairs have anti-correlated pre-activations — they are mirror channels, and GELU lets both directions be expressed by a single channel via the bump."
+   - Confirmed if: in blocks with ≥100 anti-podal pairs (from item 230), median corr(z_c, z_{c'}) < −0.3, AND sign disagreement rate > 60%.
+   - Refuted if: median corr > 0 (twins fire together, not complementarily) in all blocks.
+   - Inconclusive if: weak negative correlation (-0.3 to 0) or mixed across blocks.
+   - Depends on: 230
+
+234. **Surgical bump removal — isolate the negative leak from the positive-zone bump**
+   - Past experiments conflated two sub-effects: (i) the negative leak (GELU(z) < 0 for z < 0), and (ii) the positive-zone bump (GELU(z) < z for 0 < z < 2). Cycle 190 did one hybrid split but not the complementary clamping. Define two new activations: (A) `GELU_noneg(z) = max(0, GELU(z))` — kills the negative leak, keeps the positive bump shape; (B) `GELU_nobump(z) = z * 1[z > 2] + 0 * 1[z < −2] + linear_interp(z) for z in [−2, 2]` — kills the bump knee, keeps the asymptotic regimes. Run each all-12-blocks and measure PPL + Δ(x) to isolate which sub-region of the bump carries the functional load.
+   - Output: 4-point comparison table {baseline, hybrid (190), GELU_noneg, GELU_nobump} per block + all-12. Rank of Δ(x) under each variant. One-sentence conclusion: "The negative leak carries X%, the positive-zone bump carries Y% of the GELU-vs-ReLU functional advantage."
+   - Type: empirical / decomposition
+   - Claim to test: "The negative leak and positive-zone bump contribute unequally to model performance. One of them is functionally dominant; the other is near-linearizable."
+   - Confirmed if: one of {GELU_noneg, GELU_nobump} all-12 PPL ≤ 25 (within 10% of float) AND the other ≥ 35 (>55% degraded) — clean separation.
+   - Refuted if: both variants degrade similarly (within 3 PPL of each other) — the two sub-regions are entangled.
+   - Inconclusive if: both degrade 20-50% with no clean separation.
+   - Depends on: none
+
+### P0
 
 226. **Adam correction for 6 blocks with proper early stopping — confirm INCONCLUSIVE**
    - Cycle 211 showed 6-block best at step 1500 (PPL=59.68) but used fixed 4000 steps. Rerun with eval every 100 steps and early stopping to reliably find the optimal step count. This settles the INCONCLUSIVE from cycle 211.
@@ -73,6 +122,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 215
+
+225. **Sequential block-by-block Adam W_out correction** *(INCONCLUSIVE — cycle 215)*
+   - **Outcome: INCONCLUSIVE** — Sequential (block 1→4→7, 2000 Adam steps each, best-state restore) final PPL=47.253 ± 0.047 across 3 seeds vs joint Adam best 46.556. Per-block trajectory: init 61.746 → b1 51.486 → b4 48.503 → b7 47.253. Monotone, no collapse, but 0.7 PPL short of confirmed threshold — joint optimisation still wins marginally.
+   - Artifacts: `experiments/adam_sequential_cycle215.py`, `autoresearch/results/cycle_215_sequential_adam.json`
 
 ### Cycle 214
 
