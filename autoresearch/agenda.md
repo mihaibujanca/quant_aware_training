@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-235. **K=64/32/16 Adam compression cliff sweep**
-   - Cycle 223 confirmed K=128 still beats float with Adam W_out correction (best_mean 48.989 vs float 53.895). The compression efficiency curve was monotone but very flat between K=512 → K=128. Push the curve until it breaks. BLOCKS=[1,4,7], K ∈ {64, 32, 16}, Adam W_out+b_out, 3 seeds (42/137/2024), 4000 steps, eval every 100, best-state restore. Same calib/eval split as cycle 223 (`all_ids[:200]` / `all_ids[200:300]`, SEQ_LEN=128).
-   - Type: empirical
-   - Confirmed if: at least one K ≤ 64 still beats float (best_mean ≤ 53.0) — channel capacity is not the bottleneck even at 8× lower than K=512
-   - Refuted if: all three K give best_mean ≥ 60.0 — there is a real channel-capacity floor below K=128
-   - Inconclusive if: best_mean lies in 53-60 PPL for the smallest viable K
-   - Depends on: none
-
 236. **KD distillation baseline rerun with corrected loss normalization**
    - Cycle 224's distillation experiment was downgraded to INCONCLUSIVE because `F.kl_div(..., reduction='batchmean')` on `(B=1, T=128, V=50257)` divides only by B=1, returning the SUM over T·V ≈ 6.4M entries (~30-50) while CE averages over tokens (~4). The 50/50 mix was ~10× KD-weighted in practice. Rerun with `logits.reshape(B*T, V)` before `kl_div` (or `reduction='mean'`) so KD and CE are on the same per-token scale. Same trainable surface as cycle 224 (BLOCKS=[1,4,7] K=512, W_out+b_out+W_fc+b_fc, ≈2.36M params), tau=2.0, LR=1e-4. Run a short KD-weight sweep (α ∈ {0.0, 0.5, 1.0}) at 2000 steps × 1 seed to verify the loss is wired correctly, then 4000 steps × 3 seeds at the best α.
    - Type: empirical
@@ -77,6 +69,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 225
+
+235. **K=64/32/16 Adam compression cliff sweep** *(CONFIRMED — cycle 225)*
+   - **Outcome: CONFIRMED** — BLOCKS=[1,4,7] K ∈ {64,32,16} Adam W_out+b_out, 3 seeds (42/137/2024), 4000 steps + best-state restore. K=64 best_mean = **50.781 ± 0.021** (init 66.036, best step ~3967), K=32 = **53.038 ± 0.009** (init 67.033, best at 4000), K=16 = **55.133 ± 0.010** (init 68.978, best at 4000). Float = 53.895; K=128 (cycle 223) = 48.989. The CONFIRMED clause is met: K=64 (and even K=32, by 0.86 PPL) still beats float despite running on only 149,760 / 76,032 trainable params for the entire 3-block correction surface. The cliff sits between K=32 and K=16: K=16 is the first row in the curve to cross above float (+2.30%). The curve {512, 256, 128, 64, 32, 16} → {46.556, 47.509, 48.989, 50.781, 53.038, 55.133} is monotone but each halving costs only ~1-2 PPL, so 32× compression of W_out (K=512 → K=16) costs +8.58 PPL relative to K=512 and +1.24 PPL relative to float. K=64 (149K params, 7.9× compression vs K=512) is the new "free" operating point.
+   - Artifacts: `experiments/adam_lower_k_cliff_cycle225.py`, `autoresearch/results/cycle_225_lower_k_cliff.json`, `autoresearch/results/cycle_225_summary.md`
 
 ### Cycle 224
 
