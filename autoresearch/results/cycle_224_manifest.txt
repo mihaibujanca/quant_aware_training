@@ -1,0 +1,8 @@
+item_number=229
+outcome=refuted
+key_metric=best_mean=60.938_init_mean=61.746_ce_baseline=46.424
+commit=be9283a068501fea777e4dedfb84171d75ee2fd8
+paths=experiments/distillation_baseline_cycle224.py,autoresearch/results/cycle_224_distillation.json,autoresearch/results/cycle_224_summary.md
+learned=KD+CE (tau=2.0, 50/50) on W_out+W_fc surface (BLOCKS=[1,4,7] K=512, 10000 steps, 3 seeds, best-state restore) reaches 60.938+-0.103 — KD KL signal at tau=2.0 keeps the student near init (61.746); CE-only at the same surface (cycle 213) reaches 46.424; KD is +14.51 PPL worse, not a free upper bound on this near-saturated optimum
+next=Either tune KD (lower tau, KD-only weighting, longer schedule) to revisit a stronger distillation upper bound, or move on to interpretability items 230-234 / GELU bump follow-ups
+tsv_path=autoresearch/logs/experiments.tsv
