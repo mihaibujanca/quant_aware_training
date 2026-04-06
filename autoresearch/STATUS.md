@@ -1,6 +1,11 @@
-# Research Status — 223 Cycles (001–223)
+# Research Status — 224 Cycles (001–224)
 
-## Latest: Cycle 223
+## Latest: Cycle 224
+
+229. **Distillation baseline (KD+CE)** — INCONCLUSIVE (audit-corrected from REFUTED, G6 method failure)
+   - **best_mean=60.938 ± 0.103** (init 61.746) — barely moves. **Method failure**: `F.kl_div(..., reduction='batchmean')` on (B=1, T=128, V=50257) divides only by B, returning the SUM over T·V ≈ 6.4M entries (~30-50), while CE averages over tokens (~4). Effective 50/50 mix is ~10× KD-weighted, swamping CE. The same trainable surface (W_out+W_fc on blocks [1,4,7]) reached 46.424 under pure CE in cycle 213 — capacity is fine; the loss formulation is broken. Audit downgrade per G6. Fix: reshape `(B*T, V)` before kl_div, or use `reduction='mean'`, or weight by 1/(T·V); sweep KD/CE ratios on a short budget before recommitting 10k-step distillation.
+
+## Cycle 223
 
 228. **Lower K with Adam correction — compression efficiency curve** — CONFIRMED (interesting=true)
    - BLOCKS=[1,4,7], 3 seeds. **K=256 best_mean = 47.509 ± 0.023** (≤52.0 confirmed; -11.85% vs float). K=128 best_mean = 48.989 ± 0.033 (-9.10% vs float). K=512 (cycle 210) = 46.556 (-13.62%). Compression efficiency curve is **monotone but very flat**: 4× W_out compression (512→128) costs only +2.43 PPL. All three K beat float. **Channel capacity is NOT the bottleneck for low-K compression — Adam W_out fitting is.** Calib/eval disjoint (`all_ids[:200]` / `all_ids[200:300]`); no leakage. Best-state snapshot/restore round-trips ≤1e-3. 297K params (K=128) is enough to clear float.
