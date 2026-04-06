@@ -1,0 +1,8 @@
+item_number=232
+outcome=confirmed
+key_metric=11/11 cross-block pairs significant (c_fc 11, Q 10, K 6, V 8, resPC 11); centred rank_95 median 552 vs raw median 1
+commit=70c6458775844e0550bacb1e65a867711de61036
+paths=experiments/delta_centred_alignment_cycle218.py,autoresearch/results/cycle_218_delta_centred_alignment.json,autoresearch/results/cycle_218_summary.md
+learned=After centring Δ̃=Δ−mean(Δ), top-20 right SVs align above random+3σ against downstream c_fc and residual-stream PC subspaces in ALL 11 cross-block pairs — the bump is structured inter-block communication, not per-block computation
+next=Run item 234 (GELU_noneg vs GELU_nobump surgical bump removal) to localise which sub-region of the bump carries the cross-block signal; also consider projecting Δ̃ SV1+ onto lm_head to extract semantically clean clusters (SV0 is the post-centring unigram-frequency axis)
+tsv_path=autoresearch/logs/experiments.tsv
