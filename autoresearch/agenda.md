@@ -10,16 +10,6 @@ GELU bump interpretability items (230-234) reorient the investigation from activ
 
 All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces a report with plots/tables plus a 1-sentence plain-language claim, not a PPL threshold. `Confirmed/Refuted` criteria are phrased as whether the interpretable claim holds with a clear pattern, not numeric thresholds.
 
-230. **W_down column geometry census — anti-podal pairs, clusters, cross-block alignment**
-   - For each of the 12 blocks, take W_down ∈ R^(768×3072) and analyze the 3072 columns as vectors in R^768. Compute: (a) pairwise cosine histogram, (b) count of anti-podal pairs with cos(W_down[:,c], W_down[:,c']) < −0.9, (c) top-20 singular values of W_down (structure of reachable subspace), (d) k-means clustering of columns (k=32), (e) alignment between block l's W_down columns and block l+1's W_up rows (do the top right singular vectors of W_down_l overlap with the top right singular vectors of W_up_{l+1}? Principal angles).
-   - Output: one report with 12 × (cosine histogram, cluster sizes, SVD, cross-block alignment matrix). One-sentence conclusion per block. Per-block JSON with the numeric artifacts.
-   - Type: interpretability / structural
-   - Claim to test: "GPT-2 W_down contains enough anti-podal column pairs that GELU's bump effectively doubles channel capacity via bidirectional pushes."
-   - Confirmed if: ≥20% of columns in blocks 1-5 have a near-anti-podal twin (cos < −0.9), AND column clusters are geometrically distinct (mean within-cluster cos > 0.5, between-cluster cos < 0.2 at k=32).
-   - Refuted if: <5% anti-podal pairs in any block, AND columns are near-uniformly distributed on the sphere (no cluster structure).
-   - Inconclusive if: some structure but no clean story.
-   - Depends on: none (operates on W_down weights directly)
-
 231. **Per-token Δ(x) = GELU_FFN − ReLU_FFN — rank, subspace, logit impact**
    - For a 200-sequence OWT calibration batch, at each of 12 blocks, compute per-token Δ_l(x) = y_GELU_l(x) − y_ReLU_l(x) ∈ R^768. Measurements: (a) SVD of the per-token Δ matrix (tokens × 768) — rank_95 and rank_99, (b) ratio ||E[Δ]||² / E[||Δ||²] (token-independent vs token-dependent split), (c) top 5 right singular vectors of Δ projected onto unembedding rows W_U — which vocabulary tokens does each top direction of Δ boost/suppress, (d) top singular vectors projected onto next block's W_up rows (does Δ_l write to directions block l+1 reads).
    - Output: per-block rank histogram, top-10 boosted/suppressed vocabulary tokens per top-3 Δ directions, cross-block read/write alignment matrix. One-sentence conclusion.
@@ -120,6 +110,12 @@ All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 216
+
+230. **W_down column geometry census — anti-podal pairs, clusters, cross-block alignment** *(REFUTED — cycle 216)*
+   - **Outcome: REFUTED** — All 12 blocks have <1.2% columns with anti-podal twin at cos<-0.9 (max block 0: 1.17%; blocks 1-5: 0.00-0.26%). Within-cluster cos 0.03-0.07 (near-random). Random baseline (3 seeds, R^768): 0 anti-podal pairs. W_down columns are NOT geometrically paired. **Notable secondary finding**: cross-block top-5 principal cosines between block l's W_down writing subspace and block l+1's c_fc reading subspace average 0.649 (mid-blocks 4-7 hit 0.70-0.78), so adjacent blocks do share writing/reading directions despite no column-level anti-podality.
+   - Artifacts: `experiments/wdown_column_census_cycle216.py`, `autoresearch/results/cycle_216_wdown_geometry.json`, `autoresearch/results/cycle_216_summary.md`
 
 ### Cycle 215
 
