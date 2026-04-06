@@ -6,13 +6,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-237. **Cycle 218 specificity control — Δ̃_l alignment with non-adjacent c_fc(j)**
-   - Cycle 218 showed centred Δ̃_l's top-20 right SVs align with block l+1's c_fc reading subspace at +17 to +33σ above random in 11/11 cross-block pairs, but never tested non-adjacent destinations. Audit (G3) flagged this missing control: if Δ̃_l also aligns with c_fc(j) for j ≠ l+1, the alignment is generic ("Δ̃ leaks into a universal reading basis") rather than specifically inter-block communication. For each l ∈ {0..10}, compute the top-20 right SVs of centred Δ̃_l and measure top-5 principal cosine sums against c_fc(j) for ALL j > l (not just j=l+1). Plot a heatmap (l, j) and compare each row's max-at-j=l+1 against the row's mean over j>l+1. Use the same random baseline (10 seeds Gaussian orthonormal 20×768).
-   - Type: analysis
-   - Confirmed if: median (l, l+1) cos_sum exceeds the per-row mean over non-adjacent j by ≥ 1.0 (specificity peak at l+1) AND non-adjacent (l, j) cos_sums sit within mean+3σ of the random baseline in ≥ 7/11 rows
-   - Refuted if: non-adjacent (l, j) cos_sums are within 0.3 of (l, l+1) on average across rows — alignment is generic, not adjacency-specific
-   - Inconclusive if: peak-vs-mean gap is 0.3-1.0
-   - Depends on: 232 (cycle 218, done)
+
 
 ### P1
 
@@ -61,6 +55,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 227
+
+237. **Cycle 218 specificity control — Δ̃_l alignment with non-adjacent c_fc(j)** *(INCONCLUSIVE — cycle 227)*
+   - **Outcome: INCONCLUSIVE** — Reproduced cycle 218's adjacent-pair signal exactly (cycle 227 adjacent top-5 cos_sum mean = 2.9687 vs cycle 218 = 2.9687, Δ = 0.0000). Measured the heatmap of top-5 principal cosine sums for centred Δ̃_l vs c_fc(j) for ALL l < j ∈ {0..11}. Per-row specificity gap (max@l+1 − mean over j>l+1) ranges 0.40–1.00 across l ∈ {0..9}, **median = +0.791** (in the 0.3–1.0 INCONCLUSIVE band). The peak at j=l+1 IS larger than the average non-adjacent destination in every row, but **0/10 rows have all non-adjacent entries within 3σ of the random baseline**: ALL 55/55 non-adjacent (l, j) entries clear the 3σ threshold. Δ̃_l preferentially writes into block l+1's c_fc reading subspace, but it ALSO leaks into every later block's c_fc subspace at well above random — the universal-reading-basis interpretation cannot be ruled out. Cycle 218's CONFIRMED finding survives only as "Δ̃ aligns with c_fc subspaces in general" rather than "Δ̃ specifically targets block l+1". Random baseline per j: top5_mean ≈ 1.25–1.27 ± 0.03–0.05, top5_mean+3σ ≈ 1.34–1.43; non-adjacent values sit at 1.5–2.7 (well above). The "0/10 quiet" result is the dominant signal — adjacency specificity is real but small relative to the broad-band write.
+   - Artifacts: `experiments/delta_specificity_cycle227.py`, `autoresearch/results/cycle_227_delta_specificity.json`, `autoresearch/results/cycle_227_summary.md`
 
 ### Cycle 226
 
