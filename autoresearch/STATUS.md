@@ -1,6 +1,11 @@
-# Research Status — 222 Cycles (001–222)
+# Research Status — 223 Cycles (001–223)
 
-## Latest: Cycle 222
+## Latest: Cycle 223
+
+228. **Lower K with Adam correction — compression efficiency curve** — CONFIRMED (interesting=true)
+   - BLOCKS=[1,4,7], 3 seeds. **K=256 best_mean = 47.509 ± 0.023** (≤52.0 confirmed; -11.85% vs float). K=128 best_mean = 48.989 ± 0.033 (-9.10% vs float). K=512 (cycle 210) = 46.556 (-13.62%). Compression efficiency curve is **monotone but very flat**: 4× W_out compression (512→128) costs only +2.43 PPL. All three K beat float. **Channel capacity is NOT the bottleneck for low-K compression — Adam W_out fitting is.** Calib/eval disjoint (`all_ids[:200]` / `all_ids[200:300]`); no leakage. Best-state snapshot/restore round-trips ≤1e-3. 297K params (K=128) is enough to clear float.
+
+## Cycle 222
 
 227. **Frobenius-weighted channel selection — cascade init PPL** — REFUTED
    - Frobenius-importance scoring (||W_proj[c]||² × Σ gelu²(z_c[t])) swaps 66/52/29 channels per block (1/4/7) vs standard topk but improves 3-block init PPL by only **0.111** (61.7464 → 61.6355). Below 0.3 threshold → refuted. **Extends cycle 207's single-block finding to the cascade**: lstsq W_out absorbs whichever K=512 channels are selected. Channel selection direction is closed for K=512.
