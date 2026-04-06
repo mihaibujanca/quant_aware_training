@@ -12,12 +12,7 @@ All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces
 
 ### P1
 
-228. **Lower K with Adam correction — compression efficiency curve**
-   - All Adam experiments used K=512 (50% of full FFN). Test K=256 (25%) and K=128 (12.5%) with Adam correction for BLOCKS=[1,4,7]. If Adam can correct lower K, we get higher compression at similar PPL.
-   - Type: empirical
-   - Confirmed if: K=256 + Adam achieves PPL ≤52.0 (+3.5% vs float)
-   - Refuted if: K=256 + Adam PPL >58.0
-   - Inconclusive if: PPL 52-58
+(no items)
 
 ### P2
 
@@ -55,6 +50,12 @@ All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 223
+
+228. **Lower K with Adam correction — compression efficiency curve** *(CONFIRMED — cycle 223)*
+   - **Outcome: CONFIRMED** — BLOCKS=[1,4,7] K∈{256,128} Adam W_out+b_out, 3 seeds, 4000 steps + best-state restore. K=256 best_mean = **47.509 ± 0.023** (init 63.655, best step ~3967), well below the 52.0 confirmed threshold. K=128 best_mean = **48.989 ± 0.033** (init 65.098). Float = 53.895, K=512 baseline (cycle 210) = 46.556. Compression efficiency curve is monotone in K but very flat: K=128 (297K params) is +2.43 PPL vs K=512 (1.18M params) — a 4× compression for 5% PPL loss. All three K beat float (K=128: −9.10%, K=256: −11.85%, K=512: −13.62%). Adam correction makes K=256 nearly equivalent to K=512 (Δ=+0.95).
+   - Artifacts: `experiments/adam_lower_k_cycle223.py`, `autoresearch/results/cycle_223_lower_k_adam.json`, `autoresearch/results/cycle_223_summary.md`
 
 ### Cycle 222
 
