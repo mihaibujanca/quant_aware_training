@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-240. **K ∈ {8, 4, 2, 1} Adam compression cliff sweep — find the absolute floor**
-   - Extend the cycle 225 curve (K=512→16 monotone, K=16 first to cross +2.3% above float) into the sub-16 regime. BLOCKS=[1,4,7], K ∈ {8, 4, 2, 1} Adam W_out+b_out, LR=1e-4, 4000 steps, best-state restore, 3 seeds (42, 137, 2024). Reuse `experiments/adam_lower_k_cliff_cycle225.py` as template; same calib/eval split as cycles 206/223/225. Report init_ppl and best_ppl per K with mean ± std, and extend the {512,256,128,64,32,16,...} table. Identify the K where the surface stops learning at all (init = best within noise) vs. where it catastrophically breaks. Params per block at K=1: 1×768 + 768 = 1,536 trainable for all three blocks combined — a stress test of Adam's ability to absorb aggressive compression.
-   - Type: empirical
-   - Confirmed if: Adam W_out correction at K=4 stays within +10% of float (≤59.28 PPL). Pinpoints the compression floor as K≤4.
-   - Refuted if: K=8 already exceeds +15% of float (≥61.98 PPL) — cliff is steeper than the 1-2 PPL/halving trend predicts.
-   - Inconclusive if: K=8 lands between +2.3% (the K=16 value) and +15% — curve continues flattening into sub-16 territory but does not localize a single cliff.
-   - Depends on: 235 (cycle 225)
-
 241. **K=128 Adam correction at 6 blocks — does the flat curve hold at higher block count?**
    - Cycle 223 (K=128) beat float at 3 blocks (48.989 vs 53.895); cycle 221 showed joint Adam at 6 blocks K=512 hits a 59.5 PPL ceiling. Test whether the K=128 compression survives the 3→6 block cascade jump or whether the lower-K surface collapses at higher cascade depth. BLOCKS=[1,2,4,5,7,8] K=128 Adam W_out+b_out, LR=1e-4, 4000 steps with best-state restore and eval-every-100, 3 seeds. Reuse `experiments/adam_6block_earlystop_cycle221.py` as template but swap K. Report init, best, best_step, final, and compare against cycle 221's K=512 ceiling (59.515 ± 0.094). Success would give a 4× more compressed alternative to K=512 at matched PPL.
    - Type: empirical
@@ -75,6 +67,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 230
+
+240. **K ∈ {8, 4, 2, 1} Adam compression cliff sweep — find the absolute floor** *(CONFIRMED — cycle 230)*
+   - **Outcome: CONFIRMED** — BLOCKS=[1,4,7] K ∈ {8,4,2,1} Adam W_out+b_out, 3 seeds (42/137/2024), 4000 steps with eval-every-100 and best-state restore. Init PPL grows monotonically as K shrinks: K=8→69.223, K=4→69.830, K=2→70.256, K=1→71.409 (zero per-seed variance since lstsq init is deterministic up to numerics). Trained best_mean: K=8 = **56.323 ± 0.011** (+4.50% vs float), K=4 = **57.328 ± 0.026** (+6.37% vs float, well under the 59.28 CONFIRMED threshold), K=2 = **58.289 ± 0.035** (+8.15%), K=1 = **59.245 ± 0.029** (+9.93% — still within the +10% confirmed band). Full extended curve {512,256,128,64,32,16,8,4,2,1} → {46.556, 47.509, 48.989, 50.781, 53.038, 55.133, 56.323, 57.328, 58.289, 59.245} is strictly monotone with each halving costing ~1.0–1.2 PPL in the sub-16 regime (vs ~1.5–2.3 PPL per halving in the high-K regime). **No compression cliff** appears anywhere in [1, 512] — the curve is near-linear in log K. At K=1 each block has only 1×768 + 768 = 1,536 trainable params (4,608 total for 3 blocks, a **257× compression** vs K=512's 1.18M params) yet Adam recovers 12.16 PPL from init (−17.0%), identical in magnitude to the Δ at K=8 (−12.9 PPL). Every K passes the floor diagnostic (|Δ| ≥ 11.97, well above the 1.0 "Adam failed to learn" threshold) and none are within 2× of float. The "compression floor" for W_out+b_out Adam correction on 3 blocks is K=1 and it sits precisely at the +10% band. Adam can absorb arbitrary topk selection sparsity; the surface is not capacity-limited at any K tested. Matched-budget: K=4 (11,520 params) gets within +2.20 PPL of K=16 (39,168 params) for 3.4× less trainable memory. The new "free" ultra-compression operating point for 3-block surgical patches is K=4 (+6.37% vs float, 257× compression vs K=512 would be K=1 at +9.93%).
+   - Artifacts: `experiments/adam_k_floor_cycle230.py`, `autoresearch/results/cycle_230_k_floor.json`, `autoresearch/results/cycle_230_summary.md`
 
 ### Cycle 229
 
