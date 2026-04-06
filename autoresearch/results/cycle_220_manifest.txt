@@ -1,0 +1,8 @@
+item_number=234
+outcome=inconclusive
+key_metric=baseline_ppl=45.064,noneg_ppl=2093.296,nobump_ppl=11455.595
+commit=269d3a2f7b0b7f32cae94946c565df605bda6b11
+paths=experiments/surgical_bump_removal_cycle220.py,autoresearch/results/cycle_220_surgical_bump.json,autoresearch/results/cycle_220_summary.md
+learned=Linearizing the positive-zone bump (nobump, +25321%) is ~5.5x more destructive than clipping the negative leak (noneg, +4545%); the fine-grained curvature near zero carries more functional load than the leak, but both are catastrophic in isolation so neither sub-region is independently linearizable.
+next=Scale back the surgery — test a smooth single-block swap that preserves bump curvature but removes the negative leak in fewer blocks (e.g. 1, 2, 4 blocks) to find the minimal set tolerable without collapse, rather than all-12.
+tsv_path=autoresearch/logs/experiments.tsv
