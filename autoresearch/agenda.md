@@ -6,14 +6,49 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+240. **K ∈ {8, 4, 2, 1} Adam compression cliff sweep — find the absolute floor**
+   - Extend the cycle 225 curve (K=512→16 monotone, K=16 first to cross +2.3% above float) into the sub-16 regime. BLOCKS=[1,4,7], K ∈ {8, 4, 2, 1} Adam W_out+b_out, LR=1e-4, 4000 steps, best-state restore, 3 seeds (42, 137, 2024). Reuse `experiments/adam_lower_k_cliff_cycle225.py` as template; same calib/eval split as cycles 206/223/225. Report init_ppl and best_ppl per K with mean ± std, and extend the {512,256,128,64,32,16,...} table. Identify the K where the surface stops learning at all (init = best within noise) vs. where it catastrophically breaks. Params per block at K=1: 1×768 + 768 = 1,536 trainable for all three blocks combined — a stress test of Adam's ability to absorb aggressive compression.
+   - Type: empirical
+   - Confirmed if: Adam W_out correction at K=4 stays within +10% of float (≤59.28 PPL). Pinpoints the compression floor as K≤4.
+   - Refuted if: K=8 already exceeds +15% of float (≥61.98 PPL) — cliff is steeper than the 1-2 PPL/halving trend predicts.
+   - Inconclusive if: K=8 lands between +2.3% (the K=16 value) and +15% — curve continues flattening into sub-16 territory but does not localize a single cliff.
+   - Depends on: 235 (cycle 225)
 
+241. **K=128 Adam correction at 6 blocks — does the flat curve hold at higher block count?**
+   - Cycle 223 (K=128) beat float at 3 blocks (48.989 vs 53.895); cycle 221 showed joint Adam at 6 blocks K=512 hits a 59.5 PPL ceiling. Test whether the K=128 compression survives the 3→6 block cascade jump or whether the lower-K surface collapses at higher cascade depth. BLOCKS=[1,2,4,5,7,8] K=128 Adam W_out+b_out, LR=1e-4, 4000 steps with best-state restore and eval-every-100, 3 seeds. Reuse `experiments/adam_6block_earlystop_cycle221.py` as template but swap K. Report init, best, best_step, final, and compare against cycle 221's K=512 ceiling (59.515 ± 0.094). Success would give a 4× more compressed alternative to K=512 at matched PPL.
+   - Type: empirical
+   - Confirmed if: K=128 6-block best_mean ≤ 61.0 PPL (within +1.5 PPL of cycle 221 K=512 ceiling). Lower K is free at 6 blocks.
+   - Refuted if: K=128 6-block best_mean ≥ 65.0 PPL. Cascade depth amplifies compression cost; K=128 is only viable at 3 blocks.
+   - Inconclusive if: best_mean in (61.0, 65.0) — measurable cascade cost but not catastrophic.
+   - Depends on: 226 (cycle 221), 228 (cycle 223)
+
+242. **Sequential init + joint polish hybrid at 3 blocks — break the 46.5 floor?**
+   - Cycle 215 (sequential): 47.253. Cycle 206 (joint): 46.556. Cycle 215's audit recommended "sequential + lightweight joint polish at end" as an untested composition. Implement: run cycle 215's sequential protocol (2000 steps per block with best-state restore) to convergence, then initialize a joint Adam pass on all 3 blocks' W_out+b_out simultaneously for 1000 more joint steps with LR=5e-5 (lower LR to avoid wiping the sequential solution). BLOCKS=[1,4,7] K=512, 3 seeds (42, 137, 2024). Compare final_mean and best_mean against both baselines. Tests whether sequential provides a better basin of attraction that joint polishing can exploit.
+   - Type: empirical
+   - Confirmed if: hybrid best_mean ≤ 45.8 PPL (breaks joint 46.556 by ≥0.75). Sequential init matters for joint optimizer.
+   - Refuted if: hybrid best_mean ≥ 46.5 PPL. Joint polish either reproduces or regresses — sequential init offers no advantage.
+   - Inconclusive if: hybrid best_mean ∈ (45.8, 46.5). Marginal improvement, within reproducibility noise of joint alone.
+   - Depends on: 217 (cycle 206), 225 (cycle 215)
 
 ### P1
 
-
+243. **Alternative 6-block selections — is BLOCKS=[1,2,4,5,7,8] representative?**
+   - Cycle 221's 59.5 PPL ceiling uses BLOCKS=[1,2,4,5,7,8] but the block subset was inherited from cycle 211 without justification vs other 6-subsets. Sweep three alternative 6-block subsets: (a) [1,2,3,4,5,6] contiguous early, (b) [3,4,5,6,7,8] contiguous middle, (c) [1,3,5,7,8,10] spread. K=512, joint Adam W_out+b_out, LR=1e-4, 4000 steps + best-state restore, 1 seed (SEED=42) per subset to save time, then rerun the winner with 3 seeds if it beats 59.0. Exclude blocks 0 and 11 per cycles 198/201 (structural uniqueness). Tests whether the 59.5 ceiling is a block-subset artifact or a structural 6-block ceiling.
+   - Type: empirical
+   - Confirmed if: at least one alternative subset yields best_ppl ≤ 58.0 (below cycle 221's confirmed threshold). The 6-block ceiling depends on which 6 blocks.
+   - Refuted if: all three alternative subsets yield best_ppl ∈ [59.0, 62.0]. Ceiling is structural to the 6-block count, not a specific selection.
+   - Inconclusive if: subsets span wider than 2 PPL with no clear winner below 59.0.
+   - Depends on: 226 (cycle 221)
 
 ### P2
 
+244. **gelu_noneg + first-moment + LoRA r=8 W_out residual — eat the 16.6 PPL residual?**
+   - Cycle 228 showed per-channel first-moment correction (μ_l) recovers ~34× of the cycle 220 gelu_noneg catastrophe but leaves +16.6 PPL residual (61.66 PPL vs 45.06 baseline). The audit attributed residual to higher-order curvature beyond the per-channel mean. Test: on top of the all-12-block `relu(GELU(z)) + μ_l` patch, add a LoRA r=8 adapter on each block's W_out (A ∈ R^{768×8}, B ∈ R^{8×3072}, initialized zero) trained jointly via Adam on CE against baseline logits, LR=1e-4, 2000 steps, seed 42 (1 seed for scouting). Compare final PPL against cycle 228's 61.664. Tests whether LoRA residual correction can absorb the higher-order GELU curvature component after first-moment correction.
+   - Type: empirical
+   - Confirmed if: final_ppl ≤ 48.0 PPL (within +3 PPL of baseline 45.064). LoRA absorbs most of the 16.6 residual.
+   - Refuted if: final_ppl ≥ 58.0. LoRA cannot compensate for the higher-order curvature — the relu+μ surface is a dead end even with learned correction.
+   - Inconclusive if: final_ppl ∈ (48.0, 58.0). Partial absorption only; the gelu_noneg family is fundamentally limited.
+   - Depends on: 234 (cycle 220), 238 (cycle 228)
 
 
 
