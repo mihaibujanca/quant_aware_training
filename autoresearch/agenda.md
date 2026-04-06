@@ -10,16 +10,6 @@ GELU bump interpretability items (230-234) reorient the investigation from activ
 
 All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces a report with plots/tables plus a 1-sentence plain-language claim, not a PPL threshold. `Confirmed/Refuted` criteria are phrased as whether the interpretable claim holds with a clear pattern, not numeric thresholds.
 
-233. **Anti-podal channel twin census — does activation pattern match column geometry?**
-   - For each block, list all (c, c') channel pairs where cos(W_down[:,c], W_down[:,c']) < −0.9 (from item 230). For each such pair, measure across 200 OWT sequences: (a) corr(z_c, z_{c'}), (b) joint distribution of (z_c, z_{c'}) — do they fire in complementary regimes (one positive, one negative)?, (c) for how many tokens is sign(z_c) ≠ sign(z_{c'})? Test the hypothesis that anti-podal W_down twins have anti-correlated pre-activations — i.e., the model is actually using them as mirror channels where only one fires at a time.
-   - Output: per-block twin list with activation statistics, scatter plots of (z_c, z_{c'}) for top-5 most anti-podal pairs. One-sentence conclusion: "Anti-podal W_down pairs fire complementarily in X% of cases, confirming/refuting the mirror-channel hypothesis."
-   - Type: interpretability / mechanism confirmation
-   - Claim to test: "Anti-podal W_down pairs have anti-correlated pre-activations — they are mirror channels, and GELU lets both directions be expressed by a single channel via the bump."
-   - Confirmed if: in blocks with ≥100 anti-podal pairs (from item 230), median corr(z_c, z_{c'}) < −0.3, AND sign disagreement rate > 60%.
-   - Refuted if: median corr > 0 (twins fire together, not complementarily) in all blocks.
-   - Inconclusive if: weak negative correlation (-0.3 to 0) or mixed across blocks.
-   - Depends on: 230
-
 234. **Surgical bump removal — isolate the negative leak from the positive-zone bump**
    - Past experiments conflated two sub-effects: (i) the negative leak (GELU(z) < 0 for z < 0), and (ii) the positive-zone bump (GELU(z) < z for 0 < z < 2). Cycle 190 did one hybrid split but not the complementary clamping. Define two new activations: (A) `GELU_noneg(z) = max(0, GELU(z))` — kills the negative leak, keeps the positive bump shape; (B) `GELU_nobump(z) = z * 1[z > 2] + 0 * 1[z < −2] + linear_interp(z) for z in [−2, 2]` — kills the bump knee, keeps the asymptotic regimes. Run each all-12-blocks and measure PPL + Δ(x) to isolate which sub-region of the bump carries the functional load.
    - Output: 4-point comparison table {baseline, hybrid (190), GELU_noneg, GELU_nobump} per block + all-12. Rank of Δ(x) under each variant. One-sentence conclusion: "The negative leak carries X%, the positive-zone bump carries Y% of the GELU-vs-ReLU functional advantage."
@@ -90,6 +80,12 @@ All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 219
+
+233. **Anti-podal channel twin census** *(INCONCLUSIVE — PLAN INVALID, cycle 219)*
+   - **Outcome: INCONCLUSIVE (PLAN INVALID)** — Dependency 230 (cycle 216) confirmed there are NO blocks with ≥100 anti-podal pairs (max ~30 in block 0; total ~31 across all 12 blocks). Item 233's Confirmed criterion is unmeasurable. Reframing requires a new agenda item; no experiment run.
+   - Artifacts: `autoresearch/plans/cycle_219.md`
 
 ### Cycle 218
 

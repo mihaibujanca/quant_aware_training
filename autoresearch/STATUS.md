@@ -1,6 +1,11 @@
-# Research Status — 218 Cycles (001–218)
+# Research Status — 219 Cycles (001–219)
 
-## Latest: Cycle 218
+## Latest: Cycle 219
+
+233. **Anti-podal channel twin census** — INCONCLUSIVE (PLAN INVALID)
+   - Dependency 230 (cycle 216) found NO blocks with ≥100 anti-podal pairs (total ~31 across all 12 blocks). Confirmed criterion unmeasurable. No experiment run; commit=NONE.
+
+## Cycle 218
 
 232. **Where does Δ point? — centred Δ̃ alignment with downstream readers** — CONFIRMED
    - Centred Δ̃_l = Δ_l − mean(Δ_l) per block, top-20 right SVs vs block l+1 reading subspaces (c_fc, attention Q/K/V, residual PCs). 11/11 cross-block pairs pass mean+3σ random baseline. **c_fc cos_sums 4.42-7.07 (+17 to +33σ above random 2.72±0.10)**, **resPC cos_sums 4.77-8.38 (+20 to +33σ)** — both reader subspaces are robustly aligned with the bump's per-token signal in EVERY block. **V-reader anti-aligned by -10 to -13σ in deep blocks 8-10** (surprising negative finding). Centred rank_95 jumps from raw cycle 217 median=1 to 552 (range 489-567) — the per-token signal is essentially full-rank in R^768. The alignment is therefore "high-rank Δ̃ leaks into the right places" rather than "low-rank message in specific directions". Audit (G3): missing specificity control — Δ̃_l vs non-adjacent c_fc(j) NOT tested.
