@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-242. **Sequential init + joint polish hybrid at 3 blocks — break the 46.5 floor?**
-   - Cycle 215 (sequential): 47.253. Cycle 206 (joint): 46.556. Cycle 215's audit recommended "sequential + lightweight joint polish at end" as an untested composition. Implement: run cycle 215's sequential protocol (2000 steps per block with best-state restore) to convergence, then initialize a joint Adam pass on all 3 blocks' W_out+b_out simultaneously for 1000 more joint steps with LR=5e-5 (lower LR to avoid wiping the sequential solution). BLOCKS=[1,4,7] K=512, 3 seeds (42, 137, 2024). Compare final_mean and best_mean against both baselines. Tests whether sequential provides a better basin of attraction that joint polishing can exploit.
-   - Type: empirical
-   - Confirmed if: hybrid best_mean ≤ 45.8 PPL (breaks joint 46.556 by ≥0.75). Sequential init matters for joint optimizer.
-   - Refuted if: hybrid best_mean ≥ 46.5 PPL. Joint polish either reproduces or regresses — sequential init offers no advantage.
-   - Inconclusive if: hybrid best_mean ∈ (45.8, 46.5). Marginal improvement, within reproducibility noise of joint alone.
-   - Depends on: 217 (cycle 206), 225 (cycle 215)
-
 ### P1
 
 243. **Alternative 6-block selections — is BLOCKS=[1,2,4,5,7,8] representative?**
@@ -59,6 +51,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 232
+
+242. **Sequential init + joint polish hybrid at 3 blocks — break the 46.5 floor?** *(REFUTED — cycle 232)*
+   - **Outcome: REFUTED** — BLOCKS=[1,4,7] K=512, phase 1 = cycle 215 sequential protocol (2000 Adam steps/block W_out+b_out, LR=1e-4, best-state restore per block); phase 2 = joint Adam on all 3 blocks' W_out+b_out simultaneously, LR=5e-5 (lower than phase 1), 1000 steps, best-state restore; 3 seeds (42/137/2024). Init 61.746 (deterministic). **Post-phase-1 (sequential) mean 47.253 ± 0.047** matches cycle 215 exactly (47.253 ± 0.047) — phase 1 sanity check clean across all 3 seeds with zero collapses. **Phase 2 polish final_mean = 46.911 ± 0.026** (per-seed: 46.878 / 46.916 / 46.941; all 3 seeds reach best at step 1000 = end of phase 2 budget, still descending, zero collapses). Gain from polish = **+0.342 ± 0.026 PPL per seed** — joint polish DOES help sequential init, but not enough. **Δ vs joint 4k W_out (c210) 46.556 = +0.355 PPL** (still worse); Δ vs joint W_out+W_fc (c213) 46.424 = +0.487 (worse); Δ vs sequential alone (c215) 47.253 = −0.342 (better by the polish gain). Hybrid final 46.911 is in the interval [46.5, 47.25] and exceeds the 46.5 REFUTED threshold — sequential warm-start does not open a better basin for joint Adam than running joint Adam from the topk+lstsq init directly. The "sequential gives joint a better basin" hypothesis from cycle 215's audit is dead: joint-from-lstsq (46.556) beats joint-from-sequential (46.911) by 0.36 PPL at matched K and comparable total compute. Phase 2 trajectory is still descending at step 1000 in all 3 seeds — more phase-2 budget might close the gap, but at that point it becomes joint 4k with a sequential pre-training, which by cycle 215's structure is strictly more expensive for no gain. The 46.5 floor for 3-block W_out+b_out Adam correction at K=512 appears structural across all tested paths: joint-from-lstsq (c210: 46.556), joint-from-sequential (c232: 46.911), W_out+W_fc joint (c213: 46.424). The best-known remains cycle 213's W_out+W_fc at 46.424.
+   - Artifacts: `experiments/sequential_polish_hybrid_cycle232.py`, `autoresearch/results/cycle_232_sequential_polish.json`, `autoresearch/results/cycle_232_summary.md`
 
 ### Cycle 231
 
