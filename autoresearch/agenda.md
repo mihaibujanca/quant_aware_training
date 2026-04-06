@@ -12,13 +12,6 @@ All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces
 
 ### P1
 
-227. **Frobenius-weighted channel selection — select channels that minimize output Frobenius error**
-   - Current topk scores = act_std × W_proj_norm (cycles 207 showed this is near-optimal for single-block PPL). But for the CASCADE context, the damage accumulates block-by-block. Select channels that minimize the full-model Frobenius error of the block output (||float_out - compressed_out||_F), using cross-validation on a held-out calibration split. May give better cascade resistance.
-   - Type: empirical
-   - Confirmed if: Frobenius-optimal selection improves 3-block init PPL by ≥1 PPL (≤60.75)
-   - Refuted if: improvement <0.3 PPL vs standard init
-   - Inconclusive if: 0.3-1 PPL improvement
-
 228. **Lower K with Adam correction — compression efficiency curve**
    - All Adam experiments used K=512 (50% of full FFN). Test K=256 (25%) and K=128 (12.5%) with Adam correction for BLOCKS=[1,4,7]. If Adam can correct lower K, we get higher compression at similar PPL.
    - Type: empirical
@@ -62,6 +55,12 @@ All items 230-234 operate on GPT-2 small on OWT validation tokens. Each produces
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 222
+
+227. **Frobenius-weighted channel selection — select channels minimizing output Frobenius error** *(REFUTED — cycle 222)*
+   - **Outcome: REFUTED** — BLOCKS=[1,4,7] K=512, same calib/eval as cycle 206. Variant A `act_std × ||W_proj||` (3 seeds) reproduces cycle 206 init PPL = 61.7464 ± 0.0000 (delta vs 61.746 = 0.0004). Variant B `||W_proj||² × Σ gelu(z)²` selects measurably different channels per block (66 / 52 / 29 swaps for blocks 1/4/7) but only moves init PPL to 61.6355 — Δ = +0.111 PPL, well under the 0.3 refutation threshold. lstsq W_out compensates for selection rule on the cascade as well as on single block (cycle 207). The 3-block cascade gap is structural, not a selection problem.
+   - Artifacts: `experiments/frobenius_selection_cycle222.py`, `autoresearch/results/cycle_222_frobenius_selection.json`, `autoresearch/results/cycle_222_summary.md`
 
 ### Cycle 221
 

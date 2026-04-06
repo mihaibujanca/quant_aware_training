@@ -1,0 +1,47 @@
+{
+  "cycle": 222,
+  "item": 227,
+  "verdict": "Refuted",
+  "config": {
+    "blocks": [
+      1,
+      4,
+      7
+    ],
+    "K": 512,
+    "n_calib": 200,
+    "n_eval": 100,
+    "seq_len": 128,
+    "seeds": [
+      42,
+      137,
+      2024
+    ]
+  },
+  "float_ppl": 53.89489152418256,
+  "variants": [
+    {
+      "name": "topk_act_std",
+      "init_ppl_mean": 61.7464322818365,
+      "init_ppl_std": 7.394367401411978e-06,
+      "ppl_per_seed": [
+        61.74642310543715,
+        61.746441212878004,
+        61.74643252719434
+      ]
+    },
+    {
+      "name": "frobenius_importance",
+      "init_ppl": 61.63553259421064
+    }
+  ],
+  "improvement_vs_baseline": {
+    "frobenius_importance": 0.11089968762586011
+  },
+  "channel_set_diff_per_block_B_vs_A": {
+    "1": 66,
+    "4": 52,
+    "7": 29
+  },
+  "cycle_206_reproduction_delta": 0.0004322818364954628
+}
