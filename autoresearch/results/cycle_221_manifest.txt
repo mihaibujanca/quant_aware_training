@@ -1,0 +1,8 @@
+item_number=226
+outcome=inconclusive
+key_metric=best_mean=59.515_init_mean=86.686_cycle_211_baseline=59.680
+commit=b72bd6b56789d30e05d54ea0f15ee86600b1b6b9
+paths=experiments/adam_6block_earlystop_cycle221.py,autoresearch/results/cycle_221_adam_6block_earlystop.json,autoresearch/results/cycle_221_summary.md
+learned=6-block [1,2,4,5,7,8] Adam W_out/b_out correction has a reproducible 59.5-PPL ceiling (3 seeds, std 0.094, best step ~1367) — early stopping cannot break below the 58-PPL Confirmed threshold, confirming the cascade cannot be dissolved with output-head-only Adam on 6 blocks
+next=Test item 228 (lower K with Adam on 3-block) or introduce W_fc retraining / LoRA to break the 59.5-PPL ceiling on 6 blocks
+tsv_path=autoresearch/logs/experiments.tsv
