@@ -1,0 +1,8 @@
+item_number=230
+outcome=refuted
+key_metric=max_anti_podal_fraction_blocks_1_5=0.0026_max_all_blocks=0.0117_random_baseline=0
+commit=e4b5248ba1c58025f336710921f8b8059ef439cb
+paths=experiments/wdown_column_census_cycle216.py,autoresearch/results/cycle_216_wdown_geometry.json,autoresearch/results/cycle_216_summary.md
+learned=GPT-2 W_down columns are not geometrically paired — <1.2% anti-podal at cos<-0.9 in every block (blocks 1-5: 0.00-0.26%), within-cluster cos 0.03-0.07 (near-random on the sphere); column-level anti-podal mirror hypothesis is refuted. But cross-block alignment is real: top-5 principal cosines between block l's W_down writing subspace and block l+1's c_fc reading subspace average 0.649 (peak 0.778 at l=4), so adjacent blocks DO share writing/reading directions.
+next=Item 231 (per-token Δ(x) rank+SVD) is no longer blocked on 230 since the anti-podal prior is refuted; reframe 233 — instead of hunting cos<-0.9 twins, search softer cos<-0.5 pairs or test the activation-level anti-correlation hypothesis on random channel pairs as the control. Item 232 (Δ→next-block readers) should compare against the already-measured baseline cross-block top-5 top5 mean=0.649 so Δ-alignment must exceed the raw W_down↔c_fc baseline to count as evidence.
+tsv_path=autoresearch/logs/experiments.tsv
