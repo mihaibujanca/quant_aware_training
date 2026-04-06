@@ -8,14 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-243. **Alternative 6-block selections — is BLOCKS=[1,2,4,5,7,8] representative?**
-   - Cycle 221's 59.5 PPL ceiling uses BLOCKS=[1,2,4,5,7,8] but the block subset was inherited from cycle 211 without justification vs other 6-subsets. Sweep three alternative 6-block subsets: (a) [1,2,3,4,5,6] contiguous early, (b) [3,4,5,6,7,8] contiguous middle, (c) [1,3,5,7,8,10] spread. K=512, joint Adam W_out+b_out, LR=1e-4, 4000 steps + best-state restore, 1 seed (SEED=42) per subset to save time, then rerun the winner with 3 seeds if it beats 59.0. Exclude blocks 0 and 11 per cycles 198/201 (structural uniqueness). Tests whether the 59.5 ceiling is a block-subset artifact or a structural 6-block ceiling.
-   - Type: empirical
-   - Confirmed if: at least one alternative subset yields best_ppl ≤ 58.0 (below cycle 221's confirmed threshold). The 6-block ceiling depends on which 6 blocks.
-   - Refuted if: all three alternative subsets yield best_ppl ∈ [59.0, 62.0]. Ceiling is structural to the 6-block count, not a specific selection.
-   - Inconclusive if: subsets span wider than 2 PPL with no clear winner below 59.0.
-   - Depends on: 226 (cycle 221)
-
 ### P2
 
 244. **gelu_noneg + first-moment + LoRA r=8 W_out residual — eat the 16.6 PPL residual?**
@@ -51,6 +43,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 233
+
+243. **Alternative 6-block selections — is BLOCKS=[1,2,4,5,7,8] representative?** *(INCONCLUSIVE — cycle 233)*
+   - **Outcome: INCONCLUSIVE** — Swept three alternative 6-block subsets under cycle 221's exact protocol (K=512, LR=1e-4, joint Adam W_out+b_out, 4000 steps, EVAL_EVERY=100, best-state restore), SEED=42 phase 1. Float PPL 53.895 (unchanged). Per-subset (init / best_ppl / best_step / final@4000): **[1,2,3,4,5,6]** contiguous early = 87.631 / **61.785** / 1300 / 76.961; **[3,4,5,6,7,8]** contiguous middle = 96.758 / **67.826** / 1100 / 86.267; **[1,3,5,7,8,10]** spread = 87.237 / **60.981** / 1400 / 75.466. Cycle 221 reference [1,2,4,5,7,8] = 86.686 / 59.515 ± 0.053 / ~1500 / 72.250. All three alternatives trained cleanly (zero collapses, restore sanity matched to < 1e-3). All three **overfit** past best_step and balloon toward step 4000 (+15–19 PPL above best by end of budget), mirroring cycle 221's trajectory shape. **Phase 2 gate NOT passed** — no subset cleared the 59.0 PPL threshold, so no 3-seed rerun was performed (saved ~20 min compute; single-seed numbers are sufficient to reject CONFIRMED). **Verdict band analysis**: CONFIRMED requires ≤58.0 (no subset passes), REFUTED requires all three ∈ [59.0, 62.0] (the middle subset [3,4,5,6,7,8] = 67.826 is **outside** the REFUTED band by +5.8 PPL), so the outcome is INCONCLUSIVE. **Findings**: (1) The spread subset [1,3,5,7,8,10] is the **best** of all four tested selections at 60.981, but only by 1.47 PPL vs cycle 221's 59.515 — and the single-seed phase 1 noise floor (~0.05 PPL std from c221) is far smaller than this gap, so c221's original [1,2,4,5,7,8] remains the best-known 6-block choice with full 3-seed evidence. (2) The middle subset [3,4,5,6,7,8] is a **clear structural outlier** at 67.826 (+8.3 PPL vs c221) with init 96.758 (+10.1 above c221's init) — blocks 3,4,5,6 form a consecutive mid-layer cascade that lstsq+Adam cannot absorb as efficiently, likely because consecutive-block error coupling amplifies the cascade residual. (3) Both [1,2,3,4,5,6] and [1,3,5,7,8,10] land in the [60.9, 61.8] band, ~1.3–2.3 PPL above cycle 221's 59.515 — suggesting the true 6-block floor for the best-case selection is in [59.5, 61.0] and mildly dependent on which 6 you pick. The 59.5 PPL ceiling from cycle 221 is therefore **approximately structural but selection-sensitive**: the 6-block W_out+b_out Adam surface has a floor near ~59–60 PPL regardless of the specific 6 non-extremal blocks chosen, with [1,2,4,5,7,8] (spread across low/mid) being locally optimal and consecutive middle subsets being strictly worse. Sub-58 PPL at 6 blocks is **not** reachable by re-choosing the block subset — the ceiling is closer to structural than selection-dependent, but not cleanly refuted in the strict [59, 62] band because the middle subset breaks the band from above.
+   - Artifacts: `experiments/adam_6block_subset_sweep_cycle233.py`, `autoresearch/results/cycle_233_6block_subset_sweep.json`, `autoresearch/results/cycle_233_summary.md`
 
 ### Cycle 232
 
