@@ -1,6 +1,11 @@
-# Research Status — 230 Cycles (001–230)
+# Research Status — 231 Cycles (001–231)
 
-## Latest: Cycle 230
+## Latest: Cycle 231
+
+241. **K=128 Adam correction at 6 blocks — does the flat curve hold at higher block count?** — REFUTED
+   - BLOCKS=[1,2,4,5,7,8] K=128 Adam W_out+b_out, 3 seeds (42/137/2024), 4000 steps + best-state restore. Init PPL = **115.056** (+28.4 vs cycle 221 K=512 init 86.686 — lstsq at K=128 much worse at 6-block depth than the plan's ~88 prediction). Trained best_mean = **67.562 ± 0.061** (per-seed: 67.630 / 67.483 / 67.574, best_step 3833 ± 170, all near end of budget). **Δ vs K=512 cycle 221 ceiling (59.515) = +8.047 PPL**, well above 65.0 REFUTED threshold. The K=128 penalty goes from +2.43 PPL at 3 blocks (cycle 223 48.989 vs cycle 206 46.556) to +8.05 PPL at 6 blocks — cascade depth triples the compression cost. Cycle 230's "no compression cliff in [1,512] at 3 blocks" does NOT generalise; at 6 blocks the K-vs-PPL curve steepens. Combined with cycle 221 (joint 6-block 59.515) and cycle 229 (sequential 6-block 60.071), the 6-block W_out+b_out surface has a structural ~59.5 PPL floor that neither optimizer change NOR K reduction breaks. K=128 is NOT a cheaper 6-block substitute for K=512.
+
+## Cycle 230
 
 240. **K∈{8,4,2,1} Adam compression cliff sweep — find the absolute floor** — CONFIRMED (interesting=true)
    - BLOCKS=[1,4,7], 3 seeds. K=8: 56.323 ± 0.011, **K=4: 57.328 ± 0.026** (≤59.28 confirmed), K=2: 58.289 ± 0.035, **K=1: 59.245 ± 0.029** (still within +10% of float). Full curve {512..1}: {46.556, 47.509, 48.989, 50.781, 53.038, 55.133, 56.323, 57.328, 58.289, 59.245} — strictly monotone, ~1.0-1.2 PPL per halving in sub-16 regime. **NO compression cliff anywhere in [1, 512].** K=1 = 4,608 trainable params total (1× channel + 768-dim W_out per block × 3), still within +10% of float. Compressed MLP at K=1 = `scalar_gate(x)·v + c` with v,c∈R^768 free — sufficient additive residual update for 3 blocks. Notably K=1 3-block (59.245) ≈ K=512 6-block (59.515 cycle 221) — both regimes hit the same STRUCTURAL cascade-depth floor. Channel capacity is NOT the 3-block bottleneck.

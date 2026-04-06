@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-241. **K=128 Adam correction at 6 blocks — does the flat curve hold at higher block count?**
-   - Cycle 223 (K=128) beat float at 3 blocks (48.989 vs 53.895); cycle 221 showed joint Adam at 6 blocks K=512 hits a 59.5 PPL ceiling. Test whether the K=128 compression survives the 3→6 block cascade jump or whether the lower-K surface collapses at higher cascade depth. BLOCKS=[1,2,4,5,7,8] K=128 Adam W_out+b_out, LR=1e-4, 4000 steps with best-state restore and eval-every-100, 3 seeds. Reuse `experiments/adam_6block_earlystop_cycle221.py` as template but swap K. Report init, best, best_step, final, and compare against cycle 221's K=512 ceiling (59.515 ± 0.094). Success would give a 4× more compressed alternative to K=512 at matched PPL.
-   - Type: empirical
-   - Confirmed if: K=128 6-block best_mean ≤ 61.0 PPL (within +1.5 PPL of cycle 221 K=512 ceiling). Lower K is free at 6 blocks.
-   - Refuted if: K=128 6-block best_mean ≥ 65.0 PPL. Cascade depth amplifies compression cost; K=128 is only viable at 3 blocks.
-   - Inconclusive if: best_mean in (61.0, 65.0) — measurable cascade cost but not catastrophic.
-   - Depends on: 226 (cycle 221), 228 (cycle 223)
-
 242. **Sequential init + joint polish hybrid at 3 blocks — break the 46.5 floor?**
    - Cycle 215 (sequential): 47.253. Cycle 206 (joint): 46.556. Cycle 215's audit recommended "sequential + lightweight joint polish at end" as an untested composition. Implement: run cycle 215's sequential protocol (2000 steps per block with best-state restore) to convergence, then initialize a joint Adam pass on all 3 blocks' W_out+b_out simultaneously for 1000 more joint steps with LR=5e-5 (lower LR to avoid wiping the sequential solution). BLOCKS=[1,4,7] K=512, 3 seeds (42, 137, 2024). Compare final_mean and best_mean against both baselines. Tests whether sequential provides a better basin of attraction that joint polishing can exploit.
    - Type: empirical
@@ -67,6 +59,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 231
+
+241. **K=128 Adam correction at 6 blocks — does the flat curve hold at higher block count?** *(REFUTED — cycle 231)*
+   - **Outcome: REFUTED** — BLOCKS=[1,2,4,5,7,8] K=128 Adam W_out+b_out, LR=1e-4, 4000 steps with eval-every-100 and best-state restore, 3 seeds (42/137/2024). Init PPL **115.056** (deterministic across seeds, +28.37 vs cycle 221 K=512 init 86.686 — lstsq at K=128 is substantially worse for the 6-block cascade than the plan's 88–90 prediction). Trained best_mean = **67.562 ± 0.061** (per-seed best: 67.630 / 67.483 / 67.574), best_step_mean = 3833 ± 170 (all three seeds reach best near the end of the 4000-step budget). Final@4000 = 67.684 ± 0.168. **Delta vs cycle 221 K=512 ceiling (59.515) = +8.047 PPL**, well above the 65.0 REFUTED threshold. **Cascade depth amplifies compression cost**: at 3 blocks cycle 223 K=128 = 48.989 (−1.43 vs K=512 cycle 206 46.556 = +2.43 delta); at 6 blocks K=128 − K=512 = +8.05 delta, i.e. the K=128 penalty triples from 3 to 6 blocks. The K=128 surface is **not** a 4× cheaper substitute for K=512 at 6 blocks — even with 4000 Adam steps across 594K trainable params (half of cycle 221's 2.36M), the cascade swallows 47.5 PPL of init error (115 → 67.6) but cannot close the structural gap that K=512 6-block also hits. Adam trajectory monotone decreasing in all 3 seeds, zero collapses, restore sanity clean on all 3. Combined with cycle 229 (sequential 6-block 60.07, REFUTED) and cycle 221 (joint 6-block 59.515 flat ceiling) the picture is: the 6-block W_out+b_out surface has a ~59.5 PPL floor at K=512 that neither optimizer change NOR K reduction can break. The cycle 230 finding "no compression cliff in [1, 512] at 3 blocks" does NOT generalise to 6 blocks — at 6 blocks the K-vs-PPL curve steepens dramatically.
+   - Artifacts: `experiments/adam_6block_k128_cycle231.py`, `autoresearch/results/cycle_231_6block_k128.json`, `autoresearch/results/cycle_231_summary.md`
 
 ### Cycle 230
 
