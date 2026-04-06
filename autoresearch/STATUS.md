@@ -1,6 +1,11 @@
-# Research Status — 229 Cycles (001–229)
+# Research Status — 230 Cycles (001–230)
 
-## Latest: Cycle 229
+## Latest: Cycle 230
+
+240. **K∈{8,4,2,1} Adam compression cliff sweep — find the absolute floor** — CONFIRMED (interesting=true)
+   - BLOCKS=[1,4,7], 3 seeds. K=8: 56.323 ± 0.011, **K=4: 57.328 ± 0.026** (≤59.28 confirmed), K=2: 58.289 ± 0.035, **K=1: 59.245 ± 0.029** (still within +10% of float). Full curve {512..1}: {46.556, 47.509, 48.989, 50.781, 53.038, 55.133, 56.323, 57.328, 58.289, 59.245} — strictly monotone, ~1.0-1.2 PPL per halving in sub-16 regime. **NO compression cliff anywhere in [1, 512].** K=1 = 4,608 trainable params total (1× channel + 768-dim W_out per block × 3), still within +10% of float. Compressed MLP at K=1 = `scalar_gate(x)·v + c` with v,c∈R^768 free — sufficient additive residual update for 3 blocks. Notably K=1 3-block (59.245) ≈ K=512 6-block (59.515 cycle 221) — both regimes hit the same STRUCTURAL cascade-depth floor. Channel capacity is NOT the 3-block bottleneck.
+
+## Cycle 229
 
 239. **Sequential vs joint Adam at 6 blocks** — REFUTED
    - BLOCKS=[1,2,4,5,7,8] K=512, sequential per-block Adam (2000 steps each, best-state restore), 3 seeds. **final_mean = 60.071 ± 0.086** ≥ 60.0 threshold (barely). Per-seed: 59.949 / 60.144 / 60.119. Joint baseline (cycle 221) = 59.515 → **sequential is +0.556 PPL worse**. Block trajectory: 86.7 → 66.3 → 62.8 → 61.4 → 60.7 → 60.1 → 60.1 (block 1 removes 20.4/26.6 PPL = 59% of total; blocks 7+8 add 0.63 — severe diminishing returns). Monotone, zero collapses, restore sanity clean. **The 58.0 floor for 6-block W_out+b_out is structural, not optimizer-limited.** Joint Adam is consistently slightly better than sequential at both 3 blocks (cycle 215) and 6 blocks (this).
