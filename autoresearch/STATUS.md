@@ -1,6 +1,11 @@
-# Research Status — 221 Cycles (001–221)
+# Research Status — 222 Cycles (001–222)
 
-## Latest: Cycle 221
+## Latest: Cycle 222
+
+227. **Frobenius-weighted channel selection — cascade init PPL** — REFUTED
+   - Frobenius-importance scoring (||W_proj[c]||² × Σ gelu²(z_c[t])) swaps 66/52/29 channels per block (1/4/7) vs standard topk but improves 3-block init PPL by only **0.111** (61.7464 → 61.6355). Below 0.3 threshold → refuted. **Extends cycle 207's single-block finding to the cascade**: lstsq W_out absorbs whichever K=512 channels are selected. Channel selection direction is closed for K=512.
+
+## Cycle 221
 
 226. **Adam 6-block correction with proper early stopping** — INCONCLUSIVE
    - 3-seed (42, 137, 2024) formal early-stop rerun of cycle 211. best_ppl_mean=**59.515 ± 0.094** at best_step_mean=1367 ± 170. -0.165 PPL vs cycle 211's 59.680 single-seed. Overfitting reproduced (final@4000 = 71.054). Confirms 6-block ceiling at ~59.5 PPL — 1.5 PPL above the 58.0 Confirmed threshold. **13 PPL cascade gap**: 3-block joint Adam (46.556) → 6-block joint Adam (59.5). Sequential Adam unlikely to help (cycle 215 showed sequential ≈ joint at 3 blocks).
