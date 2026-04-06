@@ -1,6 +1,11 @@
-# Research Status — 225 Cycles (001–225)
+# Research Status — 226 Cycles (001–226)
 
-## Latest: Cycle 225
+## Latest: Cycle 226
+
+236. **KD distillation rerun with corrected KD normalization** — INCONCLUSIVE
+   - Loss fix verified: KD now O(0.5-0.8) vs cycle 224's broken O(30-50). α-sweep (SEED=42, 2000 steps): α=0.0 → 46.430 (best step 1200), α=0.5 → 47.096, α=1.0 → 61.746 (no learning). Pure CE wins. Full run (3 seeds, α=0): best_mean=**46.364 ± 0.047**, reproducing cycle 213 (46.424) within 0.06 PPL. **KD provides no benefit at matched budget on this trainable surface.** INCONCLUSIVE per criterion (46.364 ∈ (44, 47]); KD direction effectively closed for this setting.
+
+## Cycle 225
 
 235. **K=64/32/16 Adam compression cliff sweep** — CONFIRMED (interesting=true)
    - BLOCKS=[1,4,7], 3 seeds. **K=64 best_mean = 50.781 ± 0.021** (-3.11 PPL vs float). **K=32 = 53.038 ± 0.009** (-0.86 PPL vs float, still beats it). K=16 = 55.133 ± 0.010 (+2.30% above float — the cliff). Extended efficiency curve {512, 256, 128, 64, 32, 16} → {46.556, 47.509, 48.989, 50.781, 53.038, 55.133}. Monotone, ~1-2 PPL per halving. **Cliff sits between K=32 and K=16.** K=32 = ~1% of intermediate width (32/3072), only 25K trainable params per block (75K total) → still beats float. Channel capacity is not the bottleneck even at 32× compression.
