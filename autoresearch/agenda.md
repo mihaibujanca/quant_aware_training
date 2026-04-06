@@ -14,15 +14,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-239. **Sequential vs joint Adam at 6 blocks — does sequential help where joint stalls?**
-   - Cycle 215 showed sequential per-block Adam ≈ joint Adam at 3 blocks (47.253 vs 46.556, joint wins by 0.7 PPL). Cycle 221 showed 6-block joint Adam ceilings at best_mean=59.515 (1.5 PPL above the 58.0 confirmed threshold) with severe overfitting. Cycle 215's audit explicitly recommended retesting sequential at 6 blocks. Apply the cycle 215 recipe to BLOCKS=[1,2,4,5,7,8] K=512: sequentially correct each block (Adam W_out+b_out, 2000 steps, best-state restore per block), 3 seeds (42/137/2024). This is one cycle (~25 min: 6 blocks × 2000 steps × 3 seeds).
-   - Type: empirical
-   - Confirmed if: sequential 6-block best_mean ≤ 58.0 PPL (clears cycle 221's joint ceiling AND the 58.0 confirmed threshold)
-   - Refuted if: sequential best_mean ≥ 60.0 PPL (no improvement over joint 59.515; sequential cannot rescue 6-block)
-   - Inconclusive if: 58.0 < best_mean < 60.0
-   - Depends on: 225 (cycle 215, done), 226 (cycle 221, done)
-
-
 
 
 
@@ -49,6 +40,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 229
+
+239. **Sequential vs joint Adam at 6 blocks — does sequential help where joint stalls?** *(REFUTED — cycle 229)*
+   - **Outcome: REFUTED** — Applied cycle 215 sequential recipe to BLOCKS=[1,2,4,5,7,8] K=512, 3 seeds (42/137/2024), 2000 steps per block with best-state restore. Init PPL 86.686 (matches cycle 221 exactly). Sequential final_mean = **60.071 ± 0.086** PPL, crossing the 60.0 REFUTED threshold. Per-seed finals: 59.949 (s42), 60.144 (s137), 60.119 (s2024). Trajectory monotone non-increasing across all 6 blocks in all 3 seeds with **zero collapses**. Block-wise restored means: init 86.686 → b1 66.314 → b2 62.824 → b4 61.391 → b5 60.700 → b7 60.126 → b8 60.071. Block 1 alone removes 20.37 PPL (59% of the total 26.62 PPL drop); blocks 7+8 together remove only 0.63 PPL (diminishing returns). **Sequential is WORSE than joint 6-block** (cycle 221 best_mean 59.515) by **+0.556 PPL**. At 3 blocks cycle 215 found sequential trailed joint by 0.7 PPL (47.253 vs 46.556); at 6 blocks the gap is 0.56 PPL in the same direction — the "sequential can rescue 6-block" hypothesis is killed. Sequential cannot break the 58.0 confirmed threshold; the 58.0 floor is unreachable via pure W_out+b_out correction at K=512 with 2000 steps/block, independent of whether optimisation is joint or sequential. The cycle 215 audit's recommendation "retest sequential at 6 blocks" is now resolved: same ceiling, slightly worse.
+   - Artifacts: `experiments/adam_sequential_6block_cycle229.py`, `autoresearch/results/cycle_229_sequential_6block.json`, `autoresearch/results/cycle_229_summary.md`
 
 ### Cycle 228
 
