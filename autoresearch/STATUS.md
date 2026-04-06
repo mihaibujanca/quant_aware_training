@@ -1,6 +1,11 @@
-# Research Status — 228 Cycles (001–228)
+# Research Status — 229 Cycles (001–229)
 
-## Latest: Cycle 228
+## Latest: Cycle 229
+
+239. **Sequential vs joint Adam at 6 blocks** — REFUTED
+   - BLOCKS=[1,2,4,5,7,8] K=512, sequential per-block Adam (2000 steps each, best-state restore), 3 seeds. **final_mean = 60.071 ± 0.086** ≥ 60.0 threshold (barely). Per-seed: 59.949 / 60.144 / 60.119. Joint baseline (cycle 221) = 59.515 → **sequential is +0.556 PPL worse**. Block trajectory: 86.7 → 66.3 → 62.8 → 61.4 → 60.7 → 60.1 → 60.1 (block 1 removes 20.4/26.6 PPL = 59% of total; blocks 7+8 add 0.63 — severe diminishing returns). Monotone, zero collapses, restore sanity clean. **The 58.0 floor for 6-block W_out+b_out is structural, not optimizer-limited.** Joint Adam is consistently slightly better than sequential at both 3 blocks (cycle 215) and 6 blocks (this).
+
+## Cycle 228
 
 238. **gelu_noneg + per-channel first-moment correction** — INCONCLUSIVE (interesting=true)
    - Precomputed μ_l = E[gelu(z) − relu(gelu(z))] per (block, channel) on calibration set, patched all 12 blocks with relu(gelu(z)) + μ_l. **corrected_noneg_ppl = 61.664** vs uncorrected cycle 220 = 2093.296 (~34× recovery, ~99.2% of the absolute cycle 220 gap), still +16.6 PPL above baseline 45.064 (+36.84%). μ ≤ 0 elementwise; per-block mean(μ) -0.070 to -0.095 (~0.5× cycle 184's −0.17). Residual 16.6 PPL is higher-order beyond per-channel mean. Same family as cycles 188 (C3 +20.3%), 190 (hybrid +27.7%), strictly better than 184 (ReLU+bias +87.7%). First moment is necessary but not sufficient.
