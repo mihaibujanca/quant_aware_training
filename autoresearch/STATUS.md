@@ -1,6 +1,11 @@
-# Research Status — 232 Cycles (001–232)
+# Research Status — 233 Cycles (001–233)
 
-## Latest: Cycle 232
+## Latest: Cycle 233
+
+243. **Alternative 6-block subsets — is BLOCKS=[1,2,4,5,7,8] representative?** — INCONCLUSIVE
+   - Phase 1 single-seed sweep: [1,3,5,7,8,10]=**60.981** (best, +1.47 vs cycle 221), [1,2,3,4,5,6]=**61.785**, [3,4,5,6,7,8]=**67.826** (structural outlier — consecutive middle blocks +8 PPL worse). Spread 6.845 PPL → INCONCLUSIVE per criterion. No subset cleared the 59.0 phase-2 gate; no 3-seed rerun. Cycle 221's [1,2,4,5,7,8] (59.515) remains the best 6-block selection. **6-block ceiling is structural to the count, but specific subset matters: middle-only is much worse.** Sub-58 PPL at 6 blocks not reachable by reselection alone.
+
+## Cycle 232
 
 242. **Sequential init + joint polish hybrid at 3 blocks** — REFUTED
    - BLOCKS=[1,4,7] K=512, 3 seeds. Phase 1 (cycle 215 sequential, 6000 steps): post_sequential_mean=47.253 ± 0.047 (matches cycle 215 exactly). Phase 2 (joint polish LR=5e-5, 1000 steps): **final_mean=46.911 ± 0.026** ≥ 46.5 refuted threshold. Polish gain: +0.342 PPL (real but insufficient). Δ vs joint-from-lstsq cycle 210 (46.556) = +0.355 PPL WORSE. **Sequential warm-start is strictly worse than fresh joint Adam from lstsq init.** Cycle 215 audit's "sequential opens a better basin" hypothesis killed. 3-block ceiling remains cycle 213 W_out+W_fc joint Adam at 46.424.
