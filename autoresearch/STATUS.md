@@ -1,6 +1,11 @@
-# Research Status — 217 Cycles (001–217)
+# Research Status — 218 Cycles (001–218)
 
-## Latest: Cycle 217
+## Latest: Cycle 218
+
+232. **Where does Δ point? — centred Δ̃ alignment with downstream readers** — CONFIRMED
+   - Centred Δ̃_l = Δ_l − mean(Δ_l) per block, top-20 right SVs vs block l+1 reading subspaces (c_fc, attention Q/K/V, residual PCs). 11/11 cross-block pairs pass mean+3σ random baseline. **c_fc cos_sums 4.42-7.07 (+17 to +33σ above random 2.72±0.10)**, **resPC cos_sums 4.77-8.38 (+20 to +33σ)** — both reader subspaces are robustly aligned with the bump's per-token signal in EVERY block. **V-reader anti-aligned by -10 to -13σ in deep blocks 8-10** (surprising negative finding). Centred rank_95 jumps from raw cycle 217 median=1 to 552 (range 489-567) — the per-token signal is essentially full-rank in R^768. The alignment is therefore "high-rank Δ̃ leaks into the right places" rather than "low-rank message in specific directions". Audit (G3): missing specificity control — Δ̃_l vs non-adjacent c_fc(j) NOT tested.
+
+## Cycle 217
 
 231. **Per-token Δ(x) = GELU_FFN − ReLU_FFN — rank, subspace, logit impact** — INCONCLUSIVE *(audit-corrected from CONFIRMED)*
    - Literal rank clause met (rank_95 ≤ 64 in 9/12 blocks; per-block ranks [10,132,1,1,1,1,1,8,73,110,1,1]) BUT semantic clause failed: TI/TD ratio 0.87-0.99 shows Δ is dominated by a per-block token-independent constant bias. SV0 is essentially mean(Δ) projected to unigram-frequency tokens (commas, articles, tokenizer artefacts). σ₁/σ₀ ≈ 0.03-0.09 — the per-token component the hypothesis tested lives in SV1+ and is much smaller. Cross-block Δ_l top-3 → c_fc_{l+1} top-20 left SV alignment: 0.369 vs random 0.168 (vs cycle 216 W_down→c_fc 0.649). **Connects cycles 188 (C3 mean-replacement +20.33% PPL) and 191 (constant residual correction worsens PPL by 12)**: same object — constant Δ component absorbable alone, but GPT-2 needs the small SV1+ residual that this measurement did not isolate.
