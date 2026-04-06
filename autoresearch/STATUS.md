@@ -1,6 +1,11 @@
-# Research Status — 215 Cycles (001–215)
+# Research Status — 216 Cycles (001–216)
 
-## Latest: Cycle 215
+## Latest: Cycle 216
+
+230. **W_down column geometry census** — REFUTED
+   - Anti-podal mirror-channel hypothesis killed: max anti-podal fraction (cos<-0.9) in blocks 1-5 is 0.26%; max across all 12 blocks 1.17% (block 0); random R^768 baseline = 0. Within-cluster cos 0.03-0.07 — W_down columns are near-random on the sphere with no k=32 cluster structure. **Notable secondary positive finding (interesting=true)**: cross-block alignment between block l's W_down writing subspace (top-20 right SVs of c_proj) and block l+1's c_fc reading subspace (top-20 left SVs of c_fc) has top-5 principal cosines averaging 0.649 (peak 0.778 at l=4→5). Adjacent blocks DO share writing/reading directions, but not via columnwise anti-podal pairs.
+
+## Cycle 215
 
 225. **Iterative block-by-block Adam W_out correction** — INCONCLUSIVE
    - Sequential per-block Adam (BLOCKS=[1,4,7] K=512, 2000 steps each, best-state restore per block, 3 seeds): final_ppl 47.253 ± 0.047 (init 61.746 → after b1 51.486 → after b4 48.503 → after b7 47.253). Monotone no collapse. 0.7 PPL worse than joint Adam best 46.556 (cycle 210). Per-block best-state restoration freezes each block against downstream blocks' eventual trajectories — joint optimization wins. Best-step at 2000 for nearly every block-seed (under-trained at budget cap).
