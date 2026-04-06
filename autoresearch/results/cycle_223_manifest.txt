@@ -1,0 +1,8 @@
+item_number=228
+outcome=confirmed
+key_metric=k256_best_mean=47.509_k128_best_mean=48.989
+commit=cfa23b53e3bfb8b2850e76b6a81187947312542e
+paths=experiments/adam_lower_k_cycle223.py,autoresearch/results/cycle_223_lower_k_adam.json,autoresearch/results/cycle_223_summary.md
+learned=Adam W_out+b_out correction extends to lower K — K=256 reaches 47.509 (vs K=512 baseline 46.556, delta +0.95) and K=128 reaches 48.989 (delta +2.43); compression efficiency curve is monotone but very flat in K, so 4x compression of W_out costs only 5% PPL relative to K=512 and all three K still beat float 53.895
+next=Run item 229 distillation baseline for 3-block K=512 (matched-budget KD ceiling), or open a new agenda item to test whether Adam W_out can be pushed to even smaller K (K=64, K=32) before the curve breaks
+tsv_path=autoresearch/logs/experiments.tsv
