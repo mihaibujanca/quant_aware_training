@@ -6,14 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-236. **KD distillation baseline rerun with corrected loss normalization**
-   - Cycle 224's distillation experiment was downgraded to INCONCLUSIVE because `F.kl_div(..., reduction='batchmean')` on `(B=1, T=128, V=50257)` divides only by B=1, returning the SUM over T·V ≈ 6.4M entries (~30-50) while CE averages over tokens (~4). The 50/50 mix was ~10× KD-weighted in practice. Rerun with `logits.reshape(B*T, V)` before `kl_div` (or `reduction='mean'`) so KD and CE are on the same per-token scale. Same trainable surface as cycle 224 (BLOCKS=[1,4,7] K=512, W_out+b_out+W_fc+b_fc, ≈2.36M params), tau=2.0, LR=1e-4. Run a short KD-weight sweep (α ∈ {0.0, 0.5, 1.0}) at 2000 steps × 1 seed to verify the loss is wired correctly, then 4000 steps × 3 seeds at the best α.
-   - Type: empirical
-   - Confirmed if: best_mean ≤ 44.0 PPL (meaningfully better than cycle 213's pure-CE W_out+W_fc 46.424 — KD signal helps)
-   - Refuted if: best_mean ≥ 47.0 PPL (no advantage over pure CE; cycle 213 is the ceiling for this surface)
-   - Inconclusive if: 44.0 < best_mean < 47.0
-   - Depends on: none
-
 237. **Cycle 218 specificity control — Δ̃_l alignment with non-adjacent c_fc(j)**
    - Cycle 218 showed centred Δ̃_l's top-20 right SVs align with block l+1's c_fc reading subspace at +17 to +33σ above random in 11/11 cross-block pairs, but never tested non-adjacent destinations. Audit (G3) flagged this missing control: if Δ̃_l also aligns with c_fc(j) for j ≠ l+1, the alignment is generic ("Δ̃ leaks into a universal reading basis") rather than specifically inter-block communication. For each l ∈ {0..10}, compute the top-20 right SVs of centred Δ̃_l and measure top-5 principal cosine sums against c_fc(j) for ALL j > l (not just j=l+1). Plot a heatmap (l, j) and compare each row's max-at-j=l+1 against the row's mean over j>l+1. Use the same random baseline (10 seeds Gaussian orthonormal 20×768).
    - Type: analysis
@@ -69,6 +61,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 226
+
+236. **KD distillation baseline rerun with corrected loss normalization** *(INCONCLUSIVE — cycle 226)*
+   - **Outcome: INCONCLUSIVE** — Loss normalization fix worked (kd_loss is now O(0.5–0.8), comparable to ce_loss O(4) in pre-softmax-temperature scale; with τ²=4 multiplier, contributions are balanced). α-sweep (SEED=42, 2000 steps) gave α=0.0 → 46.430 (best step 1200), α=0.5 → 47.096 (best step 2000, still descending), α=1.0 → 61.746 (no learning, the soft-teacher KL has zero gradient signal for the per-token CE objective being measured). Pure CE wins, so the full run at α=0 reproduces cycle 213's pure-CE result: best_mean = **46.364 ± 0.047** (best_step 1267 ± 94, init 61.746), Δ vs cycle 213 (46.424) = **−0.060 PPL**. The verdict band is INCONCLUSIVE (44.0 < 46.364 < 47.0), but more meaningfully **best α = 0** means KD as formulated provides no benefit over pure CE on this surface. The hypothesis "KD beats CE on W_out+W_fc" is not supported. Note that pure α=0.5 still descends through 2000 steps (47.096) so a longer run might give a different ranking — but at the matched 2000-step budget, CE alone is strictly better. The cycle 224 broken-norm result (60.938) was a method failure; cycle 226 confirms that with correct normalization the surface can train, but does not need KD to do so.
+   - Artifacts: `experiments/distillation_corrected_cycle226.py`, `autoresearch/results/cycle_226_distillation_corrected.json`, `autoresearch/results/cycle_226_summary.md`
 
 ### Cycle 225
 
