@@ -1,6 +1,11 @@
-# Research Status — 231 Cycles (001–231)
+# Research Status — 232 Cycles (001–232)
 
-## Latest: Cycle 231
+## Latest: Cycle 232
+
+242. **Sequential init + joint polish hybrid at 3 blocks** — REFUTED
+   - BLOCKS=[1,4,7] K=512, 3 seeds. Phase 1 (cycle 215 sequential, 6000 steps): post_sequential_mean=47.253 ± 0.047 (matches cycle 215 exactly). Phase 2 (joint polish LR=5e-5, 1000 steps): **final_mean=46.911 ± 0.026** ≥ 46.5 refuted threshold. Polish gain: +0.342 PPL (real but insufficient). Δ vs joint-from-lstsq cycle 210 (46.556) = +0.355 PPL WORSE. **Sequential warm-start is strictly worse than fresh joint Adam from lstsq init.** Cycle 215 audit's "sequential opens a better basin" hypothesis killed. 3-block ceiling remains cycle 213 W_out+W_fc joint Adam at 46.424.
+
+## Cycle 231
 
 241. **K=128 Adam correction at 6 blocks — does the flat curve hold at higher block count?** — REFUTED
    - BLOCKS=[1,2,4,5,7,8] K=128 Adam W_out+b_out, 3 seeds (42/137/2024), 4000 steps + best-state restore. Init PPL = **115.056** (+28.4 vs cycle 221 K=512 init 86.686 — lstsq at K=128 much worse at 6-block depth than the plan's ~88 prediction). Trained best_mean = **67.562 ± 0.061** (per-seed: 67.630 / 67.483 / 67.574, best_step 3833 ± 170, all near end of budget). **Δ vs K=512 cycle 221 ceiling (59.515) = +8.047 PPL**, well above 65.0 REFUTED threshold. The K=128 penalty goes from +2.43 PPL at 3 blocks (cycle 223 48.989 vs cycle 206 46.556) to +8.05 PPL at 6 blocks — cascade depth triples the compression cost. Cycle 230's "no compression cliff in [1,512] at 3 blocks" does NOT generalise; at 6 blocks the K-vs-PPL curve steepens. Combined with cycle 221 (joint 6-block 59.515) and cycle 229 (sequential 6-block 60.071), the 6-block W_out+b_out surface has a structural ~59.5 PPL floor that neither optimizer change NOR K reduction breaks. K=128 is NOT a cheaper 6-block substitute for K=512.
