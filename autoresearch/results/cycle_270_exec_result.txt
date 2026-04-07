@@ -1,0 +1,56 @@
+Cycle 270 — Item 280: Targeted block 11 low-rank c_proj compression
+Verdict: CONFIRMED (retrain clause, by 0.031 PPL)
+Commit (main): de36ee7
+Commit (bookkeeping): TBD
+
+best_mean (retrain r=22) = 54.4687 ± 0.0237; CONFIRMED via second clause
+(retrain best_mean ≤ 54.5) by 0.031 PPL margin. The first clause (no-retrain
+r=22 ≤ 55.0) FAILS at 59.683.
+
+No-retrain rank-r sweep:
+  r=  5: 60.991  Δfloat=+7.096  energy=0.0745
+  r= 22: 59.683  Δfloat=+5.789  energy=0.1414
+  r= 50: 58.634  Δfloat=+4.739  energy=0.2249
+  r=100: 57.306  Δfloat=+3.411  energy=0.3483
+
+Retrain r=22 (3 seeds, joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100,
+best-state restore, 17,664 trainable = 22*768 (B) + 768 (bias); A=(U[:,:22]·Σ[:22])
+frozen as buffer):
+  seed 42:   init=59.6834 best=54.4673@3800
+  seed 137:  init=59.6834 best=54.4405@3600
+  seed 2024: init=59.6834 best=54.4984@3900
+  best_mean = 54.4687 ± 0.0237  (min=54.44, max=54.50)
+
+Init PPL deterministic at 59.6834 (matches noretrain[r=22]=59.683; lstsq-style
+factor init is seed-independent — only Adam initialisation differs via shuffle).
+Per-seed restored best matches recorded best within 1e-3 (script-internal
+assert passed). All 3 best at step ≥3600 — still descending at the budget cap.
+
+Config: TARGET_BLOCK=11, RANKS_NORETRAIN=[5,22,50,100], RETRAIN_RANK=22,
+N_CALIB=200, N_EVAL=100 (disjoint), SEQ_LEN=128, Adam LR=1e-4, N_STEPS=4000,
+EVAL_EVERY=100, SEEDS={42,137,2024}, MPS, GPT-2 small, wikitext-2 val.
+
+Wall: ~6 min (5 evals at 1.3s + 3 fits at 2.0 min each + SVD + reload overhead).
+
+Baselines:
+  float ref:                          53.895  (Δ retrain best_mean +0.574)
+  cycle 266 K=512 2-block [1,4]:      43.85   (Δ +10.62; cycle 266 has 46x trainable params)
+  cycle 268 K=64 4-block [1,4,7,8]:   55.95   (Δ -1.48; cycle 270 dominates on PPL at 8.7% of cycle 268's params)
+  cycle 269 K=1 6-block 16k:          91.61   (Δ -37.14; both 9-17K-param recipes)
+  cycle 267 c_proj_11 OUTPUT eff_rank: 22.49  (the rank cycle 270 tested literally on the WEIGHT — different object)
+  cycle 173 block 11 single-block PPL: +4.02% (zeroing block 11 entirely; rank-22 weight SVD costs +10.74%, so the rank-22 weight bottleneck is WORSE than removing block 11)
+
+Reading: The headline finding is that **weight SVD ≠ activation SVD**.
+Cycle 267 measured the OUTPUT subspace (R^768 activations from the joint
+action of c_fc + c_proj on the input distribution) and found eff_rank=22.49.
+This cycle measured the literal WEIGHT-matrix SVD top-22 — which captures
+only 14.14% of the operator energy. The two are different objects: cycle
+267's subspace is created by the joint action of c_fc + c_proj on a specific
+input distribution, not by the top-22 right singular vectors of c_proj
+alone. The rank-22 weight bottleneck is +5.79 PPL no-retrain (worse than
+zeroing block 11 entirely from cycle 173) but Adam recovers -5.22 PPL with
+17K params to land at 54.469, just 0.574 above float. The (17,664, 54.47)
+recipe is a NEW Pareto point that dominates cycle 268 K=64 4-block on PPL
+(54.47 vs 55.95) at 8.7% of the trainable budget. Verdict CONFIRMED on the
+retrain clause by a 0.031 PPL margin — the literal hypothesis is wrong but
+the "rank-22 + Adam retrain" version is correct by a hair.

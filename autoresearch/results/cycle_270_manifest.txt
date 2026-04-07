@@ -1,0 +1,75 @@
+Cycle 270 — Item 280: Targeted block 11 low-rank c_proj compression
+Verdict: CONFIRMED (retrain clause, by 0.031 PPL)
+Commit: de36ee7
+
+Artifacts:
+  experiments/block11_lowrank_cycle270.py
+  autoresearch/plans/cycle_270.md
+  autoresearch/briefs/cycle_270.md
+  autoresearch/logs/cycle_270_run.log
+  autoresearch/results/cycle_270_block11_lowrank.json
+  autoresearch/results/cycle_270_summary.md
+  autoresearch/results/cycle_270_manifest.txt
+  autoresearch/agenda.md
+  autoresearch/logs/experiments.tsv
+
+Float PPL: 53.895 (matches reference exactly)
+
+No-retrain rank-r sweep (HF Conv1D c_proj_11.weight (3072, 768), bias unchanged):
+  r=  5: PPL=60.991  Δfloat=+7.096  +13.17%  energy=0.0745
+  r= 22: PPL=59.683  Δfloat=+5.789  +10.74%  energy=0.1414
+  r= 50: PPL=58.634  Δfloat=+4.739   +8.79%  energy=0.2249
+  r=100: PPL=57.306  Δfloat=+3.411   +6.33%  energy=0.3483
+  Restored original c_proj.weight, PPL=53.895 (matches float — restore PASS)
+
+SVD summary:
+  Top-5 singular values: 60.99, 34.59, 32.18, 21.97, 21.70
+  S[21]=21.97  S[49]=12.54  S[99]=8.63  S[-1]≈0.04
+  Top-100 energy fraction = 34.83% (weight is well-conditioned, NOT
+  rank-concentrated, in stark contrast to cycle 267's OUTPUT eff_rank=22.49)
+
+Retrain at r=22 (3 seeds {42,137,2024}, joint Adam LR=1e-4, 4000 steps,
+EVAL_EVERY=100, best-state restore, 17,664 trainable params = 22*768 (B) + 768
+(bias); A=(U[:, :22] * Σ[:22]) frozen as buffer; LowRankCProj wrapper recomputes
+W = A @ B each forward and applies HF Conv1D semantics x @ W + bias):
+
+  seed   42: init=59.6834 best=54.4673@step3800 final@4000=54.4764 restored=54.4673
+  seed  137: init=59.6834 best=54.4405@step3600 final@4000=54.4765 restored=54.4405
+  seed 2024: init=59.6834 best=54.4984@step3900 final@4000=54.5440 restored=54.4984
+
+  best_mean = 54.4687 ± 0.0237  (min=54.4405, max=54.4984, n=3)
+  init PPL deterministic at 59.6834 (matches noretrain[r=22]=59.683 — script-internal assert PASS)
+  All 3 best at step ≥3600 — still descending at the budget cap
+  Per-seed restored == recorded best within 1e-3 (script-internal assert PASS)
+
+Verdict logic (item 280 verbatim):
+  CONFIRMED iff rank-22 no-retrain ≤ 55.0 OR retrain best_mean ≤ 54.5
+  REFUTED   iff rank-22 no-retrain ≥ 60.0 AND retrain best_mean ≥ 58.0
+  INCONCLUSIVE otherwise
+
+  rank-22 no-retrain = 59.683 → ≤55.0? NO; ≥60.0? NO
+  rank-22 retrain best_mean = 54.4687 → ≤54.5? YES (passes by 0.031 PPL); ≥58.0? NO
+  → CONFIRMED
+
+Cross-cycle deltas:
+  Δ vs float (53.895):                       retrain best_mean +0.574  noretrain r=22 +5.789
+  Δ vs cycle 266 K=512 [1,4] (43.85):        retrain +10.62  (cycle 266 has 788K params vs 17K here, 46x budget)
+  Δ vs cycle 268 K=64 [1,4,7,8] (55.95):     retrain -1.48  (cycle 270 dominates on PPL at 8.7% of cycle 268's params)
+  Δ vs cycle 173 block 11 single-block PPL (+4.02%): noretrain r=22 +10.74% — much worse
+
+Reading: the literal "rank-22 weight SVD pays for itself" hypothesis is
+mostly WRONG (no-retrain costs +5.79 PPL, far above the ≤1 PPL the brief
+predicted). The "rank-22 subspace + Adam retrain" hypothesis is correct by
+a hair (54.469 < 54.5 by 0.031). The headline geometric finding is that
+weight SVD ≠ activation SVD: cycle 267's eff_rank=22.49 was measured on the
+OUTPUT activations (in R^768), but the WEIGHT matrix (3072 → 768) is
+full-rank and well-conditioned (top-100 SVs only carry 34.83% of energy).
+The 22-dim activation subspace is created by the JOINT action of c_fc and
+c_proj on a specific input distribution, NOT by the top-22 right singular
+vectors of c_proj alone. Adam recovers -5.22 PPL with 17K params to land at
+54.469, just 0.574 above float — the (17,664, 54.47) point opens a new
+low-param row of the Pareto frontier between cycle 269 (9K, 91.61) and
+cycle 268 (200K, 55.95), and dominates cycle 268 on PPL at 8.7% of the
+trainable budget.
+
+Wall: ~6 min (5 forward-only PPL evals at 1.3s + 3 retrain fits at 2.0 min each + SVD + reload overhead).
