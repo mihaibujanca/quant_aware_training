@@ -32,18 +32,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-267. **5-block K=64 — extend the K-vs-PPL curve at 5 blocks below K=128**
-   - **Motivation**: at 5 blocks we have K=512 53.826 (cycle 245, near float) and K=128 ~59 (cycle 251 inconclusive at 4000 steps, item 264 will pin this down). The shape of the K-vs-PPL curve at 5 blocks below K=128 is unknown. Cycle 230 found K=1 3-block worked (59.245 — mid-cascade slack) but cycle 240 found K=1 6-block crashed (96.886 — 6-block channel binding). The 5-block K-curve is the right place to find the **transition point** between "channel capacity is slack" and "channel capacity is binding" — and since 5-block at K=512 is float-equivalent, there's a meaningful PPL ceiling to compare against. If K=64 still lands below 60, it probes how far K can be pushed while keeping the 5-block-special structural advantage. If K=64 catastrophically blows up like K=1 6-block, the 5-block float-tie is K-bandwidth-bounded.
-   - **Setup**: BLOCKS=[1,2,4,7,8], K=64, W_out+b_out trainable joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024}, disjoint calib=all_ids[:200]/eval=all_ids[200:300], SEQ_LEN=128. Trainable params ≈ 246,720 (5 × 49,344 W_out + b_out). Reuse cycle 245 script with K=64.
-   - **Hypothesis**: 5-block tolerates K=64 with manageable degradation → best_mean ≤ 64.0 (5 PPL above K=128 plateau, well below K=1 territory).
-   - **Outcomes**:
-     - **CONFIRMED** if best_mean ≤ 64.0: 5-block recipe is K-robust well below K=128; K-curve at 5 blocks is gradual and the K=64 point is still useful.
-     - **REFUTED** if best_mean ≥ 75.0: K=64 5-block crashes; the channel-binding regime kicks in below K=128 even at 5 blocks; cycle 240 K=1 6-block crash extends down to K=64 5-block.
-     - **INCONCLUSIVE** if best_mean ∈ (64, 75): meaningful K-degradation but not catastrophic; map onto the curve and decide if K=32/K=16 are worth probing.
-   - **Baselines**: cycle 245 K=512 5-block 53.826, item 264 K=128 5-block (TBD), cycle 230 K=1 3-block 59.245, cycle 240 K=1 6-block 96.886, float 53.895.
-   - **Run cap**: ~10 minutes.
-   - Depends on: cycle 245 infrastructure (independent of item 264).
-
 271. **Jacobian delta ΔJ_l(x) = J_GELU − J_ReLU per token, per block — operator-level GELU vs ReLU comparison**
    - **Motivation**: Δ̃_l (cycle 217) is the **zeroth-order** difference between GELU and ReLU FFN outputs at a single x. It does not say how the two block linearizations differ as **operators**. The first-order analogue is ΔJ_l(x) = W_down @ diag(GELU'(z) − ReLU'(z)) @ W_up — a 768×768 matrix per token, structurally low-rank because (GELU' − ReLU') is bounded and concentrated near z = 0 but unbounded over channels. Cycle 217 found rank_95(Δ̃) ≤ 64 in 9/12 blocks. The Jacobian delta has its own rank, and that rank tells us how many channels are in the disagreement zone *as operators*, not just as outputs. Cycle 218's c_fc-alignment baseline (top-5 cos sum 2.97 vs random 1.27) gives a reference for whether ΔJ writes into the same downstream subspace as Δ̃.
    - **Setup**: for each block l ∈ {0..11}, sample 256 tokens from the calib slice. Compute J_l(x) = W_down @ diag(σ'(z(x))) @ W_up directly (no autograd; just three matrix multiplies per token) for σ ∈ {GELU, ReLU}. Save ΔJ_l(x) = J_l^G − J_l^R. Per token: SVD, rank_95, top-3 left singular vectors. Per block: stack ΔJ along the token axis, do mode-1 SVD (which output directions are stable across tokens?), report stable-rank and principal angles between mode-1 subspace and (a) cycle 218's c_fc reading basis of block l+1, (b) the unembedding row space.
@@ -129,6 +117,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 257
+
+267. **5-block K=64 — extend the K-vs-PPL curve at 5 blocks below K=128** *(CONFIRMED — cycle 257)*
+   - Result: best_mean = **62.181 ± 0.053** at step 3967 ± 47 (init 95.620, final@4000 62.190 ± 0.060). Per-seed best: 42 → 62.2115@3900, 137 → 62.1059@4000, 2024 → 62.2244@4000. Monotone descent through full budget — no plateau-then-climb. CONFIRMED at 62.181 ≤ 64.0 (5-block tolerates K=64). Delta vs cycle 245 K=512 (53.826) = +8.355; vs cycle 251 K=128 (59.119) = +3.062; vs cycle 230 K=64 3-block (50.781) = +11.400; vs float (53.895) = +8.286. K-curve at 5 blocks is gradual: 53.826 → 59.119 → 62.181 across K=512 → 128 → 64 (~1.06, ~0.61 PPL per K-doubling step, sublinear). 5-block recipe stays useful at K=64 with 246,720 trainable params (half of K=128 cycle 251). Best-state restore round-trip clean.
+   - Artifacts: `experiments/five_block_k64_cycle257.py`, `autoresearch/results/cycle_257_five_block_k64.json`, `autoresearch/results/cycle_257_summary.md`
 
 ### Cycle 256
 

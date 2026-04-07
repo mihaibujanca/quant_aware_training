@@ -1,0 +1,26 @@
+{
+  "cycle": 257,
+  "item": 267,
+  "decision": "APPROVE",
+  "brief": "autoresearch/briefs/cycle_257.md",
+  "plan": "autoresearch/plans/cycle_257.md",
+  "template_script": "experiments/five_block_k128_cycle251.py",
+  "new_script": "experiments/five_block_k64_cycle257.py",
+  "change": "K: 128 -> 64; same BLOCKS=[1,2,4,7,8], LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, SEEDS=[42,137,2024], best-state restore",
+  "verdict_thresholds": {
+    "confirmed": "best_mean <= 64.0",
+    "refuted": "best_mean >= 75.0",
+    "inconclusive": "64.0 < best_mean < 75.0"
+  },
+  "baselines": {
+    "cycle_245_k512_5block": 53.826,
+    "cycle_251_k128_5block": 59.119,
+    "cycle_230_k64_3block": 50.781,
+    "cycle_240_k1_6block": 96.886,
+    "float_ppl": 53.895
+  },
+  "trainable_params_est": 246720,
+  "run_cap_min": 10,
+  "risks": "none - identical machinery to cycles 251/245",
+  "notes": "trivial K swap; extends 5-block K-vs-PPL curve below K=128. Agenda thresholds 64/75 are authoritative (brief shows 60/65 but task says VERIFY in agenda first)."
+}
