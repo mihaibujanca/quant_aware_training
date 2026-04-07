@@ -1,6 +1,11 @@
-# Research Status — 283 Cycles (001–283)
+# Research Status — 284 Cycles (001–284)
 
-## Latest: Cycle 283
+## Latest: Cycle 284
+
+294. **Hybrid block 1 rank-2 + block 11 rank-22 c_proj weight-SVD** — CONFIRMED
+   - Homogeneous low-rank weight-SVD hybrid, 19,968 trainable params. **best_mean=52.880 ± 0.030**, below float by 1.01 PPL and **1.59 PPL better than cycle 270 block 11 alone with only +2,304 extra params**. Init=63.46 (deterministic). Joint Adam recovered -10.58 PPL (larger than either single-block). **Composition is non-destructive** for homogeneous weight-SVD (unlike cycle 275's heterogeneous mix). **Asymmetric finding**: block 11 benefits from block 1 (hybrid > cycle 270), but block 1 does NOT benefit from block 11 (hybrid < cycle 280 by 3.85 PPL). **NOT a new Pareto point** — dominated by cycle 280 (2.3K, 49.03), cycle 282 (13.8K, 50.04), cycle 283 [2] K=16 (13.1K, 49.46).
+
+## Cycle 283
 
 293. **Block 2 K sweep {16, 32, 64}** — CONFIRMED (interesting=true)
    - **K=16 (13,056 params)=49.462 ± 0.047** — clause 1 PASS by 2.54 PPL. **K=32 (25,344)=47.897 ± 0.066** — clause 2 PASS by 2.10 PPL. **K=64 (49,920)=47.511 ± 0.061**. Deltas vs float: -4.43/-6.00/-6.38. **Block 2 beats block 1 at every K**: [2] vs [1] K=32 -1.75 PPL; K=64 -0.53 PPL (same trainable count). **NEW PARETO ANCHOR**: [2] K=16 (13,056, 49.46) **strictly dominates cycle 276 [1] K=32 (25,344, 49.65) on BOTH axes** (48% fewer params AND 0.19 PPL better). Cycle 280 block 1 r=2 (2,304, 49.03) still dominates ultra-low endpoint. **Third positive result for eff_rank-as-prescriptive at single-block level**. Consistent with cycle 281: block 2 overlaps block 1 subspace (can substitute but not add in cascade).
