@@ -1,6 +1,11 @@
-# Research Status — 242 Cycles (001–242)
+# Research Status — 243 Cycles (001–243)
 
-## Latest: Cycle 242
+## Latest: Cycle 243
+
+253. **6-block per-block PPL attribution** — CONFIRMED (interesting=true)
+   - Refit cycle 221 at seed 42 (init 86.686 → best 59.391 at step 1300, exact reproduction). Phase 1: per-block restoration scan from joint best state. ppl_if_X_restored sorted desc: **block 5 (Δ+5.10), 4 (+4.90), 7 (+4.13), 8 (+3.78), 2 (+3.53), 1 (+2.69)**. 5/6 blocks ≤56.0 confirmed threshold. **Tension with cycle 242**: cycle 242 found late blocks dominate at FRESH FIT, but cycle 243 finds **mid blocks (4, 5) contribute more than late blocks (7, 8)** at the per-block-restoration level in a jointly-fit cascade. Reconciliation: the [8,9,10] late penalty in cycle 242 is likely an INTERACTION between late blocks, not a marginal single-block effect. **Calib residual MSE does NOT rank ΔPPL** (block 8 max MSE=0.928 but only rank-4 ΔPPL) — residual is not a proxy for cascade contribution. Non-additivity: sum(Δ)=24.14 vs actual gap=5.50 (4.4×) → no single-block remediation; the 6-block ceiling is a true joint cascade phenomenon.
+
+## Cycle 242
 
 252. **Early-only vs late-only 3-block compression** — CONFIRMED (interesting=true)
    - K=512 joint Adam, 3 seeds. **[1,2,3] early consecutive: 47.135 ± 0.093** (Δ +0.579 vs cycle 210 [1,4,7]=46.556, within ±0.8 band, beats float 53.895 by 6.76 PPL). **[8,9,10] late consecutive: 55.192 ± 0.040** (Δ +8.636, ≥ 2.0 confirmed threshold, lands +1.30 PPL ABOVE float). At matched block count (3), depth placement DOMINATES. **Late blocks resist correction**: [8,9,10] cannot beat float at the same K, while [1,2,3] cleanly does. Refutes the "block count alone drives the 3→6 penalty" hypothesis. The cycle 221 6-block [1,2,4,5,7,8] floor at 59.5 is likely dominated by its late-ish blocks (7,8), not amortized uniformly across all 6.
