@@ -1,0 +1,16 @@
+Cycle 282 — Item 292: Block 10 c_proj rank-17 weight-SVD
+Verdict: CONFIRMED (retrain best_mean 50.0445 ± 0.0565 ≤ 55.0, below float by 3.850 PPL)
+Main commit: 434ba6c
+Bookkeeping commit: (see next)
+
+best_mean = 50.0445 ± 0.0565 (per-seed 42→50.0048, 137→50.0042, 2024→50.1245)
+Δ vs cycle 270 [11] r=22 retrain 54.4687: −4.424 PPL (cycle 282 BETTER, 22% fewer params → DOMINATES)
+Δ vs cycle 280 [1]  r=2  retrain 49.0324: +1.012 PPL (cycle 282 WORSE, 6× more params)
+Δ vs float 53.895: −3.850 PPL (cycle 282 beats float)
+
+Block 10 (cycle 278 eff_rank=16.70) extends the cycle 270/280 pattern:
+rank-(eff_rank-ish) + Adam retrain is a reproducible single-block c_proj recipe.
+First positive eff_rank prescriptive result at single-block c_proj weight-SVD +
+Adam retrain level (block 1 → block 10 → block 11 is monotone in both eff_rank
+and retrained PPL). Cycle 270 block 11 r=22 recipe is now DEPRECATED — cycle 282
+strictly dominates it on both axes.
