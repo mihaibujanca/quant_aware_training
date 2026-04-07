@@ -6,21 +6,69 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-*(item 270 closed in cycle 259 — see PAST EXPERIMENTS)*
+275. **K=128 4-block sweep — extend the K=128 curve and find the Pareto winner**
+   - **Motivation**: cycle 255 CONFIRMED 4-block K=512 [1,2,4,7]=49.609 (-4.29 vs float, the best 4-block K=512 subset out of 3 tested). Cycle 251 found 5-block K=128 (59.119, 495K params) Pareto-matches cycle 221 6-block K=512 (59.515, 2.36M params) — a 4× parameter win. The OPEN question: where does the K=128 curve sit at 4 blocks? Cycle 231 K=128 6-block was 67.562; cycle 251 K=128 5-block was 59.119; the gradient is ~8.4 PPL/block at K=128. Linear extrapolation predicts 4-block K=128 ≈ 50.7, near 4-block K=512's 49.609 — meaning K=128 may CLOSE the gap at 4 blocks while saving ~4× the params. If true, 4-block K=128 is the new Pareto winner (~395K params vs cycle 255's 1.58M). The 3 cycle-255 subsets [1,2,4,7] / [1,4,7,8] / [1,2,7,8] cover the same early/mid/late mix space and let us reuse the cycle 255 PPL ranking as a control.
+   - **Setup**: K=128 W_out+b_out trainable joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024} per subset, disjoint calib=all_ids[:200]/eval=all_ids[200:300], SEQ_LEN=128. Three configurations sequentially: BLOCKS=[1,2,4,7], BLOCKS=[1,4,7,8], BLOCKS=[1,2,7,8]. Trainable params per config ≈ 394,752 (4 × 98,688 W_out+b_out). Reuse cycle 255's experiment script with K=128. **9 fits, ~3 min/fit ≈ 27 min total** — at the edge of the 30-min cap; if needed, drop to 2 seeds {42, 137} for 18 fits.
+   - **Hypothesis**: K=128 at 4 blocks closes most of the K=512 gap → min over 3 subsets best_mean ≤ 53.0 (within 3.4 PPL of cycle 255 K=512 49.609, beats cycle 251 K=128 5-block 59.119 by ≥6 PPL).
+   - **Outcomes**:
+     - **CONFIRMED** if min best_mean ≤ 53.0: 4-block K=128 is the new Pareto winner, ~395K params at near-float PPL; the K-penalty shrinks dramatically as block count drops; opens "drop blocks before lowering K" recipe.
+     - **REFUTED** if all 3 subsets best_mean ≥ 56.0: K=128 4-block does NOT close the K=512 gap meaningfully; the K-bandwidth penalty is structural even at 4 blocks; cycle 251's Pareto win is the best K=128 can offer.
+     - **INCONCLUSIVE** if min ∈ (53, 56): partial closure; K=128 4-block sits between cycle 251 (59.1) and cycle 255 (49.6); useful Pareto data point but not a recipe shift.
+   - **Baselines**: cycle 255 K=512 [1,2,4,7]=49.609 / [1,2,7,8]=50.209 / [1,4,7,8]=50.712, cycle 251 K=128 5-block 59.119, cycle 231 K=128 6-block 67.562, cycle 221 K=512 6-block 59.515, float 53.895.
+   - **Run cap**: ~27 minutes (3 subsets × 3 seeds × ~3 min/fit). Drop to 2 seeds if exceeded.
+   - Depends on: cycle 255 infrastructure.
+
+276. **2-block K=512 sweep — how far below float does the count-driven cascade go?**
+   - **Motivation**: cycle 255 CONFIRMED the count-driven monotone curve: 6-block→59.5, 5-block→53.8, 4-block→49.6, 3-block→46.6 (cycle 210 [1,4,7]). Each block dropped saves ~3-6 PPL. The OPEN question: where does the curve go at 2 blocks? Cycle 210 [1,4]=46.5 (typo in agenda — actually cycle 210 was the 3-block run; we don't have a clean 2-block K=512 data point on the same recipe). If the cascade story holds, 2-block K=512 should land at ~43-44 PPL (≥10 PPL below float). This is the lower bound of the count-driven cascade — knowing where it bottoms out tells us how aggressive a "compress only N blocks at K=512" recipe can be. Three candidate 2-block subsets cover the early/mid/late axis: [1,4], [1,7], [4,7]. If the cycle 255 ranking generalises (early blocks are easier targets), [1,4] should win. If late blocks are intrinsically softer, [4,7] should win.
+   - **Setup**: K=512 W_out+b_out trainable joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024} per subset, disjoint calib=all_ids[:200]/eval=all_ids[200:300], SEQ_LEN=128. Three configurations sequentially: BLOCKS=[1,4], BLOCKS=[1,7], BLOCKS=[4,7]. Trainable params per config ≈ 787,968 (2 × 393,984 W_out+b_out). Reuse cycle 255 script with 2-block subsets. **9 fits, ~3 min/fit ≈ 27 min total**. Drop to 2 seeds if exceeded.
+   - **Hypothesis**: count-driven cascade extrapolates → min over 3 subsets best_mean ≤ 45.0 (≥4.6 PPL below cycle 255 4-block, ≥8.9 PPL below float).
+   - **Outcomes**:
+     - **CONFIRMED** if min best_mean ≤ 45.0: count-driven cascade extrapolates linearly; 2-block K=512 is the floor of the recipe family; opens "compress only 2 blocks for maximum quality headroom" sub-recipe.
+     - **REFUTED** if all 3 subsets best_mean ≥ 47.0: cycle 255 4-block is near the asymptote; the marginal benefit of dropping blocks shrinks below 4 blocks; the cascade is sub-linear at low block counts.
+     - **INCONCLUSIVE** if min ∈ (45, 47): partial improvement; 2-block buys 2-4 PPL beyond 4-block but slowly; plot Pareto and decide if 2-block is worth the recipe complexity.
+   - **Baselines**: cycle 255 4-block K=512 49.609, cycle 245 5-block K=512 53.826, cycle 221 6-block K=512 59.515, cycle 210 3-block [1,4,7]=46.556, cycle 242 3-block [1,2,3]=47.135, float 53.895.
+   - **Run cap**: ~27 minutes. Drop to 2 seeds if exceeded.
+   - Depends on: cycle 255 infrastructure.
+
+277. **Block 11 c_proj output rank decomposition — what makes block 11 special at PPL?**
+   - **Motivation**: cycle 264 found that block 11 dominates the cycle 173 single-block C3 PPL ranking (+4.02%) but is the 11th-most disruptive in pullback κ (‖Δκ‖₁=2.48e-6, 700× smaller than block 2). The clean reading: late-block PPL damage is from output-channel structure (c_proj's read into the residual stream that feeds LN_f / lm_head), NOT trajectory geometry. Cycle 263 additionally found block 11 has the highest local linearity defect ε of any block at every scale, ~10× higher than blocks 1-9 — block 11 IS structurally different. The OPEN question: what is the rank/concentration structure of block 11's c_proj output that makes it so PPL-load-bearing? If c_proj_11's output has a very low effective rank (e.g. eff_rank ≤ 50 vs the mid-block typical ~350 from cycle 252), then a small number of output channels are driving most of the PPL contribution and a TARGETED compression of those channels would let us touch block 11 cheaply. If c_proj_11 is high-rank but the top SVs project strongly onto the lm_head reading direction (which we can measure as the cosine between top SVs of c_proj_11.weight and the lm_head weight rows), then the PPL-load is from *alignment*, not concentration.
+   - **Setup**: forward pass on the standard 200×128 wikitext-2 val calib slice (seed 42) collecting the FFN-output activation `mlp_out_11 = c_proj_11(σ(c_fc_11(ln2_out)))` at block 11 — shape (25600, 768). Compute SVD of `mlp_out_11.T @ mlp_out_11 / N` (768×768 covariance) to get eff_rank, top-k SV energy fractions (k=1, 5, 20, 50, 100, 200), and top-20 right singular vectors. SVD of `c_proj_11.weight` (768×3072) for the operator-level top-20 directions. Compute pairwise cosines between top-20 SVs of `mlp_out_11` and the rows of `lm_head.weight` (50257×768) — the strongest alignments tell us which lm_head reading channels block 11 feeds. As a control, run the same pipeline on block 5 (cycle 252's "structurally normal" mid-block) and block 1 (the structurally distinct early block from cycles 218/260). Pure analysis, no training. **Trainable_params=0**. Reuse cycle 252's geometric deep-dive harness with c_proj output collection added.
+   - **Hypothesis**: block 11 c_proj output has eff_rank ≤ 50 (concentration story) OR top-5 SVs of c_proj_11 align ≥0.5 cosine median with the top-200 lm_head reading directions (alignment story) — at least one of the two clean explanations holds.
+   - **Outcomes**:
+     - **CONFIRMED** if eff_rank ≤ 50 OR median top-5 cosine with top-200 lm_head rows ≥ 0.5: block 11's PPL load is structurally explained at the operator level; opens targeted "compress block 11 only on its load-bearing subspace" probe.
+     - **REFUTED** if eff_rank ≥ 200 AND median cosine ≤ 0.2: block 11 is not concentrated and not aligned; the PPL load comes from somewhere else (e.g. cross-block dynamics, attention-V interaction, position-dependent gating); dead end for output-channel-level explanations.
+     - **INCONCLUSIVE** if eff_rank ∈ (50, 200) OR median cosine ∈ (0.2, 0.5): partial structure visible but not load-bearing on its own; record the data and move on.
+   - **Baselines**: cycle 252 block 5 SVD-eff_rank ~358 (post-GELU activation, not c_proj output); cycle 264 block 11 ‖Δκ‖₁=2.48e-6 (rank 11/12 in κ); cycle 263 block 11 ε ~10× mid-block (highest local linearity defect); cycle 173 block 11 PPL +4.02%.
+   - **Run cap**: ~10 minutes (single forward pass + SVD + cosine sweep).
+   - Depends on: cycle 252 / cycle 263 infrastructure (forward pass with hooks).
 
 ### P1
 
-*(item 271 closed in cycle 260 — see PAST EXPERIMENTS)*
-
-*(item 272 closed in cycle 261 — see PAST EXPERIMENTS)*
+278. **K=64 4-block sweep — extend cycle 257's K=64 to 4 blocks**
+   - **Motivation**: cycle 257 CONFIRMED 5-block K=64 (62.181 ± 0.053), and the K-curve at 5 blocks {K=64, 128, 512} = {62.18, 59.12, 53.83} is concave-up with per-K-halving cost shrinking (3.06 PPL for 128→64 vs 5.29 for 512→128). The OPEN question: how does the K=64 penalty scale at 4 blocks? If item 275 finds K=128 4-block lands near 53 (closing most of the K=512 gap), then K=64 4-block is the natural follow-up — cycle 251's 5-block→4-block transition saved ~10 PPL at K=512 and ~8 PPL at K=128 (extrapolated from cycle 231 to item 275). If K=64 4-block lands ≤ 56, we have a sub-300K-param recipe that beats float and the compression frontier extends substantially. If it crashes (≥ 65), the K=64 regime is not robust below 5 blocks and the K-curve concavity reverses at smaller block counts.
+   - **Setup**: BLOCKS=[1,2,4,7] (cycle 255's best 4-block subset), K=64, W_out+b_out trainable joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024}, disjoint calib=all_ids[:200]/eval=all_ids[200:300], SEQ_LEN=128. Trainable params ≈ 197,376 (4 × 49,344 W_out+b_out). Reuse cycle 257's K=64 script with 4-block subset.
+   - **Hypothesis**: 4-block K=64 absorbs the smaller K well → best_mean ≤ 56.0 (between cycle 257 K=64 5-block 62.18 and cycle 255 K=512 4-block 49.61, weighted toward K=512 by the concave-up curve).
+   - **Outcomes**:
+     - **CONFIRMED** if best_mean ≤ 56.0: K=64 4-block is the new sub-300K Pareto winner; the K-curve concavity holds at 4 blocks; opens "compress fewer blocks at smaller K" frontier.
+     - **REFUTED** if best_mean ≥ 65.0: K=64 4-block crashes; the channel-binding regime kicks in below 5 blocks at K=64; the 5-block float-tie is K-bandwidth-bounded and doesn't carry to 4 blocks at K=64.
+     - **INCONCLUSIVE** if best_mean ∈ (56, 65): meaningful improvement over K=64 5-block but not enough to beat K=128 4-block (item 275); record curve and move on.
+   - **Baselines**: cycle 257 K=64 5-block 62.181, cycle 255 K=512 4-block [1,2,4,7]=49.609, item 275 K=128 4-block (TBD), cycle 251 K=128 5-block 59.119, float 53.895.
+   - **Run cap**: ~10 minutes.
+   - Depends on: cycle 257 infrastructure (independent of items 275, 276).
 
 ### P2
 
-*(item 268 closed in cycle 262 — see PAST EXPERIMENTS)*
-
-*(item 273 closed in cycle 263 — see PAST EXPERIMENTS)*
-
-*(item 274 closed in cycle 264 — see PAST EXPERIMENTS)*
+279. **K=1 6-block extended budget (16000 steps) — does cycle 240's catastrophe budget out?**
+   - **Motivation**: cycle 240 reported K=1 6-block at 96.886 PPL after 4000 steps — catastrophic vs cycle 230 K=1 3-block 59.245. Cycle 254 found that 5-block K=128 at 8000 steps was a noop (-0.101 PPL) — extended budget bought essentially nothing because the optimisation had already plateaued. The OPEN question: is cycle 240's 96.886 plateaued (in which case the 6-block K=1 surface is just structurally too small) OR is it still descending (in which case 4× the budget might bring it into a recoverable range)? Cycle 262 found bias retraining is a noop at K=1; cycle 230 vs 240 implies the 6-block K=1 case is a structural gap (mid-cascade slack is exhausted). If 16000 steps drops PPL meaningfully (≤ 80), we have evidence that the K=1 6-block plateau is *budget-limited*, not structural — and cycle 254's "extended budget is a noop" finding doesn't generalise to the deepest K. If it stays ≥ 90, we close the K=1 6-block question cleanly: the 9K-trainable surface cannot recover the 6-block cascade no matter how long Adam runs. Either way settles the budget question for the K=1 endpoint.
+   - **Setup**: BLOCKS=[1,2,4,5,7,8], K=1, W_out+b_out trainable joint Adam LR=1e-4, **N_STEPS=16000** (4× cycle 240's budget), EVAL_EVERY=400 (40 eval points, same density as cycle 240 at 100-step interval × 4× horizon), best-state restore, 3 seeds {42, 137, 2024}, disjoint calib=all_ids[:200]/eval=all_ids[200:300], SEQ_LEN=128. Trainable params ≈ 9,222 (6 × (768 + 1) W_out+b_out, K=1). Reuse cycle 240's experiment script with N_STEPS quadrupled.
+   - **Hypothesis**: cycle 240's plateau is structural, not budget-limited → best_mean ≥ 90.0 (≤ 7 PPL improvement over cycle 240's 96.886 at 4× the steps).
+   - **Outcomes**:
+     - **CONFIRMED** (structural) if best_mean ≥ 90.0: cycle 240's catastrophe is real; 9K trainable params cannot bridge the 6-block K=1 cascade; closes the K=1 6-block question cleanly.
+     - **REFUTED** (budget-limited) if best_mean ≤ 80.0: extended budget recovers a meaningful fraction; cycle 254's "budget is a noop" pattern doesn't extend to K=1; opens follow-up "K=1 6-block at 32k steps" probe and partially rehabilitates the K=1 6-block recipe.
+     - **INCONCLUSIVE** if best_mean ∈ (80, 90): partial improvement; budget matters but doesn't close the gap; record and move on.
+   - **Baselines**: cycle 240 K=1 6-block 96.886 (4000 steps), cycle 230 K=1 3-block 59.245, cycle 254 K=128 5-block 8000-step noop, cycle 221 K=512 6-block 59.515, float 53.895.
+   - **Run cap**: ~25 minutes (4× cycle 240's ~6 min).
+   - Depends on: cycle 240 infrastructure (K=1 6-block CompressedMLP variant).
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
