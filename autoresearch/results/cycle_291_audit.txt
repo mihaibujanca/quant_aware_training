@@ -1,0 +1,156 @@
+Cycle 291 Audit — Item 301 — Auditor's Result Card
+
+Audit status: PASS
+Verdict (provisional, kept): REFUTED
+Primary commit: 143d998
+Branch: geometric_compression
+Audit file: autoresearch/audits/cycle_291.md
+
+== Verdict logic re-verification (item 301 verbatim) ==
+CONFIRMED iff best_mean <= 49.5
+REFUTED   iff best_mean >= 51.5
+INCONCLUSIVE otherwise
+
+  best_mean = 51.8008
+  51.8008 <= 49.5  ->  FALSE  (over by 2.3008)
+  51.8008 >= 51.5  ->  TRUE   (over by 0.3008)
+  ->  REFUTED  ✓ (matches manifest, exec_result, JSON, agenda)
+
+== Aggregate arithmetic re-check ==
+Per-seed bests: {42: 51.7511, 137: 51.8509, 2024: 51.8004}
+Sum         = 155.4024
+Mean        = 51.8008  (matches reported 51.80080) ✓
+Population variance:
+  deviations  : (-0.04970, +0.05010, -0.00040)
+  sq devs     : (0.0024701, 0.0025100, 0.00000016)
+  sum sq devs : 0.0049803
+  /3          : 0.0016601
+  std         : sqrt(0.0016601) = 0.04074  (matches reported 0.04073 to 4dp) ✓
+min  = 51.7511 (seed 42)   ✓
+max  = 51.8509 (seed 137)  ✓
+
+== Per-seed sanity ==
+seed 42:   init=64.46495 best=51.7511 @step 3900 restored=51.7511  |restored-best|=0 PASS
+seed 137:  init=64.46495 best=51.8509 @step 3800 restored=51.8509  |restored-best|=0 PASS
+seed 2024: init=64.46495 best=51.8004 @step 4000 restored=51.8004  |restored-best|=0 PASS
+
+best_step distribution: {3900, 3800, 4000} -- 1/3 budget-bounded (seed 2024 at cap),
+                        2/3 floor-limited (peaked before cap, mild overfit by step 4000).
+                        Aggregate is FLOOR-LIMITED with mild slack on one seed.
+
+Init PPL determinism: max |Δ| across seeds = 0 (SVD seed-free at LOAD_SEED=42; both
+  LowRankCProj modules construct from cached float SVD, no per-seed init RNG used).
+
+== Composition cross-check (additivity-in-init) ==
+The brief mentioned a "product" check (init_280 × init_289) which is mathematically
+incoherent — neither errors nor PPL multiply for stacked patches. The correct test is
+that the joint init exceeds BOTH individual inits (additivity in perturbation magnitude):
+
+  cycle 280 b1 r=2  init = 57.65813
+  cycle 289 b10 r=5 init = 59.91788
+  cycle 291 hybrid  init = 64.46495
+
+  hybrid - b1_only  = +6.80682  PASS (positive, both patches active)
+  hybrid - b10_only = +4.54707  PASS (positive, both patches active)
+
+Both deltas POSITIVE -> both LowRankCProj modules simultaneously active in forward pass
+and both perturbations contribute to joint init. PASS.
+
+== Delta arithmetic re-check (vs JSON deltas field) ==
+best_mean = 51.80080
+float     = 53.89489
+
+  vs float           : 51.80080 - 53.89489 =  -2.09410  (manifest -2.0941)  ✓
+  vs cycle 280 b1 r=2: 51.80080 - 49.03245 =  +2.76835  (manifest +2.7684)  ✓  (b1 DAMAGED)
+  vs cycle 289 b10 r=5:51.80080 - 51.46586 =  +0.33494  (manifest +0.3349)  ✓  (b10 DAMAGED)
+  vs cycle 282 b10 r17:51.80080 - 50.04450 =  +1.75630  (manifest +1.7563)  ✓
+  vs cycle 284 hybrid: 51.80080 - 52.88000 =  -1.07920  (manifest -1.0792)  ✓
+
+All 5 deltas reproduce to 4 decimal places.
+
+== Plan adherence ==
+TARGET_BLOCKS=(1, 10)                 ✓
+RANKS=(2, 5)                          ✓
+N_STEPS=4000, EVAL_EVERY=100          ✓
+LR=1e-4                               ✓
+SEEDS=[42, 137, 2024]                 ✓
+best-state restore                    ✓
+N_CALIB=200, N_EVAL=100, SEQ_LEN=128  ✓ (disjoint splits)
+MPS, GPT-2 small, wikitext-2 val      ✓
+Trainable per fit = 6,912             ✓ (asserted in-script: (2*768+768)+(5*768+768))
+Float PPL within 0.5 of 53.895        ✓ (exact)
+Template = cycle 284 verbatim         ✓
+
+== Hypothesis falsification ==
+Item 301 Hypothesis: "joint Adam over rank-2 (block 1) + rank-5 (block 10) c_proj patches
+reaches ≤49.5 PPL at ~6,912 trainable params -- adds block 10 essentially for free on top
+of cycle 280's anchor and creates a new Pareto tile between cycle 280 and cycle 282."
+
+Three clauses:
+  1. best_mean ≤ 49.5?                       Measured 51.80, ABOVE 49.5 by 2.30. FALSE.
+  2. b10 added "essentially for free" on b1? Measured cost on b1 is +2.77. FALSE.
+  3. Lands between cycle 280 and cycle 282?  Measured 51.80 lands ABOVE both. FALSE.
+
+All three FALSIFIED. The +2.77 PPL damage on the b1 anchor exceeds the REFUTED clause
+threshold (≥2.5 PPL damage) by 0.27 PPL.
+
+== Pareto reading ==
+cycle 291 (6,912 params, 51.800 PPL):
+  - STRICTLY DOMINATED on BOTH axes by cycle 280 b1 r=2 (2,304, 49.032)
+    [3.0x more params AND 2.77 PPL worse]
+  - STRICTLY DOMINATED on BOTH axes by cycle 289 b10 r=5 (4,608, 51.466)
+    [1.5x more params AND 0.33 PPL worse]
+  - DOMINATED on PPL only by cycle 282 b10 r=17 (13,824, 50.045)
+    [2x fewer params, 1.76 PPL worse -- different tier]
+  - DOMINATES cycle 284 hybrid b1+b11 (19,968, 52.880) on BOTH axes
+    [2.9x fewer params AND 1.08 PPL better -- but cycle 284 is itself non-frontier]
+
+Net: cycle 291 does NOT add a new Pareto tile. Hybrid is strictly Pareto-dominated by
+BOTH of its component anchors.
+
+== Composition family (2-block compositions involving b1) ==
+cycle 273 hetero K-mix [1] + others       REFUTED
+cycle 275 [1] K=512 + b11 r=22 (hetero)   REFUTED axis
+cycle 281 [1, 2] K=512 (channel-K)        INCONCLUSIVE
+cycle 284 b1 r=2 + b11 r=22 (homo SVD)    CONFIRMED  (only winner)
+cycle 291 b1 r=2 + b10 r=5  (homo SVD)    REFUTED    (this run)
+
+Pattern: only cycle 284 succeeded, with partner block b11 at rank 22 (HIGH rank slack).
+b10 r=5 (LOW rank), b2 channel-K, and heterogeneous combos all damage b1. Partner RANK
+SLACK is the differentiator -- depth distance (1-to-10 vs 1-to-11) is NOT predictive.
+
+== Geometric notes ==
+(i)  Patches stack additively in init: 64.465 > 59.918 > 57.658.
+(ii) Joint Adam descends FURTHER (12.66 PPL) than either solo (8.63/8.45) but lands
+     HIGHER (51.80) than either solo floor (49.03/51.47). More descent, worse landing.
+(iii) "Rank ≈ eff_rank + Adam retrain" recipe is NOT compositional.
+(iv) Depth distance is NOT the right predictor (1-10 and 1-11 are similar distances
+     but cycle 284 vs 291 outcomes are opposite).
+(v) Partner rank slack (≥22 directions) appears to gate non-destructive composition.
+
+== Artifact existence ==
+experiments/rank_hybrid_1_10_cycle291.py                    PRESENT
+autoresearch/plans/cycle_291.md                             PRESENT (33 lines, 8 ## heads)
+autoresearch/briefs/cycle_291.md                            PRESENT
+autoresearch/results/cycle_291_rank_hybrid_1_10.json        PRESENT (verdict=REFUTED)
+autoresearch/results/cycle_291_summary.md                   PRESENT
+autoresearch/results/cycle_291_manifest.txt                 PRESENT (commit=143d998)
+autoresearch/results/cycle_291_exec_result.txt              PRESENT (commit=143d998)
+autoresearch/logs/cycle_291_run.log                         PRESENT
+autoresearch/logs/experiments.tsv                           ROW 291 APPENDED (8 fields)
+autoresearch/agenda.md                                      ITEM 301 MOVED NEXT->PAST
+Primary commit 143d998                                      EXISTS in git log
+
+== Corrections ==
+None. Provisional outcome REFUTED holds.
+
+== Final status ==
+PASS -- keep provisional outcome REFUTED. Manifest, exec_result, JSON, summary, agenda,
+TSV, and audit all agree. best_mean = 51.8008 ± 0.0407, threshold ≥51.5 triggered by
+0.301 PPL. Composition is destructive on the b1 anchor by +2.77 PPL.
+
+Auditor note: cycle 291 demonstrates that cycle 284's "homogeneous low-rank SVD hybrid
+composes non-destructively" result is LIMITED to high-rank partners. The partner RANK
+SLACK (not depth distance) is the gating factor. 2-block composition family with b1
+now stands at 5 attempts / 1 CONFIRMED. The next natural follow-up is b1 r=2 + b10 r=17
+(b10 at eff_rank, not below it) to isolate sub-eff_rank vs low partner rank as cause.
