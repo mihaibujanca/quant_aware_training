@@ -1,6 +1,11 @@
-# Research Status — 265 Cycles (001–265)
+# Research Status — 266 Cycles (001–266)
 
-## Latest: Cycle 265
+## Latest: Cycle 266
+
+276. **2-block K=512 sweep** — CONFIRMED (interesting=true)
+   - 3 seeds × 3 subsets, 9 fits, 22 min. **min best_mean=43.852 on [1,4]** (≤45 confirmed by 1.15 PPL). Per-subset: [1,4]=43.85±0.03, [1,7]=43.90±0.05, [4,7]=45.77±0.02. **Block 1 is in every winning subset**; [4,7] (no block 1) is 1.9 PPL worse. **Cascade is concave**: 6→5 saves 5.69, 5→4 4.22, 4→3 3.05, **3→2 2.70 PPL** (marginal benefit shrinks monotonically). **NEW PARETO WINNER**: (788K params, 43.85 PPL) dominates cycle 210 K=512 3-block (1.18M, 46.56) and cycle 255 K=512 4-block (1.58M, 49.61) on both axes. **−10.04 PPL below float**.
+
+## Cycle 265
 
 275. **K=128 4-block sweep — Pareto chase** — INCONCLUSIVE
    - 3 seeds per subset (9 fits, 21 min). **min best_mean = 53.647 ± 0.066 on [1,2,4,7]** ∈ (53, 56) inconclusive. All 3 subsets within ±1 PPL of float (53.895). Subset ordering [1,2,4,7] < [1,4,7,8] < [1,2,7,8] mostly matches cycle 255 K=512. **DOMINATED by cycle 223 K=128 3-block [1,4,7] (297K params, 48.99 PPL) on both Pareto axes** (more params + worse PPL). Naive linear K=128 extrapolation predicted ~50.7; actual 53.65 → **K=128 cascade is sub-linear at low block counts and adding block 2 to the K=128 surface is HARMFUL, not helpful**. K=128 + 4-block is not on the Pareto frontier.
