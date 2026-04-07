@@ -1,6 +1,11 @@
-# Research Status — 266 Cycles (001–266)
+# Research Status — 267 Cycles (001–267)
 
-## Latest: Cycle 266
+## Latest: Cycle 267
+
+277. **Block 11 c_proj output rank decomposition** — CONFIRMED (interesting=true)
+   - For blocks {1, 5, 11}: SVD of mlp_out covariance → eff_rank, top-K energy. **Block 11 c_proj output eff_rank = 22.49** (≤50 confirmed). Top-1 = 48.95%, top-5 = 68.18%, top-20 = 74.87% of variance. **Concentration story HOLDS**. **Alignment story REFUTED**: median top-5 cos with top-200 lm_head rows ≤ 0.159 across all blocks (b1=0.159, b5=0.130, b11=0.123). Not a direct-read. **Surprising ordering**: block 1 eff_rank=1.94 (essentially rank-1, 92.94% top-1 energy — clean geometric characterization of cycles 218/260's "early block does almost nothing new" finding) ≪ block 11 eff_rank=22.49 ≪ block 5 eff_rank=179.19 (mid-block is high-rank). Both endpoints are rank-concentrated. **Explains cycle 173 PPL dominance + cycle 264 low κ disruption jointly**: block 11 writes into residual via low-rank high-norm operator feeding LN_f/lm_head directly → PPL sensitive, κ not. **Opens targeted probe**: compress block 11 output on rank-5 or rank-22 subspace.
+
+## Cycle 266
 
 276. **2-block K=512 sweep** — CONFIRMED (interesting=true)
    - 3 seeds × 3 subsets, 9 fits, 22 min. **min best_mean=43.852 on [1,4]** (≤45 confirmed by 1.15 PPL). Per-subset: [1,4]=43.85±0.03, [1,7]=43.90±0.05, [4,7]=45.77±0.02. **Block 1 is in every winning subset**; [4,7] (no block 1) is 1.9 PPL worse. **Cascade is concave**: 6→5 saves 5.69, 5→4 4.22, 4→3 3.05, **3→2 2.70 PPL** (marginal benefit shrinks monotonically). **NEW PARETO WINNER**: (788K params, 43.85 PPL) dominates cycle 210 K=512 3-block (1.18M, 46.56) and cycle 255 K=512 4-block (1.58M, 49.61) on both axes. **−10.04 PPL below float**.
