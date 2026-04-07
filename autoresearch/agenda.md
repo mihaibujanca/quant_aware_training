@@ -4,7 +4,96 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## NEXT EXPERIMENTS
 
-### P0
+### P0 — Bump latent feature extraction + causal tests (interpretability)
+
+**Goal**: test whether the cycle 218 alignment story is real by extracting latent features from the centred per-token bump vector Δ̃, decoding them to vocab, and intervening causally on the residual stream. Each item below MUST save concrete example outputs (token contexts, before/after predictions) so the results can be loaded and explored in a notebook the next morning. See `notebooks/bump_features_explore.py` for the loader scaffold and the exact artifact contracts these items must satisfy.
+
+**Shared config across items 245-248**:
+- Model: `gpt2` (HF) on MPS, eval/forward in fp32
+- Calibration corpus: wikitext-2 train split, N_SEQS=200, SEQ_LEN=512 (≈100K tokens after dropping pads). Use seed 42.
+- Held-out corpus: wikitext-2 validation split, distinct from calibration, N_SEQS=200, SEQ_LEN=512.
+- All Δ̃_l computed as `GELU_FFN_l(x) − ReLU_FFN_l(x) − E_calib[GELU_FFN_l − ReLU_FFN_l]` where the centring mean is computed on the calibration corpus only and applied to held-out evaluation.
+- All artifacts must be loadable by `notebooks/bump_features_explore.py` without modification — the loader expects exact filenames listed under each item's `Artifacts:` block.
+
+245. **T1: Centred Δ̃ feature SVD with concrete example extraction**
+   - For each of the 12 blocks, on the calibration corpus, compute Δ̃_l per token (~100K tokens × 768). SVD → top 32 right singular vectors V_l ∈ R^(768×32), singular values S_l ∈ R^32, left singular vectors (token coefficients) U_l ∈ R^(N_tokens×32). For each direction v_{l,i} (i ∈ 0..31):
+     - **Top 100 corpus tokens** ranked by |U_l[token, i]|, with each token's surrounding 5-token context window AND a one-line "this token in this position is X" tag (raw token id, decoded string, position in sequence)
+     - **Top 50 boosted vocab items** = top entries of `W_U @ v_{l,i}` (W_U = `model.transformer.wte.weight.T`, since GPT-2 ties embeddings)
+     - **Top 50 suppressed vocab items** = bottom entries
+     - **Variance explained** = s_i² / Σ_j s_j²
+     - **Heuristic coherence label**: try to detect if top-100 corpus tokens form a coherent class (punctuation cluster ≥40%, stopword cluster ≥40%, capitalized cluster ≥40%, number cluster ≥40%, single-token-repeat ≥30%). Output one of: `punctuation`, `stopword`, `capitalized`, `number`, `repeated`, `mixed`, `incoherent`.
+   - **Notebook contract**: every direction's decoding must be loadable as a structured JSON record with keys `block`, `direction_idx`, `singular_value`, `variance_explained`, `top_corpus_tokens` (list of {token_id, token_str, context_left, context_right, position, score}), `top_vocab_boost` (list of {token_id, token_str, score}), `top_vocab_suppress` (list of {token_id, token_str, score}), `coherence_label`.
+   - Artifacts (REQUIRED — exact filenames):
+     - `experiments/bump_t1_features_cycle<N>.py`
+     - `autoresearch/results/cycle_<N>_t1_features.pt` — torch dict {`block_<l>`: {`V`: tensor(768,32), `S`: tensor(32), `mean_delta`: tensor(768)}} for l ∈ 0..11
+     - `autoresearch/results/cycle_<N>_t1_calibration_meta.pt` — {`token_ids`: tensor(N_tokens), `seq_index`: tensor(N_tokens), `pos_in_seq`: tensor(N_tokens)} so any token row can be looked back to its source
+     - `autoresearch/results/cycle_<N>_t1_decoded.json` — list of decoded direction records (12 blocks × 32 = 384 records)
+     - `autoresearch/results/cycle_<N>_t1_examples.md` — human-readable per-block top-5 directions with full example contexts and decoded vocab. THIS IS THE FILE THE USER WILL READ FIRST IN THE MORNING. Format each direction as: heading with (block, idx, var, coherence), then a 3-row table of (context_left | TOKEN | context_right) for top-3 corpus tokens, then a 2-line `boost: [...]` / `suppress: [...]` line.
+     - `autoresearch/results/cycle_<N>_t1_summary.md` — verdict, headline, coherence count per block
+   - Type: interpretability / latent feature extraction
+   - Confirmed if: ≥5 of 32 directions per block have a coherence_label ∉ {mixed, incoherent} in ≥6 of 12 blocks.
+   - Refuted if: <2 directions per block have a coherent label in ALL 12 blocks (entire latent space is noise).
+   - Inconclusive otherwise.
+   - Depends on: none
+
+246. **T2: Causal intervention on top bump directions**
+   - Take the top 5 directions per block from item 245 (skip blocks where 245 found <5 coherent directions). On a held-out 1000-token batch (subset of held-out wikitext-2 val):
+     - Forward pass to residual stream after block l → save `x_l ∈ R^(B, T, 768)`
+     - For each direction v_{l,i} and α ∈ {-3, -1, 0, +1, +3} (units = std of `U_l[:, i]` from calibration):
+       - Modified forward: `x_l' = x_l + α · v_{l,i}`, continue through blocks l+1..11 + ln_f + lm_head
+       - Logit shift = logits(x_l') − logits(x_l)
+       - Top 20 boosted/suppressed vocab items by mean logit shift across the batch
+       - **10 concrete example records**: pick 10 tokens from the held-out batch where the L2 of the logit shift is largest. For each: `{context: str, original_top1: str, intervened_top1: str, top5_orig: list, top5_intervened: list, alpha: float, logit_delta_top: float}`.
+   - Random direction baseline: same procedure with 10 v_random ∈ R^768 unit-norm Gaussian seeds. Report mean logit shift L2 for each block.
+   - Artifacts (REQUIRED):
+     - `experiments/bump_t2_intervention_cycle<N>.py`
+     - `autoresearch/results/cycle_<N>_t2_logit_shifts.pt` — {`block_<l>`: {`direction_<i>`: {`alpha_<a>`: tensor(B*T, vocab_size)}}} (full tensors; can be subsampled to top-1000 tokens to save space)
+     - `autoresearch/results/cycle_<N>_t2_intervention.json` — per (block, direction, alpha): top vocab boost/suppress, effect size vs random baseline, T1-decoding-overlap (Jaccard top-20)
+     - `autoresearch/results/cycle_<N>_t2_examples.md` — the concrete (context, before, after) records, organized by block and direction. Format: heading with (block, direction, alpha), then a 5-row table of (context | orig_top1 | new_top1 | logit_delta).
+     - `autoresearch/results/cycle_<N>_t2_summary.md` — verdict + per-block effect-size table (causal effect at α=3 vs random baseline)
+   - Type: interpretability / causal intervention
+   - Confirmed if: ≥3 directions per block (in ≥6 of 12 blocks) have BOTH (a) logit shift L2 at α=3 ≥ 3× random baseline mean, AND (b) Jaccard overlap of top-20 boosted vocab between intervention result and the T1-predicted boost list ≥ 0.3.
+   - Refuted if: no direction in any block produces a logit shift distinguishable from random (effect size <1.2× baseline).
+   - Inconclusive if: directions cause shifts but the shifts don't match T1's vocab predictions (the alignment in 218 was correlational only).
+   - Depends on: 245
+
+247. **T3: Bump subspace ablation vs random subspace baseline**
+   - For each block, take the top-10 right singular vectors of centred Δ̃ from item 245's `cycle_<N>_t1_features.pt`. Define the projector `P_l = V_l[:,:10] @ V_l[:,:10].T` and the ablation: after the FFN output of block l is added to the residual stream, replace `x_l ← x_l − P_l x_l`. Measure full-model PPL on held-out wikitext-2 val (N_SEQS=200, SEQ_LEN=512).
+   - Comparisons:
+     - **Joint ablation** at all 12 blocks simultaneously
+     - **Per-block ablation** at one block at a time (12 single-block runs)
+     - **Random k=10 subspace baseline** (10 seeds Gaussian QR-orthonormal), joint and per-block
+     - **Top-10 right singular vectors of FULL FFN output** (not just Δ̃) — tests whether bump directions are more critical per-dim than the loud channel directions
+     - **No ablation baseline**
+   - Artifacts (REQUIRED):
+     - `experiments/bump_t3_ablation_cycle<N>.py`
+     - `autoresearch/results/cycle_<N>_t3_ablation_ppl.json` — {baseline, joint_bump, per_block_bump (12 entries), random_baseline (mean+std over 10 seeds, joint and per-block), full_ffn_top10}
+     - `autoresearch/results/cycle_<N>_t3_summary.md` — verdict + table comparing bump vs random vs full-FFN ablation per block
+   - Type: empirical / ablation
+   - Confirmed if: joint bump-subspace ablation PPL ≥ 1.5× random-subspace ablation mean PPL, AND at least 3 individual blocks show single-block ablation PPL ≥ 2× their random baseline.
+   - Refuted if: bump ablation PPL within 1.1× random baseline.
+   - Inconclusive otherwise.
+   - Depends on: 245
+
+248. **T4: Activation patching across token pairs (bump-only)**
+   - On 100 token pairs (A, B) sampled from held-out wikitext-2 such that: (1) A and B occur at the same sequence position in distinct sequences, (2) the model's top-1 prediction for A ≠ top-1 for B, (3) both predictions have logit margin >2 over the runner-up. For each pair, at each block l ∈ {1,3,5,7,9}:
+     - Compute residual stream after block l for both A and B → x_l(A), x_l(B)
+     - Compute centred bump residual: Δ̃_l(A) = (GELU_FFN_l(A) − ReLU_FFN_l(A)) − μ_l, similarly for B
+     - **Bump-only patch**: x_l_patched = x_l(A) − Δ̃_l(A) + Δ̃_l(B); continue forward
+     - **Full residual patch**: x_l_patched = x_l(B); continue forward
+     - Measure: original_top1_logit, B_top1_logit, patched_top1_logit at the final position
+     - Bump attribution ratio = (patched_logit − original_logit) / (full_patch_logit − original_logit), evaluated on B's top-1 token
+     - Save 20 concrete example records per block
+   - Artifacts (REQUIRED):
+     - `experiments/bump_t4_patching_cycle<N>.py`
+     - `autoresearch/results/cycle_<N>_t4_patching.json` — per-pair, per-block results with `bump_attribution`, `full_attribution`, `bump_logit_delta`, `full_logit_delta`
+     - `autoresearch/results/cycle_<N>_t4_examples.md` — concrete examples ("In context X (last 50 chars), A=… predicts P, B=… predicts Q. After patching only the bump from B into A at block l: A predicts P with X% reduced confidence on P and +Y logit on Q. Bump attribution: Z%")
+     - `autoresearch/results/cycle_<N>_t4_summary.md` — verdict + per-block mean bump attribution
+   - Type: interpretability / causal attribution
+   - Confirmed if: mean bump-attribution ratio across 100 pairs > 0.15 in ≥3 of the 5 tested blocks (the bump alone explains >15% of the inter-token prediction difference at those blocks).
+   - Refuted if: bump-attribution < 0.05 in ALL 5 blocks (the bump is essentially independent of token-specific prediction shifts).
+   - Inconclusive otherwise.
+   - Depends on: 245
 
 ### P1
 
@@ -38,9 +127,10 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 234
 
-244. **gelu_noneg + first-moment + LoRA r=8 W_out residual — eat the 16.6 PPL residual?** *(CONFIRMED — cycle 234)*
-   - **Outcome: CONFIRMED** — Cycle 228 protocol (N=200 wikitext-2 val, SEQ_LEN=128, seed 42, MPS) + LoRA r=8 on each of 12 blocks' `mlp.c_proj` (HF Conv1D shape (3072, 768)), A ∈ R^(3072, 8) init N(0, 0.01), B ∈ R^(8, 768) init zero, trained jointly via Adam LR=1e-4 for 2000 steps on CE against the same calibration sequences, EVAL_EVERY=200 with best-state restore. **Init sanity clean**: baseline 45.064, μ-only 12-block patch reproduces cycle 228 exactly (61.6636), LoRA-zero init matches post-μ PPL (61.6636 = 61.6636), trainable params = 368,640 = 12 × (3072×8 + 8×768). **Training trajectory monotone decreasing** at every 200-step eval checkpoint: 61.664 → 42.724 → 39.474 → 37.725 → 36.568 → 35.461 → 34.808 → 34.054 → 33.480 → 32.883 → **32.411** (best at step 2000, final-budget-end, still descending). Frozen c_proj[0] base weight verified unchanged post-train (torch.equal). **Final PPL 32.411** vs cycle 228 μ-only 61.664 = **−29.25 PPL** (47% of μ-only PPL), vs float baseline 45.064 = **−12.65 PPL (−28.1%)**, crossing the CONFIRMED threshold 48.0 by 15.6 PPL. **IMPORTANT caveat**: calibration set == eval set (same 200 sequences); 368K trainable params vs ~25,400 eval tokens means the LoRA is fitting calibration-specific structure, not a universal correction — the sub-float PPL (32.4 < 45.06) is proof of overfitting to the train/eval slice, not evidence of held-out recovery. Within the plan's thresholds (defined on calibration) CONFIRMED is correct, but the "eat the residual" interpretation requires a disjoint-split rerun to validate. What the experiment DOES establish: (1) LoRA r=8 W_out residual trained jointly with Adam can fully absorb the 16.6 PPL gelu_noneg+μ in-distribution gap; (2) the higher-order GELU curvature residual lives in a learnable rank-≤8 subspace of W_out per block; (3) the μ+LoRA combo is optimizer-friendly (no collapses, no divergence, monotone descent for the full 2000-step budget). Natural follow-up: (a) held-out wikitext-2 split eval to see how much overfitting vs genuine recovery; (b) rank sweep (r=1, 2, 4, 16) to find the smallest rank that closes the 16.6 PPL gap; (c) disentangle learned LoRA delta structure (SVD of A @ B per block) to see if it correlates with the GELU negative-zone mass beyond μ.
-   - Artifacts: `experiments/gelu_noneg_lora_cycle234.py`, `autoresearch/results/cycle_234_gelu_noneg_lora.json`, `autoresearch/results/cycle_234_summary.md`
+244. **gelu_noneg + first-moment + LoRA r=8 W_out residual — eat the 16.6 PPL residual?** *(INCONCLUSIVE — corrected from CONFIRMED, data leakage — cycle 234)*
+   - **Outcome: INCONCLUSIVE** (downgraded from CONFIRMED per G6, data leakage — see `autoresearch/audits/cycle_234.md`). Training loop optimises LoRA A, B against `eval_ids = all_ids[:200]` and the final metric is `eval_ppl(model, eval_ids)` on the SAME 200 sequences — 368K trainable params vs ~25.4K eval tokens gives the rank-8 residual enough capacity to memorise the calibration slice, and the reported 32.411 PPL falls 12.65 PPL BELOW float baseline on the same slice, which is only possible by overfitting. Cycles 220/228 share the `eval_ids = all_ids[:200]` bind safely because they never train (cycle 220 = activation patches only; cycle 228 = deterministic μ statistic + eval), so the calib==eval reuse is harmless in the no-gradient setting. Cycle 234 inherits the scaffolding and then introduces an Adam optimiser, turning the eval set into a training set. The safe pattern is cycles 206/210/223/225/230: `calib_ids = all_ids[:200]`, `eval_ids = all_ids[200:300]`, disjoint. The literal verdict (32.411 ≤ 48.0 → CONFIRMED) is met on calibration but the hypothesis "LoRA r=8 absorbs the higher-order GELU curvature for held-out data" is untested. Downgrade to INCONCLUSIVE. **Original executor findings retained for reference**: Cycle 228 protocol (N=200 wikitext-2 val, SEQ_LEN=128, seed 42, MPS) + LoRA r=8 on each of 12 blocks' `mlp.c_proj` (HF Conv1D shape (3072, 768)), A ∈ R^(3072, 8) init N(0, 0.01), B ∈ R^(8, 768) init zero, trained jointly via Adam LR=1e-4 for 2000 steps on CE against the same calibration sequences, EVAL_EVERY=200 with best-state restore. Init sanity clean: baseline 45.064, μ-only 12-block patch reproduces cycle 228 exactly (61.6636), LoRA-zero init matches post-μ PPL (61.6636 = 61.6636), trainable params = 368,640. Training trajectory monotone decreasing at every 200-step eval checkpoint: 61.664 → 42.724 → 39.474 → 37.725 → 36.568 → 35.461 → 34.808 → 34.054 → 33.480 → 32.883 → 32.411 (best at step 2000, still descending — no plateau, consistent with capacity-unbounded in-distribution fit).
+   - Next: rerun with disjoint `calib_ids`/`eval_ids` split (e.g., `all_ids[:200]` / `all_ids[200:300]`). Expected held-out PPL band: (45.064, 61.664). If held-out ≈ 45 the hypothesis upgrades back to CONFIRMED; if held-out ≈ 61.66 the residual has nothing to do with a rank-≤8 W_out subspace and the hypothesis downgrades to REFUTED. Once the split is fixed, rank sweep r ∈ {1, 2, 4, 16} and SVD of learned A@B per block become meaningful.
+   - Artifacts: `experiments/gelu_noneg_lora_cycle234.py`, `autoresearch/results/cycle_234_gelu_noneg_lora.json`, `autoresearch/results/cycle_234_summary.md`, `autoresearch/audits/cycle_234.md`, `autoresearch/results/cycle_234_audit.txt`
 
 ### Cycle 233
 

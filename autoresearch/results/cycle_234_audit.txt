@@ -1,0 +1,9 @@
+status=CORRECTED
+old_outcome=confirmed
+new_outcome=inconclusive
+reason=Data leakage: cycle 234 trains LoRA params on the same 200 wikitext-2 val sequences it then evals on. The 32.411 PPL is in-distribution overfitting (368K trainable params vs ~25K eval tokens), not held-out generalization. cycles 220/228 used calib==eval safely because they did NOT train; cycle 234 introduces training. Per G6 method failure: literal verdict CONFIRMED met but hypothesis untested. Downgrade to INCONCLUSIVE.
+guardrail_flags=G1,G6
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Rerun with disjoint calib/eval split (e.g., all_ids[:200] / [200:300] like cycles 206/223). With proper held-out eval, expect PPL in (45.064, 61.664) range.
+interesting=true
+interesting_reason=Catches the calib==eval reuse from cycles 220/228 inheritance — affects any future training experiment that reuses that data setup. Important methodology fix.
