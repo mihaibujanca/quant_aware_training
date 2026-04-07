@@ -6,18 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-287. **2-block [1, 11] hybrid — K=512 on [1] + rank-22 c_proj weight-SVD on [11] in one joint-Adam fit**
-   - **Motivation**: the natural partner to item 285. Where item 285 tests whether block 1 and block 11 compose in the LEANEST possible hybrid (just [1] + rank-22 patch), item 287 tests the same disjoint-operator hypothesis but at cycle 266's ACTIVE PARETO WINNER scale — [1,4] K=512 — replacing block 4 with block 11 rank-22 c_proj. Block 4 in cycle 266 buys 0.03 PPL vs [1] alone (cycle 271); the question is whether block 11's rank-22 c_proj compression, which on its own buys 0.57 PPL vs float (cycle 270), composes BETTER with [1] than block 4's K=512 does. If yes, (411K, ≤43.3?) is a new Pareto winner strictly below cycle 266 [1,4] on BOTH axes. If the hybrid is WORSE than [1] alone, block 11 rank-22 is either (a) already a noop at the cascade level (it shifts residual in a direction that [1]'s compressed W_out can't exploit) or (b) actively harmful via the same mechanism cycle 273 saw with channel K=22. Item 287 differs from 285 in the BASELINE it challenges: 285 asks "does adding block 11 rank-22 to [1] alone improve over [1] alone?"; 287 asks "does swapping block 4 K=512 for block 11 rank-22 improve over [1,4] K=512?". The two probes test the same composition from different anchor recipes. Running both isolates whether the hybrid is driven by additive composition OR by the block-4-vs-block-11 slot choice.
-   - **Setup**: BLOCKS=[1, 11], block 1 gets K=512 topk (cycle 271 template, trainable W_out (512×768) + b_out (768) = 393,984), block 11 gets rank-22 c_proj weight-SVD (cycle 270 template, trainable right factor (22×768) + bias (768) = 17,664). Total trainable = 411,648. Joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024}, disjoint calib=all_ids[:200]/eval=all_ids[200:300], SEQ_LEN=128, MPS. Control: also run BLOCKS=[1, 4] K=512 (cycle 266 replication, 3 seeds, N_STEPS=4000) as a within-session control — this verifies the infrastructure is consistent and provides a same-seed same-run comparison. **6 fits total, ~3 min/fit ≈ 18 min**.
-   - **Hypothesis**: block 11 rank-22 composes BETTER with [1] than block 4 K=512 does (since block 11 is the #1 cycle 173 PPL-dominant block) → hybrid best_mean ≤ 43.5 (≥0.35 PPL below cycle 266 [1,4]=43.852, ≥0.3 below cycle 271 [1]=43.821) AND within-session [1,4] control reproduces cycle 266 to ≤0.05 PPL.
-   - **Outcomes**:
-     - **CONFIRMED** if hybrid best_mean ≤ 43.5 AND control reproduces cycle 266: (411K, ≤43.5) NEW Pareto winner; swapping block 4 K=512 for block 11 rank-22 strictly improves the 2-block [1,4] recipe at the same trainable param count (411K vs 788K → ALSO ~half the params); opens "cycle 266 [1,4] + block 11 rank-22 → 3-block hybrid (806K)" next.
-     - **REFUTED** if hybrid ≥ 44.5: block 11 rank-22 does NOT compose with [1] at the 2-block cascade level; cycle 266 [1,4] recipe is better than [1,11] by ≥0.65 PPL; closes the "block 11 > block 4 in the [1,?] slot" hypothesis.
-     - **INCONCLUSIVE** if hybrid ∈ (43.5, 44.5): partial improvement; block 11 rank-22 is a noop vs [1] alone but doesn't make it worse; record Pareto point and decide on 3-block extension.
-   - **Baselines**: cycle 266 [1,4] K=512=43.852 (788K), cycle 271 [1] K=512=43.821 (394K), cycle 270 block 11 rank-22=54.469 (17.7K, single-block), cycle 273 hetero K=22 on block 11 + K=512 on [1,4,7]=52.637 (REFUTED — channel K=22, not weight-SVD rank-22), float 53.895.
-   - **Run cap**: ~18 minutes.
-   - Depends on: cycle 270 SVD infrastructure, cycle 271 1-block script. Parallel-dependent on item 285 but independently interpretable.
-
 ### P1
 
 288. **All-blocks c_proj output eff_rank census — extend cycle 267 to blocks {0, 2, 3, 4, 6, 7, 8, 9, 10}**
@@ -69,6 +57,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 277
+
+287. **2-block [1, 11] hybrid — K=512 on [1] + rank-22 c_proj on [11]** *(INCONCLUSIVE — PLAN INVALID, cycle 277)*
+   - **Outcome: INCONCLUSIVE (PLAN INVALID)** — Duplicate of cycle 275 item 285: identical trainable surface (BLOCKS=[1,11], block 1 K=512 topk + block 11 rank-22 weight-SVD, 411,648 trainable params, joint Adam). Cycle 275 measured this exact recipe with 3 seeds over 4000 steps → best_mean=48.200 ± 0.048 (REFUTED, +4.38 PPL worse than cycle 271 [1] alone). The only new element in item 287 was a within-session [1,4] K=512 control, which is not worth a full cycle (cycle 266 already measured [1,4]=43.852 ± 0.005). No experiment run.
+   - Artifacts: `autoresearch/briefs/cycle_277.md`, `autoresearch/plans/cycle_277.md`
 
 ### Cycle 276
 

@@ -1,6 +1,11 @@
-# Research Status — 276 Cycles (001–276)
+# Research Status — 277 Cycles (001–277)
 
-## Latest: Cycle 276
+## Latest: Cycle 277
+
+287. **2-block [1,11] hybrid** — INCONCLUSIVE (PLAN INVALID, duplicate of cycle 275)
+   - Item 287 is a duplicate of cycle 275 item 285: identical trainable surface (BLOCKS=[1,11], block 1 K=512 + block 11 rank-22 weight-SVD, 411,648 trainable). Cycle 275 measured REFUTED at 48.2. No experiment run; commit=NONE. The only new element was a [1,4] control, not worth a cycle (cycle 266 measured).
+
+## Cycle 276
 
 286. **1-block [1] K sweep {32, 64, 128, 256}** — CONFIRMED
    - 12 fits, 30.7 min. **K=256=45.385 (≤45.5 confirmed), K=128=46.932 (≤47 confirmed), K=64=48.045, K=32=49.649**. All 4 K beat float (53.895); all 12 fits budget-bounded at step 4000. **1-block K-curve is concave-up but SHALLOWER than multi-block** (per-halving cost ~1.46 PPL vs 4-block ~2.31, 5-block ~2.65) — fewer blocks = more Adam slack. **FOUR NEW PARETO POINTS**: (25K, 49.65) becomes lowest-param winner **dominating cycle 270 block-11 r22 (17.7K, 54.47) on PPL by 4.82 PPL**; (49.9K/99K/197K) all dominate cycle 272 K=256 4-block on both axes.
