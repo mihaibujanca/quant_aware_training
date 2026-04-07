@@ -1,6 +1,11 @@
-# Research Status — 279 Cycles (001–279)
+# Research Status — 280 Cycles (001–280)
 
-## Latest: Cycle 279
+## Latest: Cycle 280
+
+290. **Block 1 c_proj rank-r weight-SVD sweep** — CONFIRMED (interesting=true)
+   - **No-retrain**: r=1 59.75, r=2 57.66, r=5 56.83, r=10 56.73. **Retrain r=2 (3 seeds, only 2,304 params)**: **best_mean=49.032 ± 0.025** — **4.86 PPL BELOW float (53.895)**. CONFIRMED via retrain clause (≤54) by 4.97 PPL margin. **NEW LOWEST-PARAM PARETO ANCHOR**: **(2,304, 49.03)** strictly dominates cycle 270 block 11 rank-22 (17,664, 54.47) on BOTH axes — **7.7× fewer trainable params AND -5.44 PPL**. All 3 seeds still descending at step ≥3900 (budget-bounded). Confirms cycle 270's "weight-SVD ≠ activation-SVD" lesson at a second block (top-2 weight energy only 7.57% vs activation top-1 92.94%), but eff_rank IS directionally predictive of retrained compressibility.
+
+## Cycle 279
 
 289. **[1,4] K=512 W_out+W_fc retrain** — CONFIRMED (W_fc noop)
    - SLICED FullCompressedMLP (cycle 213 convention), trainable 1,575,424. **best_mean=43.878 ± 0.099**, Δ vs cycle 266 [1,4] W_out-only (43.852) = +0.026 PPL (within noise). CONFIRMED W_fc noop band (43.6, 44.1). Per-seed: 42=44.017, 137=43.796, 2024=43.819. Final@4000 overshoots best by +2.75 PPL (46.63) — **W_fc DOFs overfit rather than absorb real signal**. Strictly dominated by cycle 271 [1] K=512 on both axes. **W_fc retraining probe family now CLOSED across 5 configs**: cycle 213 (K=512 3-block), cycle 241 (K=512 6-block bias), cycle 248 (K=128 6-block full), cycle 262 (K=1 3-block bias), cycle 279 (K=512 2-block full) — all within ±0.1 PPL of W_out-only. Noted: agenda item 289 claimed 5.5M trainable (full 768×3072 W_fc); used cycle 213's SLICED semantics (1.58M) — discrepancy documented.
