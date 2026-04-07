@@ -1,6 +1,11 @@
-# Research Status — 251 Cycles (001–251)
+# Research Status — 252 Cycles (001–252)
 
-## Latest: Cycle 251
+## Latest: Cycle 252
+
+262. **Block 5 geometric deep-dive** — REFUTED (interesting=true)
+   - 5 metrics on post-GELU activations + c_proj rows for blocks {1..8}: per-channel std_mean, kurt_mean, SVD-entropy effective rank, topk-128/512 coverage, c_proj row cosine. **Block 5 within 1σ of cohort {1,2,4,7,8} on ALL metrics** (max |z|=0.801 on cov512). Block 5 sits in dense high-rank low-concentration regime monotone within blocks 4→8 (eff_rank 358 between b6=379 and b8=349; cov512 0.381 on monotone 0.406→0.417 across 4-8). Cohort is wildly heterogeneous (b2 eff_rank=45, cov128=0.98) but conclusion is robust to cohort choice. **Together with cycle 250, fully closes the "block 5 is structurally special" story** — cycle 245's 5.7 PPL gain was a 6→5 count transition, not block-identity-driven. Any residual block-5 signal must come from cross-block downstream interaction, not MLP-intrinsic geometry.
+
+## Cycle 251
 
 261. **5-block [1,2,4,7,8] at K=128** — INCONCLUSIVE (interesting=true)
    - 5-block K=128, 3 seeds. **best_mean=59.119 ± 0.009** ∈ (56, 62) inconclusive (Adam still descending at step 4000). Δ vs cycle 245 K=512 (53.826) = +5.293 K-penalty. Δ vs cycle 231 K=128 6-block (67.562) = -8.443. **Cycle 245's float-tie is K=512-specific**, not recipe-specific. **Pareto finding**: 5-block K=128 (59.119, 495K params) matches cycle 221 6-block K=512 floor (~59.5, 2.36M params) — **4× parameter win at matched PPL**. Per-block K-penalty scales sublinearly with block count (3→0.81, 5→1.06, 6→1.34 PPL/block).
