@@ -1,6 +1,11 @@
-# Research Status — 286 Cycles (001–286)
+# Research Status — 287 Cycles (001–287)
 
-## Latest: Cycle 286
+## Latest: Cycle 287
+
+297. **[1] K=512 8000 steps** — CONFIRMED
+   - **best_mean=42.785 ± 0.013** (≤ 43.0 confirmed by 0.215 PPL). Per-seed 42.77/42.79/42.80 — all below 43.0, all best at step 8000 (still descending). Init deterministic, matches cycle 271 exactly; step-4000 evals match cycle 271 within 1e-4 → only budget extension differs, **1.04 PPL gain purely from extra Adam steps**. **NEW PPL PARETO WINNER at 393,984 params**: -1.04 vs cycle 271 [1] K=512 4k (43.821), -0.78 vs cycle 286 [2] K=512 4k (43.563). **Caveat**: cycle 286 [2] was also budget-bounded; 8k retest on [2] is now the obvious follow-up to settle [1] vs [2] at matched budgets.
+
+## Cycle 286
 
 296. **1-block [2] K=512** — INCONCLUSIVE
    - 3 seeds {42,137,2024}. **best_mean=43.5627 ± 0.0258** at 393,984 trainable params, in dead zone (43.5, 44.5) — fails CONFIRMED (≤43.5) by 0.063 PPL; fails REFUTED (≥44.5) by 0.937 PPL. **NEW PPL PARETO WINNER on the 393,984-param tier**: STRICTLY DOMINATES cycle 271 [1] K=512 (43.821) at SAME param count by 0.258 PPL — replaces cycle 271 [1] as the best 1-block K=512 result. Per-K [2]-beats-[1] trend extrapolates but margin shrinks: K=32 −1.75, K=64 −0.53, K=512 −0.258. **All 3 seeds best at step 4000 (budget-bounded, still descending)** — the true floor is below 43.5; a follow-up at 8000 steps would likely flip to CONFIRMED. Init PPL 55.4612 deterministic. **Geometric reading**: block 2 eff_rank=1.05 is INPUT-driven (joint of weight × input); channel-K with topk exploits it, weight-SVD does not (cf. cycle 285 where block 2 r=2 is dominated by block 1 r=2). Right operator depends on whether structure lives in WEIGHT or INPUT. Wall ~7.8 min.
