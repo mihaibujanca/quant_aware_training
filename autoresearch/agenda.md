@@ -4,11 +4,71 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## NEXT EXPERIMENTS
 
+### P0
+
+264. **5-block [1,2,4,7,8] at K=128 with extended budget — find the cycle 251 ceiling**
+   - **Motivation**: cycle 251 (INCONCLUSIVE, 59.119 ± 0.009) ran 5-block K=128 at 4000 steps and Adam was still descending monotonically through the budget — best_step was 4000 for all 3 seeds. Cycle 251's verdict was inconclusive precisely because the optimisation hadn't plateaued; the descent rate over steps 3000–4000 averaged ~0.05 PPL/100 steps. The 5-block K=128 floor is the most strategically interesting K=128 data point we have (paretodominates cycle 221's 6-block K=512 floor at 4× fewer parameters per cycle 251's analysis). The OPEN question: where does the 5-block K=128 cascade actually plateau? If 8000 steps brings best_mean below 56.0, it CONFIRMS that 5-block is K-robust and the K=128 penalty at 5 blocks is much smaller than at 6 blocks (cycle 231 67.6). If it stays above 58, the K-bandwidth penalty is real even at the smaller block count and the cycle 251 sublinear-scaling story holds.
+   - **Setup**: BLOCKS=[1,2,4,7,8], K=128, W_out+b_out trainable joint Adam LR=1e-4, **N_STEPS=8000** (double cycle 251's budget), EVAL_EVERY=200 (so we get 40 eval points vs cycle 251's 40 at 100-step interval; same eval count, twice the horizon), best-state restore, 3 seeds {42, 137, 2024}, disjoint calib=all_ids[:200]/eval=all_ids[200:300], SEQ_LEN=128. Trainable params ≈ 987,520 (matches cycle 251). Reuse cycle 251's experiment script (`experiments/5block_k128_cycle251.py` or analogue) with N_STEPS doubled.
+   - **Hypothesis**: extending the budget closes most of the residual gap → best_mean ≤ 56.0 (within 2.1 PPL of float, beats cycle 251 by ≥3 PPL, and well below cycle 231 K=128 6-block 67.562).
+   - **Outcomes**:
+     - **CONFIRMED** if best_mean ≤ 56.0: 5-block K=128 plateaus near float at extended budget; the cycle 251 inconclusive verdict was a budget artifact, and the 5-block K=128 floor is structurally close to float.
+     - **REFUTED** if best_mean ≥ 58.0: extended budget buys ≤1 PPL beyond cycle 251; the 5-block K=128 floor is real near 58–59 and the K-penalty at 5 blocks is only marginally smaller than at 6 blocks. Sublinear-K-penalty story holds but doesn't yield float-equivalent at K=128.
+     - **INCONCLUSIVE** if best_mean ∈ (56, 58): partial improvement; the budget mattered but plateau is mid-tier; need K sweep to characterise.
+   - **Baselines**: cycle 251 5-block K=128 4000-step 59.119, cycle 245 5-block K=512 53.826, cycle 231 K=128 6-block 67.562, cycle 221 K=512 6-block 59.515, float 53.895.
+   - **Run cap**: ~15 minutes (double cycle 251's ~7 min).
+   - Depends on: cycle 251 infrastructure.
+
+265. **4-block K=512 sweep — does dropping a second block beat 5-block?**
+   - **Motivation**: cycle 245 CONFIRMED that 5-block [1,2,4,7,8] hits float at K=512 (53.826 vs float 53.895). Cycle 250 REFUTED the "block 5 is special" interpretation: substituting block 3 for block 5 in a 6-block set only changes PPL by +0.5 — the 6-block ceiling at ~59.5 is COUNT-driven, not block-identity-driven. Combined with cycle 244's monotone sliding-window curve, this implies that **going from 5 → 4 blocks should drop another ~5 PPL** if the count-driven story holds, putting 4-block compression *strictly below float* in PPL terms. The OPEN question: can we hit a 4-block K=512 PPL meaningfully below float, opening the door to a "compress 4 blocks at near-zero quality cost" recipe? Three candidate 4-block subsets cover the early/mid/late mix space: [1,2,4,7] (drop 8 from cycle 245's set), [1,4,7,8] (drop 2), [1,2,7,8] (drop 4 — the rank-2 contributor in cycle 243).
+   - **Setup**: K=512 W_out+b_out trainable joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024} **per subset**, disjoint calib=all_ids[:200]/eval=all_ids[200:300], SEQ_LEN=128. Three configurations sequentially: BLOCKS=[1,2,4,7], BLOCKS=[1,4,7,8], BLOCKS=[1,2,7,8]. Trainable params per config ≈ 1,575,936 (4 × 393,984 W_out + b_out). Reuse cycle 245 script with BLOCKS list iterated. **Single experiment script with a config loop** (3 subsets × 3 seeds = 9 fits, ~3 min/fit ≈ 27 min total — at the edge of the 30-min cap; if needed, drop to 2 seeds {42, 137} for 18 fits total to fit under cap).
+   - **Hypothesis**: count-driven story holds → at least one 4-block subset achieves best_mean ≤ 51.0 (≥3 PPL below float, the count-prediction extrapolation from 5-block 53.826 minus another ~3 PPL).
+   - **Outcomes**:
+     - **CONFIRMED** if min over 3 subsets best_mean ≤ 51.0: 4-block K=512 strictly beats float; the count-driven story extrapolates as expected; opens the "drop more blocks for more headroom" recipe.
+     - **REFUTED** if all 3 subsets best_mean ≥ 53.0: 4-block does NOT beat float meaningfully; the cycle 245 float-tie was the *limit* of the K=512 W_out cascade, not a midpoint on a continuing curve. Count-driven story is asymptotic, not extrapolative.
+     - **INCONCLUSIVE** if min ∈ (51, 53): 4-block buys ≤1 PPL beyond 5-block; count-driven story is real but the marginal benefit per dropped block is shrinking. Worth recording but not a recipe shift.
+   - **Baselines**: cycle 245 5-block 53.826, cycle 210 K=512 [1,4,7] 3-block 46.556, cycle 242 [1,2,3] 3-block 47.135, float 53.895.
+   - **Run cap**: ~27 minutes (3 subsets × 3 seeds × ~3 min/fit). Drop to 2 seeds if exceeded.
+   - Depends on: cycle 245 infrastructure.
+
+266. **6-block K=256 — fill the missing K=256 6-block data point**
+   - **Motivation**: at 6 blocks, cycle 221 (K=512) hit 59.515 and cycle 231 (K=128) hit 67.562 — an 8.05 PPL gap with K halving. Cycle 240 (K=1) refuted cleanly at 96.886. The K=256 6-block point is **missing** from the K-vs-PPL curve at 6 blocks. Cycle 223 showed K=256 3-block was 47.5 (between K=512 46.556 and K=128 48.989, near-linear interpolation in PPL). If K=256 6-block lands close to the geometric midpoint of 59.5 and 67.6 (i.e. ~63), then K vs PPL at 6 blocks scales smoothly and there's no special "K=256 jump"; if it lands much closer to either endpoint, the K-penalty has a curvature feature worth understanding. Cycles 247/249 showed that **heterogeneous** K=128/K=512 mixing gives only 28-39% gap recovery at 50% the K=512 parameter cost — homogeneous K=256 at 6 blocks is the head-to-head comparison those cycles cannot make. If K=256 6-block beats hetero {K=128, K=512} at the same parameter budget (~1.18M trainable), uniform mid-K dominates the heterogeneous sub-family.
+   - **Setup**: BLOCKS=[1,2,4,5,7,8], K=256, W_out+b_out trainable joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024}, disjoint calib=all_ids[:200]/eval=all_ids[200:300], SEQ_LEN=128. Trainable params per block ≈ 197K (256 × 768 + 256), total ≈ 1.18M (matches cycles 247/249). Reuse cycle 231 script with K=256.
+   - **Hypothesis**: K=256 6-block lands near the geometric midpoint → best_mean ∈ [62.5, 64.5] (around 63), beating BOTH cycle 247 (64.453) and cycle 249 (65.275) at the same parameter budget.
+   - **Outcomes**:
+     - **CONFIRMED** if best_mean ≤ 63.0: K=256 uniform 6-block beats both heterogeneous K mixes at matched ~1.18M budget; uniform mid-K is the dominant strategy and the cycle 247/249 hetero approach is closed.
+     - **REFUTED** if best_mean ≥ 65.0: K=256 6-block is no better than the worse of the two hetero allocations; uniform K is no better than mixing; the K=128 binding is structural at 6 blocks regardless of allocation.
+     - **INCONCLUSIVE** if best_mean ∈ (63, 65): K=256 is between the two hetero results, neither dominates; smooth K-curve with no special K=256 feature.
+   - **Baselines**: cycle 221 K=512 6-block 59.515, cycle 231 K=128 6-block 67.562, cycle 247 hetero {4,5}=512 64.453, cycle 249 hetero {7,8}=512 65.275, cycle 223 K=256 3-block 47.5, float 53.895.
+   - **Run cap**: ~10 minutes.
+   - Depends on: cycle 231 infrastructure.
+
 ### P1
+
+267. **5-block K=64 — extend the K-vs-PPL curve at 5 blocks below K=128**
+   - **Motivation**: at 5 blocks we have K=512 53.826 (cycle 245, near float) and K=128 ~59 (cycle 251 inconclusive at 4000 steps, item 264 will pin this down). The shape of the K-vs-PPL curve at 5 blocks below K=128 is unknown. Cycle 230 found K=1 3-block worked (59.245 — mid-cascade slack) but cycle 240 found K=1 6-block crashed (96.886 — 6-block channel binding). The 5-block K-curve is the right place to find the **transition point** between "channel capacity is slack" and "channel capacity is binding" — and since 5-block at K=512 is float-equivalent, there's a meaningful PPL ceiling to compare against. If K=64 still lands below 60, it probes how far K can be pushed while keeping the 5-block-special structural advantage. If K=64 catastrophically blows up like K=1 6-block, the 5-block float-tie is K-bandwidth-bounded.
+   - **Setup**: BLOCKS=[1,2,4,7,8], K=64, W_out+b_out trainable joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024}, disjoint calib=all_ids[:200]/eval=all_ids[200:300], SEQ_LEN=128. Trainable params ≈ 246,720 (5 × 49,344 W_out + b_out). Reuse cycle 245 script with K=64.
+   - **Hypothesis**: 5-block tolerates K=64 with manageable degradation → best_mean ≤ 64.0 (5 PPL above K=128 plateau, well below K=1 territory).
+   - **Outcomes**:
+     - **CONFIRMED** if best_mean ≤ 64.0: 5-block recipe is K-robust well below K=128; K-curve at 5 blocks is gradual and the K=64 point is still useful.
+     - **REFUTED** if best_mean ≥ 75.0: K=64 5-block crashes; the channel-binding regime kicks in below K=128 even at 5 blocks; cycle 240 K=1 6-block crash extends down to K=64 5-block.
+     - **INCONCLUSIVE** if best_mean ∈ (64, 75): meaningful K-degradation but not catastrophic; map onto the curve and decide if K=32/K=16 are worth probing.
+   - **Baselines**: cycle 245 K=512 5-block 53.826, item 264 K=128 5-block (TBD), cycle 230 K=1 3-block 59.245, cycle 240 K=1 6-block 96.886, float 53.895.
+   - **Run cap**: ~10 minutes.
+   - Depends on: cycle 245 infrastructure (independent of item 264).
 
 ### P2
 
-
+268. **K=1 + W_fc bias trainable on 3 blocks — does the c_fc bias become useful at the smallest K?**
+   - **Motivation**: cycle 213 (K=512 3-block) and cycle 241 (K=512 6-block) both found c_fc bias retraining to be a perfect noop on top of W_out+b_out — at K=512 the W_out path absorbs everything the bias could buy. Cycle 248 found even unfreezing the full W_fc slice at K=128 6-block is also a noop. The two-endpoint closure pattern is suspicious: at K=512 the trainable surface is large enough that c_fc bias is redundant; at K=128 the surface is still ~1.2M and W_fc retraining adds nothing on top. But at **K=1** the surface collapses to ~9K trainable params (cycle 240) and the W_out path has only ONE direction per block to work with. If c_fc bias is going to ever matter, it should matter THERE: with 1 channel, the channel selection is brittle and a per-channel offset before GELU might shift the operating point of the bottleneck channel into a more useful regime. Cycle 230 (K=1 3-block, 59.245) is the clean baseline — much better than cycle 240's K=1 6-block crash, because with 3 blocks the W_out path can still ride mid-cascade slack. Adding c_fc bias on top tests the "smallest-K is where bias matters" hypothesis directly.
+   - **Setup**: BLOCKS=[1,4,7], K=1, FullCompressedMLP-style trainable {W_out, b_out, c_fc bias slice (K=1 → 1 trainable per block)} = 3 × (768 + 1 + 1) = 2,313 trainable params (vs cycle 230's 2,310). Joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024}, disjoint calib=all_ids[:200]/eval=all_ids[200:300], SEQ_LEN=128. Reuse cycle 230's K=1 3-block script with c_fc bias added to the optimiser param group. The 1-channel c_fc bias is a single scalar per block — three scalars total — but it changes the GELU operating point on the chosen channel.
+   - **Hypothesis**: at K=1 the c_fc bias finally has a non-trivial effect because the W_out path is starved → best_mean ≤ 58.5 (beats cycle 230 K=1 3-block 59.245 by ≥0.7 PPL).
+   - **Outcomes**:
+     - **CONFIRMED** if best_mean ≤ 58.5: c_fc bias matters at K=1, validating the "small-K is where bias matters" hypothesis; gives a structural reason for the cycle 213/241/248 noops (they were in the K-rich regime where W_out absorbs everything).
+     - **REFUTED** if best_mean ≥ 59.5: c_fc bias is a noop even at K=1; the W_out path absorbs all the surface degree-of-freedom regardless of K; closes the bias-matters-at-small-K hypothesis cleanly across 3 K endpoints.
+     - **INCONCLUSIVE** if best_mean ∈ (58.5, 59.5): bias buys ~0.5 PPL but within seed noise of cycle 230; can't distinguish from null.
+   - **Baselines**: cycle 230 K=1 3-block 59.245, cycle 213 K=512 W_out+c_fc bias noop, cycle 241 K=512 6-block W_out+c_fc bias noop (59.533 vs 59.515), cycle 240 K=1 6-block 96.886 (catastrophic), float 53.895, cycle 210 K=512 [1,4,7] 46.556.
+   - **Run cap**: ~10 minutes.
+   - Depends on: cycle 230 infrastructure (K=1 3-block CompressedMLP variant).
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
