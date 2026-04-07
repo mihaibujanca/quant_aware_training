@@ -1,0 +1,106 @@
+cycle=275
+item=285
+verdict=REFUTED
+commit=61909c1
+float_ppl=53.895
+BLOCKS=[1,11]
+BLOCK_1_K=512
+BLOCK_11_RANK=22
+BLOCK_11_OPERATOR=LowRankCProj_weight_SVD_U22_Sigma22_frozen_B_22x768_plus_bias_trainable
+N_STEPS=4000
+EVAL_EVERY=100
+seeds=[42,137,2024]
+n_seeds=3
+trainable_params=411648
+trainable_block_1_W_out=393216
+trainable_block_1_b_out=768
+trainable_block_11_B=16896
+trainable_block_11_bias=768
+trainable_sum_check=411648
+
+# Aggregate (best_ppl_mean +/- best_ppl_std)
+init_mean=60.6639
+init_std=0.0000
+best_mean=48.20038
+best_std=0.04841
+best_min=48.1320
+best_max=48.2367
+best_range=0.1047
+best_step_mean=4000
+best_step_std=0
+final_at_4000_mean=48.20038
+final_at_4000_std=0.04841
+
+# Per-seed (seed, init, best, best_step, final@4000)
+seed_42_init=60.6639
+seed_42_best=48.2367
+seed_42_best_step=4000
+seed_42_final_at_4000=48.2367
+
+seed_137_init=60.6639
+seed_137_best=48.1320
+seed_137_best_step=4000
+seed_137_final_at_4000=48.1320
+
+seed_2024_init=60.6639
+seed_2024_best=48.2325
+seed_2024_best_step=4000
+seed_2024_final_at_4000=48.2325
+
+# Baselines (item 285 verbatim + script constants)
+baseline_cycle_270_block11_r22_retrain=54.469
+baseline_cycle_271_k512_1block_1=43.821
+baseline_cycle_266_k512_2block_1_4=43.852
+baseline_cycle_273_hetero_k11_22_channel=52.637
+float_baseline_ref=53.895
+
+delta_vs_cycle_271=+4.3794
+delta_vs_cycle_270=-6.2686
+delta_vs_cycle_266=+4.3484
+delta_vs_float=-5.6945
+
+# Verdict logic per item 285 verbatim
+threshold_C_le=43.5
+threshold_R_ge=45.0
+margin_to_C=-4.7004
+margin_over_R=+3.2004
+verdict_logic=best_mean_48.20038_>=_45.0_REFUTED_clause_triggered_by_3.200_PPL_CONFIRMED_clause_le_43.5_FAIL_by_4.700_PPL_REFUTED
+
+# SVD summary (block 11 c_proj.weight, rank-22)
+svd_S_0=60.99306
+svd_S_1=34.59367
+svd_S_2=32.18411
+svd_S_21=17.5653
+svd_S_22=17.4706
+svd_top_22_energy_fraction=0.1414
+
+# Notes
+# Hybrid composes cycle 271 (block 1 K=512 CompressedMLP topk+lstsq) with cycle 270
+# (block 11 LowRankCProj rank-22 weight-SVD U22_Sigma22 frozen). Joint Adam over
+# 4 tensors (block 1 W_out + b_out + block 11 B + bias), single fresh GPT-2 load
+# per seed, SVD of c_proj_11 cached across seeds, disjoint calib(200)/eval(100).
+# Init PPL deterministic 60.664 across all 3 seeds (both operators seed-independent).
+# best_step = 4000 (budget cap) for all 3 seeds -- still descending. Final at 4000
+# equals best for all seeds.
+# All per-seed |restored - recorded_best| < 1e-3 asserts PASS.
+# Hybrid lands 4.38 PPL WORSE than cycle 271 [1] alone -- block 11 rank-22 c_proj
+# patch is destructive when added to a compressed-block-1 cascade. Strictly
+# dominated by cycle 271 on BOTH Pareto axes (fewer params AND better PPL).
+# Does NOT enter Pareto frontier.
+# Consistent with cycle 273 (channel K_11=22 variant REFUTED at 52.64) -- weight-SVD
+# rank-22 is a milder operator than channel K=22 (4.4 PPL difference) but both are
+# destructive when composed with block 1 compression. "Pareto winners compose
+# additively on disjoint operators" hypothesis CLOSED as REFUTED.
+
+interpretation=REFUTED_best_mean_48.200_by_3.20_PPL_over_45.0_threshold_CONFIRMED_clause_FAIL_by_4.70_PPL_under_43.5_delta_vs_c271_1_K512_=+4.379_DAMAGES_1_K512_recipe_by_4.4_PPL_delta_vs_c270_block11_r22_=-6.269_hybrid_better_than_block11_r22_alone_by_6.3_PPL_block_1_K512_carries_information_but_block_11_patch_introduces_4.4_PPL_floor_delta_vs_c266_1_4_K512_=+4.348_hybrid_4.35_PPL_WORSE_than_2block_cascade_at_same_block_1_budget_init_60.664_det_across_seeds_both_operators_seed_indep_Adam_recovers_12.46_PPL_from_60.66_to_48.20_across_4000_steps_all_3_seeds_best_at_N_STEPS_cap_still_descending_range_0.10_tight_budget_bounded_8k_extension_would_buy_1-2_PPL_at_diminishing_returns_but_even_optimistically_lands_46-47_PPL_still_REFUTED_Pareto_frontier_unchanged_cycle_275_411K_48.200_strictly_dominated_by_cycle_271_394K_43.821_on_BOTH_axes_NOT_pareto_winner_cycle_273_hetero_K_11_22_channel_REFUTED_at_52.64_cycle_275_weight_SVD_rank_22_REFUTED_at_48.20_4.4_PPL_milder_but_both_destructive_when_composed_with_block_1_K512_cascade_disjoint_operator_compose_ability_hypothesis_CLOSED_REFUTED_at_2_operator_scale_block_11_rank22_c_proj_weight_SVD_isolated_patch_operator_NOT_cascade_compatible
+
+# File hashes (sha256) -- pre bookkeeping commit
+sha256_experiments_hybrid_block1_block11_cycle275_py=edd70f3aeb603b2d4c6185b287fc08b3ed6da3c6db7d3a50ce0861cad51510e0
+sha256_plans_cycle_275_md=fe8f2f23ad674cb919022bca2c75a6799bb22c9a41843ffdd831848644b0a89d
+sha256_briefs_cycle_275_md=42f63b26dd5d2e3e3dcf7c62b37dc6aa0a35ae3552eff33e4caa35c797f9fac4
+sha256_logs_cycle_275_run_log=64bc6f2e9fa8e6835c3021af5f0aeb1b5e16ea6e1fdd93438d95a48cb03da433
+sha256_results_cycle_275_hybrid_block1_block11_json=5a242a844b0ea7f788ecbbf57b8f6e381c37238e825214c67e73a90378e5d9b2
+sha256_results_cycle_275_summary_md=db733158044832e606694ded424386969be6cd7634521261a891fccfb8079f48
+
+paths=experiments/hybrid_block1_block11_cycle275.py,autoresearch/plans/cycle_275.md,autoresearch/briefs/cycle_275.md,autoresearch/logs/cycle_275_run.log,autoresearch/results/cycle_275_hybrid_block1_block11.json,autoresearch/results/cycle_275_summary.md,autoresearch/results/cycle_275_manifest.txt
+key_metric=best_mean=48.200_+/-_0.048_PPL_hybrid_b1_K512_plus_b11_r22_REFUTED_delta_vs_c271_+4.38_destructive_composition_NOT_Pareto_winner

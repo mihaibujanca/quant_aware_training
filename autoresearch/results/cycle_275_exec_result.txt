@@ -1,0 +1,47 @@
+cycle=275
+item=285
+verdict=REFUTED
+commit=61909c1
+status=SUCCESS
+
+best_mean=48.20038
+best_std=0.04841
+best_min=48.1320
+best_max=48.2367
+best_range=0.1047
+best_step_mean=4000
+best_step_std=0
+init_mean=60.6639 (deterministic, identical across 3 seeds)
+final_at_4000_mean=48.20038 (equals best since all best_step=4000)
+
+threshold_C_le=43.5
+threshold_R_ge=45.0
+margin_to_C=-4.7004
+margin_over_R=+3.2004
+verdict_logic=best_mean_48.200_>=_45.0_REFUTED_by_3.20_PPL_CONFIRMED_clause_le_43.5_FAIL_by_4.70_PPL
+
+per_seed_best=[48.2367@4000, 48.1320@4000, 48.2325@4000]
+per_seed_final_at_4000=[48.2367, 48.1320, 48.2325]
+all_best_at_budget_cap=true
+still_descending=true
+
+trainable_params=411648
+trainable_block_1_W_out=393216
+trainable_block_1_b_out=768
+trainable_block_11_B=16896
+trainable_block_11_bias=768
+fits=3_of_3
+no_seed_drop=true
+wall_time_min=7.8
+
+float_ppl=53.895
+delta_vs_c271_K512_1b_1=+4.379 (DAMAGES [1] alone recipe by 4.38 PPL)
+delta_vs_c270_block11_r22=-6.269 (better than block11 r=22 alone)
+delta_vs_c266_K512_2b_1_4=+4.348 (worse than [1,4] 2-block cascade)
+delta_vs_float=-5.695
+
+pareto=NOT_pareto_winner_strictly_dominated_by_cycle_271_1_K512_394K_43.821_fewer_params_AND_4.38_PPL_better_cycle_275_411K_48.200_does_NOT_enter_frontier_on_either_axis
+
+interpretation=Hybrid_composition_of_cycle_271_[1]_K=512_and_cycle_270_block_11_rank_22_c_proj_weight_SVD_REFUTED_by_3.20_PPL_margin_best_mean_48.200_is_4.38_PPL_WORSE_than_cycle_271_alone_at_43.821_the_two_disjoint_operators_do_NOT_compose_additively_block_11_rank_22_c_proj_weight_SVD_patch_is_destructive_when_added_to_a_compressed_block_1_cascade_consistent_with_cycle_273_hetero_K_11_22_channel_variant_REFUTED_at_52.64_weight_SVD_is_4.4_PPL_milder_than_channel_K_but_still_destructive_Pareto_winners_compose_additively_on_disjoint_operators_hypothesis_CLOSED_REFUTED_at_2_operator_scale_block_11_rank_22_c_proj_weight_SVD_is_isolated_patch_operator_not_cascade_compatible_operator_cycle_270_single_block_result_54.469_PPL_is_ceiling_for_this_operator_in_any_joint_cascade_fit_17_7K_block_11_trainable_params_effectively_worse_than_17_7K_additional_block_1_params_would_be
+
+artifacts=experiments/hybrid_block1_block11_cycle275.py,autoresearch/plans/cycle_275.md,autoresearch/briefs/cycle_275.md,autoresearch/logs/cycle_275_run.log,autoresearch/results/cycle_275_hybrid_block1_block11.json,autoresearch/results/cycle_275_summary.md,autoresearch/results/cycle_275_manifest.txt
