@@ -1,6 +1,11 @@
-# Research Status — 239 Cycles (001–239)
+# Research Status — 240 Cycles (001–240)
 
-## Latest: Cycle 239
+## Latest: Cycle 240
+
+250. **K=1 Adam correction at 6 blocks** — REFUTED (interesting=true)
+   - BLOCKS=[1,2,4,5,7,8] K=1 (9216 trainable), 3 seeds. **best_mean=96.886 ± 0.071** (96.943/96.786/96.929) ≥ 70 refuted threshold by +26.9 PPL. Init=203.246 (much worse than cycle 221's K=512 init 86.7). Cycle 230's K=1 3-block (59.245) WORKED on mid-cascade slack; at 6 blocks the single-channel projection compounds catastrophically. **Channel capacity binds at 6 blocks even though it doesn't at 3.** Combined with cycle 231 (K=128 6-block 67.562 vs K=512 59.515), the K-vs-PPL curve at 6 blocks is much steeper than at 3. The 59.5 ceiling is NOT a pure structural cascade-depth floor — channel capacity becomes a real constraint when stacked.
+
+## Cycle 239
 
 249. **gelu_noneg + μ + LoRA r=8 disjoint splits** — CONFIRMED (interesting=true)
    - Cycle 234 leakage rerun with disjoint calib[:200] / eval[200:300] (asserted disjoint). 3 seeds: **final_eval_ppl = 47.692 ± 0.143** (47.666/47.531/47.879). ≤48 confirmed by 0.31 PPL. **LoRA beats float on eval slice by 6.20 PPL (-11.5%)** — gelu_noneg + per-channel μ + LoRA r=8 (368K trainable params) GENERALIZES on held-out. Cycle 234's leaked 32.411 was indeed ~15 PPL of calib overfit (47.69 - 32.41 = +15.28); the residual generalizes. Lands between cycle 210 K=512 W_out (46.556) and cycle 223 K=128 W_out (48.989) at ~similar 368K trainable param budget but via a STRUCTURALLY DIFFERENT mechanism (activation modification + low-rank c_proj residual instead of channel selection). Closes cycle 234 audit loop.
