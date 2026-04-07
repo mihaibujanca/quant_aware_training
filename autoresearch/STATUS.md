@@ -1,6 +1,11 @@
-# Research Status — 268 Cycles (001–268)
+# Research Status — 269 Cycles (001–269)
 
-## Latest: Cycle 268
+## Latest: Cycle 269
+
+279. **K=1 6-block 16000 steps** — CONFIRMED (structural)
+   - Cycle 240 4× extension. **best_mean=91.613 ± 0.037** (all seeds best at step 16000). Δ vs cycle 240 4k (96.886) = -5.273 PPL — extending budget 4× bought only 5.27 PPL (closed **14%** of K=1-vs-K=512 6-block gap). Step 4000 PPLs reproduce cycle 240 to 3 d.p. **Trajectory descent rate per 1000 steps**: 4-8k=3.2, 8-12k=1.5, 12-16k=0.6 — asymptotically slow but not flatlined; linear extrapolation to 32k → ~89.2 (still above refuted). **Cycle 240's catastrophe is real and structural**: the K=1 endpoint cannot pay for cascade depth, regardless of budget.
+
+## Cycle 268
 
 278. **K=64 4-block sweep** — CONFIRMED
    - 9 fits, 21 min. **min best_mean=55.953 ± 0.092 on [1,4,7,8]** (≤56 confirmed by 0.047 PPL). Per-subset: [1,2,4,7]=56.067±0.044, [1,4,7,8]=**55.953**, [1,2,7,8]=57.277±0.120. **Subset ordering FLIPS at K=64**: [1,4,7,8] < [1,2,4,7], opposite of K=128/K=512 ordering (within ~1.2σ but consistent across seeds). **K-curve at 4 blocks {64,128,512} = {55.95, 53.65, 49.61}** — concave-up holds. 4-block K=64 does NOT beat float (+2.06 PPL above). **NEW LOW-PARAM PARETO ANCHOR**: (200K, 55.95) DOMINATES cycle 251 K=128 5-block (495K, 59.12).
