@@ -1,6 +1,11 @@
-# Research Status — 282 Cycles (001–282)
+# Research Status — 283 Cycles (001–283)
 
-## Latest: Cycle 282
+## Latest: Cycle 283
+
+293. **Block 2 K sweep {16, 32, 64}** — CONFIRMED (interesting=true)
+   - **K=16 (13,056 params)=49.462 ± 0.047** — clause 1 PASS by 2.54 PPL. **K=32 (25,344)=47.897 ± 0.066** — clause 2 PASS by 2.10 PPL. **K=64 (49,920)=47.511 ± 0.061**. Deltas vs float: -4.43/-6.00/-6.38. **Block 2 beats block 1 at every K**: [2] vs [1] K=32 -1.75 PPL; K=64 -0.53 PPL (same trainable count). **NEW PARETO ANCHOR**: [2] K=16 (13,056, 49.46) **strictly dominates cycle 276 [1] K=32 (25,344, 49.65) on BOTH axes** (48% fewer params AND 0.19 PPL better). Cycle 280 block 1 r=2 (2,304, 49.03) still dominates ultra-low endpoint. **Third positive result for eff_rank-as-prescriptive at single-block level**. Consistent with cycle 281: block 2 overlaps block 1 subspace (can substitute but not add in cascade).
+
+## Cycle 282
 
 292. **Block 10 rank-17 c_proj weight-SVD** — CONFIRMED (interesting=true)
    - No-retrain sweep: r=5 59.92, r=17 59.38, r=50 58.27 (all ≥ 57). **Retrain r=17 (3 seeds, 13,824 params)**: **best_mean=50.044 ± 0.057**. **Below float by 3.85 PPL**. **NEW PARETO POINT**: (13,824, 50.04) **strictly DOMINATES cycle 270 block 11 r=22 (17,664, 54.47)** on BOTH axes — 22% fewer params AND -4.42 PPL. Cycle 280 block 1 r=2 (2,304, 49.03) still dominates cycle 282. **First positive eff_rank-as-prescriptive result at single-block c_proj weight-SVD + Adam retrain level**. **Monotone ordering across three cycles**: block 1 (eff_rank 1.94 → 49.03) < block 10 (16.70 → 50.04) < block 11 (22.49 → 54.47). Cycle 270 block 11 rank-22 is now deprecated by cycle 282 on both Pareto axes.
