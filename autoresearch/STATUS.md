@@ -1,6 +1,11 @@
-# Research Status — 259 Cycles (001–259)
+# Research Status — 260 Cycles (001–260)
 
-## Latest: Cycle 259
+## Latest: Cycle 260
+
+271. **Jacobian delta ΔJ_l(x) = J_GELU − J_ReLU per token, per block** — INCONCLUSIVE (interesting=true)
+   - 256 calib tokens × 12 blocks. ΔJ = (c_proj.weight.T * delta_act_prime) @ c_fc.weight.T per token. **Per-token median rank_95 plateaus at ~335/768 (44%) across all 12 blocks** [360, 407, 367, 334, ..., 332]. Clause 1 (rank_95≤100 in ≥6) FAILS 0/12. REFUTED clause (rank_95≥400 in ≥6) only 1/12 (block 1). **Mode-1 alignment clause 2 PASSES STRONGLY**: top-20 left SVs of avg ΔJ vs c_fc reader of block l+1, top-5 cos sum [2.73, 2.90, 3.04, 2.89, **3.46, 3.49, 3.36**, 3.24, 3.26, 2.56, 1.93], peak 3.49 at pair 5→6 (matches cycle 258 bump layer κ-load), all 11 pairs ≥ 3σ vs random (1.256 ± 0.045, matches cycle 218's 1.27). **Verdict INCONCLUSIVE**: rank and alignment are separable — dominant directions ARE targeted (clause 2) but the operator is NOT low-rank (clause 1). The brief conflated them. **Operator-level alignment (3.49 peak) is STRONGER than cycle 218's zeroth-order Δ̃ (2.97)**.
+
+## Cycle 259
 
 270. **Per-token trajectory divergence under depth** — CONFIRMED (interesting=true)
    - d_l(x) = ‖x_GELU^l − x_(ReLU+b_leak)^l‖_G per token, 200×128 calib. **Log-linear best fit** (SSR 3.85e7 vs linear 4.68e7, saturating 2.67e8 — saturating 7× worse). **Growth constant on l∈[1,6]: b_early=+0.2135/layer** (≥ 0.20 confirmed clause 1). **Per-token cos(d_l, d_{l+1}) on early pairs**: [0.37, 0.57, 0.70, 0.77, 0.78, 0.82] — **4/6 ≥ 0.6** (clause 2 passes, threshold). **Saturation half of hypothesis REFUTED**: d_l grows FASTER after layer 8, not slower. Final layer jumps 10× (d_11=2686 → d_12=10163), driven by unembedding-read amplification. cos monotone-increasing 0.37→0.91. Cycle 189's aggregate cos=0.72 is recovered at mid-profile but undercounts late-layer coherence.
