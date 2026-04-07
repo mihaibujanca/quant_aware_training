@@ -1,6 +1,11 @@
-# Research Status — 290 Cycles (001–290)
+# Research Status — 291 Cycles (001–291)
 
-## Latest: Cycle 290
+## Latest: Cycle 291
+
+301. **Rank hybrid [1] rank-2 + [10] rank-5** — REFUTED
+   - Homogeneous low-rank weight-SVD hybrid, 6,912 trainable. **best_mean=51.801 ± 0.041** > 51.5 refuted threshold by 0.30. **Strictly Pareto-dominated on BOTH axes by both component anchors**: cycle 280 b1 r=2 (2,304, 49.03; 3× fewer params AND -2.77 PPL) AND cycle 289 b10 r=5 (4,608, 51.47; 1.5× fewer params AND -0.33 PPL). **Composition destructive**: b1 anchor damaged +2.77 PPL, b10 anchor +0.33 PPL. **Pattern across 5 b1-composition attempts** (273/275/281/284/291): only cycle 284 succeeded (b11 r=22, HIGH rank slack). **Partner RANK SLACK gates non-destructive composition; depth distance is NOT predictive** (1-10 and 1-11 are similar distances but opposite outcomes).
+
+## Cycle 290
 
 300. **[2] K=512 8000 steps** — INCONCLUSIVE
    - **best_mean=42.752 ± 0.032** in dead zone (42.5, 43.0). vs cycle 287 [1] K=512 8k (42.785) = **-0.033 PPL (statistical tie, within 1σ)** at same 393,984 params. Step-4000 evals match cycle 286 within 1.54e-5 per seed — the -0.811 PPL gain from 4k→8k is unambiguously Adam-budget, not randomness. **Cycle 286 [2]-beats-[1] advantage (-0.258 at 4k) was a BUDGET ARTIFACT**: gap collapses 7.8× to -0.033 at 8k. Cycle 290 and cycle 287 are **co-winners** at 394K params. Cycle 290 dominates cycle 286 at the same tile.
