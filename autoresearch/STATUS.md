@@ -1,6 +1,11 @@
-# Research Status — 270 Cycles (001–270)
+# Research Status — 271 Cycles (001–271)
 
-## Latest: Cycle 270
+## Latest: Cycle 271
+
+281. **K=512 1-block compression sweep** — INCONCLUSIVE (interesting=true)
+   - 9 fits, 22 min. **Per-subset best_mean**: [1]=43.8205±0.0234, [4]=44.6330±0.0270, [7]=45.3745±0.0026. min=43.8205 ([1]); failed CONFIRMED ≤43 by 0.82, failed REFUTED ≥46 (all <46). **Cascade FLATLINES at 1 block**: 6→5 saves 5.69, 5→4 4.22, 4→3 3.05, 3→2 2.70, **2→1 only 0.032 PPL**. Brief's "2.0-2.5 PPL further drop" prediction REFUTED. Cycle 173's no-retrain ordering [7]≈[1]>[4] also REFUTED — actual joint-Adam ordering [1]<[4]<[7] with block 1 best by 0.81 PPL. **NEW PARETO WINNER**: (394K, 43.82) dominates cycle 266 [1,4] (788K, 43.85) at HALF the trainable params for essentially the same PPL.
+
+## Cycle 270
 
 280. **Block 11 low-rank c_proj compression** — CONFIRMED (interesting=true)
    - Float=53.895. **Rank-r weight-SVD no-retrain**: r=5→60.99, **r=22→59.68**, r=50→58.63, r=100→57.31 (top-22 energy only 14.14%). **Retrain r=22 (3 seeds, 17,664 params): best_mean=54.469 ± 0.024**. CONFIRMED clause 2 (retrain ≤54.5) by 0.031 PPL. **Headline: weight-SVD ≠ activation-SVD**. Cycle 267's eff_rank=22.49 was on OUTPUT activations, not c_proj.weight (which is full-rank, condition number ≈38). Brief's "≤1 PPL no-retrain" prediction missed by 4.7 PPL. **NEW PARETO POINT: (17.7K, 54.47) dominates cycle 268 K=64 4-block (200K, 55.95) at 8.7% of params**. Opens hybrid recipe: cycle 266 [1,4] K=512 (788K, 43.85) + block 11 rank-22 retrain.
