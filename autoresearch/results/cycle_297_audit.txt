@@ -1,0 +1,118 @@
+Cycle 297 Audit Result — Item 307
+
+Audit status: PASS
+Provisional verdict held: CONFIRMED-init-rank
+Commit (primary): 1dcb03b
+
+Verdict logic application (verbatim item 307):
+  CONFIRMED gradual         iff per-layer eff_rank curves are monotone-decreasing
+                                across the entire training run AND no layer drops
+                                by >= 50% within any 100-step window
+  CONFIRMED phase-transition iff any layer drops by >= 50% within a 100-step window
+  CONFIRMED init-rank        iff initial eff_rank is already <= 5 for >= 6 layers
+  REFUTED                    iff eff_rank doesn't collapse at all
+  Multiple CONFIRMED-* clauses can apply simultaneously.
+
+Auditor independent recount per seed (from JSON records[*].snapshots[*].eff_rank):
+  seed=42:   n_init_le5=12/12  max_rel_drop=0.3246  monotone=False  refuted=False
+             flags=['CONFIRMED-init-rank']
+  seed=137:  n_init_le5=12/12  max_rel_drop=0.2021  monotone=False  refuted=False
+             flags=['CONFIRMED-init-rank']
+  seed=2024: n_init_le5=12/12  max_rel_drop=0.3063  monotone=False  refuted=False
+             flags=['CONFIRMED-init-rank']
+  GLOBAL max relative drop (3 seeds * 12 layers * ~120 windows): 0.3246
+    -> well below 0.50 phase threshold; CONFIRMED-phase does not fire
+  None of 3 seeds is monotone non-increasing (final > init in essentially every layer)
+    -> CONFIRMED-gradual does not fire
+  Init-final differences are real (seed 2024 layer 3: 1.129 -> 2.746, |delta|=1.62)
+    -> REFUTED clause does not fire
+
+Overall (>=2 of 3 seeds agree): CONFIRMED-init-rank (3/3) -> matches manifest, exec_result,
+JSON overall_verdict.
+
+Eff-rank formula independent reproduction (seed 42 layer 0 init):
+  Auditor rebuild: torch.manual_seed(42); aleph.models.MLP(2,32,1,depth=12,ReLU);
+                   make_spirals(2000,0.5,3,42)*2.0; deterministic 1000/1000 split
+                   via torch.Generator().manual_seed(42); first Linear+ReLU on train slice;
+                   C=Y^T Y/1000; eigvalsh; clamp >=0; normalize; exp(-sum p log p)
+  Auditor reproduction: 2.777405331
+  JSON record value:    2.777404999
+  |delta| = 3.31e-07 (float32 vs float64 noise floor) -> formula correct
+
+Trainable params per net = 11,745 (auditor independently confirmed via parameter count).
+
+Per-seed convergence (all 3 reached train_acc >= 0.95 within MAX_EPOCHS=12000):
+  seed 42:   final_epoch=12000  train_acc=0.9800  converged=True
+  seed 137:  final_epoch=12000  train_acc=0.9700  converged=True
+  seed 2024: final_epoch=12000  train_acc=0.9870  converged=True
+  None hit EARLY_STOP_ACC=0.99; all ran to MAX_EPOCHS by design to capture full
+  post-convergence trajectory.
+
+Per-seed init / final (auditor read from JSON):
+  seed 42  init: [2.777, 3.026, 1.695, 1.130, 1.046, 1.006, 1.002, 1.000, 1.000, 1.000, 1.000, 1.000]
+           final:[3.129, 3.583, 2.510, 1.798, 1.352, 1.165, 1.125, 1.222, 1.392, 1.156, 1.123, 1.160]
+  seed 137 init: [2.861, 2.315, 1.690, 1.291, 1.086, 1.011, 1.002, 1.001, 1.000, 1.000, 1.000, 1.000]
+           final:[2.947, 2.668, 2.338, 2.074, 1.957, 1.839, 2.456, 2.842, 2.035, 2.223, 2.038, 2.121]
+  seed 2024 init:[3.296, 2.700, 2.196, 1.129, 1.038, 1.013, 1.002, 1.001, 1.000, 1.000, 1.000, 1.000]
+           final:[3.584, 2.917, 2.848, 2.746, 2.110, 2.251, 1.897, 1.955, 1.611, 1.297, 1.170, 1.151]
+
+Auditor confirms: in every (seed, layer) cell, final >= init (mostly >; a few rough ties at
+layer 0 / layer 1). The trajectory is upward across the entire training run for every layer.
+The "epoch_at_1.5x_final" item 307 metric (iv) is therefore undefined (None) for all 36 cells,
+because init < 1.5*final in every cell. The script returns None correctly and the manifest
+documents this honestly.
+
+Cross-check vs cycle 295:
+  Cycle 295 spirals init_mean (full N=2000): [2.99, 2.71, 1.87, 1.19, 1.06, 1.01, 1.00x6]
+  Cycle 297 init mean across 3 seeds (1000-train subset): layer 0 = 2.97; layer 1 = 2.68;
+  layers 7-11 = 1.000 (uniform). Same qualitative shape; small differences from random subsample. OK.
+
+Substantive interpretation (verified consistent across exec_result, manifest, agenda PAST
+entry, and audit document): training does NOT collapse eff_rank on this 2D-input testbed --
+it LIFTS it. Layers START at eff_rank ~ 1.0 (already collapsed at random init by ReLU
+contraction on a 2D input; cycle 295 + Hanin-Rolnick N^d bound, lit map line 594) and training
+mildly twists the activation manifold UP to eff_rank ~ 1.2 - 2.8 over 12000 epochs. The
+"collapse to rank-2" framing has the WRONG SIGN on this testbed. The "phase transition vs
+gradual" question on this testbed reduces to "did anything go DOWN at all?" Answer: not
+substantially; the largest single-window relative drop is 0.3246, well below the 0.50
+phase-transition threshold, and none of the 3 seeds is monotone non-increasing.
+
+Only CONFIRMED-init-rank fires. Cycle 297 closes the loop opened by cycle 295: both cycles
+agree (via init census and via trajectory) that the 2D-input testbed cannot answer cycle
+278's training-dynamics question because there is no opportunity to collapse -- the testbed
+starts collapsed. The principled follow-ups flagged for the next planner are:
+  (A) higher-dim input lift (100D embedding from MEMORY.md, or random 32D linear lift) so
+      init eff_rank can plausibly be > 5 and actually drop during training
+  (B) instrument GPT-2 directly during cycle 280's 4000-step Adam retrain to see whether
+      eff_rank moves at all during the LASER fine-tune that produced the cycle 280 result
+Auditor note: follow-up B is more directly aligned with the actual research question and
+more likely to produce a clean answer. Items 308 (SDF) and 309 (cycle 280 retrain
+decomposition) are both still in NEXT and partially address this.
+
+Process notes:
+  - Plan adhered to in full. No deviations from plan to execution beyond writing the
+    optional plot file (which the plan listed as optional and the script attempted with a
+    matplotlib import guard; matplotlib was available and the plot was written successfully).
+  - Pre-commit end-of-files hook fixed a missing trailing newline on the JSON output file
+    on the first commit attempt; re-staged and committed cleanly. No data changed.
+
+Artifacts:
+  experiments/eff_rank_trajectory_cycle297.py
+  autoresearch/plans/cycle_297.md
+  autoresearch/briefs/cycle_297.md
+  autoresearch/results/cycle_297_eff_rank_trajectory.json
+  autoresearch/results/cycle_297_summary.md
+  autoresearch/results/cycle_297_trajectory.png
+  autoresearch/results/cycle_297_manifest.txt
+  autoresearch/results/cycle_297_exec_result.txt
+  autoresearch/audits/cycle_297.md
+  autoresearch/results/cycle_297_audit.txt
+  autoresearch/logs/cycle_297_run.log
+  autoresearch/agenda.md
+  autoresearch/logs/experiments.tsv
+
+Final status: PASS -- keep provisional outcome CONFIRMED-init-rank. No corrections to the
+verdict required. The substantive CONFIRMED-init-rank-with-strong-substantive-content
+reading (training LIFTS rather than collapses eff_rank on a 2D testbed; the "collapse to
+rank-2" framing has the wrong sign here; the testbed is unusable for cycle 278's question)
+is correctly documented across all artifacts.
