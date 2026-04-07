@@ -1,0 +1,28 @@
+Cycle 276 — Item 286: 1-block [1] K sweep — K ∈ {32, 64, 128, 256}
+
+Commit: 2c7ec5b
+Verdict: CONFIRMED (both clauses triggered)
+
+Summary:
+  K=256 best_mean = 45.385 +/- 0.044  (<= 45.5 by 0.115 PPL — clause 1)
+  K=128 best_mean = 46.932 +/- 0.065  (<= 47.0 by 0.068 PPL — clause 2)
+  K=64  best_mean = 48.045 +/- 0.039
+  K=32  best_mean = 49.649 +/- 0.026
+  All 4 K values < 50.0 (REFUTED clause not triggered).
+  All 4 K values beat float (53.895).
+
+12/12 fits, 30.7 min wall (under 36-min cap). All 12 fits hit best @ step 4000 (budget-bounded).
+Init PPL deterministic per K. Restore asserts pass for all 12 fits.
+
+Key Pareto update: four new Pareto points (25K/49.9K/99K/197K @ 49.65/48.05/46.93/45.39).
+(25,344, 49.649) @ K=32 is NEW lowest-param Pareto winner, dominates cycle 270 block-11 r22 on PPL by 4.82.
+1-block K-curve is concave-up but shallower than 4-block/5-block K-curves, as hypothesised.
+
+Artifacts:
+  experiments/one_block_k_sweep_cycle276.py
+  autoresearch/plans/cycle_276.md
+  autoresearch/briefs/cycle_276.md
+  autoresearch/logs/cycle_276_run.log
+  autoresearch/results/cycle_276_one_block_k_sweep.json
+  autoresearch/results/cycle_276_summary.md
+  autoresearch/results/cycle_276_manifest.txt

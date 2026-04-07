@@ -1,0 +1,35 @@
+Cycle 276 Audit — Item 286: 1-block [1] K sweep — K ∈ {32, 64, 128, 256}
+
+Commit: 2c7ec5b
+Audit status: PASS
+
+Verdict: CONFIRMED (both clauses triggered)
+  K=256 best_mean = 45.38537 <= 45.5 (margin 0.11463)  -- CONFIRMED clause 1 TRIGGERS
+  K=128 best_mean = 46.93161 <= 47.0 (margin 0.06839)  -- CONFIRMED clause 2 TRIGGERS
+  K=64  best_mean = 48.04525 < 50.0
+  K=32  best_mean = 49.64854 < 50.0                    -- REFUTED clause FAILS (all K < 50)
+
+Numerical checks:
+  - Per-K best_mean / std / min / max match JSON and run log within 2e-5.
+  - Per-seed best_step = 4000 for all 12 fits; restore |delta| < 1e-3 (assert passes).
+  - Init PPL deterministic per K (seed-independent lstsq).
+  - Trainable counts match K*768 + 768 exactly for all K: 25344/49920/99072/197376.
+  - Float PPL 53.89489 matches reference 53.895.
+  - 12/12 fits, wall time 30.67 min < 36 min cap, no seed drop triggered.
+
+K-curve reading:
+  - 1-block per-halving cost ~1.46 PPL; 4-block ~2.31; 5-block ~2.65.
+  - Monotone: fewer blocks -> shallower K-curve. Hypothesis CONFIRMED.
+
+Pareto update:
+  - 4 new Pareto points: (25K, 49.65) / (49.9K, 48.05) / (99K, 46.93) / (197K, 45.39).
+  - K=32 is new lowest-param Pareto winner, dominates cycle 270 block-11 r22 on PPL by 4.82 PPL.
+  - K=256 trades 1.57 PPL for 2x fewer params vs cycle 271 K=512 (394K, 43.82) on frontier.
+
+Bookkeeping:
+  - item 286 deleted from NEXT/P0; ### Cycle 276 block at top of PAST EXPERIMENTS.
+  - TSV row appended (8 cols, hash=2c7ec5b).
+  - Manifest + exec_result + audit written.
+  - No dirty pre-existing files staged.
+
+Issues: none.

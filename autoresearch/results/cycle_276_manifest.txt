@@ -1,0 +1,83 @@
+Cycle 276 Manifest — Item 286: 1-block [1] K sweep — K ∈ {32, 64, 128, 256}
+
+Commit: 2c7ec5b
+Branch: geometric_compression
+Verdict: CONFIRMED
+
+== Verdict logic (item 286 verbatim) ==
+CONFIRMED iff K=256 best_mean <= 45.5 OR K=128 best_mean <= 47.0
+REFUTED   iff ALL of {K=32, K=64, K=128, K=256} best_mean >= 50.0
+INCONCLUSIVE otherwise
+
+  K=256 best_mean = 45.38537 <= 45.5  -> CONFIRMED clause 1 TRIGGERED (by 0.115 PPL)
+  K=128 best_mean = 46.93161 <= 47.0  -> CONFIRMED clause 2 TRIGGERED (by 0.068 PPL)
+  K=64  best_mean = 48.04525 < 50.0
+  K=32  best_mean = 49.64854 < 50.0   -> refuted clause NOT triggered (all K < 50)
+  -> CONFIRMED (both clauses)
+
+== Per-K aggregates (n=3 seeds {42, 137, 2024}, population std) ==
+K=32  (  25,344 params): best_mean = 49.64854 +/- 0.02570, init 55.6239, final@4000 49.6485
+  seed 42:   init=55.6239  best=49.6230 @step 4000  final@4000=49.6230
+  seed 137:  init=55.6239  best=49.6837 @step 4000  final@4000=49.6837
+  seed 2024: init=55.6239  best=49.6389 @step 4000  final@4000=49.6389
+K=64  (  49,920 params): best_mean = 48.04525 +/- 0.03920, init 55.5249, final@4000 48.0453
+  seed 42:   init=55.5249  best=48.0243 @step 4000  final@4000=48.0243
+  seed 137:  init=55.5249  best=48.1002 @step 4000  final@4000=48.1002
+  seed 2024: init=55.5249  best=48.0113 @step 4000  final@4000=48.0113
+K=128 (  99,072 params): best_mean = 46.93161 +/- 0.06541, init 55.2727, final@4000 46.9316
+  seed 42:   init=55.2727  best=46.8658 @step 4000  final@4000=46.8658
+  seed 137:  init=55.2727  best=47.0208 @step 4000  final@4000=47.0208
+  seed 2024: init=55.2727  best=46.9082 @step 4000  final@4000=46.9082
+K=256 ( 197,376 params): best_mean = 45.38537 +/- 0.04376, init 54.9026, final@4000 45.3854
+  seed 42:   init=54.9026  best=45.4032 @step 4000  final@4000=45.4032
+  seed 137:  init=54.9026  best=45.4278 @step 4000  final@4000=45.4278
+  seed 2024: init=54.9026  best=45.3251 @step 4000  final@4000=45.3251
+
+All 12 fits hit best at step 4000 (best_step_mean=4000 +/- 0 for every K) — budget-bounded descent.
+Restore asserts pass for all 12 fits (|restored - best| < 1e-3).
+Init PPL deterministic per K (lstsq is seed-independent).
+Float PPL measured in-run: 53.89489152418256 (exact match to reference 53.895).
+
+== Baselines ==
+cycle 271 [1] K=512 1-block   =  43.82045  (394K trainable)
+cycle 271 [4] K=512 1-block   =  44.63301  (394K)
+cycle 271 [7] K=512 1-block   =  45.37453  (394K)
+cycle 266 [1,4] K=512 2-block =  43.85250  (788K)
+cycle 272 K=256 [1,2,4,7] 4b  =  51.92241  (789K, 4-block K=256 min)
+cycle 268 K=64  [1,4,7,8] 4b  =  55.95330  (197K, 4-block K=64 min)
+cycle 230 K=1   [1,4,7] 3-block = 59.24542 ( 5.8K)
+cycle 270 block 11 rank-22    =  54.46900  (17.7K)
+Float baseline ref            =  53.89500
+
+== Deltas vs cycle 271 [1] K=512 (43.82045) ==
+K=32  -> +5.82809
+K=64  -> +4.22480
+K=128 -> +3.11115
+K=256 -> +1.56491
+
+== Deltas vs float (53.895) ==
+K=32  -> -4.24636  (beats float by 4.25 PPL at 25K params)
+K=64  -> -5.84965
+K=128 -> -6.96329
+K=256 -> -8.50952
+
+== Wall time / fits ==
+Total wall: 30.67 min (1840.2 s) over 12 fits — under the 36-min cap.
+No seed drop triggered. Per-fit elapsed: 2.6 / 5.1 / 7.7 / 10.2 / 12.8 / 15.3 / 17.9 / 20.4 / 23.0 / 25.6 / 28.1 / 30.7 min.
+
+== Artifacts (SHA256) ==
+3395ec57294123e28ead681dbe164a642e68d0bdb2f42573be9f59ce5e50150c  experiments/one_block_k_sweep_cycle276.py
+d27c4acad4950b24aeda8a6074faaca58aa7c40ac741a1b1c1909ebbebd24e93  autoresearch/plans/cycle_276.md
+0c762784f9f3fc1d1348f8768555c55adb08ecf3fc96192842d95935b09c2965  autoresearch/briefs/cycle_276.md
+a7e2b8f2890c52eb7416af42c0a21ea88eb8106732c0a757efa2ab34c9d2321c  autoresearch/results/cycle_276_one_block_k_sweep.json
+28fa5ac1fb2a4fda8b417ff261c65f89ff872cd13246981934d5e9bd78db4a73  autoresearch/results/cycle_276_summary.md
+1521680e1de72c1173ecb60d0688c6a948d7fd3c99085909baaa96dd1ef37da0  autoresearch/logs/cycle_276_run.log
+
+== Pareto update ==
+Four new Pareto points added (all four strictly below the 4-block K=256 frontier baseline):
+  (25,344 params, 49.649 PPL)  @ K=32   — NEW lowest-param Pareto winner; dominates cycle 270 block-11 r22 (17.7K, 54.47) on PPL by 4.82 PPL
+  (49,920 params, 48.045 PPL)  @ K=64   — dominates cycle 272 K=256 4-block (789K, 51.92) by 3.88 PPL and 16x fewer params
+  (99,072 params, 46.932 PPL)  @ K=128  — dominates cycle 272 K=256 4-block by 4.99 PPL and 8x fewer params
+  (197,376 params, 45.385 PPL) @ K=256  — dominates cycle 272 K=256 4-block by 6.54 PPL and 4x fewer params; dominates cycle 255 K=512 4-block (1.57M, 49.61) by 4.22 PPL and 8x fewer params
+
+Cycle 271 [1] K=512 (393,984 params, 43.821 PPL) remains the lowest-PPL 1-block Pareto point and now shares the frontier with K=256 trading 1.57 PPL for 2x fewer params.
