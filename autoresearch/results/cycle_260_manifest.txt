@@ -1,0 +1,90 @@
+cycle=260
+item=271
+verdict=INCONCLUSIVE
+commit=c7d405f83e754ac670cf6d7f30b9576fc0f218ee
+trainable_params=0
+
+# Config
+model=gpt2
+n_calib_tokens=256
+n_calib_seqs_used=2
+seq_len=128
+n_blocks=12
+seed=42
+n_random_seeds=10
+device_model=mps
+device_linalg=cpu
+
+# Per-block median rank_95(ΔJ) over 256 tokens
+median_rank_95_block_0=360
+median_rank_95_block_1=407
+median_rank_95_block_2=367
+median_rank_95_block_3=334
+median_rank_95_block_4=332
+median_rank_95_block_5=332
+median_rank_95_block_6=335
+median_rank_95_block_7=338
+median_rank_95_block_8=337
+median_rank_95_block_9=335
+median_rank_95_block_10=334
+median_rank_95_block_11=332
+
+# Per-block ||ΔJ||_F median per-token
+fro_median_block_0=80.682
+fro_median_block_1=113.498
+fro_median_block_2=95.513
+fro_median_block_3=82.615
+fro_median_block_4=88.871
+fro_median_block_5=88.529
+fro_median_block_6=99.721
+fro_median_block_7=109.632
+fro_median_block_8=122.273
+fro_median_block_9=140.148
+fro_median_block_10=162.140
+fro_median_block_11=192.452
+
+# Cross-block alignment: mode-1 top-20 left SVs of DJ_avg vs c_fc reader top-20 left SVs of block l+1
+top5_cos_sum_pair_0_1=2.727
+top5_cos_sum_pair_1_2=2.902
+top5_cos_sum_pair_2_3=3.043
+top5_cos_sum_pair_3_4=2.893
+top5_cos_sum_pair_4_5=3.459
+top5_cos_sum_pair_5_6=3.487
+top5_cos_sum_pair_6_7=3.358
+top5_cos_sum_pair_7_8=3.239
+top5_cos_sum_pair_8_9=3.260
+top5_cos_sum_pair_9_10=2.563
+top5_cos_sum_pair_10_11=1.926
+
+# Random baseline (10 seeds × 11 pairs)
+random_top5_cos_sum_mean=1.2557
+random_top5_cos_sum_std=0.0448
+random_top20_cos_sum_mean=2.7135
+random_top20_cos_sum_std=0.0979
+cycle218_random_top5_reference=1.27
+cycle218_centred_delta_tilde_top5_reference=2.97
+
+# Verdict logic
+clause_1_rank_95_le_100_in_ge_6_blocks=False_0_of_12
+clause_2_top5_cos_ge_2.0_in_ge_6_pairs=True_10_of_11
+confirmed_both_clauses=False
+refuted_rank_95_ge_400_in_ge_6_blocks=False_1_of_12
+verdict=INCONCLUSIVE
+
+# Sanity
+delta_diag_bounded_elementwise_minus_half_to_plus_half=true
+delta_diag_frac_abs_gt_0.1_range_across_blocks=0.56_to_0.74
+sigma_gelu_prime_via_fresh_leaf_autograd=true
+sigma_relu_prime_strict_gt_zero=true
+hf_conv1d_layout_preact_x_at_W_fc_plus_b=true
+linalg_on_cpu=true
+
+# Geometric reading
+operator_medium_rank_not_low_rank_median_r95_plateau_335_over_768=true
+sits_between_delta_tilde_rank_95_le_64_cycle217_and_J_gelu_rank_95_472_cycle195=true
+alignment_strengthens_at_operator_level_vs_cycle218_centred_delta_tilde=true
+rank_of_operator_and_alignment_of_dominant_directions_are_separable_properties=true
+peak_alignment_3.487_at_pair_5_6_consistent_with_cycle258_bump_load_in_layers_3_5=true
+fro_monotone_growth_after_block_3_80_to_192=true
+
+artifacts=experiments/jacobian_delta_cycle260.py,autoresearch/results/cycle_260_jacobian_delta.json,autoresearch/results/cycle_260_summary.md,autoresearch/logs/cycle_260_run.log,autoresearch/plans/cycle_260.md,autoresearch/briefs/cycle_260.md,autoresearch/reviews/cycle_260.md,autoresearch/reviews/cycle_260_review.json
