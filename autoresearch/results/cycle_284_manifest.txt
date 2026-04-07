@@ -1,0 +1,88 @@
+Cycle 284 Manifest — Item 294: Hybrid block 1 rank-2 + block 11 rank-22 c_proj
+
+Commit: TBD
+Branch: geometric_compression
+Verdict: CONFIRMED
+
+== Verdict logic (item 294 verbatim) ==
+CONFIRMED iff best_mean <= 55.0  (matches cycle 270 band, non-destructive composition)
+REFUTED   iff best_mean >= 58.0  (destructive composition, same as cycle 275)
+INCONCLUSIVE otherwise
+
+  best_mean = 52.8803 <= 55.0  -> CONFIRMED (by 2.120 PPL margin)
+  best_mean = 52.8803 <  58.0  -> REFUTED clause NOT triggered
+  -> CONFIRMED
+
+== Per-seed aggregates (n=3 seeds {42, 137, 2024}, population std) ==
+init_ppl_mean   = 63.46289  (all 3 seeds identical: 63.46289) — deterministic, as expected
+best_mean       = 52.88029 +/- 0.02982
+best_min        = 52.84460 (seed 137 @3700)
+best_max        = 52.91759 (seed 42  @3900)
+final_at_4000_mean = 52.94060
+
+  seed 42:   init=63.4629  best=52.9176 @step 3900  final@4000=53.0446  restored=52.9176
+  seed 137:  init=63.4629  best=52.8446 @step 3700  final@4000=52.8729  restored=52.8446
+  seed 2024: init=63.4629  best=52.8787 @step 3600  final@4000=52.9043  restored=52.8787
+
+All 3 fits hit best between step 3600 and 3900 (still descending at budget cap).
+Restore asserts pass for all 3 fits (|restored - best| < 1e-3).
+Init PPL deterministic across seeds (lstsq SVD init is seed-independent).
+Float PPL measured in-run: 53.89489152418256 (exact match to reference 53.895).
+Trainable params per fit: 19,968 = (2*768 + 768) + (22*768 + 768) asserted.
+
+== SVD summary ==
+Block 1  c_proj (3072, 768): top-5 SVs from cycle 280 convention, rank 2 frozen factor A1 + trainable B1 (2, 768).
+Block 11 c_proj (3072, 768): top-5 SVs from cycle 270 convention, rank 22 frozen factor A11 + trainable B11 (22, 768).
+Both Vh factors init from SVD. Both biases trainable init from c_proj.bias.
+
+== Baselines ==
+Float baseline ref              =  53.89500
+cycle 270 block 11 c_proj r=22  =  54.46870  ( 17,664 params)
+cycle 280 block 1  c_proj r=2   =  49.03240  (  2,304 params)
+cycle 282 block 10 c_proj r=17  =  50.04450  ( 13,824 params)
+cycle 275 hetero hybrid REFUTED =  48.20040  (411,648 params) (different scoring axis; [1] K=512 + b11 r=22)
+
+== Deltas ==
+cycle 284 hybrid best_mean  -> 52.88029
+delta vs float                    = -1.01460  (below float by 1.01 PPL)
+delta vs cycle 270 b11 r=22 alone = -1.58841  (hybrid BEATS cycle 270 alone)
+delta vs cycle 280 b1 r=2 alone   = +3.84789  (hybrid WORSE than cycle 280 alone)
+delta vs cycle 282 b10 r=17 alone = +2.83579  (hybrid WORSE than cycle 282 alone)
+delta vs cycle 275 hetero hybrid  = +4.67989  (cycle 275 had ~20x more params)
+
+== Geometric reading ==
+1. Homogeneous low-rank weight-SVD composition is NON-DESTRUCTIVE at 2 blocks. Init hybrid PPL 63.46 (both errors compound: +9.57 above float) is recovered by joint Adam to 52.88 (below float by 1.01). The recovery of -10.58 PPL exceeds either single-block recovery separately (cycle 280 -8.63, cycle 270 -5.22).
+2. Hybrid BEATS cycle 270 block 11 alone by 1.59 PPL with only +2,304 extra trainable params (13% more). Adding block 1 rank-2 on top of block 11 rank-22 is net positive for both PPL and model coverage.
+3. Hybrid is WORSE than cycle 280 block 1 alone by 3.85 PPL. Adding block 11 rank-22 on top of block 1 rank-2 is net NEGATIVE — block 11 adds more error than its rank-22 can absorb when block 1 is already compressed.
+4. Contrast with cycle 275: heterogeneous hybrid ([1] K=512 + block 11 r=22) got 48.20 with 20x more params. The composition axis here is different (cycle 275 was about whether a heterogeneous mix beat [1] alone; cycle 284 is about whether a homogeneous low-rank mix matches cycle 270 alone). Cycle 284 CONFIRMS the composition is non-destructive at the same scale.
+5. Adam recovery: init 63.46 -> best 52.88 = -10.58 PPL over 4000 steps, all 3 seeds hit best step >= 3600 (still descending at budget cap). Longer training could push further below.
+6. Init PPL 63.46 is higher than either single-block init (cycle 280 57.658, cycle 270 59.378) — as expected since both errors compound in a single forward pass. best_mean 52.88 is BETTER than cycle 270's 54.47 but WORSE than cycle 280's 49.03.
+7. Param axis: 19,968 trainable params is between cycle 270 (17,664) and cycle 283 [2] K=32 (25,344). At 19,968 params, hybrid 52.88 is dominated by cycle 282 (13,824, 50.04), cycle 280 (2,304, 49.03), cycle 283 [2] K=16 (13,056, 49.46). The hybrid is NOT a new Pareto point — it is dominated by existing cheaper single-block recipes.
+
+== Pareto update ==
+- NOT a new Pareto point. Cycle 284 hybrid (19,968 params, 52.88 PPL) is strictly DOMINATED on both axes by:
+    - cycle 280 block 1 r=2           (2,304 params, 49.03 PPL) — 8.7x fewer params AND 3.85 PPL better
+    - cycle 282 block 10 r=17         (13,824 params, 50.04 PPL) — 30pc fewer params AND 2.84 PPL better
+    - cycle 283 [2] K=16              (13,056 params, 49.46 PPL) — 35pc fewer params AND 3.42 PPL better
+- Hybrid DOES strictly dominate cycle 270 b11 r=22 alone (17,664 params, 54.47 PPL) on PPL axis (-1.59 PPL) but loses on params axis (+2,304).
+- Cycle 284 closes the "does homogeneous weight-SVD hybrid compose" question POSITIVELY (composition is non-destructive) while ALSO confirming that 2-block hybrids at small rank are outclassed by better single-block recipes.
+
+== Wall time / fits ==
+Total wall: ~8 min over 3 fits. Under 30-min cap.
+
+== Artifacts ==
+experiments/rank_hybrid_1_11_cycle284.py
+autoresearch/plans/cycle_284.md
+autoresearch/briefs/cycle_284.md
+autoresearch/reviews/cycle_284.md
+autoresearch/results/cycle_284_rank_hybrid_1_11.json
+autoresearch/results/cycle_284_summary.md
+autoresearch/logs/cycle_284_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+
+item_number: 294
+outcome: CONFIRMED
+key_metric: best_mean=52.8803_pm_0.0298_below_float_53.895_by_1.01_PPL_beats_cycle_270_alone_by_1.59_PPL_composition_non_destructive
+commit: TBD
+paths: experiments/rank_hybrid_1_11_cycle284.py,autoresearch/plans/cycle_284.md,autoresearch/briefs/cycle_284.md,autoresearch/reviews/cycle_284.md,autoresearch/results/cycle_284_rank_hybrid_1_11.json,autoresearch/results/cycle_284_summary.md,autoresearch/logs/cycle_284_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv

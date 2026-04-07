@@ -10,13 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-294. **Hybrid recipe — block 1 rank-2 c_proj + block 11 rank-22 c_proj (both low-rank weight-SVD, no K=512)**
-   - Context: This targets the LOWEST-param Pareto frontier with a 2-block low-rank hybrid. Cycle 275 REFUTED the mixed hybrid [1] K=512 + block 11 rank-22 (48.20, dominated by cycle 271 [1] alone). But that hybrid mixed two DIFFERENT compression operators (topk+lstsq W_out at block 1 vs weight-SVD at block 11) — possibly the mismatch caused Adam trouble. Here we test a HOMOGENEOUS low-rank weight-SVD hybrid: block 1 rank-2 c_proj (from item 290 if available) + block 11 rank-22 c_proj (cycle 270). Estimated params: (768×2 + 2×768) + (768×22 + 22×768) ≈ 3,072 + 33,792 = ~20.7K — slightly more than cycle 270's 17.7K alone. Hypothesis: since BOTH blocks are weight-SVD patches, joint Adam should be able to compose them additively, unlike cycle 275's heterogeneous mix. Target: match cycle 270's 54.47 PPL with slightly more params but a "bracketing" structure that captures early+late concentration simultaneously.
-   - Precondition: Item 290 must land CONFIRMED or INCONCLUSIVE with rank-2 block 1 ≤ 55.0 PPL (otherwise the hybrid has no low-rank block 1 operator to compose).
-   - Setup: New script `experiments/rank_hybrid_1_11_cycle284.py`. Install rank-2 c_proj SVD at block 1 AND rank-22 c_proj SVD at block 11. Joint Adam retrain both W_out factors LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, best-state restore. 3 seeds {42, 137, 2024}. Disjoint N_CALIB=200/N_EVAL=100, SEQ_LEN=128, MPS. ~5 min/fit × 3 ≈ 15 min wall.
-   - Verdict thresholds: CONFIRMED iff best_mean ≤ 55.0 (matches cycle 270 band, better-than-additive composition). REFUTED iff best_mean ≥ 58.0 (composition is destructive, same as cycle 275). INCONCLUSIVE otherwise.
-   - Artifacts: experiments/rank_hybrid_1_11_cycle284.py, autoresearch/results/cycle_284_rank_hybrid_1_11.json
-
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
 138. ~~**Train MoE testbed — Tiny Mixtral**~~ SKIPPED — WikiText-2 too small, overfits at PPL 65. Need pretrained model or larger dataset.
@@ -40,6 +33,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 284
+
+294. **Hybrid block 1 rank-2 + block 11 rank-22 c_proj weight-SVD** *(CONFIRMED — cycle 284)*
+   - **Outcome: CONFIRMED** — best_mean=**52.880±0.030** at 19,968 trainable params, ≤ 55.0 by 2.12 PPL. Homogeneous low-rank weight-SVD composition is NON-DESTRUCTIVE: init hybrid PPL 63.46 (both block errors compound) recovered to 52.88 (below float 53.895 by 1.01 PPL). Hybrid **beats cycle 270 b11 r=22 alone** (54.47) by 1.59 PPL with only +2,304 params (+13%). But hybrid is WORSE than cycle 280 b1 r=2 alone (49.03) by 3.85 PPL: adding b11 on top of b1 compressed is net negative. Cycle 284 is **NOT a new Pareto point** — strictly dominated on both axes by cycle 280 (2.3K, 49.03), cycle 282 b10 r=17 (13.8K, 50.04), and cycle 283 [2] K=16 (13.1K, 49.46). Composition question answered POSITIVELY (homogeneous weight-SVD composes) while simultaneously confirming small 2-block hybrids are outclassed by better single-block recipes. Contrast with cycle 275 hetero hybrid (48.20 at 20× more params, REFUTED on different axis): cycle 284 homogeneous hybrid composes non-destructively, cycle 275 heterogeneous mix did not compose gainfully. All 3 seeds hit best at step ≥3600 still descending. Restore asserts PASS. Init PPL deterministic 63.46 across all seeds. Wall ~8 min. Config: TARGET_BLOCKS=(1,11), RANKS=(2,22), joint Adam LR=1e-4 N_STEPS=4000 EVAL_EVERY=100 best-state restore, 3 seeds {42,137,2024}, disjoint N_CALIB=200/N_EVAL=100, SEQ_LEN=128, MPS.
+   - Artifacts: `experiments/rank_hybrid_1_11_cycle284.py`, `autoresearch/plans/cycle_284.md`, `autoresearch/briefs/cycle_284.md`, `autoresearch/reviews/cycle_284.md`, `autoresearch/results/cycle_284_rank_hybrid_1_11.json`, `autoresearch/results/cycle_284_summary.md`, `autoresearch/logs/cycle_284_run.log`, `autoresearch/results/cycle_284_manifest.txt`
+
 
 ### Cycle 283
 
