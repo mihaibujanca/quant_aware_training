@@ -6,15 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-254. **Sliding 3-block sweep — where does the cascade penalty bite?** (empirical)
-   - **Goal**: cycle 242 tested [1,2,3] (Δ=+0.58) and [8,9,10] (Δ=+8.64). Fill the gap. Test [3,4,5], [5,6,7], [6,7,8] at matched recipe to map the ΔPPL-vs-start-depth curve, localising the exact depth where the cascade penalty turns steep. Cycle 243 flagged blocks 4 and 5 as the heaviest per-block contributors inside the jointly-fit 6-block cascade; this sweep tests whether the "mid-cascade is fragile" story holds at 3-block isolation.
-   - **Recipe**: K=512, trainable = W_out + b_out (W_fc frozen), topk+lstsq init, joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, disjoint calib=all_ids[:200] / eval=all_ids[200:300], SEQ_LEN=128, 3 seeds {42, 137, 2024}. Float held-out PPL=53.895. Cycle 210 [1,4,7] baseline 46.556.
-   - **Confirmed**: any 3-block window in {[3,4,5], [5,6,7], [6,7,8]} lands ≤48.5 PPL mean (matches early-cascade regime).
-   - **Refuted**: every window ≥52.0 PPL mean (entire mid-to-late range is uniformly hard).
-   - **Inconclusive**: mixed or straddling the 48.5-52.0 band.
-   - **Report**: per-config mean ± std, per-seed best ppl + best step, init ppl (lstsq) per config, ΔPPL vs float and vs cycle 210 [1,4,7]. Plot ΔPPL vs window start index overlaid with the cycle 242 [1,2,3] / [8,9,10] anchors.
-   - Artifacts: `experiments/sliding_3block_cycle254.py`, `autoresearch/results/cycle_254_sliding_3block.json`, `autoresearch/results/cycle_254_summary.md`
-
 255. **Drop block 5 from 6-block compression — can we beat the 59.5 floor by dropping cycle 243's biggest contributor?** (empirical)
    - **Goal**: cycle 243 phase 1 identified block 5 as the largest single-block ΔPPL contributor (+5.10) in the jointly-fit [1,2,4,5,7,8] cascade. If the joint floor 59.515 PPL is dominated by the block-5 cost, removing block 5 from the compression set (leaving it float) should measurably drop the floor. Test [1,2,4,7,8] (5 blocks, drop 5). This is a direct structural counter to the cycle 243 non-additivity observation (Σ delta 24.14 vs 5.50 actual) — if the gap is truly joint-cascade and not single-block, dropping the biggest contributor should move the ceiling only modestly; if the gap is dominated by block 5, the drop should close most of it.
    - **Recipe**: BLOCKS=[1,2,4,7,8] K=512, trainable W_out+b_out, topk+lstsq init, joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, disjoint calib=all_ids[:200] / eval=all_ids[200:300], SEQ_LEN=128, 3 seeds. Compare to cycle 221 6-block 59.515 ± 0.094 and cycle 242 3-block early 47.135 and cycle 210 3-block [1,4,7] 46.556.
@@ -83,6 +74,18 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 244
+
+254. **Sliding 3-block sweep — where does the cascade penalty bite?** *(INCONCLUSIVE — cycle 244)*
+   - **Outcome: INCONCLUSIVE** — three consecutive 3-block windows tested at matched cycle 242 recipe (K=512, W_out+b_out trainable, topk+lstsq init, joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024}, disjoint calib=all_ids[:200] / eval=all_ids[200:300], SEQ_LEN=128, 1,181,952 trainable params per config). Float held-out PPL=53.895.
+     - **[3,4,5]**: init=65.853 → per-seed best 49.411 / 49.483 / 49.538 at steps 2500 / 2400 / 2500 → **mean 49.477 ± 0.052**, Δ vs [1,4,7]=+2.921, Δ vs c242 [1,2,3]=+2.342, final@4000 mean=50.337.
+     - **[5,6,7]**: init=66.538 → per-seed best 50.871 / 50.860 / 50.964 at steps 2000 / 2100 / 1400 → **mean 50.899 ± 0.047**, Δ vs [1,4,7]=+4.343, Δ vs c242 [1,2,3]=+3.764, final@4000 mean=53.310.
+     - **[6,7,8]**: init=67.651 → per-seed best 52.068 / 52.025 / 52.022 at steps 1500 / 1600 / 1600 → **mean 52.038 ± 0.021**, Δ vs [1,4,7]=+5.482, Δ vs c242 [1,2,3]=+4.903, final@4000 mean=56.220.
+   - **INCONCLUSIVE** — no window ≤48.5 (the early-regime threshold is not matched) and not all windows ≥52.0 (only [6,7,8] clears it, by 0.04 PPL). Verdict logic falls in the straddling band. However, the scientific content is stronger than the verdict string: combined with the cycle 242 anchors the ΔPPL-vs-window-start curve is cleanly **monotone** in start index with very tight seed std (0.02-0.05) at every window:
+     - [1,2,3]→47.135, [3,4,5]→49.477, [5,6,7]→50.899, [6,7,8]→52.038, [8,9,10]→55.192.
+     - Differences are 2.342, 1.422, 1.139, 3.154 — the bulk of the late-block penalty (5.71 from [1,2,3] to [8,9,10]) is split smoothly across mid/late start indices, with the biggest single jump between [6,7,8] and [8,9,10] (3.15 PPL). No sharp cliff; no flat region. The "mid-cascade fragility" story from cycle 243 (blocks 4 and 5 heaviest per-block) does NOT reproduce as a dip for the 3-block window containing blocks 4 and 5: [3,4,5] is the LOWEST of the three new windows, not the highest. At fresh 3-block fit the penalty rises monotonically with the late block in the window. This means cycle 243's per-block ΔPPL ranking (which measured restoration in a jointly-fit 6-block cascade) does NOT predict fresh-fit 3-block difficulty: **the cascade cost is set by the deepest block in the window, not by "fragile" middle blocks**. The init PPL also rises monotonically (65.85 → 66.54 → 67.65 → 71.35), so the late penalty is already visible at lstsq init before any Adam training — late blocks have structurally worse K=512 topk projections on calibration, and Adam closes only part of the gap (init→best drop: 16.4, 15.6, 15.6, 16.2 across [3,4,5]/[5,6,7]/[6,7,8]/[8,9,10] — remarkably constant, meaning Adam contributes ~16 PPL of improvement no matter where in depth you sit, but the initial floor is what differs). Seed std is tightest on [6,7,8] (0.021) and loosest on [3,4,5] (0.052) — more variance at earlier cascade positions, consistent with the cycle 242 [1,2,3]/[8,9,10] split (0.093 vs 0.040). Follow-ups: (a) single-block ablations at block 8, 9, 10 to see which individual block drives the +3.15 jump from [6,7,8] to [8,9,10] (is it block 9 or 10?); (b) [4,5,6] and [7,8,9] to fill the remaining gaps in the sweep; (c) a K sweep at the worst window [8,9,10] to test whether the late penalty is K-sensitive (cycles 240/225 show K matters heavily at 6 blocks but weakly at 3 blocks [1,4,7]).
+   - Artifacts: `experiments/sliding_3block_cycle244.py`, `autoresearch/results/cycle_244_sliding_3block.json`, `autoresearch/results/cycle_244_summary.md`
 
 ### Cycle 243
 
