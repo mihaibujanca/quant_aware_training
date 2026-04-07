@@ -1,0 +1,173 @@
+`loss_type=None` was set in the config but it is unrecognized. Using the default loss: `ForCausalLMLoss`.
+Device: mps
+Calibration: 200 seqs, Eval: 100 seqs
+
+Float baseline...
+Float PPL: 53.895
+
+############################################################
+SWEEP: 1 subsets x 3 seeds = 3 fits
+############################################################
+
+============================================================
+SUBSET [1, 2]  SEED 42
+============================================================
+Init PPL: 57.207
+Trainable params: 787,968 (0.79M) [== expected 787,968]
+  Step   100: eval_ppl=53.630 *
+  Step   200: eval_ppl=51.965 *
+  Step   300: eval_ppl=50.588 *
+  Step   400: eval_ppl=49.819 *
+  Step   500: eval_ppl=48.886 *
+  Step   600: eval_ppl=48.470 *
+  Step   700: eval_ppl=47.862 *
+  Step   800: eval_ppl=47.508 *
+  Step   900: eval_ppl=46.987 *
+  Step  1000: eval_ppl=46.752 *
+  Step  1100: eval_ppl=46.340 *
+  Step  1200: eval_ppl=46.137 *
+  Step  1300: eval_ppl=45.795 *
+  Step  1400: eval_ppl=45.706 *
+  Step  1500: eval_ppl=45.499 *
+  Step  1600: eval_ppl=45.345 *
+  Step  1700: eval_ppl=45.230 *
+  Step  1800: eval_ppl=45.070 *
+  Step  1900: eval_ppl=44.928 *
+  Step  2000: eval_ppl=44.883 *
+  Step  2100: eval_ppl=44.725 *
+  Step  2200: eval_ppl=44.843
+  Step  2300: eval_ppl=44.656 *
+  Step  2400: eval_ppl=44.648 *
+  Step  2500: eval_ppl=44.575 *
+  Step  2600: eval_ppl=44.672
+  Step  2700: eval_ppl=44.651
+  Step  2800: eval_ppl=44.638
+  Step  2900: eval_ppl=44.573 *
+  Step  3000: eval_ppl=44.557 *
+  Step  3100: eval_ppl=44.495 *
+  Step  3200: eval_ppl=44.648
+  Step  3300: eval_ppl=44.554
+  Step  3400: eval_ppl=44.479 *
+  Step  3500: eval_ppl=44.402 *
+  Step  3600: eval_ppl=44.436
+  Step  3700: eval_ppl=44.347 *
+  Step  3800: eval_ppl=44.526
+  Step  3900: eval_ppl=44.407
+  Step  4000: eval_ppl=44.493
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Final at step 4000: 44.493
+Restored best (step 3700): 44.347 (recorded best=44.347)
+[fit 1 done, elapsed 2.5 min]
+
+============================================================
+SUBSET [1, 2]  SEED 137
+============================================================
+Init PPL: 57.207
+Trainable params: 787,968 (0.79M) [== expected 787,968]
+  Step   100: eval_ppl=53.697 *
+  Step   200: eval_ppl=51.787 *
+  Step   300: eval_ppl=50.496 *
+  Step   400: eval_ppl=49.681 *
+  Step   500: eval_ppl=48.887 *
+  Step   600: eval_ppl=48.362 *
+  Step   700: eval_ppl=47.816 *
+  Step   800: eval_ppl=47.438 *
+  Step   900: eval_ppl=46.996 *
+  Step  1000: eval_ppl=46.648 *
+  Step  1100: eval_ppl=46.304 *
+  Step  1200: eval_ppl=46.089 *
+  Step  1300: eval_ppl=45.864 *
+  Step  1400: eval_ppl=45.553 *
+  Step  1500: eval_ppl=45.472 *
+  Step  1600: eval_ppl=45.298 *
+  Step  1700: eval_ppl=45.147 *
+  Step  1800: eval_ppl=44.987 *
+  Step  1900: eval_ppl=44.986 *
+  Step  2000: eval_ppl=44.789 *
+  Step  2100: eval_ppl=44.765 *
+  Step  2200: eval_ppl=44.671 *
+  Step  2300: eval_ppl=44.708
+  Step  2400: eval_ppl=44.601 *
+  Step  2500: eval_ppl=44.623
+  Step  2600: eval_ppl=44.475 *
+  Step  2700: eval_ppl=44.493
+  Step  2800: eval_ppl=44.330 *
+  Step  2900: eval_ppl=44.405
+  Step  3000: eval_ppl=44.469
+  Step  3100: eval_ppl=44.572
+  Step  3200: eval_ppl=44.369
+  Step  3300: eval_ppl=44.482
+  Step  3400: eval_ppl=44.474
+  Step  3500: eval_ppl=44.505
+  Step  3600: eval_ppl=44.467
+  Step  3700: eval_ppl=44.562
+  Step  3800: eval_ppl=44.447
+  Step  3900: eval_ppl=44.617
+  Step  4000: eval_ppl=44.426
+Final at step 4000: 44.426
+Restored best (step 2800): 44.330 (recorded best=44.330)
+[fit 2 done, elapsed 5.0 min]
+
+============================================================
+SUBSET [1, 2]  SEED 2024
+============================================================
+Init PPL: 57.207
+Trainable params: 787,968 (0.79M) [== expected 787,968]
+  Step   100: eval_ppl=53.882 *
+  Step   200: eval_ppl=51.995 *
+  Step   300: eval_ppl=50.744 *
+  Step   400: eval_ppl=49.824 *
+  Step   500: eval_ppl=49.125 *
+  Step   600: eval_ppl=48.537 *
+  Step   700: eval_ppl=47.971 *
+  Step   800: eval_ppl=47.534 *
+  Step   900: eval_ppl=47.160 *
+  Step  1000: eval_ppl=46.800 *
+  Step  1100: eval_ppl=46.501 *
+  Step  1200: eval_ppl=46.092 *
+  Step  1300: eval_ppl=45.898 *
+  Step  1400: eval_ppl=45.747 *
+  Step  1500: eval_ppl=45.670 *
+  Step  1600: eval_ppl=45.393 *
+  Step  1700: eval_ppl=45.345 *
+  Step  1800: eval_ppl=45.164 *
+  Step  1900: eval_ppl=45.000 *
+  Step  2000: eval_ppl=44.932 *
+  Step  2100: eval_ppl=44.852 *
+  Step  2200: eval_ppl=44.778 *
+  Step  2300: eval_ppl=44.720 *
+  Step  2400: eval_ppl=44.608 *
+  Step  2500: eval_ppl=44.502 *
+  Step  2600: eval_ppl=44.443 *
+  Step  2700: eval_ppl=44.509
+  Step  2800: eval_ppl=44.560
+  Step  2900: eval_ppl=44.496
+  Step  3000: eval_ppl=44.383 *
+  Step  3100: eval_ppl=44.428
+  Step  3200: eval_ppl=44.441
+  Step  3300: eval_ppl=44.417
+  Step  3400: eval_ppl=44.339 *
+  Step  3500: eval_ppl=44.484
+  Step  3600: eval_ppl=44.399
+  Step  3700: eval_ppl=44.420
+  Step  3800: eval_ppl=44.373
+  Step  3900: eval_ppl=44.439
+  Step  4000: eval_ppl=44.472
+Final at step 4000: 44.472
+Restored best (step 3400): 44.339 (recorded best=44.339)
+[fit 3 done, elapsed 7.6 min]
+
+============================================================
+AGGREGATE
+============================================================
+Float PPL:                          53.895
+  [1,2] (n=3): best_mean=44.3389 ± 0.0070  init 57.207  final@4000 44.464
+Cycle 266 [1,4] K=512 baseline:     43.8525
+Cycle 271 [1]   K=512 baseline:     43.8205
+Float ref:                          53.8950
+Δ (best_mean − cycle 266 [1,4]):    +0.4864
+Δ (best_mean − cycle 271 [1]):      +0.5184
+Δ (best_mean − float):              -9.5560
+Verdict: INCONCLUSIVE
+Saved JSON to autoresearch/results/cycle_281_two_block_1_2.json
+Saved summary to autoresearch/results/cycle_281_summary.md
