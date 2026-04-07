@@ -1,6 +1,6 @@
 Cycle 284 Manifest — Item 294: Hybrid block 1 rank-2 + block 11 rank-22 c_proj
 
-Commit: TBD
+Commit: 67ca93e
 Branch: geometric_compression
 Verdict: CONFIRMED
 
@@ -84,5 +84,5 @@ autoresearch/logs/experiments.tsv
 item_number: 294
 outcome: CONFIRMED
 key_metric: best_mean=52.8803_pm_0.0298_below_float_53.895_by_1.01_PPL_beats_cycle_270_alone_by_1.59_PPL_composition_non_destructive
-commit: TBD
+commit: 67ca93e
 paths: experiments/rank_hybrid_1_11_cycle284.py,autoresearch/plans/cycle_284.md,autoresearch/briefs/cycle_284.md,autoresearch/reviews/cycle_284.md,autoresearch/results/cycle_284_rank_hybrid_1_11.json,autoresearch/results/cycle_284_summary.md,autoresearch/logs/cycle_284_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv

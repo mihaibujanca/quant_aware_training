@@ -1,0 +1,85 @@
+Cycle 284 Execute Result — Item 294
+Verdict: CONFIRMED
+Commit: 67ca93e
+
+Item: Hybrid — block 1 rank-2 c_proj + block 11 rank-22 c_proj
+      (both homogeneous low-rank weight-SVD, no K=512)
+
+Key metric: best_mean=52.8803+/-0.0298 <= 55.0 (PASS by 2.120 PPL margin);
+            hybrid is BELOW float (53.895) by 1.01 PPL and 1.59 PPL BETTER
+            than cycle 270 block 11 r=22 alone (54.469).
+
+Config: TARGET_BLOCKS=(1,11), RANKS=(2,22), 3 seeds {42,137,2024}, 3 fits.
+        Joint Adam over [B1, bias1, B11, bias11] only, LR=1e-4, N_STEPS=4000,
+        EVAL_EVERY=100, best-state restore. Fresh model per seed.
+        LowRankCProj: frozen A=(U[:,:r]*S[:r]), trainable B=Vh[:r,:] + bias.
+        Disjoint N_CALIB=200/N_EVAL=100, SEQ_LEN=128, MPS, GPT-2 small,
+        wikitext-2 val. Wall ~8 min.
+
+Trainable params asserted per fit: 19,968 = (2*768 + 768) + (22*768 + 768)
+                                          =  2,304 + 17,664.
+
+Per-seed:
+  seed 42:   init=63.4629  best=52.9176 @step 3900  final@4000=53.0446  restored=52.9176
+  seed 137:  init=63.4629  best=52.8446 @step 3700  final@4000=52.8729  restored=52.8446
+  seed 2024: init=63.4629  best=52.8787 @step 3600  final@4000=52.9043  restored=52.8787
+
+Aggregate:
+  best_mean  = 52.8803 +/- 0.0298  (n=3)
+  best_min   = 52.8446
+  best_max   = 52.9176
+  init_mean  = 63.4629  (deterministic across all 3 seeds, SVD init is seed-independent)
+  final_mean = 52.9406  (only slightly above best, best-state restore salvages)
+
+All 3 restore asserts PASS (|restored - best| < 1e-3).
+Init PPL deterministic across seeds (SVD init seed-independent on identical data).
+Float PPL measured in-run: 53.89489152418256 (matches reference 53.895 exactly).
+
+Verdict logic (item 294 verbatim):
+  CONFIRMED iff best_mean <= 55.0  -> PASS (52.8803 <= 55.0 by 2.120 PPL)
+  REFUTED   iff best_mean >= 58.0  -> FAIL (52.8803 < 58.0)
+  -> CONFIRMED
+
+Deltas:
+  vs float 53.895                  : -1.0146  (below float by 1.01 PPL)
+  vs cycle 270 b11 r=22 (54.469)   : -1.5884  (hybrid BEATS cycle 270 alone)
+  vs cycle 280 b1  r=2  (49.032)   : +3.8479  (hybrid WORSE than cycle 280 alone)
+  vs cycle 282 b10 r=17 (50.045)   : +2.8358  (hybrid dominated by cycle 282)
+  vs cycle 275 hetero  (48.2 @411K): +4.6799  (different axis, 20x params)
+
+Geometric cross-cycle reading:
+1. Homogeneous low-rank weight-SVD composition is NON-DESTRUCTIVE at 2
+   blocks. Init hybrid PPL 63.46 (both errors compound: +9.57 above float)
+   recovered by joint Adam to 52.88 (below float by 1.01). Adam recovery
+   of -10.58 PPL exceeds either single-block recovery separately (cycle 280
+   -8.63, cycle 270 -4.91).
+2. Asymmetric composition: block 11 BENEFITS from block 1 (hybrid beats cycle
+   270 alone by 1.59 PPL with +2,304 extra params) but block 1 does NOT
+   benefit from block 11 (hybrid is WORSE than cycle 280 alone by 3.85 PPL).
+   Adding block 11 rank-22 on top of block 1 rank-2 is net negative.
+3. Cycle 284 is NOT a new Pareto point. At 19,968 params, 52.88 PPL is
+   strictly dominated on BOTH axes by:
+     - cycle 280 (2,304,   49.03)  — 8.7x fewer params AND 3.85 PPL better
+     - cycle 282 (13,824,  50.04)  — 30pc fewer params AND 2.84 PPL better
+     - cycle 283 [2] K=16 (13,056, 49.46) — 35pc fewer params AND 3.42 PPL better
+   Hybrid DOES strictly dominate cycle 270 alone on PPL axis (-1.59) but loses
+   on params axis (+2,304).
+4. Contrast with cycle 275 (REFUTED heterogeneous hybrid [1] K=512 + b11 r=22
+   at 411,648 params reaching 48.20): cycle 275 was about whether a
+   heterogeneous mix beats [1]-alone (43.82); cycle 284 is about whether a
+   homogeneous low-rank mix matches cycle 270-alone (54.47). Cycle 284
+   CONFIRMS the homogeneous composition axis positively. These are different
+   questions on different scoring axes.
+5. Composition question answered POSITIVELY (homogeneous weight-SVD composes
+   non-destructively) while simultaneously confirming that small 2-block
+   hybrids at small rank are outclassed by better single-block recipes.
+6. All 3 seeds hit best at step >= 3600 (still descending at budget cap).
+   Longer training could push best_mean further below 52.88.
+
+Closing item 294 CONFIRMED. P2 hybrid question resolved.
+
+Future directions (not added to agenda this cycle):
+  - 3-block homogeneous hybrid b1 r=2 + b10 r=17 + b11 r=22
+  - asymmetric rank hybrids at matched total param budget
+  - block 2 rank-1 weight-SVD isolated target (mirror cycle 283 K-sweep on
+    the weight-SVD side)

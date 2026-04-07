@@ -1,0 +1,57 @@
+Cycle 284 Audit Result — Item 294
+
+Status: PASS
+Verdict: CONFIRMED (best_mean = 52.8803 <= 55.0 by 2.120 PPL margin)
+Commit: 67ca93e
+
+Mechanical checks:
+  - Trainable param count per fit: 19,968 = 2*768+768 + 22*768+768 (asserted)
+  - n_seeds: 3 ({42, 137, 2024})
+  - Init PPL deterministic: 63.46289 across all 3 seeds (SVD init seed-independent)
+  - Float PPL in-run: 53.89489152418256 (matches reference 53.895)
+  - Restore asserts PASS for all 3 fits (|restored - best| < 1e-3)
+  - Best-step distribution: 3/3 between step 3600 and 3900 (budget-bounded)
+  - Wall time: ~8 min (<< 30-min cap)
+
+Aggregate:
+  best_mean = 52.8803 +/- 0.0298
+  best_min  = 52.8446 (seed 137 @ step 3700)
+  best_max  = 52.9176 (seed 42  @ step 3900)
+  init_mean = 63.4629
+  final@4000_mean = 52.9406
+
+Deltas:
+  vs float 53.895                  : -1.0146 (below float by 1.01 PPL)
+  vs cycle 270 b11 r=22 (54.469)   : -1.5884 (hybrid BEATS cycle 270 alone)
+  vs cycle 280 b1  r=2  (49.032)   : +3.8479 (hybrid WORSE than cycle 280 alone)
+  vs cycle 282 b10 r=17 (50.045)   : +2.8358 (hybrid dominated by cycle 282)
+  vs cycle 275 hetero hybrid (48.2): +4.6799 (cycle 275 different axis, 20x params)
+
+Pareto reading:
+  Cycle 284 (19968, 52.88) is NOT a new Pareto point — strictly dominated on
+  both axes by:
+    - cycle 280 (2304, 49.03)
+    - cycle 282 (13824, 50.04)
+    - cycle 283 [2] K=16 (13056, 49.46)
+  Hybrid DOES strictly dominate cycle 270 alone on PPL (-1.59) but loses on
+  params axis (+2304).
+
+Bookkeeping:
+  - Agenda: item 294 moved from NEXT > P2 to PAST > Cycle 284 cleanly.
+  - TSV row 284 appended with commit 67ca93e.
+  - Manifest, JSON, summary, agenda PAST entry all agree on CONFIRMED.
+  - Pre-existing dirty files untouched.
+
+Geometric reading:
+  1. Homogeneous low-rank weight-SVD composition is non-destructive at 2
+     blocks. Init 63.46 recovered to 52.88 (below float).
+  2. Asymmetric composition: block 11 benefits from block 1 (hybrid > cycle
+     270 alone), but block 1 does NOT benefit from block 11 (hybrid < cycle
+     280 alone).
+  3. Adam recovery -10.58 PPL exceeds either single-block recovery separately
+     (cycle 280 -8.63, cycle 270 -4.91).
+  4. Positive compositionality result without being a new Pareto point. The
+     item 294 question is answered positively; the recipe is still outclassed
+     by cheaper single-block options.
+
+Decision: PASS — verdict CONFIRMED stands.
