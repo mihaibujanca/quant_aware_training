@@ -1,0 +1,80 @@
+cycle=271
+item=281
+verdict=INCONCLUSIVE
+commit=4cf86ac
+float_ppl=53.895
+subsets=[[1],[4],[7]]
+K=512
+seeds=[42,137,2024]
+n_fits=9
+wall_time_min=21.7
+trainable_params_per_subset=393984
+
+# Per-subset aggregates (best_ppl_mean +/- best_ppl_std)
+subset_1_best_mean=43.8205
+subset_1_best_std=0.0234
+subset_1_init_mean=54.689
+subset_1_best_step_mean=4000
+subset_1_best_step_std=0
+subset_1_final_at_4000_mean=43.8205
+
+subset_4_best_mean=44.6330
+subset_4_best_std=0.0270
+subset_4_init_mean=55.715
+subset_4_best_step_mean=3967
+subset_4_best_step_std=47
+subset_4_final_at_4000_mean=44.6355
+
+subset_7_best_mean=45.3745
+subset_7_best_std=0.0026
+subset_7_init_mean=56.774
+subset_7_best_step_mean=4000
+subset_7_best_step_std=0
+subset_7_final_at_4000_mean=45.3745
+
+min_best_mean=43.8205
+min_subset=[1]
+max_best_mean=45.3745
+
+# Per-seed best_ppl
+per_seed_subset_1=[43.8262, 43.8459, 43.7893]
+per_seed_subset_4=[44.6346, 44.6652, 44.5992]
+per_seed_subset_7=[45.3771, 45.3709, 45.3756]
+
+# Per-seed best_step
+per_seed_step_subset_1=[4000, 4000, 4000]
+per_seed_step_subset_4=[3900, 4000, 4000]
+per_seed_step_subset_7=[4000, 4000, 4000]
+
+# Baselines
+baseline_c266_k512_2block_min_1_4=43.8525
+baseline_c210_k512_3block_1_4_7=46.556
+baseline_c255_k512_4block_min_1_2_4_7=49.609
+baseline_c245_k512_5block=53.826
+baseline_c221_k512_6block=59.515
+float_baseline_ref=53.895
+delta_vs_c266_k512_2block_min=-0.032
+delta_vs_c210_k512_3block=-2.736
+delta_vs_float=-10.074
+
+verdict_logic=min_best_mean_43.8205_>43.0_AND_NOT_all_>=46.0_->_INCONCLUSIVE
+threshold_C_le=43.0
+threshold_R_ge=46.0
+cascade_6b_5b_4b_3b_2b_1b=[59.515,53.826,49.609,46.556,43.8525,43.8205]
+per_step_savings=[5.689,4.217,3.053,2.704,0.032]
+cascade_concave_then_flatlines=true
+subset_ordering=[1]<[4]<[7]
+block_1_alone_carries_the_recipe=true
+new_pareto_winner_low_PPL_low_param=true
+dominates_cycle_266_2block_on_params_at_essentially_same_PPL=true
+interpretation=1-block_K=512_[1]_recipe_at_394K_params_43.82_PPL_is_new_lowest-PPL_AND_lowest-param_Pareto_winner_dominating_cycle_266_K=512_2-block_(788K_43.85)_at_HALF_the_params_for_essentially_the_same_PPL_(0.032_PPL_within_seed_std)_count-driven_cascade_FLATLINES_at_1_block_marginal_savings_collapse_5.69_4.22_3.05_2.70_0.03_block_1_alone_IS_the_recipe_-10.07_below_float
+
+# File hashes (sha256)
+sha256_experiments_one_block_sweep_cycle271_py=d804f4f9442f8dd2627921e7aed95af0533f9d7c336965c9008d789b1dc56fd0
+sha256_plans_cycle_271_md=091ed4bccf60caa16315ea5e305262fd04904f7c695ab6cde89aeaedc8e1ac7c
+sha256_briefs_cycle_271_md=d43cf274636633413c3625d7ce068683662113706c9c587520d3a818d8f98a62
+sha256_logs_cycle_271_run_log=762b203fb5a5be1c399f56a026c786fa1acb708be66bb6baea8de69c1da1f2ae
+sha256_results_cycle_271_one_block_sweep_json=5f217ebb0789ea12f45ce17cdeb5eee80266b1d658bb99713b12fcbdc30e4550
+sha256_results_cycle_271_summary_md=779a2a3a02ea4d8ccb7411d336eafd41834611f05929d1b0499ab7dd19699576
+
+artifacts=experiments/one_block_sweep_cycle271.py,autoresearch/plans/cycle_271.md,autoresearch/briefs/cycle_271.md,autoresearch/results/cycle_271_one_block_sweep.json,autoresearch/results/cycle_271_summary.md,autoresearch/logs/cycle_271_run.log,autoresearch/results/cycle_271_manifest.txt
