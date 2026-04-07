@@ -1,0 +1,76 @@
+cycle=265
+item=275
+verdict=INCONCLUSIVE
+commit=02a5936
+float_ppl=53.895
+subsets=[[1,2,4,7],[1,4,7,8],[1,2,7,8]]
+K=128
+seeds=[42,137,2024]
+n_fits=9
+wall_time_min=21.0
+trainable_params_per_subset=396288
+
+# Per-subset aggregates (best_ppl_mean +/- best_ppl_std)
+subset_1_2_4_7_best_mean=53.6469
+subset_1_2_4_7_best_std=0.0656
+subset_1_2_4_7_init_mean=74.216
+subset_1_2_4_7_best_step_mean=3933
+subset_1_2_4_7_best_step_std=94
+subset_1_2_4_7_final_at_4000_mean=53.706
+
+subset_1_4_7_8_best_mean=53.7320
+subset_1_4_7_8_best_std=0.0976
+subset_1_4_7_8_init_mean=76.107
+subset_1_4_7_8_best_step_mean=3900
+subset_1_4_7_8_best_step_std=82
+subset_1_4_7_8_final_at_4000_mean=53.771
+
+subset_1_2_7_8_best_mean=54.4877
+subset_1_2_7_8_best_std=0.1366
+subset_1_2_7_8_init_mean=75.862
+subset_1_2_7_8_best_step_mean=3900
+subset_1_2_7_8_best_step_std=82
+subset_1_2_7_8_final_at_4000_mean=54.561
+
+min_best_mean=53.6469
+min_subset=[1,2,4,7]
+max_best_mean=54.4877
+
+# Per-seed best_ppl
+per_seed_subset_1_2_4_7=[53.6948, 53.6929, 53.5530]
+per_seed_subset_1_4_7_8=[53.7711, 53.8267, 53.5982]
+per_seed_subset_1_2_7_8=[54.5942, 54.5751, 54.2939]
+
+# Per-seed best_step
+per_seed_step_subset_1_2_4_7=[4000, 3800, 4000]
+per_seed_step_subset_1_4_7_8=[3900, 3800, 4000]
+per_seed_step_subset_1_2_7_8=[3900, 3800, 4000]
+
+# Baselines
+baseline_c255_k512_4block_min_1_2_4_7=49.609
+baseline_c255_k512_4block_1_4_7_8=50.712
+baseline_c255_k512_4block_1_2_7_8=50.208
+baseline_c251_k128_5block=59.119
+baseline_c223_k128_3block_1_4_7=48.989
+delta_vs_c255_k512_min=+4.038
+delta_vs_c251_k128_5block=-5.472
+delta_vs_c223_k128_3block=+4.658
+delta_vs_float=-0.248
+
+verdict_logic=min_best_mean_53.647_in_(53.0,56.0)_->_INCONCLUSIVE
+threshold_C=53.0_threshold_R=56.0
+all_3_subsets_within_pm1ppl_of_float=true
+k128_4block_dominated_by_c223_k128_3block_on_pareto=true
+naive_linear_k128_extrapolation_predicted_50.7_actual_53.65_diff_2.95_PPL=sub_linear_cascade
+subset_ordering_matches_cycle_255_K=512=[1,2,4,7]<[1,4,7,8]<[1,2,7,8]
+interpretation=K=128_4-block_recipe_is_float-tied_at_396K_params_but_dominated_by_cycle_223_K=128_3-block_(297K_48.99)_on_both_pareto_axes_naive_linear_extrapolation_was_wrong_K-bandwidth_penalty_grows_per_block_as_block_count_drops_opposite_of_K=512_cascade
+
+# File hashes (sha256)
+sha256_experiments_four_block_k128_sweep_cycle265_py=80f470bd56ba8691c87948ce114a32b1c6d41718132ddc275dd322d5411270b6
+sha256_plans_cycle_265_md=a32cdef57bc97726cd9ba8051c139bca93c054817c3144a8518e1bd8e63ef4f5
+sha256_briefs_cycle_265_md=6be758d6a02dcad1210347fbb7d2c0fc857f5bb220aa212341ae5bea6f10f094
+sha256_logs_cycle_265_run_log=c818c66bee99b574c12a6e34ce600272b533806334c9caee98b4de8e11b16348
+sha256_results_cycle_265_four_block_k128_sweep_json=1bcf49778ccb7e5c480209e60b81b8b536ed95d97549c26ace0c0a4d66608678
+sha256_results_cycle_265_summary_md=097c6c5e5d7d88eab1ef2bc67b33d146175ec5f254e91ded5ededc1a0c863e1e
+
+artifacts=experiments/four_block_k128_sweep_cycle265.py,autoresearch/plans/cycle_265.md,autoresearch/briefs/cycle_265.md,autoresearch/results/cycle_265_four_block_k128_sweep.json,autoresearch/results/cycle_265_summary.md,autoresearch/logs/cycle_265_run.log,autoresearch/results/cycle_265_manifest.txt
