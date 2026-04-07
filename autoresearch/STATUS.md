@@ -1,6 +1,11 @@
-# Research Status — 284 Cycles (001–284)
+# Research Status — 285 Cycles (001–285)
 
-## Latest: Cycle 284
+## Latest: Cycle 285
+
+295. **Block 2 rank-r c_proj weight-SVD** — CONFIRMED
+   - No-retrain sweep: r=1:72.38, r=2:64.08, r=5:64.09, r=10:62.16. r=1 gate (≤55) did NOT fire. **Retrain r=2 (3 seeds, 2,304 params)**: **best_mean=49.329 ± 0.133**. CONFIRMED (≤50 by 0.67). **NOT a Pareto winner**: dominated by cycle 280 block 1 r=2 (same 2,304 params, 49.03) by 0.30 PPL. **Dominates cycle 283 [2] K=16 (13K, 49.46)** on both axes (5.7× fewer params). **Geometric finding**: block 2 c_proj WEIGHT SVD is FLAT (top-5 SVs: 38, 15, 13, 12, 12). **Cycle 278 eff_rank=1.05 is an OUTPUT-covariance property driven by input, NOT a weight-rank property** — lower output eff_rank does NOT imply better rank-r weight-SVD. Refines the "activation eff_rank ≠ weight-SVD rank" lesson from cycles 270/273/280.
+
+## Cycle 284
 
 294. **Hybrid block 1 rank-2 + block 11 rank-22 c_proj weight-SVD** — CONFIRMED
    - Homogeneous low-rank weight-SVD hybrid, 19,968 trainable params. **best_mean=52.880 ± 0.030**, below float by 1.01 PPL and **1.59 PPL better than cycle 270 block 11 alone with only +2,304 extra params**. Init=63.46 (deterministic). Joint Adam recovered -10.58 PPL (larger than either single-block). **Composition is non-destructive** for homogeneous weight-SVD (unlike cycle 275's heterogeneous mix). **Asymmetric finding**: block 11 benefits from block 1 (hybrid > cycle 270), but block 1 does NOT benefit from block 11 (hybrid < cycle 280 by 3.85 PPL). **NOT a new Pareto point** — dominated by cycle 280 (2.3K, 49.03), cycle 282 (13.8K, 50.04), cycle 283 [2] K=16 (13.1K, 49.46).
