@@ -1,0 +1,63 @@
+Cycle 283 Execute Result — Item 293
+Verdict: CONFIRMED (both clauses)
+Commit: 7e63138
+
+Item: 1-block [2] K sweep — K ∈ {16, 32, 64}
+
+Key metric: K=16 best_mean=49.4622±0.0472 ≤ 52.0 (clause 1 PASS by 2.538 PPL);
+            K=32 best_mean=47.8966±0.0657 ≤ 50.0 (clause 2 PASS by 2.103 PPL);
+            K=64 best_mean=47.5115±0.0612
+All K beat float by 4.43–6.38 PPL.
+
+Config: BLOCKS=[2], K_VALUES=[16,32,64], 3 seeds {42,137,2024}, 9 fits
+        joint Adam W_out+b_out LR=1e-4 N_STEPS=4000 EVAL_EVERY=100 best-state restore
+        topk+lstsq init, disjoint N_CALIB=200/N_EVAL=100, SEQ_LEN=128, MPS, GPT-2 small
+        wikitext-2 val. Wall 22.6 min.
+
+Trainable params asserted per K: 13,056 / 25,344 / 49,920 = K×768 + 768.
+
+Key cross-block findings:
+- Block 2 BEATS block 1 at every K tested:
+    [2] K=32 47.897 vs cycle 276 [1] K=32 49.649  -> -1.752 PPL at identical params
+    [2] K=64 47.511 vs cycle 276 [1] K=64 48.045  -> -0.534 PPL at identical params
+- New lowest-param Pareto anchor: [2] K=16 (13,056 params, 49.462 PPL)
+  strictly dominates cycle 276 [1] K=32 (25,344, 49.649) on BOTH axes
+  (48% fewer params AND 0.19 PPL better)
+- Cycle 280 block 1 c_proj r=2 (2,304, 49.032) still dominates cycle 283 [2] K=16 on
+  both axes at the ultra-low endpoint (5.7x fewer params AND 0.43 PPL better)
+- Cycle 276 [1] K=32/K=64 recipes DEPRECATED — block 2 strictly better at same K
+
+Geometric reading:
+Block 2 (cycle 278: eff_rank=1.05, top-1 energy 99.61%) IS a viable standalone compression
+target — even K=16 beats float by 4.43 PPL. Cycle 281 showed adding block 2 to [1] in a
+cascade is harmful (+0.52 PPL); cycle 283 shows block 2 alone at K=16 beats block 1 alone
+at K=32 with half the params. Consistent reading: block 2 represents ~same 1D subspace
+block 1 spans, so it cannot add in cascade but CAN substitute at lower cost. Third
+independent positive result for eff_rank as prescriptive at single-block level (after
+cycles 280 and 282 on the weight-SVD side). Eff_rank remains non-prescriptive at cascade
+level (cycles 273/278/281).
+
+Per-seed (all 9 fits, restore asserts PASS):
+  K=16 seed 42:   init=57.4949  best=49.4172 @step 4000
+  K=16 seed 137:  init=57.4949  best=49.5274 @step 3800
+  K=16 seed 2024: init=57.4949  best=49.4420 @step 4000
+  K=32 seed 42:   init=56.5899  best=47.8326 @step 4000
+  K=32 seed 137:  init=56.5899  best=47.9869 @step 4000
+  K=32 seed 2024: init=56.5899  best=47.8703 @step 4000
+  K=64 seed 42:   init=56.4734  best=47.4397 @step 4000
+  K=64 seed 137:  init=56.4734  best=47.5892 @step 4000
+  K=64 seed 2024: init=56.4734  best=47.5055 @step 4000
+
+8 of 9 fits best at step 4000 (still descending at budget cap). Float PPL in-run:
+53.89489152418256 matches reference 53.895.
+
+Artifacts:
+  experiments/block2_k_sweep_cycle283.py
+  autoresearch/plans/cycle_283.md
+  autoresearch/briefs/cycle_283.md
+  autoresearch/results/cycle_283_block2_k_sweep.json
+  autoresearch/results/cycle_283_summary.md
+  autoresearch/results/cycle_283_manifest.txt
+  autoresearch/logs/cycle_283_run.log
+  autoresearch/agenda.md
+  autoresearch/logs/experiments.tsv

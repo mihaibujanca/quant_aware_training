@@ -1,0 +1,85 @@
+Cycle 283 Manifest — Item 293: 1-block [2] K sweep — K ∈ {16, 32, 64}
+
+Commit: 7e63138
+Branch: geometric_compression
+Verdict: CONFIRMED (both clauses)
+
+== Verdict logic (item 293 verbatim) ==
+CONFIRMED iff K=16 best_mean <= 52.0 OR K=32 best_mean <= 50.0
+REFUTED   iff ALL of {K=16, K=32, K=64} best_mean >= 55.0
+INCONCLUSIVE otherwise
+
+  K=16 best_mean = 49.46221 <= 52.0  -> CONFIRMED clause 1 TRIGGERED (by 2.538 PPL)
+  K=32 best_mean = 47.89660 <= 50.0  -> CONFIRMED clause 2 TRIGGERED (by 2.103 PPL)
+  K=64 best_mean = 47.51148 < 55.0   -> refuted clause NOT triggered (all K < 55)
+  -> CONFIRMED (both clauses)
+
+== Per-K aggregates (n=3 seeds {42, 137, 2024}, population std) ==
+K=16 ( 13,056 params): best_mean = 49.46221 +/- 0.04720, init 57.4949, final@4000 49.4786
+  seed 42:   init=57.4949  best=49.4172 @step 4000  final@4000=49.4172
+  seed 137:  init=57.4949  best=49.5274 @step 3800  final@4000=49.5764
+  seed 2024: init=57.4949  best=49.4420 @step 4000  final@4000=49.4420
+K=32 ( 25,344 params): best_mean = 47.89660 +/- 0.06574, init 56.5899, final@4000 47.8966
+  seed 42:   init=56.5899  best=47.8326 @step 4000  final@4000=47.8326
+  seed 137:  init=56.5899  best=47.9869 @step 4000  final@4000=47.9869
+  seed 2024: init=56.5899  best=47.8703 @step 4000  final@4000=47.8703
+K=64 ( 49,920 params): best_mean = 47.51148 +/- 0.06123, init 56.4734, final@4000 47.5115
+  seed 42:   init=56.4734  best=47.4397 @step 4000  final@4000=47.4397
+  seed 137:  init=56.4734  best=47.5892 @step 4000  final@4000=47.5892
+  seed 2024: init=56.4734  best=47.5055 @step 4000  final@4000=47.5055
+
+8 of 9 fits hit best at step 4000 (only K=16 seed 137 hit best at 3800 then final rose to 49.5764 with restore salvaging to 49.5274) — budget-bounded descent.
+Restore asserts pass for all 9 fits (|restored - best| < 1e-3).
+Init PPL deterministic per K across all 3 seeds (lstsq init is seed-independent on identical calib).
+Float PPL measured in-run: 53.89489152418256 (exact match to reference 53.895).
+
+== Baselines ==
+cycle 271 [1]  K=512 1-block    =  43.82045  (393,984)
+cycle 281 [1,2] K=512 2-block    =  44.33887  (787,968)
+cycle 276 [1]  K=32  1-block     =  49.64854  ( 25,344)
+cycle 276 [1]  K=64  1-block     =  48.04525  ( 49,920)
+cycle 276 [1]  K=128 1-block     =  46.93161  ( 99,072)
+cycle 276 [1]  K=256 1-block     =  45.38537  (197,376)
+cycle 282 block 10 c_proj r=17   =  50.04450  ( 13,824)
+cycle 280 block 1  c_proj r=2    =  49.03240  (  2,304)
+cycle 270 block 11 c_proj r=22   =  54.46900  ( 17,664)
+Float baseline ref               =  53.89500
+
+== Deltas vs float (53.895) ==
+K=16 [2] -> -4.4328  (beats float by 4.43 PPL at 13,056 params — lowest-param K-sweep anchor)
+K=32 [2] -> -5.9984
+K=64 [2] -> -6.3835
+
+== Deltas vs cycle 276 [1] same K ==
+K=32 [2]=47.8966 vs [1]=49.6485 -> -1.7519 PPL (block 2 BEATS block 1 at K=32)
+K=64 [2]=47.5115 vs [1]=48.0453 -> -0.5338 PPL (block 2 BEATS block 1 at K=64)
+(K=16: no cycle 276 [1] K=16 counterpart to compare)
+
+== Cross-block cheapness comparison (at ~13-14K params) ==
+cycle 283 [2] K=16      (13,056 params, 49.462 PPL)  NEW ANCHOR
+cycle 282 block 10 r=17 (13,824 params, 50.045 PPL)  cycle 283 BETTER by 0.58 PPL, 6% fewer params
+cycle 280 block 1  r=2  ( 2,304 params, 49.032 PPL)  cycle 280 still dominates (5.7x fewer params, 0.43 PPL better)
+
+== Pareto update ==
+- NEW: ( 13,056 params, 49.462 PPL) @ [2] K=16 — new lowest-param K-sweep anchor; strictly DOMINATES cycle 276 [1] K=32 (25,344 params, 49.649 PPL) on BOTH axes (48% fewer trainable params AND 0.19 PPL better).
+- NEW: ( 25,344 params, 47.897 PPL) @ [2] K=32 — strictly DOMINATES cycle 276 [1] K=32 (25,344, 49.649) at IDENTICAL trainable params, -1.75 PPL improvement.
+- NEW: ( 49,920 params, 47.511 PPL) @ [2] K=64 — strictly DOMINATES cycle 276 [1] K=64 (49,920, 48.045) at IDENTICAL trainable params, -0.53 PPL improvement.
+- Cycle 276 [1] K=32 and K=64 recipes are DEPRECATED at the single-block K-sweep level — block 2 at the same K is strictly better.
+- Cycle 280 block 1 c_proj r=2 (2,304 params, 49.032) still strictly dominates cycle 283 [2] K=16 on BOTH axes (5.7x fewer trainable params AND 0.43 PPL better) at the ultra-low-param endpoint.
+- cycle 271 [1] K=512 (393,984, 43.820) remains best-PPL anchor; cycle 283 does not challenge it (block 2 has a lower PPL ceiling than block 1 at large K).
+
+== Geometric reading (one-paragraph) ==
+Block 2 (cycle 278 eff_rank=1.05, top-1 energy 99.61pc) IS a viable standalone compression target at small K — even K=16 beats float by 4.43 PPL. Block 2 beats block 1 at every K tested in the K-sweep family: [2] K=32 47.90 vs [1] K=32 49.65 (-1.75); [2] K=64 47.51 vs [1] K=64 48.05 (-0.53). This LOOKS contradictory to cycle 281 which found adding block 2 to [1] in a cascade is actively harmful (+0.52 PPL vs [1] alone), but the reading is consistent: block 2 represents approximately the same one-dimensional subspace that block 1 already spans, so it contributes no new direction IN A CASCADE, but can SUBSTITUTE for block 1 at far lower param cost. Cycle 283 is the third independent positive result for activation eff_rank as prescriptive at the single-block level (after cycles 280 and 282 on the weight-SVD side). At the cascade level, cycles 273/278/281 still stand: eff_rank is NOT prescriptive for which blocks to combine.
+
+== Wall time / fits ==
+Total wall: 22.6 min over 9 fits — under the 30-min cap. No seed drop triggered.
+
+== Artifacts ==
+experiments/block2_k_sweep_cycle283.py
+autoresearch/plans/cycle_283.md
+autoresearch/briefs/cycle_283.md
+autoresearch/results/cycle_283_block2_k_sweep.json
+autoresearch/results/cycle_283_summary.md
+autoresearch/logs/cycle_283_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv

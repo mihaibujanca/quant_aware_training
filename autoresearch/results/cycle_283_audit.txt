@@ -1,0 +1,33 @@
+Cycle 283 Audit — Item 293: 1-block [2] K sweep
+Status: PASS
+Commit: 7e63138
+
+Verdict: CONFIRMED (both clauses) — correct per item 293 verbatim thresholds:
+  CONFIRMED iff K=16 best_mean <= 52.0 OR K=32 best_mean <= 50.0
+    K=16 = 49.46221 <= 52.0 PASS (margin 2.538)
+    K=32 = 47.89660 <= 50.0 PASS (margin 2.103)
+    K=64 = 47.51148
+  REFUTED iff all K >= 55.0 — FAIL (all K < float at 47-49)
+
+Mechanical checks:
+- trainable params asserted per K: 13056/25344/49920 = K*768+768 — PASS
+- 3 seeds {42,137,2024} per K, 9 fits total — MATCH
+- init_ppl deterministic within K (lstsq seed-independent) — MATCH
+- float_ppl in-run = 53.89489 matches reference 53.895 — PASS
+- restore assert |restored - best| < 1e-3 all 9 fits — PASS (per run log)
+- wall 22.6 min under 30-min cap — PASS
+- script fidelity to cycle 276 template (BLOCKS=[2], K_VALUES=[16,32,64], all other config verbatim) — MATCH
+
+Cross-cycle numerical sanity (verified from JSON):
+- [2] K=32 47.897 vs cycle 276 [1] K=32 49.649 = -1.752 (block 2 beats block 1 same K)
+- [2] K=64 47.511 vs cycle 276 [1] K=64 48.045 = -0.534 (block 2 beats block 1 same K)
+- [2] K=16 (13056, 49.462) strictly dominates cycle 276 [1] K=32 (25344, 49.649) on BOTH axes
+- cycle 280 block 1 r=2 (2304, 49.032) still dominates cycle 283 [2] K=16 on both axes
+- cycle 271 [1] K=512 (393984, 43.820) remains best-PPL 1-block anchor — not challenged
+- Consistent with cycle 281 negative cascade result for [1,2] K=512 (block 2 overlaps block 1 subspace)
+
+Agenda / TSV / manifest / summary agreement — VERIFIED.
+PAST entry is ≤4 lines as required.
+No other items touched.
+
+Decision: PASS.
