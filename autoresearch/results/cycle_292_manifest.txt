@@ -1,6 +1,6 @@
 Cycle 292 Manifest — Item 302: Block 1 c_proj rank-1 sub-eff_rank stress test
 
-Commit: TBD
+Commit: 95be6f7
 Branch: geometric_compression
 Verdict: CONFIRMED
 
@@ -127,5 +127,5 @@ autoresearch/logs/experiments.tsv
 item_number: 302
 outcome: CONFIRMED
 key_metric: best_mean=50.0794_pm_0.0479_le_51.0_by_0.921_PPL_block_1_rank_1_c_proj_SUB_EFF_RANK_weight_SVD_retrain_1536_params_r_eff_rank_0.51_LOWEST_PARAM_single_block_c_proj_anchor_below_float_by_3.82_PPL
-commit: TBD
+commit: 95be6f7
 paths: experiments/block1_rank1_cycle292.py,autoresearch/plans/cycle_292.md,autoresearch/briefs/cycle_292.md,autoresearch/results/cycle_292_block1_rank1.json,autoresearch/results/cycle_292_summary.md,autoresearch/logs/cycle_292_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv

@@ -1,0 +1,143 @@
+Cycle 292 — Item 302 — Audit Result
+
+Audit status: PASS
+Auditor verdict: CONFIRMED (unchanged — provisional outcome holds)
+Commit: 95be6f7
+Branch: geometric_compression
+
+== Verdict arithmetic ==
+  r=1 retrain best_mean = 50.07942
+  CONFIRMED clause: 50.07942 <= 51.0 ?  TRUE  (margin 0.92058 PPL)
+  REFUTED   clause: 50.07942 >= 53.5 ?  FALSE
+  -> CONFIRMED by r=1 clause
+
+  Std recomputed from per-seed bests:
+    mean(50.14708, 50.04679, 50.04439) = 50.07942              match
+    deviations    : (+0.06766, -0.03263, -0.03503)
+    squared sum/3 : 0.0022899                                   match
+    sqrt           : 0.04785 ~ 0.04785 reported                 match (5dp)
+
+== Per-seed sanity ==
+  seed 42  : init=59.7513 best=50.1471@3900 final=50.2724 restored=50.1471
+  seed 137 : init=59.7513 best=50.0468@3900 final=50.1260 restored=50.0468
+  seed 2024: init=59.7513 best=50.0444@4000 final=50.0444 restored=50.0444
+
+  init PPL identical across seeds (59.7513)                PASS (SVD init deterministic)
+  init PPL == noretrain r=1 PPL (59.7513)                  PASS
+  |restored - best| < 1e-3 per seed                        PASS (all three exact)
+  best step in {3900, 3900, 4000}                          PASS (BUDGET-bounded at cap)
+  seed 2024 best=4000, final=best                          PASS (still descending at cap)
+  seeds 42/137 final > best by 0.125/0.079 PPL             PASS (early overfit signal)
+  trainable params per fit = 1,536                         PASS (1*768 + 768)
+
+== No-retrain sweep ==
+  r=1  PPL = 59.7513   energy = 0.0459
+
+  cross-check vs cycle 280 r=1 reference 59.7513           PASS (|Δ|=0.0000, exact 5dp)
+  in-script assert cycle_280_delta < 0.01                  PASS
+  restore of c_proj.weight after sweep ~ float 53.895      PASS (log shows exact match)
+
+== Plan adherence ==
+  TARGET_BLOCK=1                                           PASS
+  RANKS_NORETRAIN=[1]                                      PASS
+  RETRAIN_RANK=1                                           PASS
+  SEEDS=[42,137,2024]                                      PASS
+  N_STEPS=4000, LR=1e-4, EVAL_EVERY=100                    PASS
+  N_CALIB=200, N_EVAL=100, SEQ_LEN=128, disjoint           PASS
+  MPS, GPT-2 small, wikitext-2 val                         PASS
+  Float PPL 53.89489 within 0.5 of reference 53.895        PASS (exact)
+  Template (cycle 280 block 1) adapted verbatim            PASS
+
+== Baseline cross-checks (vs manifest) ==
+  cycle 280 b1 r=2           49.0324    match
+  cycle 285 b2 r=2           49.3290    match
+  cycle 289 b10 r=5          51.4659    match
+  cycle 282 b10 r=17         50.0445    match
+  cycle 288 b3 r=24          50.5935    match
+  cycle 270 b11 r=22         54.4687    match
+  cycle 278 b1 eff_rank      1.9448     match
+  cycle 278 b1 top-1 energy  0.9294     match
+  cycle 280 b1 r=1 noretrain 59.7513    match (measured 59.7513)
+
+== Delta checks ==
+  vs float              50.07942 - 53.89489 = -3.81547     match (below float by 3.82 PPL)
+  vs cycle 280 b1 r2    50.07942 - 49.03240 = +1.04702     match (worse at 1.5x fewer params; new tile, NOT dominated)
+  vs cycle 289 b10 r5   50.07942 - 51.46590 = -1.38648     match (STRICTLY DOMINATES — 3x fewer, 1.39 lower)
+  vs cycle 285 b2 r2    50.07942 - 49.32900 = +0.75042     match (worse at 1.5x fewer params; same logic as cycle 280)
+  vs cycle 282 b10 r17  50.07942 - 50.04450 = +0.03492     match (essentially TIES on PPL at 9x fewer params)
+  vs cycle 288 b3 r24   50.07942 - 50.59350 = -0.51408     match (STRICTLY DOMINATES — 12.5x fewer, 0.51 lower)
+  vs cycle 270 b11 r22  50.07942 - 54.46870 = -4.38928     match (STRICTLY DOMINATES — 11.5x fewer, 4.39 lower)
+
+== Pareto reading ==
+  Cycle 292 (1,536 params, 50.08 PPL):
+    NEW lowest-param single-block c_proj recipe by 33% vs cycle 280/285 (2,304)
+    STRICTLY DOMINATES cycle 289 b10 r=5  (4,608, 51.47) — 3x fewer, 1.39 lower
+    STRICTLY DOMINATES cycle 288 b3 r=24  (19,200, 50.59) — 12.5x fewer, 0.51 lower
+    STRICTLY DOMINATES cycle 270 b11 r=22 (17,664, 54.47) — 11.5x fewer, 4.39 lower
+    ESSENTIALLY TIES cycle 282 b10 r=17  (13,824, 50.04) — 9x fewer, +0.03 (noise)
+    DOMINATED on PPL (different param tier) by cycle 280 b1 r=2 (2,304, 49.03)
+    DOMINATED on PPL (different param tier) by cycle 285 b2 r=2 (2,304, 49.33)
+  Major Pareto rewrite: REMOVES THREE anchors (270, 288, 289) from joint frontier
+  AND ESSENTIALLY-TIES cycle 282 (13,824) on PPL at 9x fewer params. New lowest-
+  param tile at 1,536 params / 50.08 PPL. Single-block c_proj recipe landscape
+  is now anchored by cycle 292 (1,536) and cycle 280 (2,304) at the small-param
+  end of the curve.
+
+== Sub-eff_rank reading (audit) ==
+  r/eff_rank = 1/1.9448 = 0.514. SECOND successful sub-eff_rank single-block
+  c_proj recipe (after cycle 289 block 10 r=5 at r/eff=0.30). Two data points
+  now establish the sub-eff_rank regime is general, not block-specific:
+    block 1  r=1 (eff 1.94) → 50.08 @ 1,536  cycle 292 NEW
+    block 10 r=5 (eff 16.70)→ 51.47 @ 4,608  cycle 289
+  Cycle 292 covers the SMALLEST-eff_rank concentrator (block 1) at the LOWEST
+  possible rank (r=1) — a 33% lower trainable param count than the previous
+  lowest cycle-280/285 anchor at r=2.
+
+== Geometric audit ==
+  Block 1 c_proj weight-SVD: top-5 28.71, 23.10, 18.84, 13.83, 13.74.
+  S[0]/S[4] = 2.09 — flat profile (similar to block 10 in shape, lower in
+  magnitude). Rank-1 captures only 4.59% of weight matrix squared-norm energy.
+  Rank-1 SVD init is therefore a severe approximation of the weight matrix.
+  Adam over (B, bias) = 1,536 params realigns the single trainable B (1, 768)
+  row with the dominant input-active output direction (cycle 278 eff_rank
+  1.9448 is an OUTPUT property; the top-1 OUTPUT energy fraction is 0.9294,
+  consistent with one dominant direction).
+
+  Adam recovery -9.67 PPL (59.7513 -> 50.0794). The init is FAR from float
+  (+5.86 PPL above) — more room to descend than cycle 280 r=2 (init 57.66
+  → best 49.03, recovery -8.63), and Adam exploits all of it.
+
+  BUDGET-BOUNDED, not floor-limited: all 3 seeds hit best at step 3900-4000.
+  Seed 2024 best=4000 with final=best (no overfit signal). Seeds 42/137
+  best=3900 with final > best by only 0.08-0.13 PPL (mild early overfit).
+  This is qualitatively DIFFERENT from cycle 289 b10 r=5 (best at 1500-1800,
+  then drift up by 0.18-0.24 PPL — deeply floor-limited). Cycle 292 has not
+  yet found its floor; an 8000-step extension is the natural follow-up.
+
+== Artifacts ==
+  experiments/block1_rank1_cycle292.py             present
+  autoresearch/plans/cycle_292.md                   present  (25 lines, 8 H2 headings + title)
+  autoresearch/briefs/cycle_292.md                  present
+  autoresearch/results/cycle_292_block1_rank1.json  present  (verdict=CONFIRMED)
+  autoresearch/results/cycle_292_summary.md         present
+  autoresearch/results/cycle_292_manifest.txt       present  (commit=95be6f7)
+  autoresearch/results/cycle_292_exec_result.txt    present  (commit=95be6f7)
+  autoresearch/logs/cycle_292_run.log               present
+  autoresearch/audits/cycle_292.md                  present  (this audit)
+  autoresearch/agenda.md                            updated  (302 moved to PAST as Cycle 292)
+  autoresearch/logs/experiments.tsv                 appended (row 292 with 8 cols)
+
+== Final ==
+  audit_status: PASS
+  final_verdict: CONFIRMED (unchanged)
+  corrections: none
+  next_action: keep provisional outcome; follow-up suggestions — (a) cycle 292
+               8k budget extension (rank-1 floor probe); (b) 2-block hybrids
+               anchored on cycle 292 1,536-param tile; (c) re-examine cycle 291
+               with cycle 292's b1 r=1 instead of b1 r=2.
+
+item_number: 302
+outcome: CONFIRMED
+key_metric: best_mean=50.0794_pm_0.0479_le_51.0_by_0.921_PPL_audit_PASS_sub_eff_rank_r_over_eff_rank=0.514_SECOND_success_BUDGET_BOUNDED_lowest_param_anchor_1536
+commit: 95be6f7
+paths: autoresearch/audits/cycle_292.md,autoresearch/results/cycle_292_audit.txt
