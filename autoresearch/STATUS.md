@@ -1,6 +1,11 @@
-# Research Status — 278 Cycles (001–278)
+# Research Status — 279 Cycles (001–279)
 
-## Latest: Cycle 278
+## Latest: Cycle 279
+
+289. **[1,4] K=512 W_out+W_fc retrain** — CONFIRMED (W_fc noop)
+   - SLICED FullCompressedMLP (cycle 213 convention), trainable 1,575,424. **best_mean=43.878 ± 0.099**, Δ vs cycle 266 [1,4] W_out-only (43.852) = +0.026 PPL (within noise). CONFIRMED W_fc noop band (43.6, 44.1). Per-seed: 42=44.017, 137=43.796, 2024=43.819. Final@4000 overshoots best by +2.75 PPL (46.63) — **W_fc DOFs overfit rather than absorb real signal**. Strictly dominated by cycle 271 [1] K=512 on both axes. **W_fc retraining probe family now CLOSED across 5 configs**: cycle 213 (K=512 3-block), cycle 241 (K=512 6-block bias), cycle 248 (K=128 6-block full), cycle 262 (K=1 3-block bias), cycle 279 (K=512 2-block full) — all within ±0.1 PPL of W_out-only. Noted: agenda item 289 claimed 5.5M trainable (full 768×3072 W_fc); used cycle 213's SLICED semantics (1.58M) — discrepancy documented.
+
+## Cycle 278
 
 288. **All-blocks c_proj output eff_rank census** — INCONCLUSIVE (interesting=true)
    - **12-block profile**: {0:71.93, 1:**1.94**, 2:**1.05**, 3:24.29, 4:**49.04**, 5:179.19, 6:290.97, 7:297.79, 8:291.41, 9:195.50, 10:**16.70**, 11:**22.49**}. Cycle 267 sanity reproduces exactly. **Block 4 = 49.04 triggers CONFIRMED clause 1** by 0.96, BUT mid-blocks {2, 3, 10} = {1.05, 24.29, 16.70} are far below the 100 floor → clause 2 fails → INCONCLUSIVE. **U-shape hypothesis WRONG**: pattern is **bathtub-with-block-0-bump** — 4 contiguous concentrators at blocks 1-4, 5 contiguous diffusers at 5-9, 2 late concentrators at 10-11. **Block 2 is rank-1** (top-1 energy 99.61%), more concentrated than block 1. **Block 10 (16.70) is more concentrated than block 11 (22.49)** — untested as single-block-patch candidates. **Block 7 (297.79) is high-rank yet a Pareto-cascade winner** — confirms cycle 273's finding that activation eff_rank is descriptive, not prescriptive.
