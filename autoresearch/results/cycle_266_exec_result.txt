@@ -1,0 +1,36 @@
+cycle=266
+item=276
+verdict=CONFIRMED
+commit=c1ee079
+bookkeeping_commit=PENDING_HASH
+status=success
+fits_completed=9
+wall_time_min=22.2
+seed_drop=none
+
+# Aggregates
+min_best_mean=43.8525
+min_subset=[1,4]
+max_best_mean=45.7703
+subset_1_4_best_mean=43.8525_pm_0.0273
+subset_1_7_best_mean=43.9048_pm_0.0508
+subset_4_7_best_mean=45.7703_pm_0.0164
+
+# Verdict logic
+threshold_C_le=45.0
+threshold_R_ge=47.0
+min_43.8525_le_45.0=CONFIRMED
+
+# Deltas
+delta_vs_c210_k512_3block_46.556=-2.704
+delta_vs_c255_k512_4block_min_49.609=-5.757
+delta_vs_float_53.895=-10.042
+
+# Pareto reading
+trainable_params_per_subset=787968
+new_lowest_PPL_pareto_winner_at_788K_43.85=true
+dominates_cycle_210_k512_3block_and_cycle_255_k512_4block_on_both_axes=true
+cascade_concave_marginal_savings_5.69_4.22_3.05_2.70=true
+block_1_in_every_winning_subset=true
+
+artifacts=experiments/two_block_sweep_cycle266.py,autoresearch/plans/cycle_266.md,autoresearch/briefs/cycle_266.md,autoresearch/logs/cycle_266_run.log,autoresearch/results/cycle_266_two_block_sweep.json,autoresearch/results/cycle_266_summary.md,autoresearch/results/cycle_266_manifest.txt
