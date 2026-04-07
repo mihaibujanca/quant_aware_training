@@ -1,0 +1,79 @@
+cycle=272
+item=282
+verdict=CONFIRMED
+commit=a61fdf6
+float_ppl=53.895
+subsets=[[1,2,4,7],[1,4,7,8],[1,2,7,8]]
+K=256
+seeds=[42,137,2024]
+n_fits=9
+wall_time_min=21.3
+trainable_params_per_subset=789504
+
+# Per-subset aggregates (best_ppl_mean +/- best_ppl_std)
+subset_1_2_4_7_best_mean=51.9224
+subset_1_2_4_7_best_std=0.0199
+subset_1_2_4_7_init_mean=70.869
+subset_1_2_4_7_best_step_mean=3633
+subset_1_2_4_7_best_step_std=170
+subset_1_2_4_7_final_at_4000_mean=52.0705
+
+subset_1_4_7_8_best_mean=52.4716
+subset_1_4_7_8_best_std=0.0592
+subset_1_4_7_8_init_mean=72.818
+subset_1_4_7_8_best_step_mean=3233
+subset_1_4_7_8_best_step_std=368
+subset_1_4_7_8_final_at_4000_mean=52.7782
+
+subset_1_2_7_8_best_mean=52.6762
+subset_1_2_7_8_best_std=0.0828
+subset_1_2_7_8_init_mean=72.450
+subset_1_2_7_8_best_step_mean=3100
+subset_1_2_7_8_best_step_std=294
+subset_1_2_7_8_final_at_4000_mean=53.0503
+
+min_best_mean=51.9224
+min_subset=[1,2,4,7]
+max_best_mean=52.6762
+
+# Per-seed best_ppl
+per_seed_subset_1_2_4_7=[51.9505, 51.9072, 51.9095]
+per_seed_subset_1_4_7_8=[52.5492, 52.4601, 52.4056]
+per_seed_subset_1_2_7_8=[52.7813, 52.6685, 52.5789]
+
+# Per-seed best_step
+per_seed_step_subset_1_2_4_7=[3700, 3800, 3400]
+per_seed_step_subset_1_4_7_8=[3700, 2800, 3200]
+per_seed_step_subset_1_2_7_8=[3500, 2800, 3000]
+
+# Baselines
+baseline_c255_k512_4block_min_1_2_4_7=49.609
+baseline_c265_k128_4block_min_1_2_4_7=53.647
+baseline_c223_k256_3block_1_4_7=47.509
+baseline_c256_k256_6block=64.181
+baseline_c268_k64_4block_min_1_4_7_8=55.953
+float_baseline_ref=53.895
+delta_vs_c255_k512_4block=+2.313
+delta_vs_c265_k128_4block=-1.725
+delta_vs_c223_k256_3block=+4.413
+delta_vs_float=-1.972
+
+verdict_logic=min_best_mean_51.9224_le_52.0_->_CONFIRMED_pass_by_0.078_PPL
+threshold_C_le=52.0
+threshold_R_ge=54.0
+K_curve_4block_K64_K128_K256_K512=[55.953,53.647,51.922,49.609]
+per_K_halving_cost_512to256_256to128_128to64=[2.31,1.73,2.31]
+canonical_subset_ordering_returns_at_K256=true
+K268_K64_subset_flip_was_K_specific=true
+NOT_pareto_winner_dominated_by_c271=true
+interpretation=K=256_4-block_at_789K_params_51.92_PPL_fills_K-curve_midpoint_cleanly_(brief_predicted_~51.6)_canonical_[1,2,4,7]<[1,4,7,8]<[1,2,7,8]_ordering_returns_(c268_K=64_flip_was_K-specific)_K-curve_at_4_blocks_now_fully_mapped_per-K-halving_cost_{512to256:2.31_256to128:1.73_128to64:2.31}_roughly_linear_in_logK_with_flat_midstep_NOT_strictly_concave-up_NOT_pareto_winner_dominated_by_c271_K512_1block_[1]_at_HALF_params_for_8.10_PPL_better_beats_float_by_1.97_PPL
+
+# File hashes (sha256)
+sha256_experiments_four_block_k256_sweep_cycle272_py=815530771c2263c6022bc366b8abba58935c4eae84e765e966017adcdafee19d
+sha256_plans_cycle_272_md=35d75dda4957e7917891ca46d5921aa249ebb88a2528761390b0d33be77dbd09
+sha256_briefs_cycle_272_md=68c8a9d53fc327da0d4be2b3659194beff87c70a64a1cb2c978b4c541f61f03f
+sha256_logs_cycle_272_run_log=cfc71421c0573f68d5e50fb4544e3b768e3ddd6eaf1d886ffa33be9fd097243b
+sha256_results_cycle_272_four_block_k256_sweep_json=a3777d35ead859ddfd3a7ea204bc60ad56cb9664bebe68c11217edc672b532e4
+sha256_results_cycle_272_summary_md=1578ee67d5458d17181008a17f497e8e793591ea0d053374aadaf687eb2b2bc9
+
+artifacts=experiments/four_block_k256_sweep_cycle272.py,autoresearch/plans/cycle_272.md,autoresearch/briefs/cycle_272.md,autoresearch/results/cycle_272_four_block_k256_sweep.json,autoresearch/results/cycle_272_summary.md,autoresearch/logs/cycle_272_run.log,autoresearch/results/cycle_272_manifest.txt
