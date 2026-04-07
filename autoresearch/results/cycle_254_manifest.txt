@@ -1,0 +1,34 @@
+cycle=254
+item=264
+verdict=REFUTED
+commit=5fcc3184ae815d1a3c97f157871cd747ce76e22b
+float_ppl=53.895
+blocks=[1,2,4,7,8]
+K=128
+N_STEPS=8000
+EVAL_EVERY=200
+best_mean=59.018
+best_std=0.041
+per_seed_best=[58.9960, 58.9824, 59.0764]
+per_seed_best_step=[4800, 4400, 5200]
+per_seed_init=[88.341, 88.341, 88.341]
+per_seed_final_at_8000=[60.6140, 60.4155, 60.5204]
+init_mean=88.341
+init_std=0.000
+best_step_mean=4800
+best_step_std=327
+final_at_8000_mean=60.517
+final_at_8000_std=0.081
+trainable_params=495360
+baseline_c251_k128_4k=59.119
+baseline_c245_k512_5block=53.826
+baseline_c231_k128_6block=67.562
+baseline_c223_k128_3block=48.989
+delta_vs_c251_k128_4k=-0.101
+delta_vs_c245_k512=+5.192
+delta_vs_c231_k128=-8.544
+delta_vs_c223_k128=+10.029
+delta_vs_float=+5.123
+verdict_logic=best_mean_59.018_>=_58.5_->_REFUTED
+interpretation=doubling_budget_4000->8000_buys_only_-0.10_PPL_within_seed_noise_5-block_K=128_floor_is_structurally_bounded_near_59_PPL_all_3_seeds_plateau_at_step_4400-5200_then_climb_steadily_to_60.5_at_step_8000_cycle_251_monotone-descent_was_a_soft-plateau-near-overfit_not_active_descent_5-block_K=128_does_NOT_reach_float-equivalence_regardless_of_budget_4x_parameter_win_vs_6-block_K=512_at_matched_PPL_stands_but_neither_approaches_float
+artifacts=experiments/five_block_k128_8k_cycle254.py,autoresearch/results/cycle_254_five_block_k128_8k.json,autoresearch/results/cycle_254_summary.md,autoresearch/logs/cycle_254_run.log,autoresearch/results/cycle_254_manifest.txt,autoresearch/plans/cycle_254.md
