@@ -1,6 +1,6 @@
 Cycle 288 Manifest — Item 298: Block 3 rank-r c_proj weight-SVD sweep
 
-Commit: PENDING
+Commit: 82014e2
 Branch: geometric_compression
 Verdict: CONFIRMED
 
@@ -115,5 +115,5 @@ autoresearch/logs/experiments.tsv
 item_number: 298
 outcome: CONFIRMED
 key_metric: best_mean=50.5935_pm_0.0402_le_55.0_by_4.407_PPL_block_3_rank_24_c_proj_weight_SVD_retrain_19200_params_CONFIRMED_but_DOMINATED_by_cycle_282_b10_r17_at_fewer_params_lower_PPL
-commit: PENDING
+commit: 82014e2
 paths: experiments/block3_lowrank_cycle288.py,autoresearch/plans/cycle_288.md,autoresearch/briefs/cycle_288.md,autoresearch/results/cycle_288_block3_lowrank.json,autoresearch/results/cycle_288_summary.md,autoresearch/logs/cycle_288_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv

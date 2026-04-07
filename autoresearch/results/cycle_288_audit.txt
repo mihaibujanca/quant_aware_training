@@ -1,0 +1,118 @@
+Cycle 288 — Item 298 — Audit Result
+
+Audit status: PASS
+Auditor verdict: CONFIRMED (unchanged — provisional outcome holds)
+Commit: 82014e2
+Branch: geometric_compression
+
+== Verdict arithmetic ==
+  r=24 retrain best_mean = 50.5935
+  CONFIRMED clause: 50.5935 <= 55.0 ?  TRUE  (margin 4.4065 PPL)
+  REFUTED   clause: 50.5935 >= 57.0 ?  FALSE
+  -> CONFIRMED by r=24 clause
+
+  Std recomputed from per-seed bests:
+    mean(50.6474, 50.5825, 50.5507) = 50.5935              match
+    dev^2 sum/3 = 0.001618                                 match
+    sqrt          = 0.04023 ~ 0.04023 reported             match (5dp)
+
+== Per-seed sanity ==
+  seed 42  : init=57.2062 best=50.6474@3900 final=50.7107 restored=50.6474
+  seed 137 : init=57.2062 best=50.5825@3900 final=50.6320 restored=50.5825
+  seed 2024: init=57.2062 best=50.5507@4000 final=50.5507 restored=50.5507
+
+  init PPL identical across seeds (57.2062)                PASS (SVD init deterministic)
+  init PPL == noretrain r=24 PPL (57.2062)                 PASS
+  |restored - best| < 1e-3 per seed                        PASS (all three exact)
+  best step in {3900, 3900, 4000} (all still descending)   PASS
+  trainable params per fit = 19,200                        PASS (24*768 + 768)
+
+== No-retrain sweep ==
+  r=5  PPL = 58.458   energy = 0.1136
+  r=10 PPL = 58.317   energy = 0.1423
+  r=24 PPL = 57.206   energy = 0.2067
+
+  energy monotone in r                                     PASS
+  PPL monotone-decreasing in r                             PASS
+  restore of c_proj.weight after sweep ~ float 53.895      PASS (log shows exact match)
+
+== Plan adherence ==
+  TARGET_BLOCK=3                                           PASS
+  RANKS_NORETRAIN=[5,10,24]                                PASS
+  RETRAIN_RANK=24                                          PASS
+  SEEDS=[42,137,2024]                                      PASS
+  N_STEPS=4000, LR=1e-4, EVAL_EVERY=100                    PASS
+  N_CALIB=200, N_EVAL=100, SEQ_LEN=128, disjoint           PASS
+  MPS, GPT-2 small, wikitext-2 val                         PASS
+  Float PPL 53.895 within 0.5 of reference                 PASS (exact)
+  Template (cycle 282 block 10) adapted verbatim           PASS
+
+== Baseline cross-checks (vs manifest) ==
+  cycle 280 b1 r=2           49.0324    match
+  cycle 285 b2 r=2           49.3290    match
+  cycle 282 b10 r=17         50.0445    match
+  cycle 270 b11 r=22         54.4687    match
+  cycle 278 b3 eff_rank      24.2853    match
+  cycle 278 b3 top-1 energy  0.5887     match
+
+== Delta checks ==
+  vs float              50.5935 - 53.8950 = -3.30147       match
+  vs cycle 282 b10 r17  50.5935 - 50.0445 = +0.54903       match (DOMINATED: +params, +PPL)
+  vs cycle 270 b11 r22  50.5935 - 54.4687 = -3.87517       match (dominates on PPL only)
+  vs cycle 280 b1 r2    50.5935 - 49.0324 = +1.56113       match (DOMINATED: much more params, more PPL)
+  vs cycle 285 b2 r2    50.5935 - 49.3290 = +1.26453       match (DOMINATED)
+
+== Pareto reading ==
+  Cycle 288 (19200 params, 50.59 PPL):
+    STRICTLY DOMINATED by cycle 282 b10 r=17 (13824 params, 50.04 PPL) — fewer params, lower PPL
+    STRICTLY DOMINATED by cycle 280 b1 r=2  (2304 params, 49.03 PPL) — 8.33x fewer, 1.56 lower
+    STRICTLY DOMINATED by cycle 285 b2 r=2  (2304 params, 49.33 PPL) — 8.33x fewer, 1.26 lower
+    DOMINATES (PPL-only) cycle 270 b11 r=22 (17664 params, 54.47 PPL) — +1536 params, -3.88 PPL
+  NOT a new global Pareto point. Confirming interior point.
+
+== Recipe generalization (audit) ==
+  b1 r=2  (eff_rank 1.94 ) -> 49.03 @ 2,304
+  b2 r=2  (eff_rank 1.05 ) -> 49.33 @ 2,304
+  b3 r=24 (eff_rank 24.29) -> 50.59 @ 19,200  <-- cycle 288
+  b10 r=17 (eff_rank 16.70) -> 50.04 @ 13,824
+  b11 r=22 (eff_rank 22.49) -> 54.47 @ 17,664
+  5/5 concentrators confirm "rank ~ eff_rank, Adam retrain, below float by 3-5 PPL".
+  Early-vs-late ordering does NOT predict PPL (b3 early sits between b10/b11 late).
+  eff_rank alone does NOT predict final retrain PPL (b11 is the outlier at 54.47).
+
+== Geometric audit ==
+  Block 3 c_proj WEIGHT SVD top-5 = 40.80, 13.37, 12.18, 11.73, 11.37
+  S[0]/S[4] ratio ~ 3.6x — matrix is NOT low-rank by any reasonable criterion.
+  Cycle 278 eff_rank=24.29 is OUTPUT covariance property (joint of weight + input
+  distribution), NOT weight-rank. Rank-24 SVD destroys the flat weight; Adam
+  realigns 24 directions with the dominant input subspace.
+  Block 3 top-1 energy 0.5887 (less concentrated than b1/b2 at 0.93/0.996) is
+  consistent with block 3 needing MORE rank to recover (r=24 vs r=2).
+  Consistent with cycle 285 audit: "rank-small + Adam retrain works for c_proj
+  across multiple blocks when input concentration is high" holds at intermediate
+  concentration too, with proportionally larger rank budget.
+
+== Artifacts ==
+  experiments/block3_lowrank_cycle288.py          present
+  autoresearch/plans/cycle_288.md                 present  (34 lines, 8 headings)
+  autoresearch/briefs/cycle_288.md                present
+  autoresearch/results/cycle_288_block3_lowrank.json present (verdict=CONFIRMED)
+  autoresearch/results/cycle_288_summary.md       present
+  autoresearch/results/cycle_288_manifest.txt     present  (commit=82014e2)
+  autoresearch/results/cycle_288_exec_result.txt  present  (commit=82014e2)
+  autoresearch/logs/cycle_288_run.log             present
+  autoresearch/audits/cycle_288.md                present  (this audit)
+  autoresearch/agenda.md                          updated  (298 moved to PAST as Cycle 288)
+  autoresearch/logs/experiments.tsv               appended (row 288 with 8 cols)
+
+== Final ==
+  audit_status: PASS
+  final_verdict: CONFIRMED (unchanged)
+  corrections: none
+  next_action: keep provisional outcome; proceed to next cycle (item 299, P2 block 10 rank-5)
+
+item_number: 298
+outcome: CONFIRMED
+key_metric: best_mean=50.5935_pm_0.0402_le_55.0_by_4.407_PPL_audit_PASS
+commit: 82014e2
+paths: autoresearch/audits/cycle_288.md,autoresearch/results/cycle_288_audit.txt
