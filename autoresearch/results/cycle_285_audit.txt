@@ -1,0 +1,107 @@
+Cycle 285 — Item 295 — Audit Result
+
+Audit status: PASS
+Auditor verdict: CONFIRMED (unchanged — provisional outcome holds)
+Commit: 4c6edf5
+Branch: geometric_compression
+
+== Verdict arithmetic ==
+  r=2 retrain best_mean = 49.3290
+  CONFIRMED clause: 49.3290 <= 50.0 ?  TRUE  (margin 0.6710 PPL)
+  REFUTED   clause: 49.3290 >= 53.0 ?  FALSE
+  r=1 retrain: SKIPPED (noretrain r=1 = 72.381 > in-script gate 55.0)
+  -> CONFIRMED by r=2 clause
+
+  Std recomputed from per-seed bests:
+    mean(49.2446, 49.2253, 49.5171) = 49.3290              match
+    dev^2 sum/3 = 0.01775                                  match
+    sqrt          = 0.13324 ~ 0.13321 reported             match (4dp)
+
+== Per-seed sanity ==
+  seed 42  : init=64.0814 best=49.2446@3700 final=49.9992 restored=49.2446
+  seed 137 : init=64.0814 best=49.2253@3900 final=49.7387 restored=49.2253
+  seed 2024: init=64.0814 best=49.5171@3300 final=49.5760 restored=49.5171
+
+  init PPL identical across seeds (64.0814)                PASS (SVD init deterministic)
+  |restored - best| < 1e-3 per seed                        PASS (all three exact)
+  best step in [3300, 3900] (all still descending@4000)    PASS
+  trainable params per fit = 2,304                         PASS (2*768 + 768)
+
+== No-retrain sweep ==
+  r=1  PPL = 72.381   energy = 0.0716
+  r=2  PPL = 64.081   energy = 0.0828
+  r=5  PPL = 64.094   energy = 0.1049
+  r=10 PPL = 62.156   energy = 0.1342
+
+  energy monotone in r                                     PASS
+  noretrain r=1 72.38 >> gate 55.0 -> r=1 retrain skipped  PASS (correct skip)
+  restore of c_proj.weight after sweep ~ float 53.895      PASS (log shows exact match)
+
+== Plan adherence ==
+  TARGET_BLOCK=2                                           PASS
+  RANKS_NORETRAIN=[1,2,5,10]                               PASS
+  RETRAIN_RANK=2                                           PASS
+  SEEDS=[42,137,2024]                                      PASS
+  N_STEPS=4000, LR=1e-4, EVAL_EVERY=100                    PASS
+  N_CALIB=200, N_EVAL=100, SEQ_LEN=128, disjoint           PASS
+  MPS, GPT-2 small, wikitext-2 val                         PASS
+  Float PPL 53.895 within 0.5 of reference                 PASS
+
+== Baseline cross-checks (vs manifest) ==
+  cycle 280 b1 r=2           49.0324    match
+  cycle 270 b11 r=22         54.4687    match
+  cycle 282 b10 r=17         50.0445    match
+  cycle 283 [2] K=16         49.4621    match
+  cycle 278 b2 eff_rank      1.0503     match (cycle 278 JSON top-level per_block/2)
+  cycle 278 b2 top-1 energy  0.9961     match
+
+== Delta checks ==
+  vs float             49.3290 - 53.8950 = -4.5660        match
+  vs cycle 280         49.3290 - 49.0324 = +0.2966        match (dominated at same params)
+  vs cycle 283 [2] K16 49.3290 - 49.4621 = -0.1331        match (dominates both axes)
+  vs cycle 282         49.3290 - 50.0445 = -0.7155        match
+  vs cycle 270         49.3290 - 54.4687 = -5.1397        match
+
+== Pareto reading ==
+  Cycle 285 (2304 params, 49.33 PPL):
+    STRICTLY DOMINATED by cycle 280 b1 r=2 (2304 params, 49.03 PPL)
+    STRICTLY DOMINATES  cycle 283 [2] K=16 (13056 params, 49.46 PPL)
+    STRICTLY DOMINATES  cycle 282 b10 r=17 (13824 params, 50.04 PPL)
+    STRICTLY DOMINATES  cycle 270 b11 r=22 (17664 params, 54.47 PPL)
+  Not a new global Pareto winner. New best-in-class for [2]-isolation.
+
+== Geometric audit ==
+  Block 2 c_proj WEIGHT SVD top-5 = 38.25, 15.16, 13.08, 12.10, 11.58
+  S[0]/S[4] ratio ~ 3.3x — matrix is NOT low-rank by any reasonable criterion.
+  Cycle 278 eff_rank=1.05 is OUTPUT covariance property (joint of weight + input
+  distribution), NOT weight-rank. Rank-2 SVD destroys the flat weight; Adam
+  realigns 2 directions with the dominant input axis.
+  Item 295's "rank-eff_rank-match" framing is IMPRECISE. Cycle 285 confirms the
+  weaker claim: rank-2 c_proj + Adam retrain works at block 2 as it does at
+  block 1, but does NOT confirm that lower eff_rank implies better retrain at
+  matched rank — block 1 (eff_rank 1.94) still wins at rank 2.
+
+== Artifacts ==
+  experiments/block2_lowrank_cycle285.py           present
+  autoresearch/plans/cycle_285.md                  present  (34 lines, 8 headings)
+  autoresearch/briefs/cycle_285.md                 present
+  autoresearch/reviews/cycle_285.md                not written (single-thread run)
+  autoresearch/results/cycle_285_block2_lowrank.json present
+  autoresearch/results/cycle_285_summary.md        present
+  autoresearch/results/cycle_285_manifest.txt      present  (commit=4c6edf5)
+  autoresearch/logs/cycle_285_run.log              present
+  autoresearch/audits/cycle_285.md                 present  (this audit)
+  autoresearch/agenda.md                           updated  (295 moved to PAST as Cycle 285)
+  autoresearch/logs/experiments.tsv                appended (row 285 with 8 cols)
+
+== Final ==
+  audit_status: PASS
+  final_verdict: CONFIRMED (unchanged)
+  corrections: none
+  next_action: keep provisional outcome; proceed to next cycle (item 296)
+
+item_number: 295
+outcome: CONFIRMED
+key_metric: best_mean=49.3290_pm_0.1332_le_50.0_by_0.671_PPL_audit_PASS
+commit: 4c6edf5
+paths: autoresearch/audits/cycle_285.md,autoresearch/results/cycle_285_audit.txt

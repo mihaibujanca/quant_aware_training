@@ -1,0 +1,63 @@
+Cycle 285 — Item 295 — Execution Result
+
+Verdict: CONFIRMED
+Commit: 4c6edf5
+Branch: geometric_compression
+
+Script: experiments/block2_lowrank_cycle285.py
+Log:    autoresearch/logs/cycle_285_run.log
+Result: autoresearch/results/cycle_285_block2_lowrank.json
+
+Key metrics:
+  float_ppl                 = 53.895
+  noretrain r=1 PPL         = 72.381  (energy=0.0716)
+  noretrain r=2 PPL         = 64.081  (energy=0.0828)
+  noretrain r=5 PPL         = 64.094  (energy=0.1049)
+  noretrain r=10 PPL        = 62.156  (energy=0.1342)
+  r=1 gate fired            = False   (72.381 > 55.0 threshold)
+  retrain r=2 best_mean     = 49.3290
+  retrain r=2 best_std      = 0.1332
+  retrain r=2 best_min      = 49.2253  (seed 137 @3900)
+  retrain r=2 best_max      = 49.5171  (seed 2024 @3300)
+  trainable params per fit  = 2,304
+
+Verdict logic (item 295 verbatim):
+  CONFIRMED iff (r=2 retrain best_mean <= 50.0) OR (r=1 retrain best_mean <= 51.0)
+  REFUTED   iff r=2 retrain best_mean >= 53.0
+  INCONCLUSIVE otherwise
+
+  r=2 best_mean 49.3290 <= 50.0  ->  CONFIRMED (margin 0.671 PPL)
+  r=1 retrain SKIPPED            ->  clause not evaluated
+  r=2 best_mean 49.3290 <  53.0  ->  REFUTED clause NOT triggered
+  ->  CONFIRMED
+
+Wall time: ~8 min total (4 no-retrain evals @ 1.3s each + 3 Adam fits @ 2.5 min each).
+
+Sanity checks:
+  float PPL within 0.5 of reference 53.895                     PASS (exact match)
+  restore original c_proj.weight after sweep                   PASS (exact match)
+  init PPL per seed == noretrain r=2 PPL (64.0814)             PASS all 3 seeds
+  trainable param count == 2,304                               PASS
+  restore best-state per seed (|restored - best| < 1e-3)       PASS all 3 seeds
+  all 3 seeds hit best step in [3300, 3900]                    PASS (still descending)
+
+Pareto reading:
+  cycle 285 (2,304 params, 49.33 PPL) STRICTLY DOMINATED on both axes by
+    cycle 280 b1 r=2 (2,304 params, 49.03 PPL) — same params, 0.30 PPL worse.
+  cycle 285 STRICTLY DOMINATES cycle 283 [2] K=16 (13,056 params, 49.46 PPL)
+    on both axes: 5.7x fewer params AND 0.13 PPL better.
+  cycle 285 STRICTLY DOMINATES cycle 282 b10 r=17 (13,824 params, 50.04 PPL).
+  cycle 285 STRICTLY DOMINATES cycle 270 b11 r=22 (17,664 params, 54.47 PPL).
+
+Geometric finding:
+  Block 2 c_proj WEIGHT SVD is essentially flat (top-5: 38.25, 15.16, 13.08,
+  12.10, 11.58). The cycle 278 eff_rank=1.05 is an OUTPUT covariance property
+  driven by the concentration of the INPUT to c_proj (the c_proj input lives
+  on essentially 1 direction in the data-active subspace), not a weight-rank
+  property. Rank-2 weight-SVD therefore destroys the flat weight and must
+  retrain to realign the 2 surviving directions with the dominant input axis.
+  Block 1 (eff_rank=1.94) retrains better at the same rank — eff_rank alone
+  does NOT predict weight-SVD retrain quality. Some interaction with the
+  upstream attention output gates the recovery.
+
+Next agenda items remain unchanged (296, 297 still in P0; 298 in P1; 299 in P2).

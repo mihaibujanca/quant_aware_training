@@ -1,6 +1,6 @@
 Cycle 285 Manifest — Item 295: Block 2 rank-r c_proj weight-SVD sweep
 
-Commit: PENDING
+Commit: 4c6edf5
 Branch: geometric_compression
 Verdict: CONFIRMED
 
@@ -106,5 +106,5 @@ autoresearch/logs/experiments.tsv
 item_number: 295
 outcome: CONFIRMED
 key_metric: best_mean=49.3290_pm_0.1332_le_50.0_by_0.671_PPL_block_2_rank_2_c_proj_weight_SVD_retrain_2304_params_r_1_gate_NOT_fired_CONFIRMED_but_WORSE_than_cycle_280_b1_r2_by_0.30_PPL_at_same_param_count
-commit: PENDING
+commit: 4c6edf5
 paths: experiments/block2_lowrank_cycle285.py,autoresearch/plans/cycle_285.md,autoresearch/briefs/cycle_285.md,autoresearch/results/cycle_285_block2_lowrank.json,autoresearch/results/cycle_285_summary.md,autoresearch/logs/cycle_285_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv
