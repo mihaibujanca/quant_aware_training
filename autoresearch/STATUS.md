@@ -1,6 +1,11 @@
-# Research Status — 261 Cycles (001–261)
+# Research Status — 262 Cycles (001–262)
 
-## Latest: Cycle 261
+## Latest: Cycle 262
+
+268. **K=1 + c_fc bias trainable 3-block** — INCONCLUSIVE
+   - BLOCKS=[1,4,7] K=1, FullCompressedMLP {W_out + b_out + c_fc bias slice (1 scalar/block)} = 4,611 trainable. 3 seeds. **best_mean=59.131 ± 0.027** ∈ (58.5, 59.5). Δ vs cycle 230 K=1 W_out only (59.245) = -0.114 PPL (~37% from REFUTED to CONFIRMED). All seeds best at step 4000. b_fc consistently shifted positive at all 3 blocks all 3 seeds (block 7 ≈ +1.17, seed-std 0.0005) — optimizer found a real direction but ~6.5× too small to clear the +0.745 PPL threshold. **The cycles 213/241/248/262 series (K=512/512/128/1) now spans 4 endpoints all showing near-noop bias retraining**: W_out absorbs the DOF regardless of K.
+
+## Cycle 261
 
 272. **W_down column geometry vs sign frequency σ_c — rescue-note experiment** — INCONCLUSIVE (interesting=true)
    - Per block: σ_c = E[1{z_c>0}] over calib, split into mostly_neg σ∈[0,0.1] / balanced [0.45,0.55] / mostly_pos [0.9,1.0]; PCA each subspace; principal angles between pos vs neg subspaces. **Block 2 mostly_pos has only 6 channels** (svdvals [6.82, 4.45, 2.82, 2.19, 1.84, 1.36]) → top-1 SV energy = 0.5517, rank ~3 (NOT rank 1). **Median pos↔neg principal angles** [76.3, 71.9, 62.3, 81.1, 75.3, 77.0, 73.2, 73.6, 72.3, 21.4, 75.7, 77.0] — no monotone depth trend (b1→b11 drop = -5.1°, basically constant). Only b1/2/3/9 outside null ±2σ. **Cycle 174's rank-1 positive-regime finding CANNOT come from W_down column geometry alone** — 6 columns at block 2 span ~3 dimensions; rank-1 must arise from how activation magnitudes α_c weight those columns. **Rescue note's "directions come from W_down columns" framing is technically consistent but NOT load-bearing**: the mostly_pos group is structurally tiny (≤12 channels) in 11/12 blocks.
