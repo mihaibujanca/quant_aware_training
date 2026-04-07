@@ -1,0 +1,96 @@
+Cycle 280 — Item 290: Targeted block 1 low-rank c_proj compression
+Verdict: CONFIRMED (retrain clause, by 4.968 PPL margin, BELOW FLOAT)
+Commit: 1109243
+
+Artifacts:
+  experiments/block1_lowrank_cycle280.py
+  autoresearch/plans/cycle_280.md
+  autoresearch/briefs/cycle_280.md
+  autoresearch/logs/cycle_280_run.log
+  autoresearch/results/cycle_280_block1_lowrank.json
+  autoresearch/results/cycle_280_summary.md
+  autoresearch/results/cycle_280_manifest.txt
+  autoresearch/agenda.md
+  autoresearch/logs/experiments.tsv
+
+Float PPL: 53.895 (matches reference exactly)
+
+No-retrain rank-r sweep (HF Conv1D c_proj_1.weight (3072, 768), bias unchanged):
+  r=  1: PPL=59.751  Δfloat=+5.856  +10.87%  energy=0.0459
+  r=  2: PPL=57.658  Δfloat=+3.763   +6.98%  energy=0.0757
+  r=  5: PPL=56.833  Δfloat=+2.938   +5.45%  energy=0.1167
+  r= 10: PPL=56.730  Δfloat=+2.835   +5.26%  energy=0.1523
+  Restored original c_proj.weight, PPL=53.895 (matches float — restore PASS)
+
+SVD summary:
+  Top-5 singular values: 28.706, 23.104, 18.841, 13.834, 13.739
+  S[0]=28.706  S[1]=23.104  S[4]=13.739  S[9]=9.068  S[-1]=0.135
+  Ratio S[0]/S[-1] = 213x (well-conditioned, full numerical rank).
+  Top-10 weight energy = 15.23% — the weight matrix is NOT rank-concentrated
+  as an operator, in stark contrast to cycle 278's ACTIVATION eff_rank=1.94 /
+  top-1 energy 92.94%. Second confirmation (after cycle 270 block 11) that
+  activation eff_rank and weight-SVD rank are different objects.
+
+Retrain at r=2 (3 seeds {42,137,2024}, joint Adam LR=1e-4, 4000 steps,
+EVAL_EVERY=100, best-state restore, 2,304 trainable params = 2*768 (B) + 768
+(bias); A=(U[:, :2] * Σ[:2]) frozen as buffer; LowRankCProj wrapper recomputes
+W = A @ B each forward and applies HF Conv1D semantics x @ W + bias):
+
+  seed   42: init=57.6581 best=49.0603@step3900 final@4000=49.2498 restored=49.0603
+  seed  137: init=57.6581 best=49.0367@step3900 final@4000=49.0741 restored=49.0367
+  seed 2024: init=57.6581 best=49.0004@step4000 final@4000=49.0004 restored=49.0004
+
+  best_mean = 49.0324 ± 0.0246  (min=49.0004, max=49.0603, n=3)
+  init PPL deterministic at 57.6581 (matches noretrain[r=2]=57.6581 — assert PASS)
+  All 3 best at step ≥3900 — still descending at the budget cap
+  Per-seed restored == recorded best within 1e-3 (assert PASS)
+
+Verdict logic (item 290 verbatim):
+  CONFIRMED iff any r ∈ {1,2,5,10} no-retrain ≤ 55.0 OR r=2 retrain best_mean ≤ 54.0
+  REFUTED   iff all r ∈ {1,2,5,10} no-retrain ≥ 60.0 AND r=2 retrain best_mean ≥ 55.0
+  INCONCLUSIVE otherwise
+
+  any noretrain ≤ 55.0? NO (min 56.730 at r=10)
+  all noretrain ≥ 60.0? NO (max 59.751 at r=1, below the 60 threshold)
+  r=2 retrain best_mean = 49.0324 → ≤54.0? YES (passes by 4.968 PPL); ≥55.0? NO
+  → CONFIRMED (via retrain clause only, by a huge margin)
+
+Cross-cycle deltas:
+  Δ vs float (53.895):                                retrain best_mean −4.862 (BELOW FLOAT)
+                                                      noretrain r=2    +3.763
+  Δ vs cycle 270 block 11 rank-22 retrain (54.4687):  retrain −5.436 (cycle 280 dominates)
+                                                      at 2,304 vs 17,664 params (7.7× fewer)
+  Δ vs cycle 266 K=512 [1,4] (43.85):                 retrain +5.182 (cycle 266 has 342× more params)
+  Δ vs cycle 271 [1] K=512 W_out-only (43.82):        retrain +5.212 (cycle 271 has 171× more params)
+  Δ vs cycle 269 6-block K=1 (91.61):                 retrain −42.578 (cycle 280 dominates on both axes)
+
+Reading: **New dominant Pareto anchor.** The (2,304, 49.03) point strictly
+dominates cycle 270's (17,664, 54.47) on both trainable params and PPL —
+7.7× fewer params AND -5.44 PPL. It opens a new ultra-low-budget row of the
+Pareto curve: cycle 280 is the smallest-trainable recipe found that beats
+float, and it beats float by 4.86 PPL. The retrained block 1 rank-2 c_proj
++ bias operator is a better fit for wikitext-2 than the pretrained GPT-2
+c_proj_1 weights — float is not the optimum in this 2,304-param
+trainable-subset neighbourhood.
+
+Two geometric findings: (i) **Cycle 270's weight-SVD ≠ activation-SVD
+lesson generalises.** Cycle 278 measured block 1 c_proj OUTPUT eff_rank=1.94
+(top-1 activation energy 92.94%). Cycle 280 measures the WEIGHT SVD: top-2
+covers only 7.57% of the weight-energy, and rank-2 no-retrain still costs
++3.76 PPL (NOT ≤1 as the brief predicted). The activation eff_rank is a
+property of the joint action of c_fc + c_proj on the input distribution,
+NOT of c_proj.weight alone. Second independent confirmation. (ii) **Adam
+recovery per param is MUCH higher at block 1 than block 11.** Cycle 270:
+block 11 rank-22 retrain recovered 59.68 → 54.47 = -5.22 PPL with 17,664
+params. Cycle 280: block 1 rank-2 retrain recovers 57.66 → 49.03 = -8.63 PPL
+with 2,304 params. Per-param effectiveness is ~25.7× higher at block 1 —
+eff_rank IS directionally predictive of retrained compressibility at the
+single-block c_proj weight-SVD level, even though it does NOT predict
+no-retrain compressibility. This is a refinement of cycle 273's "eff_rank
+not prescriptive at cascade level": at 1-block c_proj weight-SVD + Adam
+retrain, eff_rank-ordered candidates ARE predictive of post-retrain quality.
+
+All 3 retrain seeds best at step ≥3900 (still descending) — longer training
+could push best_mean further below 49.
+
+Wall: ~8 min (4 forward-only PPL evals + 3 retrain fits at 2.6 min each).
