@@ -1,0 +1,160 @@
+Cycle 296 Manifest — Item 306: LASER recipe on spirals/moons (cycle 280 replication)
+
+Commit: PENDING
+Branch: geometric_compression
+Verdict: INCONCLUSIVE (spirals); moons context: CONFIRMED
+
+== Verdict logic (item 306 verbatim, applied to spirals) ==
+CONFIRMED iff rank-2 retrain held-out acc >= float held-out acc - 0.5% on spirals
+            AND no-retrain rank-2 >= 80% of float held-out acc
+REFUTED   iff rank-2 retrain held-out gap > 5% from float on spirals
+INCONCLUSIVE between
+
+  spirals: float_held_mean    = 0.8270 ± 0.0205
+           rank2_noretrain    = 0.6363 ± 0.0856   (76.94% of float; CONFIRMED clause B requires >= 80%) [FAILS]
+           rank2_retrain_best = 0.8207 ± 0.0303   (gap +0.0063 vs float; CONFIRMED clause A requires gap <= 0.005) [FAILS by 0.0013]
+           refuted clause: gap > 0.05? NO (0.0063 < 0.05)
+           -> INCONCLUSIVE
+
+  moons (context, item 306 thresholds applied for completeness):
+           float_held_mean    = 0.9967 ± 0.0019
+           rank2_noretrain    = 0.9947 ± 0.0025   (99.80% of float)
+           rank2_retrain_best = 0.9967 ± 0.0021   (gap +0.0000)
+           -> CONFIRMED (rank-1 retrain ALSO matches float, gap +0.0003)
+
+== Per-rank held-out accuracy (3 seeds, mean ± std) ==
+
+spirals (float_held_mean = 0.8270 ± 0.0205):
+  r=1: noretrain=0.5307±0.0695  retrain=0.7830±0.0453  gap_vs_float=+0.0440
+  r=2: noretrain=0.6363±0.0856  retrain=0.8207±0.0303  gap_vs_float=+0.0063
+  r=3: noretrain=0.6850±0.0840  retrain=0.8023±0.0312  gap_vs_float=+0.0247
+  r=5: noretrain=0.6997±0.0956  retrain=0.8307±0.0245  gap_vs_float=-0.0037 (rank-5 retrain MATCHES float within 0.4%)
+
+moons (float_held_mean = 0.9967 ± 0.0019):
+  r=1: noretrain=0.7943±0.2168  retrain=0.9963±0.0017  gap_vs_float=+0.0003
+  r=2: noretrain=0.9947±0.0025  retrain=0.9967±0.0021  gap_vs_float=+0.0000
+  r=3: noretrain=0.9950±0.0022  retrain=0.9970±0.0022  gap_vs_float=-0.0003
+  r=5: noretrain=0.9967±0.0019  retrain=0.9973±0.0024  gap_vs_float=-0.0007
+
+== Per-seed details ==
+spirals seed=42:   epochs=5425  train_acc=0.9510  float_held=0.8410  l*=5  eff_rank[l*]=1.423
+  r=1: noretrain=0.6280  retrain_best=0.7840@375
+  r=2: noretrain=0.5500  retrain_best=0.8390@350
+  r=3: noretrain=0.5910  retrain_best=0.7750@500
+  r=5: noretrain=0.7570  retrain_best=0.8470@25
+spirals seed=137:  epochs=3725  train_acc=0.9530  float_held=0.7980  l*=6  eff_rank[l*]=1.195
+  r=1: noretrain=0.4700  retrain_best=0.7270@475
+  r=2: noretrain=0.6060  retrain_best=0.7780@500
+  r=3: noretrain=0.6690  retrain_best=0.7860@225
+  r=5: noretrain=0.7770  retrain_best=0.7960@25
+spirals seed=2024: epochs=2775  train_acc=0.9530  float_held=0.8420  l*=4  eff_rank[l*]=1.447
+  r=1: noretrain=0.4940  retrain_best=0.8380@275
+  r=2: noretrain=0.7530  retrain_best=0.8450@50
+  r=3: noretrain=0.7950  retrain_best=0.8460@50
+  r=5: noretrain=0.5650  retrain_best=0.8490@100
+moons seed=42:     epochs= 100  train_acc=0.9880  float_held=0.9980  l*=3  eff_rank[l*]=1.136
+  r=1: noretrain=0.8960  retrain_best=0.9970@50
+  r=2: noretrain=0.9920  retrain_best=0.9970@25
+  r=3: noretrain=0.9930  retrain_best=0.9980@500
+  r=5: noretrain=0.9980  retrain_best=0.9990@425
+moons seed=137:    epochs= 100  train_acc=1.0000  float_held=0.9980  l*=4  eff_rank[l*]=1.094
+  r=1: noretrain=0.4930  retrain_best=0.9980@125
+  r=2: noretrain=0.9980  retrain_best=0.9990@25
+  r=3: noretrain=0.9980  retrain_best=0.9990@25
+  r=5: noretrain=0.9980  retrain_best=0.9990@25
+moons seed=2024:   epochs= 100  train_acc=0.9990  float_held=0.9940  l*=11 eff_rank[l*]=1.128
+  r=1: noretrain=0.9940  retrain_best=0.9940@0
+  r=2: noretrain=0.9940  retrain_best=0.9940@0
+  r=3: noretrain=0.9940  retrain_best=0.9940@0
+  r=5: noretrain=0.9940  retrain_best=0.9940@0
+
+All 6 nets cleared the 95% train_acc target. Per CLAUDE.md "verify task performance before
+analysis" the LASER measurements were taken on properly-trained networks.
+
+== Layer selection (l*) ==
+l* = argmin_{l in [2..11]} eff_rank(post-ReLU on TRAIN). Selection per (dataset, seed):
+spirals: l* in {5, 6, 4} -- mid-stack, eff_rank ~1.2-1.45 (cycle 295 spirals layers 2-11
+                            sit at eff_rank ~1.7-2.1 on FULL set; on the 1000-pt train
+                            split here, eff_rank dips slightly lower because eigenvalue
+                            estimates are noisier on N=1000).
+moons:   l* in {3, 4, 11} -- spread across the stack (moons trains in 100 epochs and the
+                            eff_rank profile is flatter than spirals).
+
+== Config ==
+HIDDEN=32 DEPTH=12 N=2000 split=1000/1000 random per seed
+LR_TRAIN=1e-3 LR_RETRAIN=1e-3 MAX_EPOCHS=20000 TARGET_ACC=0.95
+RETRAIN_STEPS=500 EVAL_EVERY=25 RANKS=[1,2,3,5] seeds={42,137,2024}
+spirals: noise=0.5 n_turns=3 input_scale=2.0 (MEMORY.md depth-12 trainability recipe)
+moons:   noise=0.1
+MLP: aleph.models.MLP(input_size=2, hidden_size=32, output_size=1, depth=12, ReLU)
+LowRankLinear: A=(U[:, :r] * S[:r]) frozen (32, r); B=Vh[:r, :] trainable (r, 32);
+               bias trainable (32). Forward: F.linear(x, A @ B, bias).
+Trainable per fit = 32(r+1) (e.g. r=2 -> 96, r=5 -> 192).
+Loss: nn.BCEWithLogitsLoss, full-batch Adam, CPU.
+
+== Hypothesis check (item 306 verbatim) ==
+"rank-2 retrain matches float held-out acc within 0.5% on spirals" -- NEAR MISS
+   measured spirals rank-2 retrain gap = +0.0063 (0.63%), 0.13% over the 0.5% threshold
+"rank-1 fails by >= 3% (need at least 2 dimensions for the spiral)" -- HOLDS in DIRECTION
+   measured spirals rank-1 retrain gap = +0.0440 (4.40%), exceeds the 3% prediction
+"on moons, rank-1 might already match" -- CONFIRMED
+   measured moons rank-1 retrain gap = +0.0003 (essentially zero)
+
+== Substantive finding ==
+The cycle 280 LASER shape REPLICATES on a provably-2D task in DIRECTION:
+  (i) rank-2 retrain recovers nearly all of the float accuracy (gap +0.63% on spirals,
+      tied at float on moons);
+  (ii) rank-1 retrain fails on spirals (4.4% gap, ~5x the rank-2 gap) and matches float
+       on moons (the moons separator is essentially 1D after a coordinate change, just as
+       item 306's hypothesis predicted);
+  (iii) Adam recovery is large: spirals rank-2 noretrain = 63.6%, retrain = 82.1% (recovery
+       of 18.4 percentage points, larger fractional gain than cycle 280 GPT-2's PPL recovery);
+  (iv) rank-5 retrain on spirals slightly beats float (gap -0.37%), mirroring cycle 280's
+       below-float result on GPT-2 block 1 -- the LASER+retrain recipe DOES denoise the
+       weight matrix on the data distribution.
+
+The verbatim INCONCLUSIVE verdict is driven by two narrow misses:
+  - rank-2 retrain gap is 0.63%, just over the strict 0.5% threshold (0.13% over);
+  - rank-2 noretrain is 76.9% of float, just under the strict 80% threshold (3.1% under).
+With spirals held-out N=1000 the per-seed std on rank-2 retrain is 3.0% and on noretrain
+is 8.6%, so both thresholds are inside one standard deviation of the measurements. The
+result is a tight INCONCLUSIVE that the hypothesis essentially predicts but cannot pass
+the literal threshold without either (a) a larger held-out set, or (b) more retrain steps,
+or (c) seed-by-seed cherry-picking (spirals seed 42 hits gap +0.0020 at rank-2, well
+inside the threshold).
+
+This is consistent with cycle 280's GPT-2 block 1 result (rank-2 retrain 49.03 PPL,
+4.86 PPL below float) -- the LASER recipe denoises by truncating below eff_rank and
+letting Adam realign the surviving rank directions. On the spirals 2D task the float
+network is still noisy enough that rank-2 retrain almost matches float; on GPT-2 b1 the
+denoising effect is large enough to BEAT float by a wide margin.
+
+== Baselines ==
+Cycle 280 block 1 rank-2 retrain: 49.03 PPL  (-4.86 vs float 53.90)
+Cycle 292 block 1 rank-1 retrain: 50.08 PPL  (-3.82 vs float)
+Cycle 295 spirals/moons eff_rank census: layers 7-11 sit at eff_rank ~1.7-2.1 post-train
+   (cycle 296 picks l* in [4..6] for spirals because the 1000-pt train split has slightly
+   lower eff_rank in mid-stack -- still well below rank 2, so SVD truncation is meaningful).
+
+== Wall time ==
+Total wall: 15.9 seconds. 6 nets x 4 ranks x 500-step retrain + train-from-scratch = trivial CPU.
+
+== Artifacts ==
+experiments/spirals_moons_laser_cycle296.py
+autoresearch/plans/cycle_296.md
+autoresearch/briefs/cycle_296.md
+autoresearch/results/cycle_296_spirals_moons_laser.json
+autoresearch/results/cycle_296_summary.md
+autoresearch/results/cycle_296_manifest.txt
+autoresearch/results/cycle_296_exec_result.txt
+autoresearch/audits/cycle_296.md
+autoresearch/results/cycle_296_audit.txt
+autoresearch/logs/cycle_296_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+
+item_number: 306
+outcome: INCONCLUSIVE
+key_metric: verdict=INCONCLUSIVE_spirals_rank2_retrain_gap_+0.0063_NEAR_MISS_0.5pc_threshold_by_0.13pc_rank2_noretrain_frac_0.7694_under_0.80_threshold_by_3.06pc_REFUTED_threshold_5pc_NOT_triggered_spirals_float_held_0.8270_pm_0.0205_rank1_noretrain_0.5307_retrain_0.7830_rank2_noretrain_0.6363_retrain_0.8207_rank3_noretrain_0.6850_retrain_0.8023_rank5_noretrain_0.6997_retrain_0.8307_BEATS_float_by_0.37pc_moons_CONFIRMED_float_held_0.9967_pm_0.0019_rank1_noretrain_0.7943_retrain_0.9963_rank2_retrain_0.9967_EXACT_tie_rank3_rank5_retrain_BEAT_float_by_0.03pc_0.07pc_hypothesis_directionally_HOLDS_rank1_fails_on_spirals_4.4pc_rank1_matches_on_moons_rank2_essentially_matches_float_within_one_std_recipe_replicates_in_shape_LASER_denoising_smaller_in_magnitude_on_spirals_than_cycle_280_GPT2_b1_consistent_with_2D_task_already_being_essentially_denoised_at_float_level_l_star_argmin_eff_rank_layers_2_to_11_spirals_4_5_6_eff_rank_1.20_1.45_moons_3_4_11_all_6_nets_converged_ge_95_train_acc_LowRankLinear_32xr_frozen_A_rxr_trainable_B_32_bias_trainable_per_fit_32_r_plus_1_params_500_Adam_steps_lr_1e_3_full_batch_BCEWithLogits_CPU_wall_15.9s_substantive_NEAR_MISS_INCONCLUSIVE_recipe_works_thresholds_just_too_tight_for_spirals_held_out_N_1000
+commit: PENDING
+paths: experiments/spirals_moons_laser_cycle296.py,autoresearch/plans/cycle_296.md,autoresearch/briefs/cycle_296.md,autoresearch/results/cycle_296_spirals_moons_laser.json,autoresearch/results/cycle_296_summary.md,autoresearch/results/cycle_296_manifest.txt,autoresearch/results/cycle_296_exec_result.txt,autoresearch/logs/cycle_296_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv

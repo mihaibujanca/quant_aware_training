@@ -1,0 +1,73 @@
+Cycle 296 / item 306 — LASER recipe on spirals/moons
+config: HIDDEN=32 DEPTH=12 N=2000 LR_TRAIN=0.001 LR_RETRAIN=0.001 max_epochs=20000 target_acc=0.95 retrain_steps=500 eval_every=25 ranks=[1, 2, 3, 5] seeds=[42, 137, 2024]
+  spirals seed=42: epochs=5425 train_acc=0.9510 float_train=0.9510 float_held=0.8410 l*=5 eff_rank[l*]=1.423
+    train_eff_rank=[2.965, 2.984, 2.348, 1.838, 1.607, 1.423, 1.561, 1.854, 1.874, 2.052, 2.504, 3.077]
+    spirals seed=42 layer_seq_idx=10 W shape=(32, 32)
+      SVD top-5: [3.8325, 2.5643, 1.8215, 1.7307, 1.3037]
+      float held-out acc = 0.8410
+      r=1: noretrain held=0.6280  retrain best=0.7840@375  init_held=0.6280
+      r=2: noretrain held=0.5500  retrain best=0.8390@350  init_held=0.5500
+      r=3: noretrain held=0.5910  retrain best=0.7750@500  init_held=0.5910
+      r=5: noretrain held=0.7570  retrain best=0.8470@25  init_held=0.7570
+  spirals seed=137: epochs=3725 train_acc=0.9530 float_train=0.9530 float_held=0.7980 l*=6 eff_rank[l*]=1.195
+    train_eff_rank=[3.093, 2.618, 2.324, 1.769, 1.432, 1.204, 1.195, 1.237, 1.994, 2.22, 1.482, 1.267]
+    spirals seed=137 layer_seq_idx=12 W shape=(32, 32)
+      SVD top-5: [3.066, 2.6368, 1.917, 1.5089, 1.3531]
+      float held-out acc = 0.7980
+      r=1: noretrain held=0.4700  retrain best=0.7270@475  init_held=0.4700
+      r=2: noretrain held=0.6060  retrain best=0.7780@500  init_held=0.6060
+      r=3: noretrain held=0.6690  retrain best=0.7860@225  init_held=0.6690
+      r=5: noretrain held=0.7770  retrain best=0.7960@25  init_held=0.7770
+  spirals seed=2024: epochs=2775 train_acc=0.9530 float_train=0.9530 float_held=0.8420 l*=4 eff_rank[l*]=1.447
+    train_eff_rank=[3.503, 2.781, 2.2, 1.497, 1.447, 1.626, 1.732, 2.149, 2.327, 2.53, 2.457, 1.965]
+    spirals seed=2024 layer_seq_idx=8 W shape=(32, 32)
+      SVD top-5: [5.8873, 2.7065, 1.4369, 1.3451, 1.1536]
+      float held-out acc = 0.8420
+      r=1: noretrain held=0.4940  retrain best=0.8380@275  init_held=0.4940
+      r=2: noretrain held=0.7530  retrain best=0.8450@50  init_held=0.7530
+      r=3: noretrain held=0.7950  retrain best=0.8460@50  init_held=0.7950
+      r=5: noretrain held=0.5650  retrain best=0.8490@100  init_held=0.5650
+  moons seed=42: epochs=100 train_acc=0.9880 float_train=0.9880 float_held=0.9980 l*=3 eff_rank[l*]=1.136
+    train_eff_rank=[1.841, 1.448, 1.159, 1.136, 1.155, 1.175, 1.199, 1.263, 1.35, 1.491, 1.645, 1.937]
+    moons seed=42 layer_seq_idx=6 W shape=(32, 32)
+      SVD top-5: [1.7436, 1.5367, 1.1043, 1.016, 0.9037]
+      float held-out acc = 0.9980
+      r=1: noretrain held=0.8960  retrain best=0.9970@50  init_held=0.8960
+      r=2: noretrain held=0.9920  retrain best=0.9970@25  init_held=0.9920
+      r=3: noretrain held=0.9930  retrain best=0.9980@500  init_held=0.9930
+      r=5: noretrain held=0.9980  retrain best=0.9990@425  init_held=0.9980
+  moons seed=137: epochs=100 train_acc=1.0000 float_train=1.0000 float_held=0.9980 l*=4 eff_rank[l*]=1.094
+    train_eff_rank=[2.311, 1.408, 1.175, 1.111, 1.094, 1.119, 1.147, 1.162, 1.26, 1.344, 1.416, 1.677]
+    moons seed=137 layer_seq_idx=8 W shape=(32, 32)
+      SVD top-5: [1.7839, 1.6743, 1.0442, 0.9547, 0.8816]
+      float held-out acc = 0.9980
+      r=1: noretrain held=0.4930  retrain best=0.9980@125  init_held=0.4930
+      r=2: noretrain held=0.9980  retrain best=0.9990@25  init_held=0.9980
+      r=3: noretrain held=0.9980  retrain best=0.9990@25  init_held=0.9980
+      r=5: noretrain held=0.9980  retrain best=0.9990@25  init_held=0.9980
+  moons seed=2024: epochs=100 train_acc=0.9990 float_train=0.9990 float_held=0.9940 l*=11 eff_rank[l*]=1.128
+    train_eff_rank=[2.329, 1.495, 1.231, 1.158, 1.145, 1.219, 1.346, 1.55, 1.719, 1.486, 1.251, 1.128]
+    moons seed=2024 layer_seq_idx=22 W shape=(32, 32)
+      SVD top-5: [1.6642, 1.1198, 0.9866, 0.9755, 0.8943]
+      float held-out acc = 0.9940
+      r=1: noretrain held=0.9940  retrain best=0.9940@0  init_held=0.9940
+      r=2: noretrain held=0.9940  retrain best=0.9940@0  init_held=0.9940
+      r=3: noretrain held=0.9940  retrain best=0.9940@0  init_held=0.9940
+      r=5: noretrain held=0.9940  retrain best=0.9940@0  init_held=0.9940
+
+=== Aggregate ===
+  spirals: float_held_mean=0.8270 ± 0.0205
+    r=1: noretrain=0.5307±0.0695  retrain=0.7830±0.0453
+    r=2: noretrain=0.6363±0.0856  retrain=0.8207±0.0303
+    r=3: noretrain=0.6850±0.0840  retrain=0.8023±0.0312
+    r=5: noretrain=0.6997±0.0956  retrain=0.8307±0.0245
+  moons: float_held_mean=0.9967 ± 0.0019
+    r=1: noretrain=0.7943±0.2168  retrain=0.9963±0.0017
+    r=2: noretrain=0.9947±0.0025  retrain=0.9967±0.0021
+    r=3: noretrain=0.9950±0.0022  retrain=0.9970±0.0022
+    r=5: noretrain=0.9967±0.0019  retrain=0.9973±0.0024
+spirals verdict: INCONCLUSIVE
+  rank2_retrain_gap=+0.0063  rank2_noretrain_frac_of_float=0.7694
+moons context verdict: CONFIRMED
+OVERALL VERDICT: INCONCLUSIVE
+total wall: 15.9s
