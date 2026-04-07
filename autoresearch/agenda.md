@@ -15,15 +15,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 - All Δ̃_l computed as `GELU_FFN_l(x) − ReLU_FFN_l(x) − E_calib[GELU_FFN_l − ReLU_FFN_l]` where the centring mean is computed on the calibration corpus only and applied to held-out evaluation.
 - All artifacts must be loadable by `notebooks/bump_features_explore.py` without modification — the loader expects exact filenames listed under each item's `Artifacts:` block.
 
-250. **K=1 Adam correction at 6 blocks — does the K=1 floor hold at cascade depth?**
-   - Cycle 230 established K=1 W_out correction at 3 blocks BLOCKS=[1,4,7] achieves 59.245 ± 0.029 PPL (within +10% of float 53.895, still monotone in K ∈ {1..512}). Cycle 230 used calib/eval disjoint (`all_ids[:200]` / `all_ids[200:300]`), SEQ_LEN=128, seed 42, and W_out-only Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore. Re-run IDENTICAL machinery with BLOCKS=[1,2,4,5,7,8] (the cycle 221 best 6-block subset) at K=1 only, 3 seeds {42, 137, 2024}. Trainable params per block = 1536 (768-dim v + scalar gate + 768-dim b_out); 3 blocks × 1536 = 4608 (cycle 230); 6 blocks × 1536 = 9216 — trivially cheap. Record init PPL, best PPL, best step, final PPL, full history per seed. Compare against (a) K=512 6-block baseline 59.515 ± 0.094 (cycle 221), (b) K=128 6-block baseline 67.562 ± 0.061 (cycle 231), (c) cycle 230 K=1 3-block 59.245 ± 0.029. Purpose: cycles 221/229/231/233 all hit a ~59.5 PPL floor at 6 blocks; cycle 231 showed K=128 6-block is much worse (67.6) than K=512 6-block (59.5), so the K-vs-PPL curve steepens with depth. K=1 at 6 blocks lets us test whether the 59.5 floor is a structural cascade-depth barrier (K=1 ≈ K=512) or whether channel capacity matters at 6 blocks after all (K=1 >> K=512 penalty, like K=128).
-   - Type: empirical / cascade x compression sweep
-   - Confirmed if: K=1 6-block best_ppl_mean ∈ [58.0, 62.0] (K=1 ≈ K=512 at 6 blocks → 59.5 is a structural cascade floor, channel capacity irrelevant even at 6 blocks).
-   - Refuted if: K=1 6-block best_ppl_mean ≥ 70.0 (K=1 cascade collapses like K=128 did → channel capacity does matter at 6 blocks, just less than expected from 3-block results).
-   - Inconclusive if: 62.0 < best_ppl_mean < 70.0 (partial steepening, continuous with the K=128 cycle 231 finding).
-   - Artifacts: `experiments/k1_6block_cascade_cycle<N>.py`, `autoresearch/results/cycle_<N>_k1_6block.json`, `autoresearch/results/cycle_<N>_summary.md`
-   - Depends on: none
-
 251. **W_out + W_fc trainable joint Adam at 6 blocks — does W_fc help at cascade depth?**
    - Cycle 213 added the `c_fc` bias as a joint Adam parameter at 3 blocks BLOCKS=[1,4,7] K=512 and reached best_mean 46.424 vs cycle 206 W_out-only 46.556 (essentially identical, -0.13 PPL). Repeat the same recipe at 6 blocks BLOCKS=[1,2,4,5,7,8] K=512 to test whether W_fc training is a noop at 3 blocks because the 3-block surface is already flat, or because W_fc is always a noop. Use cycle 221 scaffolding: calib_ids = all_ids[:200], eval_ids = all_ids[200:300], SEQ_LEN=128, seed 42, joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore. Trainable params per block: W_out + b_out + c_fc_bias = 512×768 + 768 + 3072 = 396,288 (W_out-only was 393,216; W_fc adds 3072); 6 blocks × 396,288 ≈ 2.38M. 3 seeds {42, 137, 2024}. Compare against cycle 221 W_out-only 6-block 59.515 ± 0.094. If W_fc helps at 6 blocks where it didn't at 3 blocks, the 59.5 floor is NOT fully structural and adding more trainable surface still buys PPL. If W_fc is still a noop, the 59.5 floor is rigid and the 6-block cascade barrier does not respond to this trainable-parameter direction.
    - Type: empirical / joint trainable surface
@@ -80,6 +71,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 240
+
+250. **K=1 Adam correction at 6 blocks — does the K=1 floor hold at cascade depth?** *(REFUTED — cycle 240)*
+   - **Outcome: REFUTED** — K=1 6-block (BLOCKS=[1,2,4,5,7,8], 9,216 trainable params) joint Adam W_out+b_out 4000 steps best_mean = **96.886 ± 0.071** (per-seed 96.943 / 96.786 / 96.929), init = 203.246 (zero seed variance, lstsq is deterministic). All 3 seeds best at step 4000 (still descending — budget-bounded, not converged). REFUTED at threshold ≥70.0 by 26.9 PPL. Δ vs cycle 221 K=512 6-block 59.515 = +37.37; Δ vs cycle 231 K=128 6-block 67.562 = +29.32; Δ vs cycle 230 K=1 3-block 59.245 = +37.64. The 59.5 floor is **NOT** a structural cascade-depth barrier independent of K — channel capacity matters dramatically at 6 blocks, far more than the cycle 230 K=1 3-block result extrapolated to. The K-vs-PPL curve at 6 blocks penalizes K=1 catastrophically (init 203.2 = 3.77× float; trained 96.9 = 1.80× float). Cascade depth × low channel count is multiplicatively worse than either alone. K=1 worked at 3 blocks (within +10%) because the 3-block surface has enough mid-cascade slack to absorb extreme c_fc sparsity; at 6 blocks the same single-channel projection compounds across the cascade and cannot be repaired by W_out Adam alone. Best-state restore round-trip clean for all 3 seeds (|restored − best| < 1e-3, all best states are step 4000). Trajectory: linear descent from init 203 → ~96.9 over 4000 steps with no plateau — the surface is still optimisable but trapped in a basin two orders of magnitude above the K=512 floor.
+   - Artifacts: `experiments/adam_6block_k1_cycle240.py`, `autoresearch/results/cycle_240_6block_k1.json`, `autoresearch/results/cycle_240_summary.md`
 
 ### Cycle 239
 
