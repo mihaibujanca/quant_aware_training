@@ -1,6 +1,11 @@
-# Research Status — 246 Cycles (001–246)
+# Research Status — 247 Cycles (001–247)
 
-## Latest: Cycle 246
+## Latest: Cycle 247
+
+257. **Heterogeneous K — K=512 on blocks 4,5 + K=128 on 1,2,7,8** — INCONCLUSIVE (interesting=true)
+   - 6-block joint Adam, 3 seeds. **best_mean=64.453 ± 0.123** ∈ [61, 65) inconclusive (0.55 PPL from refuted, leans refuted). Recovers only **38.6%** of the K=512→K=128 gap at 50.1% of the K=512 parameter cost. **Plan hypothesis rejected**: per-block residual MSE at K=128 (seed 42) shows blocks **7, 8 (0.581, 0.818)** are HIGHER than blocks **4, 5 (0.162, 0.224)**. Cycle 243's per-block restoration ranking under fixed-fit ≠ per-block ranking under heterogeneous-K fit. **Two different measures of "block difficulty" disagree.** Concrete pivot: swap K=512 onto {7, 8} at the same 1.18M budget to test the residual-MSE ranking directly.
+
+## Cycle 246
 
 256. **gelu_noneg + μ + LoRA r=8 + K=128 W_out compression** — REFUTED (interesting=true)
    - All 12 blocks gelu_noneg+μ + LoRA r=8 + BLOCKS=[1,4,7] additional K=128 topk+lstsq W_out compression. Trainable=595,200 (verified). 3 seeds. **best_mean=57.811 ± 0.277** ≥ 49.5 refuted threshold by +8.3 PPL. Δ vs cycle 223 K=128 alone (48.989) = **+8.82**. Δ vs cycle 239 LoRA alone (47.692) = +10.12. **Root cause**: K=128 topk+lstsq init against the gelu_noneg+μ patched target is **106.74** PPL — actively WORSE than the μ-only baseline (74.30) before Adam runs. The bump-removed target is HARDER for K=128 lstsq, not easier. **Activation-level fix and channel compression do NOT compose** — they share a linearization budget. Adam's 595K trainable surface can't close a 56 PPL starting gap in 2000 steps.
