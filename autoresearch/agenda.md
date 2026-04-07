@@ -15,24 +15,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 - All Δ̃_l computed as `GELU_FFN_l(x) − ReLU_FFN_l(x) − E_calib[GELU_FFN_l − ReLU_FFN_l]` where the centring mean is computed on the calibration corpus only and applied to held-out evaluation.
 - All artifacts must be loadable by `notebooks/bump_features_explore.py` without modification — the loader expects exact filenames listed under each item's `Artifacts:` block.
 
-247. **T3: Bump subspace ablation vs random subspace baseline**
-   - For each block, take the top-10 right singular vectors of centred Δ̃ from item 245's `cycle_<N>_t1_features.pt`. Define the projector `P_l = V_l[:,:10] @ V_l[:,:10].T` and the ablation: after the FFN output of block l is added to the residual stream, replace `x_l ← x_l − P_l x_l`. Measure full-model PPL on held-out wikitext-2 val (N_SEQS=200, SEQ_LEN=512).
-   - Comparisons:
-     - **Joint ablation** at all 12 blocks simultaneously
-     - **Per-block ablation** at one block at a time (12 single-block runs)
-     - **Random k=10 subspace baseline** (10 seeds Gaussian QR-orthonormal), joint and per-block
-     - **Top-10 right singular vectors of FULL FFN output** (not just Δ̃) — tests whether bump directions are more critical per-dim than the loud channel directions
-     - **No ablation baseline**
-   - Artifacts (REQUIRED):
-     - `experiments/bump_t3_ablation_cycle<N>.py`
-     - `autoresearch/results/cycle_<N>_t3_ablation_ppl.json` — {baseline, joint_bump, per_block_bump (12 entries), random_baseline (mean+std over 10 seeds, joint and per-block), full_ffn_top10}
-     - `autoresearch/results/cycle_<N>_t3_summary.md` — verdict + table comparing bump vs random vs full-FFN ablation per block
-   - Type: empirical / ablation
-   - Confirmed if: joint bump-subspace ablation PPL ≥ 1.5× random-subspace ablation mean PPL, AND at least 3 individual blocks show single-block ablation PPL ≥ 2× their random baseline.
-   - Refuted if: bump ablation PPL within 1.1× random baseline.
-   - Inconclusive otherwise.
-   - Depends on: 245
-
 248. **T4: Activation patching across token pairs (bump-only)**
    - On 100 token pairs (A, B) sampled from held-out wikitext-2 such that: (1) A and B occur at the same sequence position in distinct sequences, (2) the model's top-1 prediction for A ≠ top-1 for B, (3) both predictions have logit margin >2 over the runner-up. For each pair, at each block l ∈ {1,3,5,7,9}:
      - Compute residual stream after block l for both A and B → x_l(A), x_l(B)
@@ -127,6 +109,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 237
+
+247. **T3: Bump subspace ablation vs random subspace baseline** *(CONFIRMED — cycle 237)*
+   - **Outcome: CONFIRMED** — held-out wikitext-2 val 200×512=102,400 tokens, gpt2 on MPS fp32. For each of 12 blocks built `P_bump_l = V_l[:,:10] @ V_l[:,:10].T` from cycle 235's centred-Δ̃ right singular vectors. Installed per-block forward hooks on `transformer.h[l]` that replace `hs ← hs − hs @ P_l`. Baseline PPL 34.514. **Joint bump ablation (all 12 blocks): PPL = 2,344,385.8 (67,926× baseline)**; joint random k=10 baseline over 3 seeds (QR-orthonormal Gaussian): 101.30 ± 8.14 (2.94× baseline). Ratio joint_bump / joint_random = **23,143×** (gate ≥1.5). Per-block single-block ratios: [19.9, 12.9, 10.6, 30.2, 22.1, 25.2, 797.7, 11.2, 1.65, 1.45, 1.51, 928.4] — **9/12 blocks above 2× random** (gate ≥3). The bump subspace is massively load-bearing at the ablation-PPL level, especially at blocks 6 (797×) and 11 (928×) which have catastrophic single-block failures. Blocks 8-10 are the only ones where the top-10 bump is ~random (ratios 1.45-1.65). Full-FFN top-10 right-SV comparison: joint PPL = 3,114,155 (slightly worse than bump); per-block ratios show the full-FFN loud-channel directions are also structurally critical (block 3 = 11,317 PPL single-block; block 11 = 4,400 PPL single-block). Bump and full-FFN top-10 subspaces are both critical, but NOT in the same blocks: bump catastrophic at blocks 6, 11; full-FFN catastrophic at blocks 3, 11. Sanity clean: V_0 orthonormal (max err 1.07e-6), P_0 idempotent (max err 5.07e-7), restore baseline delta = 0.00e+00 after all hooks removed. This is a strong positive result — the centred bump directions from the cycle 235 T1 inventory are NOT just a statistical artifact: ablating them destroys the model far beyond what removing a random 10-dim slice does, directly falsifying a "bump is compression slack" story at the aggregate PPL level. Combined with cycle 236 T2 (causal intervention found real non-random logit shifts but T1's vocab decoding was the wrong probe), the bump subspace is causally load-bearing for LM prediction — the remaining open question is which readers downstream actually use it (logit-lens / downstream-V probes, not wte @ v_{l,i}).
+   - Artifacts: `experiments/bump_t3_ablation_cycle237.py`, `autoresearch/results/cycle_237_t3_ablation_ppl.json`, `autoresearch/results/cycle_237_t3_summary.md`
 
 ### Cycle 236
 

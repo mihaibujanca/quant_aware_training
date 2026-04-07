@@ -1,0 +1,130 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Device: mps
+Loading GPT-2 and tokenizer...
+Loading cycle 235 T1 features...
+Orthonormality check V_0.T @ V_0 - I max abs = 1.07e-06
+Idempotency check P_0 @ P_0 - P_0 max abs = 5.07e-07
+
+Loading wikitext-2 val split (seqs=200, seq_len=512)...
+  eval_ids shape: (200, 512)
+
+[1] Baseline PPL (no ablation)...
+  baseline_ppl = 34.5140
+
+[2] Joint bump ablation (all 12 blocks)...
+  joint_bump_ppl = 2344385.8250
+
+[3] Per-block bump ablation (12 single-block runs)...
+  block 0: ppl = 690.1776
+  block 1: ppl = 453.0198
+  block 2: ppl = 396.6735
+  block 3: ppl = 1122.5037
+  block 4: ppl = 833.2528
+  block 5: ppl = 953.2030
+  block 6: ppl = 30603.6162
+  block 7: ppl = 437.0631
+  block 8: ppl = 60.9498
+  block 9: ppl = 51.4422
+  block 10: ppl = 53.8176
+  block 11: ppl = 33758.9777
+
+[4] Random subspace baseline (3 seeds)...
+
+  --- seed 42 ---
+  seed 42 joint random ppl = 92.0455
+    seed 42 block 0: ppl = 34.9546
+    seed 42 block 1: ppl = 35.4218
+    seed 42 block 2: ppl = 35.8457
+    seed 42 block 3: ppl = 36.1145
+    seed 42 block 4: ppl = 37.9771
+    seed 42 block 5: ppl = 38.7788
+    seed 42 block 6: ppl = 37.1894
+    seed 42 block 7: ppl = 37.2881
+    seed 42 block 8: ppl = 37.4276
+    seed 42 block 9: ppl = 35.3235
+    seed 42 block 10: ppl = 35.9353
+    seed 42 block 11: ppl = 36.1796
+
+  --- seed 137 ---
+  seed 137 joint random ppl = 111.8493
+    seed 137 block 0: ppl = 34.5152
+    seed 137 block 1: ppl = 35.1128
+    seed 137 block 2: ppl = 37.9835
+    seed 137 block 3: ppl = 39.4544
+    seed 137 block 4: ppl = 37.9034
+    seed 137 block 5: ppl = 37.6295
+    seed 137 block 6: ppl = 40.8984
+    seed 137 block 7: ppl = 37.0624
+    seed 137 block 8: ppl = 37.2891
+    seed 137 block 9: ppl = 35.3397
+    seed 137 block 10: ppl = 35.3059
+    seed 137 block 11: ppl = 35.7836
+
+  --- seed 2024 ---
+  seed 2024 joint random ppl = 100.0001
+    seed 2024 block 0: ppl = 34.5773
+    seed 2024 block 1: ppl = 34.9948
+    seed 2024 block 2: ppl = 38.5487
+    seed 2024 block 3: ppl = 36.1162
+    seed 2024 block 4: ppl = 37.3572
+    seed 2024 block 5: ppl = 37.1898
+    seed 2024 block 6: ppl = 37.0126
+    seed 2024 block 7: ppl = 42.3728
+    seed 2024 block 8: ppl = 36.1109
+    seed 2024 block 9: ppl = 36.0985
+    seed 2024 block 10: ppl = 35.5568
+    seed 2024 block 11: ppl = 37.1233
+
+  joint random mean ± std = 101.2983 ± 8.1368
+
+[5] Full-FFN top-10 right SVs (calibration)...
+  Loading wikitext-2 train for calibration...
+  calib_ids shape: (200, 512)
+  forward pass for FFN output capture...
+  block 0: full-FFN V shape (768, 10)
+  block 1: full-FFN V shape (768, 10)
+  block 2: full-FFN V shape (768, 10)
+  block 3: full-FFN V shape (768, 10)
+  block 4: full-FFN V shape (768, 10)
+  block 5: full-FFN V shape (768, 10)
+  block 6: full-FFN V shape (768, 10)
+  block 7: full-FFN V shape (768, 10)
+  block 8: full-FFN V shape (768, 10)
+  block 9: full-FFN V shape (768, 10)
+  block 10: full-FFN V shape (768, 10)
+  block 11: full-FFN V shape (768, 10)
+
+[5a] Joint full-FFN ablation...
+  joint_full_ppl = 3114154.9187
+
+[5b] Per-block full-FFN ablation...
+  block 0: full-FFN ppl = 134.3689
+  block 1: full-FFN ppl = 197.9091
+  block 2: full-FFN ppl = 47.0822
+  block 3: full-FFN ppl = 11316.9626
+  block 4: full-FFN ppl = 71.2670
+  block 5: full-FFN ppl = 112.8656
+  block 6: full-FFN ppl = 182.7430
+  block 7: full-FFN ppl = 152.7091
+  block 8: full-FFN ppl = 95.2107
+  block 9: full-FFN ppl = 68.6719
+  block 10: full-FFN ppl = 54.9655
+  block 11: full-FFN ppl = 4399.7843
+
+Sanity: rerunning baseline after all hooks removed...
+  baseline_final = 34.5140 (initial 34.5140)
+  restore delta = 0.00e+00
+
+── Verdict ──────────────────────────────────────────────────────
+  joint_bump_ppl         = 2344385.8250
+  joint_random_mean      = 101.2983
+  ratio joint            = 23143.3825
+  per_block ratios       = [19.9, 12.878, 10.589, 30.152, 22.075, 25.173, 797.659, 11.233, 1.65, 1.446, 1.512, 928.41]
+  n_blocks_above_2x_rand = 9
+
+  VERDICT = CONFIRMED
+
+Wrote autoresearch/results/cycle_237_t3_ablation_ppl.json
+Wrote autoresearch/results/cycle_237_t3_summary.md
+
+Done. verdict=CONFIRMED joint_bump=2344385.825 joint_random=101.298 ratio=23143.383 n_blocks_above_2x=9/12
