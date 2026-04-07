@@ -1,6 +1,11 @@
-# Research Status — 277 Cycles (001–277)
+# Research Status — 278 Cycles (001–278)
 
-## Latest: Cycle 277
+## Latest: Cycle 278
+
+288. **All-blocks c_proj output eff_rank census** — INCONCLUSIVE (interesting=true)
+   - **12-block profile**: {0:71.93, 1:**1.94**, 2:**1.05**, 3:24.29, 4:**49.04**, 5:179.19, 6:290.97, 7:297.79, 8:291.41, 9:195.50, 10:**16.70**, 11:**22.49**}. Cycle 267 sanity reproduces exactly. **Block 4 = 49.04 triggers CONFIRMED clause 1** by 0.96, BUT mid-blocks {2, 3, 10} = {1.05, 24.29, 16.70} are far below the 100 floor → clause 2 fails → INCONCLUSIVE. **U-shape hypothesis WRONG**: pattern is **bathtub-with-block-0-bump** — 4 contiguous concentrators at blocks 1-4, 5 contiguous diffusers at 5-9, 2 late concentrators at 10-11. **Block 2 is rank-1** (top-1 energy 99.61%), more concentrated than block 1. **Block 10 (16.70) is more concentrated than block 11 (22.49)** — untested as single-block-patch candidates. **Block 7 (297.79) is high-rank yet a Pareto-cascade winner** — confirms cycle 273's finding that activation eff_rank is descriptive, not prescriptive.
+
+## Cycle 277
 
 287. **2-block [1,11] hybrid** — INCONCLUSIVE (PLAN INVALID, duplicate of cycle 275)
    - Item 287 is a duplicate of cycle 275 item 285: identical trainable surface (BLOCKS=[1,11], block 1 K=512 + block 11 rank-22 weight-SVD, 411,648 trainable). Cycle 275 measured REFUTED at 48.2. No experiment run; commit=NONE. The only new element was a [1,4] control, not worth a cycle (cycle 266 measured).
