@@ -1,0 +1,416 @@
+"""
+Cycle 248 — Item 258: K=128 + W_out + W_fc trainable at 6 blocks.
+BLOCKS=[1,2,4,5,7,8], K=128. Forks cycle 231 (K=128 6-block W_out-only)
+by promoting W_fc and b_fc from buffers to trainable parameters
+(FullCompressedMLP semantics from cycle 213, sliced to K=128 at topk+lstsq init).
+
+Trainable per block = K*768 (W_out) + 768 (b_out) + 768*K (W_fc slice)
+                    + K (b_fc slice) = 197,504. Across 6 blocks: 1,185,024.
+
+Note: the agenda item 258 text reports "14.77M trainable" from the formula
+  6 * (768*128 + 128 + 3072*768 + 3072)
+which inflates W_fc to the FULL (3072, 768) c_fc — inconsistent with K=128
+compression, since CompressedMLP's forward path uses only the topk-sliced
+(768, K) c_fc. Training the full c_fc on an un-addressed 2944-channel slab
+yields zero gradient on those channels. We train the (768, K)-SLICED W_fc,
+matching cycle 213's FullCompressedMLP. See plan cycle_248.md for details.
+
+Compare:
+  - cycle 231 W_out-only ceiling (K=128 6-block): 67.562
+  - cycle 221 K=512 ceiling (6-block):           59.515
+  - float:                                       53.895
+
+Verdict:
+  Confirmed if best_mean <= 61.0.
+  Refuted   if best_mean >= 66.0.
+  Inconclusive otherwise.
+"""
+import json
+import math
+import random
+import time
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from transformers import GPT2LMHeadModel, GPT2TokenizerFast
+from datasets import load_dataset
+
+BLOCKS = [1, 2, 4, 5, 7, 8]
+K = 128
+N_CALIB = 200
+N_EVAL = 100
+SEQ_LEN = 128
+DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
+LR = 5e-5
+N_STEPS = 4000
+EVAL_EVERY = 100
+SEEDS = [42, 137, 2024]
+OUTPUT_PATH = "autoresearch/results/cycle_248_k128_wout_wfc.json"
+SUMMARY_PATH = "autoresearch/results/cycle_248_summary.md"
+CYCLE_221_K512_BASELINE = 59.515
+CYCLE_231_K128_WOUT_BASELINE = 67.562
+
+print(f"Device: {DEVICE}")
+
+# ── Load tokenizer + data once ────────────────────────────────────────────────
+tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+tokenizer.pad_token = tokenizer.eos_token
+ds = load_dataset("wikitext", "wikitext-2-raw-v1", split="validation")
+texts = [r["text"] for r in ds if len(r["text"].strip()) > 50]
+all_ids = []
+for text in texts:
+    enc = tokenizer(text, return_tensors="pt", truncation=True, max_length=SEQ_LEN)
+    if enc["input_ids"].shape[1] >= SEQ_LEN:
+        all_ids.append(enc["input_ids"][:, :SEQ_LEN])
+    if len(all_ids) >= N_CALIB + N_EVAL:
+        break
+
+calib_ids = [t.to(DEVICE) for t in all_ids[:N_CALIB]]
+eval_ids = [t.to(DEVICE) for t in all_ids[N_CALIB:N_CALIB + N_EVAL]]
+print(f"Calibration: {len(calib_ids)} seqs, Eval: {len(eval_ids)} seqs")
+
+
+# ── FullCompressedMLP with sliced W_fc trainable ──────────────────────────────
+class FullCompressedMLP(nn.Module):
+    """
+    K-sliced c_fc → gelu → W_out.T + b_out.
+    W_fc (768, K), b_fc (K,), W_out (768, K), b_out (768,) all trainable.
+    """
+    def __init__(self, fc_weight_slice, fc_bias_slice, W_out, b_out):
+        super().__init__()
+        self.W_fc = nn.Parameter(fc_weight_slice.clone())
+        self.b_fc = nn.Parameter(fc_bias_slice.clone())
+        self.W_out = nn.Parameter(W_out.clone())
+        self.b_out = nn.Parameter(b_out.clone())
+
+    def forward(self, x):
+        return F.gelu(x @ self.W_fc + self.b_fc) @ self.W_out.T + self.b_out
+
+
+def collect_mlp_io(model, calib_ids, block_ids):
+    ln_outs = {b: [] for b in block_ids}
+    proj_outs = {b: [] for b in block_ids}
+    hooks = []
+    for b in block_ids:
+        def mk_hook(bb):
+            def fn(m, inp, out):
+                ln_outs[bb].append(inp[0].detach().float().cpu().reshape(-1, 768))
+                proj_outs[bb].append(out.detach().float().cpu().reshape(-1, 768))
+            return fn
+        hooks.append(model.transformer.h[b].mlp.register_forward_hook(mk_hook(b)))
+    with torch.no_grad():
+        for ids in calib_ids:
+            model(ids)
+    for h in hooks:
+        h.remove()
+    for b in block_ids:
+        ln_outs[b] = torch.cat(ln_outs[b])
+        proj_outs[b] = torch.cat(proj_outs[b])
+    return ln_outs, proj_outs
+
+
+def fit_block_lstsq(block, ln_out_cpu, proj_out_cpu, K):
+    """K=topk+lstsq init, slice c_fc to the topk channels, promote W_fc/b_fc to params."""
+    W_fc = block.mlp.c_fc.weight.data.float().cpu()           # (768, 3072)
+    b_fc = block.mlp.c_fc.bias.data.float().cpu()             # (3072,)
+    W_proj = block.mlp.c_proj.weight.data.float().cpu()       # (3072, 768)
+    act_all = F.gelu(ln_out_cpu @ W_fc + b_fc)                # (N, 3072)
+    scores = act_all.std(0) * W_proj.norm(dim=1)              # (3072,)
+    topk_idx = scores.topk(K).indices                         # (K,)
+    act_sub = act_all[:, topk_idx]                            # (N, K)
+    ones = torch.ones(act_sub.shape[0], 1)
+    sol = torch.linalg.lstsq(torch.cat([act_sub, ones], 1), proj_out_cpu, rcond=None).solution
+    W_out_init = sol[:K].T                                    # (768, K)
+    b_out_init = sol[K]                                       # (768,)
+    return FullCompressedMLP(W_fc[:, topk_idx], b_fc[topk_idx], W_out_init, b_out_init)
+
+
+def eval_ppl(model, eval_ids):
+    model.eval()
+    total_loss, total_tokens = 0.0, 0
+    with torch.no_grad():
+        for ids in eval_ids:
+            out = model(ids, labels=ids)
+            total_loss += out.loss.item() * (ids.shape[1] - 1)
+            total_tokens += ids.shape[1] - 1
+    return math.exp(total_loss / total_tokens)
+
+
+# ── Per-seed run ──────────────────────────────────────────────────────────────
+def run_seed(seed):
+    print(f"\n{'='*60}\nSEED {seed}\n{'='*60}")
+    torch.manual_seed(seed)
+    random.seed(seed)
+    t0 = time.time()
+
+    model = GPT2LMHeadModel.from_pretrained("gpt2").to(DEVICE)
+    model.eval()
+    ln_outs, proj_outs = collect_mlp_io(model, calib_ids, BLOCKS)
+    for b in BLOCKS:
+        model.transformer.h[b].mlp = fit_block_lstsq(
+            model.transformer.h[b], ln_outs[b], proj_outs[b], K).to(DEVICE)
+    del ln_outs, proj_outs
+
+    init_ppl = eval_ppl(model, eval_ids)
+    print(f"Init PPL: {init_ppl:.3f}")
+
+    # Snapshot W_fc init for drift calc
+    W_fc_init = {b: model.transformer.h[b].mlp.W_fc.detach().clone().cpu()
+                 for b in BLOCKS}
+
+    # Freeze everything, unfreeze W_fc/b_fc/W_out/b_out for BLOCKS
+    for param in model.parameters():
+        param.requires_grad_(False)
+    trainable_params = []
+    for b in BLOCKS:
+        mlp = model.transformer.h[b].mlp
+        mlp.W_fc.requires_grad_(True)
+        mlp.b_fc.requires_grad_(True)
+        mlp.W_out.requires_grad_(True)
+        mlp.b_out.requires_grad_(True)
+        trainable_params.extend([mlp.W_fc, mlp.b_fc, mlp.W_out, mlp.b_out])
+    n_trainable = sum(p.numel() for p in trainable_params)
+    print(f"Trainable params: {n_trainable:,} ({n_trainable/1e6:.2f}M)")
+
+    optimizer = torch.optim.Adam(trainable_params, lr=LR)
+    calib_shuffled = list(calib_ids)
+    random.shuffle(calib_shuffled)
+
+    # Snapshot all 4 trainable tensors per block (CPU)
+    def snapshot():
+        snap = {}
+        for b in BLOCKS:
+            mlp = model.transformer.h[b].mlp
+            snap[b] = (
+                mlp.W_fc.detach().clone().cpu(),
+                mlp.b_fc.detach().clone().cpu(),
+                mlp.W_out.detach().clone().cpu(),
+                mlp.b_out.detach().clone().cpu(),
+            )
+        return snap
+
+    def restore(snap):
+        for b in BLOCKS:
+            W_fc_s, b_fc_s, W_out_s, b_out_s = snap[b]
+            mlp = model.transformer.h[b].mlp
+            mlp.W_fc.data.copy_(W_fc_s.to(DEVICE))
+            mlp.b_fc.data.copy_(b_fc_s.to(DEVICE))
+            mlp.W_out.data.copy_(W_out_s.to(DEVICE))
+            mlp.b_out.data.copy_(b_out_s.to(DEVICE))
+
+    best_ppl = init_ppl
+    best_step = 0
+    best_state = snapshot()
+    history = []
+
+    step = 0
+    while step < N_STEPS:
+        for ids in calib_shuffled:
+            if step >= N_STEPS:
+                break
+            model.train()
+            optimizer.zero_grad()
+            model(ids, labels=ids).loss.backward()
+            optimizer.step()
+            step += 1
+            if step % EVAL_EVERY == 0:
+                ppl_e = eval_ppl(model, eval_ids)
+                history.append({"step": step, "eval_ppl": float(ppl_e)})
+                marker = ""
+                if ppl_e < best_ppl:
+                    best_ppl = float(ppl_e)
+                    best_step = step
+                    best_state = snapshot()
+                    marker = " *"
+                print(f"  Step {step:5d}: eval_ppl={ppl_e:.3f}{marker}", flush=True)
+
+    final_ppl_at_step_4000 = eval_ppl(model, eval_ids)
+    print(f"Final at step {N_STEPS}: {final_ppl_at_step_4000:.3f}")
+
+    # W_fc drift (at END of training — not best): ||W_fc_final - W_fc_init||_F / ||W_fc_init||_F
+    drifts_final = []
+    for b in BLOCKS:
+        W_fc_end = model.transformer.h[b].mlp.W_fc.detach().cpu()
+        W0 = W_fc_init[b]
+        rel = (W_fc_end - W0).norm().item() / max(W0.norm().item(), 1e-12)
+        drifts_final.append(rel)
+    drift_final_mean = sum(drifts_final) / len(drifts_final)
+
+    # Restore best and verify
+    restore(best_state)
+    final_ppl_restored = eval_ppl(model, eval_ids)
+    print(f"Restored best (step {best_step}): {final_ppl_restored:.3f} (recorded best={best_ppl:.3f})")
+    assert abs(final_ppl_restored - best_ppl) < 1e-3, \
+        f"Restore mismatch: {final_ppl_restored} vs {best_ppl}"
+
+    # W_fc drift at BEST (after restore)
+    drifts_best = []
+    for b in BLOCKS:
+        W_fc_best = model.transformer.h[b].mlp.W_fc.detach().cpu()
+        W0 = W_fc_init[b]
+        rel = (W_fc_best - W0).norm().item() / max(W0.norm().item(), 1e-12)
+        drifts_best.append(rel)
+    drift_best_mean = sum(drifts_best) / len(drifts_best)
+
+    elapsed = time.time() - t0
+    print(f"Wall clock for seed {seed}: {elapsed:.1f}s")
+    print(f"W_fc drift (best):  mean={drift_best_mean:.4e} per-block={['%.3e' % d for d in drifts_best]}")
+    print(f"W_fc drift (final): mean={drift_final_mean:.4e} per-block={['%.3e' % d for d in drifts_final]}")
+
+    result = {
+        "seed": seed,
+        "init_ppl": float(init_ppl),
+        "best_ppl": float(best_ppl),
+        "best_step": int(best_step),
+        "final_ppl_at_step_4000": float(final_ppl_at_step_4000),
+        "wfc_drift_best_mean": float(drift_best_mean),
+        "wfc_drift_best_per_block": [float(d) for d in drifts_best],
+        "wfc_drift_final_mean": float(drift_final_mean),
+        "wfc_drift_final_per_block": [float(d) for d in drifts_final],
+        "wall_clock_sec": float(elapsed),
+        "history": history,
+    }
+    del model, optimizer, trainable_params, best_state, W_fc_init
+    if DEVICE == "mps":
+        torch.mps.empty_cache()
+    return result
+
+
+# ── Float baseline (once) ─────────────────────────────────────────────────────
+print("\nFloat baseline...")
+model_float = GPT2LMHeadModel.from_pretrained("gpt2").to(DEVICE)
+model_float.eval()
+float_ppl = eval_ppl(model_float, eval_ids)
+print(f"Float PPL: {float_ppl:.3f}")
+del model_float
+if DEVICE == "mps":
+    torch.mps.empty_cache()
+
+# ── Run all seeds ─────────────────────────────────────────────────────────────
+seed_results = [run_seed(s) for s in SEEDS]
+
+# ── Aggregate ─────────────────────────────────────────────────────────────────
+def agg(key):
+    vals = torch.tensor([r[key] for r in seed_results], dtype=torch.float64)
+    return float(vals.mean()), float(vals.std(unbiased=False))
+
+init_mean, init_std = agg("init_ppl")
+best_mean, best_std = agg("best_ppl")
+best_step_mean, best_step_std = agg("best_step")
+final_mean, final_std = agg("final_ppl_at_step_4000")
+drift_best_mean, drift_best_std = agg("wfc_drift_best_mean")
+drift_final_mean, drift_final_std = agg("wfc_drift_final_mean")
+wall_mean, wall_std = agg("wall_clock_sec")
+
+# Verdict per item 258 criteria
+if best_mean <= 61.0:
+    verdict = "CONFIRMED"
+elif best_mean >= 66.0:
+    verdict = "REFUTED"
+else:
+    verdict = "INCONCLUSIVE"
+
+n_trainable_reported = 6 * (K * 768 + 768 + 768 * K + K)
+
+print(f"\n{'='*60}\nAGGREGATE\n{'='*60}")
+print(f"Float PPL:                  {float_ppl:.3f}")
+print(f"Init PPL (mean±std):        {init_mean:.3f} ± {init_std:.3f}")
+print(f"Best PPL (mean±std):        {best_mean:.3f} ± {best_std:.3f}")
+print(f"Best step (mean±std):       {best_step_mean:.0f} ± {best_step_std:.0f}")
+print(f"Final@4000 (mean±std):      {final_mean:.3f} ± {final_std:.3f}")
+print(f"W_fc drift best (mean±std): {drift_best_mean:.4e} ± {drift_best_std:.4e}")
+print(f"W_fc drift final (mean±std):{drift_final_mean:.4e} ± {drift_final_std:.4e}")
+print(f"Wall clock/seed (mean±std): {wall_mean:.1f} ± {wall_std:.1f} s")
+print(f"Trainable params:           {n_trainable_reported:,}")
+print(f"Cycle 231 K=128 W_out-only: {CYCLE_231_K128_WOUT_BASELINE}")
+print(f"Cycle 221 K=512 ceiling:    {CYCLE_221_K512_BASELINE}")
+print(f"Delta vs c231 (K=128 W_out): {best_mean - CYCLE_231_K128_WOUT_BASELINE:+.3f}")
+print(f"Delta vs c221 (K=512 ceiling):{best_mean - CYCLE_221_K512_BASELINE:+.3f}")
+print(f"Verdict: {verdict}")
+
+result = {
+    "cycle": 248,
+    "item": 258,
+    "verdict": verdict,
+    "config": {
+        "BLOCKS": BLOCKS, "K": K, "N_CALIB": N_CALIB, "N_EVAL": N_EVAL,
+        "SEQ_LEN": SEQ_LEN, "LR": LR, "N_STEPS": N_STEPS,
+        "EVAL_EVERY": EVAL_EVERY, "SEEDS": SEEDS,
+        "trainable_set": ["W_fc(slice)", "b_fc(slice)", "W_out", "b_out"],
+        "trainable_params_per_block": K * 768 + 768 + 768 * K + K,
+        "trainable_params_total": n_trainable_reported,
+    },
+    "float_ppl": float(float_ppl),
+    "seeds": seed_results,
+    "aggregate": {
+        "init_mean": init_mean, "init_std": init_std,
+        "best_mean": best_mean, "best_std": best_std,
+        "best_step_mean": best_step_mean, "best_step_std": best_step_std,
+        "final_mean": final_mean, "final_std": final_std,
+        "wfc_drift_best_mean": drift_best_mean, "wfc_drift_best_std": drift_best_std,
+        "wfc_drift_final_mean": drift_final_mean, "wfc_drift_final_std": drift_final_std,
+        "wall_clock_sec_mean": wall_mean, "wall_clock_sec_std": wall_std,
+    },
+    "cycle_221_k512_baseline": CYCLE_221_K512_BASELINE,
+    "cycle_231_k128_wout_baseline": CYCLE_231_K128_WOUT_BASELINE,
+    "delta_vs_c231": float(best_mean - CYCLE_231_K128_WOUT_BASELINE),
+    "delta_vs_c221": float(best_mean - CYCLE_221_K512_BASELINE),
+}
+with open(OUTPUT_PATH, "w") as f:
+    json.dump(result, f, indent=2)
+print(f"Saved JSON to {OUTPUT_PATH}")
+
+# ── Summary markdown ──────────────────────────────────────────────────────────
+lines = []
+lines.append("# Cycle 248 — Item 258: K=128 W_out+W_fc trainable at 6 blocks")
+lines.append("")
+lines.append(f"**Verdict: {verdict}**")
+lines.append("")
+lines.append("- Criteria: Confirmed ≤61.0, Refuted ≥66.0, else Inconclusive")
+lines.append(f"- Config: BLOCKS={BLOCKS}, K={K}, LR={LR}, N_STEPS={N_STEPS}, EVAL_EVERY={EVAL_EVERY}, SEEDS={SEEDS}")
+lines.append(f"- Trainable set per block: W_fc(sliced to K), b_fc(sliced), W_out, b_out = 197,504")
+lines.append(f"- Total trainable: {n_trainable_reported:,} (~{n_trainable_reported/1e6:.2f}M)")
+lines.append("- Agenda item 258 formula `6 × (768×128 + 128 + 3072×768 + 3072) ≈ 14.77M` inflates W_fc to the **full** (3072, 768) matrix, contradicting K=128 compression: the forward path only uses the topk-sliced (768, K) c_fc. We train the sliced W_fc per cycle 213's FullCompressedMLP semantics. Documented in `autoresearch/plans/cycle_248.md`.")
+lines.append(f"- Float PPL: {float_ppl:.3f}")
+lines.append("")
+lines.append("## Per-seed results")
+lines.append("")
+lines.append("| seed | init | best | best_step | final@4000 | ||ΔW_fc||/||W_fc|| (best) |")
+lines.append("|---|---|---|---|---|---|")
+for r in seed_results:
+    lines.append(f"| {r['seed']} | {r['init_ppl']:.3f} | {r['best_ppl']:.3f} | {r['best_step']} | {r['final_ppl_at_step_4000']:.3f} | {r['wfc_drift_best_mean']:.3e} |")
+lines.append(f"| **mean** | {init_mean:.3f} | **{best_mean:.3f}** | {best_step_mean:.0f} | {final_mean:.3f} | {drift_best_mean:.3e} |")
+lines.append(f"| **std**  | {init_std:.3f} | {best_std:.3f} | {best_step_std:.0f} | {final_std:.3f} | {drift_best_std:.3e} |")
+lines.append("")
+lines.append("## Trajectory description")
+lines.append("")
+for r in seed_results:
+    lines.append(f"### Seed {r['seed']}")
+    hist = r["history"]
+    init_line = f"init={r['init_ppl']:.2f}"
+    q = hist[len(hist)//4] if hist else None
+    h = hist[len(hist)//2] if hist else None
+    tq = hist[3*len(hist)//4] if hist else None
+    f_ = hist[-1] if hist else None
+    parts = [init_line]
+    if q: parts.append(f"step{q['step']}={q['eval_ppl']:.2f}")
+    if h: parts.append(f"step{h['step']}={h['eval_ppl']:.2f}")
+    parts.append(f"best=step{r['best_step']}@{r['best_ppl']:.2f}")
+    if tq: parts.append(f"step{tq['step']}={tq['eval_ppl']:.2f}")
+    if f_: parts.append(f"step{f_['step']}={f_['eval_ppl']:.2f}")
+    lines.append("- " + ", ".join(parts))
+lines.append("")
+lines.append("## Comparison")
+lines.append("")
+lines.append(f"- Cycle 231 K=128 W_out-only baseline: **{CYCLE_231_K128_WOUT_BASELINE:.3f}**")
+lines.append(f"- Cycle 248 K=128 W_out+W_fc best_mean: **{best_mean:.3f} ± {best_std:.3f}**")
+lines.append(f"- Δ vs c231 (effect of unfreezing W_fc at K=128): **{best_mean - CYCLE_231_K128_WOUT_BASELINE:+.3f}** PPL")
+lines.append(f"- Cycle 221 K=512 ceiling: **{CYCLE_221_K512_BASELINE:.3f}**")
+lines.append(f"- Δ vs c221 (gap to K=512 quality ceiling): **{best_mean - CYCLE_221_K512_BASELINE:+.3f}** PPL")
+lines.append(f"- Wall clock per seed (mean): {wall_mean:.1f} s")
+lines.append(f"- Overfitting check: final@4000 mean = {final_mean:.3f}; W_fc drift moved off float with mean rel_fro={drift_best_mean:.3e} at best (final: {drift_final_mean:.3e}).")
+lines.append("")
+
+with open(SUMMARY_PATH, "w") as f:
+    f.write("\n".join(lines) + "\n")
+print(f"Saved summary to {SUMMARY_PATH}")

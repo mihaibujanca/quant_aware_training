@@ -1,0 +1,10 @@
+{
+  "cycle": 248,
+  "item": 258,
+  "decision": "approve",
+  "trainable_params_expected": 1185024,
+  "agenda_arithmetic_error_noted": "14.77M uses full (768,3072) c_fc; plan uses sliced (768,128) per cycle 213",
+  "verdict_thresholds": {"confirmed_le": 61.0, "refuted_ge": 66.0},
+  "baselines": {"cycle_231_wout_only": 67.562, "cycle_221_k512": 59.515, "float": 53.895},
+  "notes": "Fork of cycle 231 with FullCompressedMLP from cycle 213; snapshot/restore extended; LR=5e-5; overfit caution acknowledged."
+}

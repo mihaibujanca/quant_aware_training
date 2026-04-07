@@ -14,15 +14,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-258. **K=128 + W_out + W_fc trainable at 6 blocks — does unfreezing W_fc help where bias alone failed?** (empirical)
-   - **Goal**: cycle 241 showed adding the pre-topk c_fc BIAS to the 6-block K=512 trainable surface is a noop (59.533 vs 59.515). Cycle 231 showed K=128 6-block W_out-only is 67.562. The open question: at the more constrained K=128 surface, does unfreezing the full c_fc MATRIX (not just bias) in the trainable set give W_out+b_out room to re-route through nonlinear mixing? This is explicitly the direction cycle 241's "forbidden by agenda budget" note carves out — test it once at K=128 where the W_out-only ceiling is worse and there is more gap to close.
-   - **Recipe**: BLOCKS=[1,2,4,5,7,8] K=128, trainable={W_out, b_out, c_fc full matrix (3072, 768), b_fc (3072,)}. Parameter count: 6×(768×128 + 128 + 3072×768 + 3072) ≈ 6×2,458,880 = 14,753,280 trainable params — much larger than cycle 221's 2.36M W_out-only, but this is P2 precisely because it burns parameter budget. Joint Adam LR=5e-5 (lower than default; large trainable surface benefits from smaller steps), 4000 steps, 3 seeds, disjoint split. Freeze LM head, attention, and all blocks outside [1,2,4,5,7,8]. Init: topk+lstsq on W_out as usual; c_fc starts at float.
-   - **Baselines**: cycle 231 K=128 6-block W_out-only 67.562 (same K, fewer trainables). Cycle 221 K=512 6-block 59.515 (quality ceiling regardless of surface). Float 53.895.
-   - **Confirmed**: best_mean ≤ 61.0 (large jump from 67.562 — W_fc matrix absorbs meaningful capacity that bias cannot).
-   - **Refuted**: best_mean ≥ 66.0 (W_fc matrix noop like bias was; surface enlargement does not help at K=128 6-block either).
-   - **Inconclusive**: (61.0, 66.0).
-   - **Report**: per-seed best + std, init PPL, ||ΔW_fc||_F / ||W_fc||_F at end to confirm W_fc actually moved off float, trainable param count, wall-clock (this item is expected to be slow).
-   - Artifacts: `experiments/k128_wout_wfc_6block_cycle258.py`, `autoresearch/results/cycle_258_k128_wout_wfc.json`, `autoresearch/results/cycle_258_summary.md`
+*(item 258 closed REFUTED by cycle 248; P2 queue empty, promote from review next cycle.)*
 
 
 
@@ -49,6 +41,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 248
+
+258. **K=128 + W_out + W_fc trainable at 6 blocks — does unfreezing W_fc help where bias alone failed?** *(REFUTED — cycle 248)*
+   - **Outcome: REFUTED** — BLOCKS=[1,2,4,5,7,8] K=128 with FullCompressedMLP (W_fc sliced to (768, K), b_fc (K,), W_out, b_out — all trainable per block). Per-block trainable 197,504; total 1,185,024 (~1.19M). Joint Adam LR=5e-5, N_STEPS=4000, EVAL_EVERY=100, best-state restore over all 4 tensor groups, 3 seeds {42, 137, 2024}, disjoint calib=all_ids[:200] / eval=all_ids[200:300], SEQ_LEN=128. Init PPL=115.056 (zero seed variance — lstsq deterministic; exact match to cycle 231 K=128 init). Float held-out=53.895. Per-seed: seed 42 best=67.671 @ step 3500 final@4000=67.751 W_fc_drift_best=7.36e-2; seed 137 best=67.596 @ step 4000 final=67.596 drift=8.10e-2; seed 2024 best=67.559 @ step 4000 final=67.559 drift=8.10e-2. **Mean best 67.609 ± 0.047** at step mean 3833 ± 236. Final@4000 mean=67.635. Wall clock 133.4s/seed (400.2s total). W_fc drift relative Frobenius mean=7.85e-2 at best (range 0.049–0.098 across blocks; block 1 drifts least 0.061, block 7 most 0.098) — W_fc moved OFF float non-trivially (~8% norm shift), so the noop cannot be explained by "W_fc didn't train".
+   - **REFUTED** at best_mean=67.609 ≥ 66.0. Δ vs cycle 231 K=128 W_out-only 67.562 = **+0.047** (within seed noise 0.047). Δ vs cycle 221 K=512 ceiling 59.515 = **+8.094**. Unfreezing W_fc at K=128 is a **complete noop** — at the ~8% W_fc drift regime Adam actually found, the trained W_fc contributes nothing measurable on top of W_out+b_out. Together with cycle 241 (W_fc bias-only at K=512, also noop: 59.533 vs 59.515), this **closes the "enlarge the trainable surface via W_fc" hypothesis** at both endpoints of the K spectrum (K=128 matrix, K=512 bias). The W_out+b_out 6-block surface is **saturated at K=128** — neither bias-level nor full-matrix c_fc retraining moves the floor. The 8.09 PPL gap between K=128 (67.6) and K=512 (59.5) at 6 blocks is a **K-bandwidth phenomenon**, not a trainable-surface-size phenomenon. Best steps at 3833 mean (seeds 137 and 2024 hit best at the final step 4000) indicate Adam is still descending at the LR=5e-5 schedule, but the descent rate by step 3000 is ~0.003 PPL/100 steps — no extrapolation to below 66 is plausible within any reasonable step budget. Final@4000 ≈ best (no overfit) unlike cycles 221/231 which plateau-then-climb; the lower LR=5e-5 buys monotone descent at the cost of ceiling value. Agenda item 258's "14.77M trainable" formula inflated W_fc to the FULL (3072, 768) c_fc matrix, which is inconsistent with K=128 compression (only the topk-sliced 128 channels feed W_out). The sliced (768, K) W_fc semantic used here matches cycle 213's FullCompressedMLP and is the only budget-coherent interpretation of "train W_fc at K=128". Best-state restore round-trip clean for all 3 seeds (|restored-best|<1e-3). Follow-ups (low priority given two-endpoint refutation): (a) LoRA r=8 on c_fc (not full retrain) at 6 blocks K=128 to test whether a narrow low-rank update to c_fc is structurally different from the full slice retrain; (b) LoRA r=8 on c_proj at 6 blocks K=128 as an alternative surface that is NOT on the W_out path; (c) 2-stage init — retrain W_fc full under K=128 lstsq REfit periodically (re-select topk after W_fc updates) to test whether the topk basis being fixed at float is the limiter.
+   - Artifacts: `experiments/k128_wout_wfc_6block_cycle248.py`, `autoresearch/results/cycle_248_k128_wout_wfc.json`, `autoresearch/results/cycle_248_summary.md`
 
 ### Cycle 247
 
