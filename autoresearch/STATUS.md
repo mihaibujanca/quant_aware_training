@@ -1,6 +1,11 @@
-# Research Status — 289 Cycles (001–289)
+# Research Status — 290 Cycles (001–290)
 
-## Latest: Cycle 289
+## Latest: Cycle 290
+
+300. **[2] K=512 8000 steps** — INCONCLUSIVE
+   - **best_mean=42.752 ± 0.032** in dead zone (42.5, 43.0). vs cycle 287 [1] K=512 8k (42.785) = **-0.033 PPL (statistical tie, within 1σ)** at same 393,984 params. Step-4000 evals match cycle 286 within 1.54e-5 per seed — the -0.811 PPL gain from 4k→8k is unambiguously Adam-budget, not randomness. **Cycle 286 [2]-beats-[1] advantage (-0.258 at 4k) was a BUDGET ARTIFACT**: gap collapses 7.8× to -0.033 at 8k. Cycle 290 and cycle 287 are **co-winners** at 394K params. Cycle 290 dominates cycle 286 at the same tile.
+
+## Cycle 289
 
 299. **Block 10 rank-5 sub-eff_rank stress test** — CONFIRMED (interesting=true)
    - Rank-5 retrain (3 seeds, 4,608 params): **best_mean=51.466 ± 0.009** ≤53 confirmed by 1.53 PPL. **First sub-eff_rank success**: r/eff_rank = 5/16.70 = 0.30. Floor-limited (all seeds converge then overfit within 4000-step budget, -2.43 PPL vs float). Noretrain r=5 = 59.918 matches cycle 282 within 0.002. Adam recovery -8.45 PPL (largest in 282-family). **Block 10 rank-5 (51.47) BEATS block 11 rank-22 (54.47) at 3.8× fewer params**. **New Pareto tile at 4.6K params**: strictly dominates cycle 270 block 11 rank-22 and cycle 288 block 3 rank-24 on both axes. Still dominated by cycle 280/285 block 1/2 rank-2 (2.3K).
