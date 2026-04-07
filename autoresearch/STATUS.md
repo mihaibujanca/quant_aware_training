@@ -1,6 +1,11 @@
-# Research Status — 252 Cycles (001–252)
+# Research Status — 253 Cycles (001–253)
 
-## Latest: Cycle 252
+## Latest: Cycle 253
+
+263. **gelu_noneg + μ targeted to compressed blocks only** — INCONCLUSIVE
+   - Patch ONLY blocks [1,4,7] with relu(gelu(z))+μ_l, leave other 9 blocks on raw GELU. K=512 topk+lstsq init on patched targets, joint Adam W_out+b_out, 3 seeds. **best_mean=46.510 ± 0.038** ∈ (46, 47) inconclusive. Δ vs cycle 210 raw GELU [1,4,7] (46.556) = -0.046 (within 1σ, statistically inert). Targeted patching sidesteps cycle 246's "all-12 hurts uncompressed blocks" failure but yields no measurable benefit either. **Closes the gelu_noneg activation-surgery line at both extremes**: cycle 246 (all-12 + K=128) REFUTED, cycle 253 (targeted + K=512) INCONCLUSIVE. Activation surgery is statistically inert at K=512 channel compression.
+
+## Cycle 252
 
 262. **Block 5 geometric deep-dive** — REFUTED (interesting=true)
    - 5 metrics on post-GELU activations + c_proj rows for blocks {1..8}: per-channel std_mean, kurt_mean, SVD-entropy effective rank, topk-128/512 coverage, c_proj row cosine. **Block 5 within 1σ of cohort {1,2,4,7,8} on ALL metrics** (max |z|=0.801 on cov512). Block 5 sits in dense high-rank low-concentration regime monotone within blocks 4→8 (eff_rank 358 between b6=379 and b8=349; cov512 0.381 on monotone 0.406→0.417 across 4-8). Cohort is wildly heterogeneous (b2 eff_rank=45, cov128=0.98) but conclusion is robust to cohort choice. **Together with cycle 250, fully closes the "block 5 is structurally special" story** — cycle 245's 5.7 PPL gain was a 6→5 count transition, not block-identity-driven. Any residual block-5 signal must come from cross-block downstream interaction, not MLP-intrinsic geometry.
