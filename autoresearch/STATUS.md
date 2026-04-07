@@ -1,6 +1,11 @@
-# Research Status — 287 Cycles (001–287)
+# Research Status — 288 Cycles (001–288)
 
-## Latest: Cycle 287
+## Latest: Cycle 288
+
+298. **Block 3 rank-r c_proj weight-SVD** — CONFIRMED
+   - Rank-24 retrain (3 seeds, 19,200 params): **best_mean=50.594 ± 0.040** (≤55 by 4.41 PPL). Per-seed 50.64/50.58/50.55 at steps 3900/3900/4000. **NOT a Pareto winner**: dominated on both axes by cycle 282 block 10 rank-17 (13.8K, 50.04). Dominates cycle 270 block 11 rank-22 on PPL only. **Recipe "rank ≈ eff_rank + Adam retrain → 3-5 PPL below float" now confirmed on 5/5 concentrator blocks** (1, 2, 3, 10, 11). Block 11 remains the soft outlier; early-vs-late block depth does NOT clearly order retrain PPL.
+
+## Cycle 287
 
 297. **[1] K=512 8000 steps** — CONFIRMED
    - **best_mean=42.785 ± 0.013** (≤ 43.0 confirmed by 0.215 PPL). Per-seed 42.77/42.79/42.80 — all below 43.0, all best at step 8000 (still descending). Init deterministic, matches cycle 271 exactly; step-4000 evals match cycle 271 within 1e-4 → only budget extension differs, **1.04 PPL gain purely from extra Adam steps**. **NEW PPL PARETO WINNER at 393,984 params**: -1.04 vs cycle 271 [1] K=512 4k (43.821), -0.78 vs cycle 286 [2] K=512 4k (43.563). **Caveat**: cycle 286 [2] was also budget-bounded; 8k retest on [2] is now the obvious follow-up to settle [1] vs [2] at matched budgets.
