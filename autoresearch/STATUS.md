@@ -1,6 +1,11 @@
-# Research Status — 235 Cycles (001–235)
+# Research Status — 236 Cycles (001–236)
 
-## Latest: Cycle 235
+## Latest: Cycle 236
+
+246. **T2: Causal intervention on top bump directions** — INCONCLUSIVE (interesting=true)
+   - For each block, top 5 T1 directions intervened with α∈[-3,-1,0,1,3]·std on held-out 1024 tokens. **Effects are real**: max effect_size = 29.23× random baseline (block 11, dir 0); 18/60 directions cross effect≥3 gate; per-block max effect monotone with depth [5.23, 3.62, 2.34, 2.72, 2.62, 2.20, 3.47, 2.85, 4.20, 5.88, 8.05, **29.23**]. Refute branch ruled out. **BUT T1's wte @ v vocab predictions FAIL to match actual logit shifts**: only 1/60 directions reach jaccard ≥ 0.3. Joint confirm gate (effect≥3 AND jaccard≥0.3) passes 0/12 blocks. This is exactly the "directions cause shifts but don't match T1 predictions" inconclusive case. **T1's wte-column-space decoder is the wrong probe** — the bump directions are causally real but their effect propagates through non-linear downstream paths, not through a simple unembedding readout. Cycle 218's "Δ̃ writes into c_fc reading subspace" story survives only at the weak (correlational) level. T3 (cycle 237) is the next gating test.
+
+## Cycle 235
 
 245. **T1: Centred Δ̃ feature SVD with concrete example extraction** — CONFIRMED (G3 flagged)
    - For each of 12 blocks, computed Δ̃_l per token on wikitext-2 train (200 seqs × 512 tokens = ~100K tokens), SVD → top 32 right singular vectors, decoded each direction via wte.weight @ v for vocab projection + top-100 corpus token contexts. Per-block coherent counts: [27,23,24,27,21,19,19,15,17,15,12,10] — **all 12 blocks ≥10, satisfying ≥5 threshold in ≥6 blocks**. Audit PASS but G3 flagged: dominant label is `repeated` (top-100 concentrated on a single high-frequency token id). Strict non-`repeated` coherent count is only 5/12 blocks — would fail ≥6 threshold on stricter reading. Block 11 SV0 (σ=2556, var=24%) looks like unigram-axis reboot (boost = `[, the, -, and, ...]`). T2 (item 246) is the gating causal test. Artifacts: cycle_235_t1_features.pt + decoded.json + examples.md + summary.md per the notebook loader contract.
