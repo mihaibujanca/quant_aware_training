@@ -1,0 +1,86 @@
+cycle=263
+item=273
+verdict=REFUTED
+commit=62ff08e49340de9e4b6da8306eb476236e3a6518
+trainable_params=0
+
+# Config
+model=gpt2
+n_calib_seqs_for_loader=200
+seq_len=128
+n_tokens=64
+n_directions=32
+eps_fracs=[0.01,0.03,0.10,0.30]
+seed=42
+device_model=mps
+device_linalg=cpu
+n_blocks=12
+n_per_l_sigma_scale=2048
+n_total_probes=196608
+
+# Quantities
+metric=pullback_G_eq_U_T_U
+defect_formula=eps(x,h)=||f(x+h)-f(x)-J(x)h||_G/||h||^2_G
+J_formula=W_fc@diag(sigma_prime(z))@W_proj
+b_leak_recipe=cycle_258_E_x[gelu(z)-relu(z)]_per_block_per_channel
+
+# Per-block median ratio epsilon_G/epsilon_R at smallest scale (eps=0.01·||x||_G)
+median_GoverR_block_0=0.838
+median_GoverR_block_1=0.748
+median_GoverR_block_2=0.911
+median_GoverR_block_3=0.971
+median_GoverR_block_4=1.006
+median_GoverR_block_5=1.036
+median_GoverR_block_6=1.055
+median_GoverR_block_7=1.082
+median_GoverR_block_8=1.077
+median_GoverR_block_9=1.115
+median_GoverR_block_10=1.120
+median_GoverR_block_11=1.127
+
+# Per-block p99 ratio epsilon_R/epsilon_G at smallest scale
+p99_RoverG_block_0=1.202
+p99_RoverG_block_1=1.218
+p99_RoverG_block_2=1.101
+p99_RoverG_block_3=1.019
+p99_RoverG_block_4=1.016
+p99_RoverG_block_5=0.993
+p99_RoverG_block_6=1.025
+p99_RoverG_block_7=1.021
+p99_RoverG_block_8=0.968
+p99_RoverG_block_9=0.987
+p99_RoverG_block_10=0.987
+p99_RoverG_block_11=0.964
+
+# Verdict logic
+clause_a_med_ratio_GR_ge_5_in_blocks_0_4=0_of_5_FAIL
+clause_b_p99_ratio_RG_ge_1_in_blocks_0_4=5_of_5_PASS
+confirmed_iff=clause_a_AND_clause_b
+confirmed=False
+refuted_iff=all_12_blocks_med_ratio_in_0p5_2_AND_p99_ratio_in_0p5_2
+all_blocks_med_ratio_in_0p5_2=True
+all_blocks_p99_ratio_in_0p5_2=True
+refuted=True
+verdict=REFUTED
+
+# Sanity
+median_ratio_range=[0.748,1.127]
+p99_RoverG_range=[0.964,1.218]
+max_med_ratio_in_early_band=1.006_at_block_4
+five_threshold_for_clause_a=5.000
+factor_below_threshold=4.97x
+sub_quadratic_scaling_observed=True_residual_grows_~linear_in_h_not_quadratic
+both_sigmas_share_sub_quadratic_slope=True
+block_11_dominates_magnitude_~10x_blocks_1_9=True
+block_0_elevated=True
+
+# Files
+plan=autoresearch/plans/cycle_263.md
+brief=autoresearch/briefs/cycle_263.md
+script=experiments/local_linearity_defect_cycle263.py
+run_log=autoresearch/logs/cycle_263_run.log
+result_json=autoresearch/results/cycle_263_local_linearity_defect.json
+summary_md=autoresearch/results/cycle_263_summary.md
+manifest=autoresearch/results/cycle_263_manifest.txt
+
+artifacts=experiments/local_linearity_defect_cycle263.py,autoresearch/plans/cycle_263.md,autoresearch/briefs/cycle_263.md,autoresearch/logs/cycle_263_run.log,autoresearch/results/cycle_263_local_linearity_defect.json,autoresearch/results/cycle_263_summary.md,autoresearch/results/cycle_263_manifest.txt
