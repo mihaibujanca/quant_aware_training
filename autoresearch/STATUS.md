@@ -1,6 +1,11 @@
-# Research Status — 243 Cycles (001–243)
+# Research Status — 244 Cycles (001–244)
 
-## Latest: Cycle 243
+## Latest: Cycle 244
+
+254. **Sliding 3-block sweep** — INCONCLUSIVE (interesting=true)
+   - K=512 joint Adam W_out+b_out, 3 seeds: **[3,4,5]=49.477±0.052, [5,6,7]=50.899±0.047, [6,7,8]=52.038±0.021**. INCONCLUSIVE per criterion (no window ≤48.5; [3,4,5]/[5,6,7] below 52). **Combined with cycle 242 anchors, the curve is monotone**: [1,2,3]→47.135 → [3,4,5]→49.477 → [5,6,7]→50.899 → [6,7,8]→52.038 → [8,9,10]→55.192. Each step ~1-2 PPL except the final +3.15 jump. Init PPL also monotone (penalty is in topk projection pre-Adam, init→best drop ~16 PPL constant). **Cycle 243's "mid-block heaviest" (block 4/5 dominant) does NOT reproduce as a fresh-fit dip** — fresh-fit cost tracks the DEEPEST block in the window. The cycle 243 mid-block finding was a JOINT-FIT restoration-ranking artifact, not a structural property of the FFN.
+
+## Cycle 243
 
 253. **6-block per-block PPL attribution** — CONFIRMED (interesting=true)
    - Refit cycle 221 at seed 42 (init 86.686 → best 59.391 at step 1300, exact reproduction). Phase 1: per-block restoration scan from joint best state. ppl_if_X_restored sorted desc: **block 5 (Δ+5.10), 4 (+4.90), 7 (+4.13), 8 (+3.78), 2 (+3.53), 1 (+2.69)**. 5/6 blocks ≤56.0 confirmed threshold. **Tension with cycle 242**: cycle 242 found late blocks dominate at FRESH FIT, but cycle 243 finds **mid blocks (4, 5) contribute more than late blocks (7, 8)** at the per-block-restoration level in a jointly-fit cascade. Reconciliation: the [8,9,10] late penalty in cycle 242 is likely an INTERACTION between late blocks, not a marginal single-block effect. **Calib residual MSE does NOT rank ΔPPL** (block 8 max MSE=0.928 but only rank-4 ΔPPL) — residual is not a proxy for cascade contribution. Non-additivity: sum(Δ)=24.14 vs actual gap=5.50 (4.4×) → no single-block remediation; the 6-block ceiling is a true joint cascade phenomenon.
