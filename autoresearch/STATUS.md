@@ -1,6 +1,11 @@
-# Research Status — 234 Cycles (001–234)
+# Research Status — 235 Cycles (001–235)
 
-## Latest: Cycle 234
+## Latest: Cycle 235
+
+245. **T1: Centred Δ̃ feature SVD with concrete example extraction** — CONFIRMED (G3 flagged)
+   - For each of 12 blocks, computed Δ̃_l per token on wikitext-2 train (200 seqs × 512 tokens = ~100K tokens), SVD → top 32 right singular vectors, decoded each direction via wte.weight @ v for vocab projection + top-100 corpus token contexts. Per-block coherent counts: [27,23,24,27,21,19,19,15,17,15,12,10] — **all 12 blocks ≥10, satisfying ≥5 threshold in ≥6 blocks**. Audit PASS but G3 flagged: dominant label is `repeated` (top-100 concentrated on a single high-frequency token id). Strict non-`repeated` coherent count is only 5/12 blocks — would fail ≥6 threshold on stricter reading. Block 11 SV0 (σ=2556, var=24%) looks like unigram-axis reboot (boost = `[, the, -, and, ...]`). T2 (item 246) is the gating causal test. Artifacts: cycle_235_t1_features.pt + decoded.json + examples.md + summary.md per the notebook loader contract.
+
+## Cycle 234
 
 244. **gelu_noneg + first-moment + LoRA r=8 W_out** — INCONCLUSIVE (audit-corrected from CONFIRMED, G1+G6 data leakage)
    - Cycle 228 base (relu(gelu(z)) + μ_l) + LoRA r=8 on c_proj per block (368,640 trainable params), Adam 2000 steps, seed 42. Final PPL = **32.411** (cycle 228 baseline 61.664; -29.25 PPL gain). LoRA-zero init reproduced cycle 228 exactly. **Audit downgrade**: cycle 234 trains LoRA on the SAME 200 wikitext-2 val sequences it then evals on (calib==eval). 368K params >> ~25K eval tokens → in-distribution overfitting, not held-out generalization. The 32.411 below-float PPL is contaminated. Cycles 220/228 used calib==eval safely (no optimizer); cycle 234 inherits that scaffolding and adds Adam, turning eval into training. Recommended: rerun with disjoint splits like cycles 206/223 (`all_ids[:200]` / `[200:300]`).
