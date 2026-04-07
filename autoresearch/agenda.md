@@ -8,12 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-293. **1-block [2] K sweep — K ∈ {16, 32, 64} — can rank-1 block 2 compress to very small K?**
-   - Context: Cycle 278 shows block 2 is eff_rank=1.05, top-1 energy 99.61% — the most rank-concentrated block in the model. Cycle 276 established the 1-block [1] K sweep: K ∈ {32, 64, 128, 256} all beat float by 4.25-8.51 PPL. Block 2 has never been tested as a compression target. Hypothesis: block 2's extreme rank concentration means K=16 (half cycle 276's smallest tested K) is sufficient — if block 2 is genuinely rank-1, even K=16 should beat float. Compared to cycle 276's [1] K=32=49.649 at 25,344 params, a successful [2] K=16 would yield ~12,672 params as a new lowest-param anchor (dominating cycle 270 block 11 rank-22 at 17.7K/54.47 on BOTH axes).
-   - Setup: New script `experiments/one_block_2_k_sweep_cycle283.py`. Mirror cycle 276 (`experiments/one_block_k_sweep_cycle276.py`) verbatim but with BLOCKS=[2] and K_VALUES=[16, 32, 64]. 3 seeds {42, 137, 2024} per K. 9 fits total. Disjoint N_CALIB=200/N_EVAL=100, SEQ_LEN=128, MPS. ~2.5 min/fit × 9 ≈ 23 min wall.
-   - Verdict thresholds: CONFIRMED iff K=16 best_mean ≤ 52.0 (beats float with extreme compression) OR K=32 best_mean ≤ 50.0 (beats cycle 276 [1] K=32 = 49.65 within 0.5 PPL). REFUTED iff all K ≥ 55.0 (block 2 is NOT a viable single-block target). INCONCLUSIVE otherwise.
-   - Artifacts: experiments/one_block_2_k_sweep_cycle283.py, autoresearch/results/cycle_283_block2_k_sweep.json
-
 ### P2
 
 294. **Hybrid recipe — block 1 rank-2 c_proj + block 11 rank-22 c_proj (both low-rank weight-SVD, no K=512)**
@@ -46,6 +40,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 283
+
+293. **1-block [2] K sweep — K ∈ {16, 32, 64}** *(CONFIRMED — cycle 283)*
+   - **Outcome: CONFIRMED (both clauses)** — K=16 best_mean=**49.462±0.047** (13,056 params, ≤ 52.0 by 2.54 PPL), K=32 best_mean=**47.897±0.066** (25,344 params, ≤ 50.0 by 2.10 PPL), K=64 best_mean=**47.511±0.061** (49,920 params). All 3 K values beat cycle 276 [1] at the same K: K=32 [2] 47.897 vs [1] 49.649 (−1.75 PPL); K=64 [2] 47.511 vs [1] 48.045 (−0.53 PPL). New lowest-param Pareto anchor: **[2] K=16 (13,056 params, 49.46 PPL)** strictly dominates cycle 276 [1] K=32 (25,344, 49.65) on BOTH axes (48% fewer params AND 0.19 PPL better). **Single-block [2] beats cascade [1,2]**: cycle 281 [1,2] K=512=44.339 @ 788K vs [2] K=64=47.511 @ 50K (cycle 281 still wins on PPL by 3.17 but at 16× more params). Block 2 IS a viable standalone compression target. This refines cycle 281's reading: block 2 is not load-bearing when ADDED to block 1, but IS useful on its own at small K. Deltas vs float (53.895): K=16 −4.43, K=32 −6.00, K=64 −6.38. Init PPL deterministic per K across all 3 seeds; all restore asserts PASS; wall 22.6 min. Config: BLOCKS=[2], K∈{16,32,64}, joint Adam W_out+b_out LR=1e-4 4000 steps eval every 100, best-state restore, 3 seeds {42,137,2024}, N_CALIB=200 N_EVAL=100 SEQ_LEN=128 MPS GPT-2 small wikitext-2 val.
+   - Artifacts: `experiments/block2_k_sweep_cycle283.py`, `autoresearch/plans/cycle_283.md`, `autoresearch/briefs/cycle_283.md`, `autoresearch/results/cycle_283_block2_k_sweep.json`, `autoresearch/results/cycle_283_summary.md`, `autoresearch/logs/cycle_283_run.log`, `autoresearch/results/cycle_283_manifest.txt`
+
 
 ### Cycle 282
 
