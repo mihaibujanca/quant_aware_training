@@ -1,6 +1,11 @@
-# Research Status — 295 Cycles (001–295)
+# Research Status — 296 Cycles (001–296)
 
-## Latest: Cycle 295
+## Latest: Cycle 296
+
+306. **LASER recipe on spirals/moons MLP** — INCONCLUSIVE (near miss) / context CONFIRMED
+   - **Spirals**: float held=0.8270; rank-2 retrain 0.8207 (gap +0.63%, 0.13% over the 0.5% CONFIRMED threshold; within 1 std of 3.0%); rank-2 no-retrain 76.94% of float (3.06% under 80% threshold, within 1 std of 8.6%). REFUTED (>5%) NOT triggered. **Moons**: rank-1 retrain 0.9963 ≈ float 0.9967 ("rank-1 might match" CONFIRMED); rank-2 retrain exact tie. Spirals rank-1 fails by 4.4% ("rank-1 fails by ≥3%" holds). **Spirals rank-5 BEATS float by 0.37%** (cycle 280 GPT-2 b1 below-float behavior reproduced). **Recipe replicates in shape**; literal thresholds too tight for held-out N=1000.
+
+## Cycle 295
 
 305. **Spirals/moons MLP eff_rank census** — INCONCLUSIVE (interesting=true)
    - 32×12 MLPs, 3 seeds, ≥95% train acc (spirals 6k-11k epochs, moons 75-100). Spirals post≤3=11/12 ✓, init≥20=0/12 ✗; moons post≤3=12/12 ✓, init≥20=0/12 ✗. Both CONFIRMED clauses needed. **Substantive finding** (more important than verdict): **collapse is input-dimension-induced, NOT training-induced**. With 2D input, random Gaussian + ReLU cannot create new effective dimensions; init eff_rank already collapses to 1.0 by layer 7 for both datasets. **Hanin & Rolnick N^d bound is the right reference for d=2**. Item 305 is the wrong control for cycle 278's question — the 2D testbed has no opportunity to collapse because it STARTS collapsed. Item 307 needs higher-dim input lift.
