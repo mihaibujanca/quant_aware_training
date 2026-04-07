@@ -1,6 +1,11 @@
-# Research Status — 256 Cycles (001–256)
+# Research Status — 257 Cycles (001–257)
 
-## Latest: Cycle 256
+## Latest: Cycle 257
+
+267. **5-block K=64** — CONFIRMED
+   - 5-block [1,2,4,7,8] K=64, 3 seeds. **best_mean=62.181 ± 0.053** ≤ 64 confirmed threshold by 1.82 PPL. Monotone descent through full 4k budget, no plateau-then-climb. Δ vs cycle 245 K=512 (53.826)=+8.36; vs cycle 251 K=128 (59.119)=+3.06; vs float (53.895)=+8.29. **K-curve at 5 blocks** {K=64,128,512} = {62.18, 59.12, 53.83}: per-K-halving cost 3.06 (128→64) < 5.29 (512→128) — concave-up in PPL vs K. Trainable 249,600 (50% of cycle 251 K=128).
+
+## Cycle 256
 
 266. **6-block K=256** — INCONCLUSIVE (interesting=true)
    - 6-block [1,2,4,5,7,8] K=256, 3 seeds. **best_mean=64.181 ± 0.032** ∈ (63, 65) inconclusive. Plateau-then-climb at step 2200-2400. Δ vs cycle 221 K=512 (59.515) = +4.67; Δ vs cycle 231 K=128 (67.562) = -3.38; Δ vs cycle 247 hetero {4,5}=512 (64.453) = -0.27 (statistical tie). **K=256 sits 0.64 PPL above the linear K-midpoint** (63.539) — **K-vs-PPL curve at 6 blocks is slightly concave**. Homogeneous K=256 ties hetero within noise → **at 6 blocks the binding factor is block count, not K-allocation strategy**.
