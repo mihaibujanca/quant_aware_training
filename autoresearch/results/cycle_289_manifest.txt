@@ -1,6 +1,6 @@
 Cycle 289 Manifest — Item 299: Block 10 c_proj rank-5 sub-eff_rank stress test
 
-Commit: <PENDING>
+Commit: 7392cfe
 Branch: geometric_compression
 Verdict: CONFIRMED
 
@@ -110,5 +110,5 @@ autoresearch/logs/experiments.tsv
 item_number: 299
 outcome: CONFIRMED
 key_metric: best_mean=51.4659_pm_0.0089_le_53.0_by_1.534_PPL_block_10_rank_5_c_proj_SUB_EFF_RANK_weight_SVD_retrain_4608_params_r_eff_rank_0.30_FIRST_sub_eff_rank_success
-commit: <PENDING>
-paths: experiments/block10_rank5_cycle289.py,autoresearch/plans/cycle_289.md,autoresearch/briefs/cycle_289.md,autoresearch/results/cycle_289_block10_rank5.json,autoresearch/results/cycle_289_summary.md,autoresearch/logs/cycle_289_run.log,autoresearch/agenda.md
+commit: 7392cfe
+paths: experiments/block10_rank5_cycle289.py,autoresearch/plans/cycle_289.md,autoresearch/briefs/cycle_289.md,autoresearch/results/cycle_289_block10_rank5.json,autoresearch/results/cycle_289_summary.md,autoresearch/logs/cycle_289_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv

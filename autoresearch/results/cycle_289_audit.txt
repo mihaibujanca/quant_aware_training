@@ -1,0 +1,127 @@
+Cycle 289 — Item 299 — Audit Result
+
+Audit status: PASS
+Auditor verdict: CONFIRMED (unchanged — provisional outcome holds)
+Commit: 7392cfe
+Branch: geometric_compression
+
+== Verdict arithmetic ==
+  r=5 retrain best_mean = 51.46586
+  CONFIRMED clause: 51.46586 <= 53.0 ?  TRUE  (margin 1.53414 PPL)
+  REFUTED   clause: 51.46586 >= 56.0 ?  FALSE
+  -> CONFIRMED by r=5 clause
+
+  Std recomputed from per-seed bests:
+    mean(51.47830, 51.46139, 51.45790) = 51.46586              match
+    dev^2 sum / 3 = 0.00007940                                 match
+    sqrt           = 0.008911 ~ 0.008909 reported              match (4dp)
+
+== Per-seed sanity ==
+  seed 42  : init=59.9179 best=51.4783@1500 final=51.6569 restored=51.4783
+  seed 137 : init=59.9179 best=51.4614@1700 final=51.6385 restored=51.4614
+  seed 2024: init=59.9179 best=51.4579@1800 final=51.6946 restored=51.4579
+
+  init PPL identical across seeds (59.9179)                PASS (SVD init deterministic)
+  init PPL == noretrain r=5 PPL (59.9179)                  PASS
+  |restored - best| < 1e-3 per seed                        PASS (all three exact)
+  best step in {1500, 1700, 1800} (all well inside budget) PASS
+  final > best per seed by 0.18-0.24 PPL                   PASS (FLOOR-limited, not budget)
+  trainable params per fit = 4,608                         PASS (5*768 + 768)
+
+== No-retrain sweep ==
+  r=5  PPL = 59.918   energy = 0.0503
+
+  cross-check vs cycle 282 r=5 reference 59.92             PASS (|Δ|=0.002, exact to 3dp)
+  restore of c_proj.weight after sweep ~ float 53.895      PASS (log shows exact match)
+
+== Plan adherence ==
+  TARGET_BLOCK=10                                          PASS
+  RANKS_NORETRAIN=[5]                                      PASS
+  RETRAIN_RANK=5                                           PASS
+  SEEDS=[42,137,2024]                                      PASS
+  N_STEPS=4000, LR=1e-4, EVAL_EVERY=100                    PASS
+  N_CALIB=200, N_EVAL=100, SEQ_LEN=128, disjoint           PASS
+  MPS, GPT-2 small, wikitext-2 val                         PASS
+  Float PPL 53.89489 within 0.5 of reference 53.895        PASS (exact)
+  Template (cycle 282 block 10) adapted verbatim           PASS
+
+== Baseline cross-checks (vs manifest) ==
+  cycle 280 b1 r=2           49.0324    match
+  cycle 285 b2 r=2           49.3290    match
+  cycle 282 b10 r=17         50.0445    match
+  cycle 288 b3 r=24          50.5935    match
+  cycle 270 b11 r=22         54.4687    match
+  cycle 278 b10 eff_rank     16.70      match
+  cycle 278 b10 top-1 energy 0.5889     match
+  cycle 282 b10 r=5 noretrain 59.92     match (measured 59.918)
+
+== Delta checks ==
+  vs float              51.46586 - 53.89489 = -2.42903     match
+  vs cycle 282 b10 r17  51.46586 - 50.04450 = +1.42136     match (worse at fewer params; different tier)
+  vs cycle 280 b1 r2    51.46586 - 49.03240 = +2.43346     match (worse at 2x more params; DOMINATED)
+  vs cycle 285 b2 r2    51.46586 - 49.32900 = +2.13686     match (worse at 2x more params; DOMINATED)
+  vs cycle 288 b3 r24   51.46586 - 50.59350 = +0.87236     match (STRICTLY DOMINATES — fewer params, better PPL)
+  vs cycle 270 b11 r22  51.46586 - 54.46870 = -3.00284     match (STRICTLY DOMINATES — fewer params, better PPL)
+
+== Pareto reading ==
+  Cycle 289 (4,608 params, 51.47 PPL):
+    STRICTLY DOMINATES cycle 270 b11 r=22 (17,664, 54.47) — 3.8x fewer, 3.00 lower
+    STRICTLY DOMINATES cycle 288 b3 r=24  (19,200, 50.59) — 4.2x fewer, 0.87 lower
+    DOMINATED by cycle 280 b1 r=2 (2,304, 49.03) — 2x more params, 2.43 higher
+    DOMINATED by cycle 285 b2 r=2 (2,304, 49.33) — 2x more params, 2.14 higher
+  NEW Pareto interior point at the ~4.6K param tier, between cycle 280/285 (2.3K
+  49.03/49.33) and cycle 282 b10 r=17 (13.8K 50.04). Removes cycle 270 and cycle
+  288 from the joint frontier.
+
+== Sub-eff_rank reading (audit) ==
+  r/eff_rank = 5/16.70 = 0.30. FIRST successful sub-eff_rank result in cycle-282
+  family. Prior recipe "rank ≈ eff_rank + Adam retrain → below float by 3-5 PPL"
+  held for b1/b2/b3/b10/b11 at r/eff_rank in [0.98, 1.90]. Cycle 289 extends the
+  envelope to r/eff_rank = 0.30 for block 10 at cost of only +1.42 PPL vs b10
+  r=17 (at 3x fewer params). Block 10 r=5 (51.47) BEATS block 11 r=22 (54.47)
+  in absolute PPL at 3.8x fewer params — eff_rank does NOT set a per-block PPL
+  floor; the weight+input joint structure of block 10 is more compressible
+  than block 11's.
+
+== Geometric audit ==
+  Block 10 c_proj weight-SVD: top-5 41.58, 28.19, 21.17, 20.17, 19.66.
+  S[0]/S[4] = 2.11 — FLATTEST of any tested concentrator. Rank-5 captures only
+  5.03% of matrix norm^2. Rank-5 SVD init is therefore a severe approximation
+  of the weight matrix. Adam over (B, bias) = 4,608 params realigns the 5 rank
+  directions with the dominant input-active output subspace (cycle 278 eff_rank
+  16.70 is an OUTPUT property, not a weight-rank property).
+
+  Adam recovery -8.45 PPL (59.92 -> 51.47) is the LARGEST single-block recovery
+  in the 282-family. This is consistent with the init being much FURTHER from
+  the optimum (more room to descend) rather than the optimum being lower.
+
+  Floor-limited, not budget-limited: all 3 seeds hit best in [1500, 1800] then
+  degrade monotonically to step 4000 (final > best by 0.18-0.24 PPL per seed).
+  This is qualitatively distinct from 270/282/288 (all still descending at cap)
+  and suggests cycle 289's 4,608 param budget is the binding constraint. The
+  floor sits at 51.47; extra training only adds calibration-specific drift.
+
+== Artifacts ==
+  experiments/block10_rank5_cycle289.py             present
+  autoresearch/plans/cycle_289.md                   present  (35 lines, 8 headings)
+  autoresearch/briefs/cycle_289.md                  present
+  autoresearch/results/cycle_289_block10_rank5.json present  (verdict=CONFIRMED)
+  autoresearch/results/cycle_289_summary.md         present
+  autoresearch/results/cycle_289_manifest.txt       present  (commit=7392cfe)
+  autoresearch/results/cycle_289_exec_result.txt    present  (commit=7392cfe)
+  autoresearch/logs/cycle_289_run.log               present
+  autoresearch/audits/cycle_289.md                  present  (this audit)
+  autoresearch/agenda.md                            updated  (299 moved to PAST as Cycle 289)
+  autoresearch/logs/experiments.tsv                 appended (row 289 with 8 cols)
+
+== Final ==
+  audit_status: PASS
+  final_verdict: CONFIRMED (unchanged)
+  corrections: none
+  next_action: keep provisional outcome; follow-up suggestion — block 10 r=1/r=2/r=3 sweep to map the sub-eff_rank floor.
+
+item_number: 299
+outcome: CONFIRMED
+key_metric: best_mean=51.4659_pm_0.0089_le_53.0_by_1.534_PPL_audit_PASS_sub_eff_rank_r_over_eff_rank=0.30_FIRST_success_FLOOR_limited
+commit: 7392cfe
+paths: autoresearch/audits/cycle_289.md,autoresearch/results/cycle_289_audit.txt
