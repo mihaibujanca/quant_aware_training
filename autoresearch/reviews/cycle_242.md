@@ -1,0 +1,1 @@
+APPROVED. Clean depth-vs-count ablation with matched block count (3), disjoint calib/eval, 3 seeds, tight verdict thresholds (±0.8/≥2.0). [8,9,10] avoids block-11 rank-expansion concern. Baseline 46.556 ± 0.028 from cycle 210 is stable enough to compare without re-running.

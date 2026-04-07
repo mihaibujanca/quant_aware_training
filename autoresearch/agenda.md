@@ -17,14 +17,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-252. **Early-only vs late-only 3-block compression — disentangle cascade depth from block count**
-   - Cycle 221 (6 blocks [1,2,4,5,7,8]) → 59.515. Cycle 210 (3 blocks [1,4,7]) → 46.556. The ~13 PPL gap could be driven by (a) more blocks compressed, (b) compressing through the full depth of the model, or (c) compressing consecutive-ish blocks that interact. Test (a) vs (b) directly: run joint Adam W_out+b_out K=512, 3 seeds {42, 137, 2024}, disjoint calib/eval (`all_ids[:200]`/`[200:300]`, SEQ_LEN=128, seed 42), LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, on TWO configurations with identical block COUNT but different DEPTH coverage: (i) EARLY-only BLOCKS=[1,2,3] — 3 consecutive early blocks, (ii) LATE-only BLOCKS=[9,10,11] — but block 11 is rank-expansion territory (see `notes about block 0/11 in cycles 216/218`), use BLOCKS=[8,9,10] instead to stay away from the LM head. Compare both against cycle 210 BLOCKS=[1,4,7] baseline 46.556 ± 0.028. Expected: if depth coverage dominates, [1,4,7] >> [1,2,3] and [8,9,10] (spread cheaper than contiguous); if block count dominates, all three land near 46-48; if late blocks are structurally harder, [8,9,10] ≫ [1,2,3].
-   - Type: empirical / block selection
-   - Confirmed if: one of the two new 3-block configs is ≥ 2.0 PPL worse than cycle 210's [1,4,7] at matched budget (depth placement matters, not just count).
-   - Refuted if: both new configs land within ±0.8 PPL of 46.556 (block position is roughly irrelevant within blocks 1-10 → block COUNT is the sole driver of cascade penalty).
-   - Inconclusive otherwise.
-   - Artifacts: `experiments/early_vs_late_3block_cycle<N>.py`, `autoresearch/results/cycle_<N>_early_vs_late.json`, `autoresearch/results/cycle_<N>_summary.md`
-   - Depends on: none
+*(empty — item 252 closed CONFIRMED in cycle 242)*
 
 ### P2
 
@@ -62,6 +55,15 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 242
+
+252. **Early-only vs late-only 3-block compression — disentangle cascade depth from block count** *(CONFIRMED — cycle 242)*
+   - **Outcome: CONFIRMED** — Two 3-block configs tested at identical block COUNT vs cycle 210 BLOCKS=[1,4,7] baseline 46.556 ± 0.028. Joint Adam W_out+b_out, K=512, LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024}, disjoint calib=all_ids[:200] / eval=all_ids[200:300] SEQ_LEN=128. Trainable 1,181,952 params per config. Float held-out PPL=53.895.
+     - **CONFIG A [1,2,3] (early)**: init=61.695 (zero seed variance) → per-seed best 47.205 / 47.003 / 47.198 at steps 2500 / 2400 / 2400 → **mean 47.135 ± 0.093, Δ=+0.579** (within ±0.8 band).
+     - **CONFIG B [8,9,10] (late)**: init=71.349 (zero seed variance) → per-seed best 55.173 / 55.248 / 55.155 all at step **1400** → **mean 55.192 ± 0.040, Δ=+8.636** (far exceeds 2.0 threshold).
+   - **CONFIRMED** at max(Δ_A, Δ_B) = +8.636 ≥ 2.0. Depth PLACEMENT matters, not just block count. Late-block compression is structurally harder: init PPL +9.65 above early (71.35 vs 61.70), trained floor +8.05 above early (55.19 vs 47.14), and the cascade barrier persists despite matched block count, matched topk+lstsq recipe, matched trainable budget, and matched optimisation (same optimiser, LR, step count, best-state restore, disjoint split). The three [8,9,10] seeds hit best at step 1400 with tight std 0.040 — convergence is genuine and early, not budget-bounded. The three [1,2,3] seeds converge later (step 2400-2500) and the full-float held-out eval baseline 53.895 is *between* the two configs, i.e. the early-only compressed cascade beats full fp32 held-out by 6.7 PPL while the late-only compressed cascade lands 1.3 PPL *above* full fp32. Together with cycle 233 [3..8] 6-block 67.826, this rules out the "block count is the sole driver" story from cycle 241's follow-up. The new null hypothesis: the cascade floor is dominated by late-block compression cost, not block-count arithmetic. Immediate follow-ups: (a) single-block ablations at block 8, 9, 10 to localise which of the three drives most of the +8.64; (b) [8,9,10] K sweep to check whether the late-block penalty is K-sensitive like the 6-block cycle 240 result; (c) [7,8,9] to see whether block 7 participates in the barrier or 10 is the outlier.
+   - Artifacts: `experiments/early_vs_late_3block_cycle242.py`, `autoresearch/results/cycle_242_early_vs_late.json`, `autoresearch/results/cycle_242_summary.md`
 
 ### Cycle 241
 

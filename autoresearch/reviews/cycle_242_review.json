@@ -1,0 +1,1 @@
+{"cycle": 242, "item": 252, "decision": "approved", "notes": "Matched block-count (3) ablation isolates depth-coverage from count; [8,9,10] avoids block-11; 3 seeds, disjoint calib/eval, tight ±0.8/≥2.0 verdict thresholds; reuses cycle 210 baseline 46.556±0.028."}
