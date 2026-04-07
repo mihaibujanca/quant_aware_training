@@ -15,26 +15,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 - All Δ̃_l computed as `GELU_FFN_l(x) − ReLU_FFN_l(x) − E_calib[GELU_FFN_l − ReLU_FFN_l]` where the centring mean is computed on the calibration corpus only and applied to held-out evaluation.
 - All artifacts must be loadable by `notebooks/bump_features_explore.py` without modification — the loader expects exact filenames listed under each item's `Artifacts:` block.
 
-248. **T4: Activation patching across token pairs (bump-only)**
-   - On 100 token pairs (A, B) sampled from held-out wikitext-2 such that: (1) A and B occur at the same sequence position in distinct sequences, (2) the model's top-1 prediction for A ≠ top-1 for B, (3) both predictions have logit margin >2 over the runner-up. For each pair, at each block l ∈ {1,3,5,7,9}:
-     - Compute residual stream after block l for both A and B → x_l(A), x_l(B)
-     - Compute centred bump residual: Δ̃_l(A) = (GELU_FFN_l(A) − ReLU_FFN_l(A)) − μ_l, similarly for B
-     - **Bump-only patch**: x_l_patched = x_l(A) − Δ̃_l(A) + Δ̃_l(B); continue forward
-     - **Full residual patch**: x_l_patched = x_l(B); continue forward
-     - Measure: original_top1_logit, B_top1_logit, patched_top1_logit at the final position
-     - Bump attribution ratio = (patched_logit − original_logit) / (full_patch_logit − original_logit), evaluated on B's top-1 token
-     - Save 20 concrete example records per block
-   - Artifacts (REQUIRED):
-     - `experiments/bump_t4_patching_cycle<N>.py`
-     - `autoresearch/results/cycle_<N>_t4_patching.json` — per-pair, per-block results with `bump_attribution`, `full_attribution`, `bump_logit_delta`, `full_logit_delta`
-     - `autoresearch/results/cycle_<N>_t4_examples.md` — concrete examples ("In context X (last 50 chars), A=… predicts P, B=… predicts Q. After patching only the bump from B into A at block l: A predicts P with X% reduced confidence on P and +Y logit on Q. Bump attribution: Z%")
-     - `autoresearch/results/cycle_<N>_t4_summary.md` — verdict + per-block mean bump attribution
-   - Type: interpretability / causal attribution
-   - Confirmed if: mean bump-attribution ratio across 100 pairs > 0.15 in ≥3 of the 5 tested blocks (the bump alone explains >15% of the inter-token prediction difference at those blocks).
-   - Refuted if: bump-attribution < 0.05 in ALL 5 blocks (the bump is essentially independent of token-specific prediction shifts).
-   - Inconclusive otherwise.
-   - Depends on: 245
-
 249. **Cycle 234 rerun with disjoint calib/eval split — is the LoRA residual real?**
    - Re-execute `experiments/gelu_noneg_lora_cycle234.py` with the cycle 206/210/223/225/230 safe split. Replace the `eval_ids = all_ids[:200]` bind with `calib_ids = all_ids[:200]` and `eval_ids = all_ids[200:300]` (extend the wikitext-2 val loader so `all_ids` has ≥300 sequences at SEQ_LEN=128, seed 42). μ_l, LoRA init, and the Adam training loop (LR=1e-4, 2000 steps, EVAL_EVERY=200, best-state restore) run exclusively against `calib_ids`; every PPL print, the best-state selection metric, and the final `final_ppl` MUST be computed on `eval_ids`. Keep LoRA config identical to cycle 234: rank r=8, all 12 c_proj blocks, A ∈ R^(3072,8) init N(0, 0.01), B ∈ R^(8,768) init zero, 368,640 trainable params. Report init PPL, best PPL, best step, final PPL, 3 seeds (42/137/2024) if budget allows else single seed with justification. Sanity: LoRA-zero init on eval must reproduce cycle 228 μ-only eval PPL (held-out equivalent ≈ 61.66 or nearby; if it drifts, the splits are wrong). The audit in `autoresearch/audits/cycle_234.md` is the canonical reference for why cycle 234 was downgraded — this item closes that loop.
    - Type: empirical / LoRA residual, methodology fix
@@ -109,6 +89,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 238
+
+248. **T4: Activation patching across token pairs (bump-only)** *(REFUTED — cycle 238)*
+   - **Outcome: REFUTED** — held-out wikitext-2 val 200×128, 100 (A, B, p) pairs sampled with positions p ∈ {32, 64, 96} and logit margin >2 over runner-up, top1(A, p) ≠ top1(B, p), seed 42. For each pair × block l ∈ {1, 3, 5, 7, 9}: computed Δ̃_l = (GELU − ReLU)(x @ W_fc + b_fc) @ W_proj − μ_l at position p for A and B (μ_l from cycle 235 T1 features), cached x_l from a plain forward pass via a forward hook on transformer.h[l]. Bump-only patch installed forward_pre_hook on h[l+1] that overwrites args[0][0, p, :] ← x_l(A) − Δ̃(A) + Δ̃(B); full-residual patch overwrites with x_l(B). Compared to clean logits cached from a baseline forward pass. Sanity clean: identity patch (v=x_l(A) no-swap) reproduces clean logits max |Δ|=0.00e+00. Per-block bump_attribution (n=100): block 1 mean=0.2121 median=0.0083 std=1.44 (frac>0.15=0.15, frac_full_positive=42/100); block 3 mean=0.1057 median=0.0117 std=0.90 (frac>0.15=0.15, n_full_pos=54); block 5 mean=0.0348 median=-0.0093 std=0.70 (n_full_pos=53); block 7 mean=0.2132 median=-0.0038 std=2.31 (n_full_pos=57); block 9 mean=2.7904 median=0.0167 std=27.15 (n_full_pos=64). **Mean and median disagree dramatically** at all 5 blocks — block 9 is the clearest case: mean 2.79 vs median 0.017 with std 27.15. Per the design review note, preferred median over mean (unbounded ratio tails inflate mean); stat_used=median. n_blocks_mean_above_0.15 = 3/5 (blocks 1, 7, 9); n_blocks_median_above_0.15 = 0/5. Median in all 5 blocks is < 0.02 (≪ 0.05 REFUTED gate), so **verdict REFUTED**. Additional caveat: the full-residual patch makes B's top1 logit go UP in only ~42-64% of pairs per block (the denominator of bump_attribution is not consistently positive), meaning the "full patch cleanly shifts A's prediction toward B's token" assumption the ratio relies on is not robust — half the pairs have denominators flipping sign, which is what inflates the mean tails in the first place. At the per-prediction / per-token level the centred bump Δ̃_l captures ~none of the inter-token logit shift on B's top1, despite cycle 237's strong ablation-PPL result showing the top-10 bump subspace is aggregate-critical. The two results are consistent under a "Δ̃ is aggregate compression-critical but not token-specific" story: the bump subspace carries broad LM signal whose removal ruins generation, but swapping Δ̃ between two token contexts does not transfer token-specific prediction signal at the ≥5% level.
+   - Artifacts: `experiments/bump_t4_patching_cycle238.py`, `autoresearch/results/cycle_238_t4_patching.json`, `autoresearch/results/cycle_238_t4_examples.md`, `autoresearch/results/cycle_238_t4_summary.md`
 
 ### Cycle 237
 
