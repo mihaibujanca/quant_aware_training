@@ -6,12 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-296. **1-block [2] K=512 — does block 2 alone at maximum K beat cycle 271 [1] K=512 (43.82) on the per-block axis?**
-   - Context: Cycle 271 established the [1] K=512 1-block recipe at **43.82 PPL / 393,984 params** as the best 1-block K=512 result (and current PPL Pareto winner). Cycle 271 also tested [4] K=512 (44.63) and [7] K=512 (45.37) — block 1 wins by 0.81 / 1.55 PPL. Block 2 has never been tested at K=512. Cycle 281 showed [1,2] K=512 cascade hits 44.34 (dominated by [1] alone), but that does NOT tell us how [2] alone behaves. Cycle 283's [2] K-sweep at K∈{16,32,64} showed [2] BEATS [1] at every matched K (K=64: [2]=47.51 vs [1]=48.05; K=32: [2]=47.90 vs [1]=49.65). Hypothesis: extrapolating cycle 283's per-K [2]-beats-[1] trend, [2] K=512 should land below cycle 271's 43.82 — potentially the first sub-43 1-block K=512 measurement and a new dominant Pareto winner on the PPL axis.
-   - Setup: New script `experiments/one_block_2_k512_cycle286.py`. Mirror cycle 271 (`experiments/one_block_k512_sweep_cycle271.py`) verbatim but with BLOCKS=[2] only, K=512, W_out+b_out trainable (cycle 271 form). Joint Adam LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, best-state restore. 3 seeds {42, 137, 2024}. Disjoint N_CALIB=200/N_EVAL=100, SEQ_LEN=128, MPS. ~7 min wall (1 subset × 3 seeds, matches cycle 281's [1,2] timing).
-   - Verdict thresholds: CONFIRMED iff best_mean ≤ 43.5 (beats cycle 271 [1] K=512=43.82 by ≥0.32 PPL — establishes block 2 as the new 1-block PPL winner). REFUTED iff best_mean ≥ 44.5 (block 2 K=512 does NOT beat block 1, contradicting cycle 283's per-K [2]-beats-[1] trend). INCONCLUSIVE otherwise.
-   - Artifacts: experiments/one_block_2_k512_cycle286.py, autoresearch/results/cycle_286_block2_k512.json
-
 297. **Cycle 271 [1] K=512 extended budget — 8000 steps — can Adam push the cascade floor below 43.82?**
    - Context: Cycle 271 measured [1] K=512 best_mean=43.8205 ± 0.0234 at N_STEPS=4000. Per-seed: 42→43.8074@3700, 137→43.7873@3500, 2024→43.8669@3800 — ALL best at step ≥3500, still descending at the budget cap. The cascade extension family (cycles 254/269/274) shows extending budget is sometimes worth several PPL: cycle 269 K=1 6-block 4k→16k bought −5.27 PPL; cycle 274 K=64 5-block 4k→8k bought −0.80 PPL; cycle 254 K=128 5-block 4k→8k bought only −0.10 PPL (plateau). [1] K=512 1-block has the FEWEST trainable params of any cascade tested at K=512 (394K) → most Adam slack per param → most likely to benefit from longer training. Hypothesis: 8000 steps drops cycle 271 [1] K=512 below 43.0 — establishes a new dominant PPL Pareto anchor.
    - Setup: New script `experiments/one_block_k512_extended_cycle287.py`. Mirror cycle 271 verbatim with BLOCKS=[1], K=512, but N_STEPS=8000 (2× extension). 3 seeds {42, 137, 2024}, joint Adam LR=1e-4, EVAL_EVERY=100, best-state restore. Disjoint N_CALIB=200/N_EVAL=100, SEQ_LEN=128, MPS. ~14 min wall (2× cycle 271's 7 min).
@@ -57,6 +51,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 286
+
+296. **1-block [2] K=512** *(INCONCLUSIVE — cycle 286)*
+   - **Outcome: INCONCLUSIVE** — best_mean=**43.5627±0.0258** at 393,984 trainable params, lands in dead zone (43.5, 44.5). Fails CONFIRMED clause (≤43.5) by 0.063 PPL; fails REFUTED clause (≥44.5) by 0.937 PPL. **NEW PPL PARETO WINNER on the 393,984-param tier**: cycle 286 [2] K=512 (43.5627) STRICTLY DOMINATES cycle 271 [1] K=512 (43.821) on PPL at SAME param count by 0.258 PPL — replaces cycle 271 [1] as the best 1-block K=512 result. **Per-K [2]-beats-[1] trend extrapolates** but margin shrinks with K: K=32 -1.75, K=64 -0.53, K=512 -0.258 — channel-K capacity surpasses block 2's input concentration as K grows. **All 3 seeds best at step 4000 — budget-bounded, still descending** (init PPL 55.4612 deterministic across seeds; restore asserts PASS; trainable=393,984 asserted). Sub-43 hypothesis NOT achieved; agenda's CONFIRMED threshold (43.5) was 0.5 above sub-43 and cycle 286 lands 0.063 above the line. **Geometric reading**: block 2 c_proj output eff_rank=1.05 (cycle 278) is INPUT-driven (joint of weight × input distribution), not a weight-rank property. Channel-K with topk EXPLOITS the 1-dimensional data-active subspace; weight-SVD does not (cf. cycle 285 where block 2 rank-2 is dominated by block 1 rank-2). The right operator depends on whether structure lives in WEIGHT or INPUT — for block 2 it's the input. Wall ~7.8 min. Config: SUBSETS=[[2]], K=512, W_out+b_out trainable, joint Adam LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024}, disjoint N_CALIB=200/N_EVAL=100, SEQ_LEN=128, MPS, GPT-2 small, wikitext-2 val.
+   - Artifacts: `experiments/block2_k512_cycle286.py`, `autoresearch/plans/cycle_286.md`, `autoresearch/briefs/cycle_286.md`, `autoresearch/results/cycle_286_block2_k512.json`, `autoresearch/results/cycle_286_summary.md`, `autoresearch/logs/cycle_286_run.log`, `autoresearch/results/cycle_286_manifest.txt`
+
 
 ### Cycle 285
 

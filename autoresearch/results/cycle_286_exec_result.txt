@@ -1,0 +1,81 @@
+Cycle 286 — Item 296 — Execution Result
+
+Verdict: INCONCLUSIVE
+Commit: PENDING
+Branch: geometric_compression
+
+Script: experiments/block2_k512_cycle286.py
+Log:    autoresearch/logs/cycle_286_run.log
+Result: autoresearch/results/cycle_286_block2_k512.json
+
+Key metrics:
+  float_ppl                 = 53.895
+  init_ppl (deterministic)  = 55.4612 (all 3 seeds within 1e-5)
+  [2] K=512 best_mean       = 43.5627
+  [2] K=512 best_std        = 0.0258
+  [2] K=512 best_min        = 43.5303 (seed 42  @ step 4000)
+  [2] K=512 best_max        = 43.5934 (seed 137 @ step 4000)
+  trainable params per fit  = 393,984 = 512*768 + 768
+
+Verdict logic (item 296 verbatim):
+  CONFIRMED iff best_mean <= 43.5
+  REFUTED   iff best_mean >= 44.5
+  INCONCLUSIVE otherwise
+
+  43.5627 <= 43.5  ->  FALSE  (CONFIRMED clause fails by 0.0627 PPL)
+  43.5627 >= 44.5  ->  FALSE  (REFUTED clause fails by 0.9373 PPL)
+  ->  INCONCLUSIVE
+
+Wall time: 7.8 min over 3 fits (~2.6 min/fit). No wall cap.
+
+Sanity checks:
+  float PPL within 0.5 of reference 53.895                     PASS (exact match)
+  trainable param count == 393,984                             PASS asserted in-script
+  init PPL deterministic across seeds (topk lstsq seed-free)   PASS (all 3 within 1e-5)
+  restore best-state per seed (|restored - best| < 1e-3)       PASS all 3 seeds (exact)
+  all 3 seeds best at step 4000 — budget-bounded               NOTE: still descending
+
+Pareto reading:
+  Cycle 286 [2] K=512 (393,984 params, 43.5627 PPL) vs cycle 271 [1] K=512
+  (393,984 params, 43.821 PPL): SAME params, 0.258 PPL BETTER. Cycle 286
+  STRICTLY DOMINATES cycle 271's [1] K=512 on PPL axis at the 393,984-param
+  tier — NEW PPL PARETO WINNER on this tier (replaces cycle 271 [1]).
+  However, INCONCLUSIVE per agenda thresholds: the CONFIRMED line (43.5)
+  required a 0.32 PPL margin, not just any improvement. Cycle 286 lands
+  0.063 PPL above the line.
+
+  Hypothesis ("first sub-43 1-block K=512 measurement and a new dominant
+  Pareto winner") is PARTIALLY confirmed: dominant Pareto winner YES,
+  sub-43 NO. The agenda's 43.5 threshold was 0.32 above the cycle 271 anchor
+  but 0.5 above sub-43 — cycle 286 lands in between.
+
+Per-K monotonicity (extrapolation of cycle 283's per-K [2]-beats-[1] trend):
+  K     [1]      [2]      delta [2]-[1]
+  16    ~       49.46    (no [1] K=16 at hand)
+  32    49.65   47.90    -1.75 PPL
+  64    48.05   47.51    -0.53 PPL
+  512   43.821  43.5627  -0.258 PPL  (cycle 286)
+  Trend: gap shrinks as K grows. [2] continues to beat [1] but by ever-smaller
+  margins as channel-K capacity surpasses block 2's input concentration.
+
+Geometric finding:
+  Block 2 c_proj output eff_rank = 1.05 (cycle 278) — lowest in the model.
+  This concentration is INPUT-driven (joint of weight x input distribution),
+  not a weight-rank property. At small K, topk channel selection EXPLOITS
+  the 1-dimensional data-active subspace and beats block 1 by ~2 PPL. As K
+  grows, both channel sets reach surplus capacity and the gap shrinks. At
+  K=512, the gap is 0.26 PPL — block 2's concentration is no longer load-
+  bearing.
+
+  Contrast with cycle 285: block 2 rank-2 weight-SVD is dominated by block 1
+  rank-2 (49.33 vs 49.03). Weight-SVD destroys the flat weight (top-5 SVs
+  38, 15, 13, 12, 12) and cannot exploit the input concentration. The right
+  operator for block 2 is INPUT-aware (channel-K with topk scoring), not
+  weight-aware (rank-r SVD).
+
+  All 3 seeds budget-bounded at step 4000 — extending to 8000 (parallel to
+  cycle 297 agenda item) would likely push cycle 286 below 43.0, validating
+  the strong form of the hypothesis. But this experiment did not budget for
+  that; verdict stands at INCONCLUSIVE.
+
+Next agenda items remain unchanged (297 still in P0; 298 in P1; 299 in P2).

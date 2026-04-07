@@ -1,0 +1,104 @@
+Cycle 286 Manifest — Item 296: 1-block [2] K=512
+
+Commit: PENDING
+Branch: geometric_compression
+Verdict: INCONCLUSIVE
+
+== Verdict logic (item 296 verbatim) ==
+CONFIRMED iff best_mean <= 43.5
+REFUTED   iff best_mean >= 44.5
+INCONCLUSIVE otherwise
+
+  best_mean = 43.56269 in dead zone (43.5, 44.5)
+  43.56269 <= 43.5  -> FALSE  (CONFIRMED clause fails by 0.06269 PPL)
+  43.56269 >= 44.5  -> FALSE  (REFUTED clause fails by 0.93731 PPL)
+  -> INCONCLUSIVE
+
+== Per-seed [2] K=512 (n=3 seeds {42, 137, 2024}, population std) ==
+init_ppl_mean   = 55.46119  (all 3 seeds within 1e-5: 55.46118 — deterministic topk lstsq init)
+best_mean       = 43.56269 +/- 0.02579
+best_min        = 43.53027  (seed 42 @4000)
+best_max        = 43.59336  (seed 137 @4000)
+final_at_4000_mean = 43.56269  (== best — all seeds best at terminal step)
+
+  seed 42:   init=55.4612  best=43.5303 @step 4000  final@4000=43.5303  restored=43.5303
+  seed 137:  init=55.4612  best=43.5934 @step 4000  final@4000=43.5934  restored=43.5934
+  seed 2024: init=55.4612  best=43.5644 @step 4000  final@4000=43.5644  restored=43.5644
+
+ALL 3 fits hit best at step 4000 — budget-bounded, still descending.
+Restore asserts pass for all 3 fits (|restored - best| < 1e-3, all exact).
+Init PPL deterministic across seeds (topk lstsq is seed-free).
+Float PPL measured in-run: 53.89489152418256 (exact match to reference 53.895).
+Trainable params per fit: 393,984 = 512*768 (W_out) + 768 (b_out) asserted.
+Wall time: 7.8 min over 1 subset x 3 seeds = 3 fits.
+
+== Baselines ==
+Float baseline ref               = 53.89500
+cycle 271 [1] K=512              = 43.82100  (393,984 params)  -- SAME param count
+cycle 271 [4] K=512              = 44.63000
+cycle 271 [7] K=512              = 45.37000
+cycle 283 [2] K=64               = 47.51148  ( 49,920 params)
+cycle 283 [2] K=32               = 47.89700  ( 25,344 params)
+cycle 283 [2] K=16               = 49.46210  ( 13,056 params)
+
+== Deltas ==
+cycle 286 [2] K=512 best_mean -> 43.56269  at 393,984 params
+delta vs float                          = -10.33220  (below float by 10.33 PPL)
+delta vs cycle 271 [1] K=512 (=params)  =  -0.25831  (BEATS cycle 271 [1] by 0.26 PPL at SAME param count)
+delta vs cycle 271 [4] K=512            =  -1.06731
+delta vs cycle 271 [7] K=512            =  -1.80731
+delta vs cycle 283 [2] K=64             =  -3.94879  (K-curve continues monotone descent)
+delta vs cycle 283 [2] K=32             =  -4.33431
+delta vs cycle 283 [2] K=16             =  -5.89941
+
+== Pareto reading ==
+- Cycle 286 [2] K=512 (393,984 params, 43.5627 PPL) vs cycle 271 [1] K=512 (393,984 params, 43.821 PPL):
+  SAME parameter count (both 393,984), 0.258 PPL BETTER. Cycle 286 STRICTLY DOMINATES cycle 271
+  on the PPL axis at this param tier — BUT NOT a CONFIRMED win because the agenda's CONFIRMED
+  threshold required a 0.32 PPL margin (43.5), not just any improvement. Cycle 286 lands 0.063
+  PPL above the CONFIRMED line. The "first sub-43 1-block K=512 measurement" hypothesis FAILS
+  (best_mean=43.56 > 43.0).
+- Verdict-vs-Pareto distinction: INCONCLUSIVE on the agenda thresholds, but Cycle 286 IS a NEW
+  PPL Pareto winner on the 393,984-param tier (replaces cycle 271 [1] as the best 1-block K=512
+  result by 0.258 PPL).
+- Cycle 283's per-K [2]-beats-[1] trend EXTRAPOLATES to K=512: matched-K, [2] continues to beat
+  [1] by sub-PPL margins. Magnitude shrinks as K grows: K=32 -1.75, K=64 -0.53, K=512 -0.26.
+- All 3 seeds budget-bounded at step 4000 (still descending). Extending the budget (cycle 297
+  agenda item, [1] K=512 8000-step variant) would also benefit cycle 286 — actual [2] K=512
+  floor likely well below 43.5.
+
+== Geometric reading ==
+- Block 2 c_proj has the lowest output eff_rank in the model (1.05 per cycle 278). At small K,
+  this concentration HELPS — block 2 K=16 (49.46) beats block 1 K=16 (~50) handily because
+  the K=16 channel set can capture the 1-direction-dominated output. As K grows, the advantage
+  shrinks because both blocks' channel-K compressors have enough capacity to absorb the
+  full structure: K=32 -1.75, K=64 -0.53, K=512 -0.26. Block 2's eff_rank=1.05 is no longer
+  load-bearing once K provides surplus capacity; the per-block gap converges with K.
+- Compare cycle 285 (rank-2 weight-SVD): block 2 weight-SVD is essentially flat (top-5 SVs
+  38, 15, 13, 12, 12) and DOES NOT enjoy a low-rank advantage — block 1 wins at rank 2.
+  Block 2's compression-friendliness is INPUT-driven (eff_rank=1.05 is OUTPUT covariance,
+  joint of weight x input distribution), not a weight-rank property. Channel-K with topk
+  selection EXPLOITS the input concentration; weight-SVD does not.
+- This refines the cycles 270/280/282/285 lesson: "the right operator depends on whether
+  the structure lives in the WEIGHT or in the INPUT". For block 2, the structure lives in
+  the input (data-active subspace is 1-dimensional) → channel-K with input-aware scoring
+  exploits it; rank-r weight-SVD destroys it.
+
+== Wall time / fits ==
+Total wall: 7.8 min over 1 subset x 3 seeds = 3 fits (~2.6 min/fit). No wall cap applied.
+
+== Artifacts ==
+experiments/block2_k512_cycle286.py
+autoresearch/plans/cycle_286.md
+autoresearch/briefs/cycle_286.md
+autoresearch/results/cycle_286_block2_k512.json
+autoresearch/results/cycle_286_summary.md
+autoresearch/logs/cycle_286_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+
+item_number: 296
+outcome: INCONCLUSIVE
+key_metric: best_mean=43.5627_pm_0.0258_dead_zone_43.5_44.5_block_2_K512_393984_params_BEATS_cycle_271_b1_K512_43.821_by_0.258_PPL_at_SAME_params_NEW_PPL_PARETO_WINNER_on_393984_tier_BUT_INCONCLUSIVE_per_agenda_threshold_fails_CONFIRMED_by_0.063_all_3_seeds_best_step_4000_budget_bounded_still_descending_init_PPL_55.4612_deterministic_across_seeds_topk_lstsq_seed_free_per_K_2_beats_1_trend_extrapolates_K16_-2_K32_-1.75_K64_-0.53_K512_-0.26_gap_shrinks_with_K_block_2_eff_rank_1.05_INPUT_driven_channel_K_topk_exploits_weight_SVD_does_not_cycle_285_contrast_wall_7.8_min
+commit: PENDING
+paths: experiments/block2_k512_cycle286.py,autoresearch/plans/cycle_286.md,autoresearch/briefs/cycle_286.md,autoresearch/results/cycle_286_block2_k512.json,autoresearch/results/cycle_286_summary.md,autoresearch/logs/cycle_286_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv
