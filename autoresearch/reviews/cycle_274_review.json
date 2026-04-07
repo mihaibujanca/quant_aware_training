@@ -1,0 +1,32 @@
+{
+  "cycle": 274,
+  "item": 284,
+  "decision": "APPROVE",
+  "checks": {
+    "brief_alignment": "PASS",
+    "blocks_1_2_4_7_8": "PASS",
+    "K_64": "PASS",
+    "n_steps_8000": "PASS",
+    "eval_every_200": "PASS",
+    "joint_adam_w_out_b_out": "PASS",
+    "lr_1e_4": "PASS",
+    "seeds_42_137_2024_total_3_fits": "PASS",
+    "disjoint_calib_eval_splits": "PASS",
+    "best_state_snapshot_restore": "PASS",
+    "trainable_count_5x_64x768_plus_768": "PASS",
+    "lstsq_init_cycle218_importance": "PASS",
+    "compressed_mlp_shape_chain": "PASS",
+    "verdict_thresholds_match_item_284": "PASS",
+    "output_namespacing_cycle274": "PASS",
+    "run_cap_under_30_min": "PASS"
+  },
+  "risks": [
+    "final_ppl_at_step_4000 -> final_ppl_at_step_8000 rename must be consistent across script+JSON+manifest",
+    "cycle 254 precedent suggests plateau-then-climb pattern; best-state restore essential",
+    "Plateau outcome (CONFIRMED) most likely; INCONCLUSIVE possible if final at 8k climbs only marginally",
+    "Trainable count from cycle 257 manifest = 246,720 vs naive 249,600; will appear in new manifest"
+  ],
+  "trainable_params_expected": 246720,
+  "n_fits": 3,
+  "expected_wall_min": 18
+}
