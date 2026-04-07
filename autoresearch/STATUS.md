@@ -1,6 +1,11 @@
-# Research Status — 248 Cycles (001–248)
+# Research Status — 249 Cycles (001–249)
 
-## Latest: Cycle 248
+## Latest: Cycle 249
+
+259. **Heterogeneous K complement — K=512 on {7,8}, K=128 on {1,2,4,5}** — REFUTED (interesting=true)
+   - K_PER_BLOCK={1:128,2:128,4:128,5:128,7:512,8:512}, 6-block joint Adam, 3 seeds. **best_mean=65.275 ± 0.094** ≥ 65 refuted threshold (+0.275 margin). Per-block residual MSE on blocks 7, 8 dropped ~28-29% under K=512 (cycle 247 hypothesis worked LOCALLY) but downstream PPL got worse: Δ vs cycle 247 = +0.822, gap recovery 28.4% vs cycle 247's 38.6%. **Local block fit decoupled from cascade PPL**. **Paired with cycle 247, this closes the "localize K-bandwidth penalty to a 2-of-6 block subset at 1.18M params" sub-family**: NEITHER cycle 243's restoration ranking (cycle 247 used it) NOR cycle 247's residual MSE ranking (cycle 249 used it) predicts heterogeneous-fit PPL.
+
+## Cycle 248
 
 258. **K=128 + W_out + W_fc + b_fc trainable at 6 blocks** — REFUTED (interesting=true)
    - BLOCKS=[1,2,4,5,7,8] K=128, FullCompressedMLP (W_out + b_out + W_fc_slice + b_fc_slice trainable). LR=5e-5, 4000 steps, 3 seeds. **best_mean=67.609 ± 0.047** ≥ 66 refuted threshold. Δ vs cycle 231 K=128 W_out-only (67.562) = +0.047 (noop). Δ vs cycle 221 K=512 6-block (59.515) = +8.094. **W_fc relative Frobenius drift 7.85e-2** (range 0.049-0.098 per block) — W_fc trained meaningfully but had no effect on PPL. **Two-endpoint closure**: combined with cycle 241 (W_fc bias at K=512 noop), W_fc surface enlargement is refuted at BOTH K endpoints. **The K=128→K=512 gap is a K-BANDWIDTH phenomenon, not a surface-size phenomenon.** Note: agenda's "14.77M trainable" formula was an arithmetic error (assumed full 768×3072 W_fc despite K=128 compression); plan correctly used the cycle 213 sliced (768, K) semantics → 1.19M.
