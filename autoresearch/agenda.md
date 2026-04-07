@@ -10,15 +10,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-257. **Heterogeneous K — K=512 on cascade-binding blocks, K=128 elsewhere** (empirical)
-   - **Goal**: cycle 243 showed blocks 4 and 5 carry the most per-block ΔPPL inside the [1,2,4,5,7,8] joint fit. Cycle 231 showed K=128 at 6 blocks lands at 67.562 (+8.05 PPL above K=512). If the K=128 penalty concentrates on the few "binding" blocks, upgrading ONLY those blocks to K=512 while leaving the rest K=128 should recover most of the gap at a parameter budget closer to K=128.
-   - **Recipe**: BLOCKS=[1,2,4,5,7,8], heterogeneous K: blocks 4, 5 ← K=512; blocks 1, 2, 7, 8 ← K=128. W_out+b_out trainable, joint Adam LR=1e-4, 4000 steps, 3 seeds, disjoint split. Parameter count target: 4×(768×128 + 128) + 2×(768×512 + 512) = 4×98,432 + 2×393,728 = 393,728 + 787,456 = 1,181,184 trainable params per seed (vs cycle 221 K=512 6-block 2,363,904 — ~50% of K=512 cost).
-   - **Baselines**: cycle 221 K=512 6-block 59.515 (upper quality bound), cycle 231 K=128 6-block 67.562 (lower cost bound).
-   - **Confirmed**: best_mean ≤ 61.0 (recovers ≥81% of the K=512→K=128 gap with half the params on the two binding blocks). Also report (best_mean − 59.515) / (67.562 − 59.515) = "fraction of gap recovered".
-   - **Refuted**: best_mean ≥ 65.0 (the K=128 penalty is distributed, not localised — heterogeneous K does not help).
-   - **Inconclusive**: (61.0, 65.0).
-   - **Report**: per-seed best + std, init PPL, trainable count, per-block residual MSE at end (to check whether block 4/5 MSE drops to cycle 221 level while blocks 1/2/7/8 stay at cycle 231 level, confirming the heterogeneous structure worked as intended).
-   - Artifacts: `experiments/hetero_k_6block_cycle257.py`, `autoresearch/results/cycle_257_hetero_k.json`, `autoresearch/results/cycle_257_summary.md`
+*(item 257 closed INCONCLUSIVE by cycle 247; promote from P2 next cycle.)*
 
 ### P2
 
@@ -57,6 +49,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 247
+
+257. **Heterogeneous K — K=512 on mid-cascade {4,5}, K=128 on {1,2,7,8}** *(INCONCLUSIVE — cycle 247)*
+   - **Outcome: INCONCLUSIVE** — BLOCKS=[1,2,4,5,7,8] with K_PER_BLOCK={1:128, 2:128, 4:512, 5:512, 7:128, 8:128}. W_out+b_out trainable, joint Adam LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024}, disjoint calib=all_ids[:200] / eval=all_ids[200:300], SEQ_LEN=128, 1,184,256 trainable params (50.1% of cycle 221 2.36M). Per-block residual MSE at lstsq init (seed 42): block 1 K=128 → 0.126, block 2 K=128 → 0.172, block 4 K=512 → 0.162, block 5 K=512 → 0.224, block 7 K=128 → 0.581, block 8 K=128 → 0.818. Float held-out PPL=53.895. Init PPL=103.931 (zero seed variance — lstsq is deterministic). Per-seed: seed 42 best=64.621 @ step 2300 final@4000=65.928; seed 137 best=64.405 @ step 2200 final@4000=65.373; seed 2024 best=64.332 @ step 2400 final@4000=65.302. **Mean best 64.453 ± 0.123** at step mean 2300 ± 82. Δ vs cycle 221 K=512 ceiling 59.515 = **+4.938**. Δ vs cycle 231 K=128 floor 67.562 = **−3.109**. **Gap recovery fraction = (67.562 − 64.453) / (67.562 − 59.515) = 0.386** — hetero K closes 38.6% of the K=128 → K=512 gap with 50.1% of the parameters. Final@4000 mean=65.534 (mild overfit past best).
+   - **INCONCLUSIVE** at 64.453 ∈ (61.0, 65.0). Close to the REFUTED side (0.55 PPL from the 65.0 threshold). The plan predicted ≥81% gap recovery under the hypothesis "K=128 penalty concentrates on binding blocks 4/5 (cycle 243 rank-1 and rank-2 per-block ΔPPL)". The actual result of 38.6% gap recovery rejects the strong localisation story: upgrading blocks 4, 5 alone does not buy most of the gap. The K=128 penalty is spread across blocks — cycle 243's per-block attribution (measured under a fixed K=512 joint fit) does NOT predict which blocks carry the K=128 penalty under heterogeneous fit. Diagnostic hint from init MSE: the two K=512 blocks (4, 5) already have lower per-block residual MSE (0.162, 0.224) than the K=128 blocks 7 (0.581) and 8 (0.818), so the K=128 penalty is concentrated at blocks 7, 8 in the residual sense, not at blocks 4, 5. The init PPL 103.931 is notably WORSE than cycle 231 K=128 init (~101-ish in that cycle's log range) despite giving two blocks 4× more channels — suggesting the lstsq targets on blocks 4 and 5 sit in a basis that the K=128 neighbours struggle to compose against. The mid-cascade blocks are not the bottleneck under K=128 compression; blocks 7 and 8 are. Follow-ups: (a) swap the allocation — give K=512 to blocks 7, 8 (highest residual MSE) and K=128 to blocks 1, 2, 4, 5; if this recovers more gap it confirms the diagnosis that blocks 7, 8 are the binding constraint. (b) try K=512 on three blocks {4, 5, 8} (the top-3 per-block restore ΔPPL in cycle 243) vs {5, 7, 8} (the top-3 residual MSE in this run) at a matched ~1.37M parameter budget. (c) K sweep on the two K=128 blocks with highest MSE (7, 8) while holding others fixed — does K=256 or K=384 on just those two close the remaining gap cheaply? (d) correlate per-block init residual MSE with per-block K=128 → K=512 PPL recovery via a controlled single-block K=128→K=512 upgrade study (one block at a time from cycle 231 baseline) to get a direct ranking of binding cost per block.
+   - Artifacts: `experiments/hetero_k_6block_cycle247.py`, `autoresearch/results/cycle_247_hetero_k.json`, `autoresearch/results/cycle_247_summary.md`
 
 ### Cycle 246
 
