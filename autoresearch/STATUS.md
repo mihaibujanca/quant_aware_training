@@ -1,6 +1,11 @@
-# Research Status — 273 Cycles (001–273)
+# Research Status — 274 Cycles (001–274)
 
-## Latest: Cycle 273
+## Latest: Cycle 274
+
+284. **K=64 5-block 8000 steps** — INCONCLUSIVE
+   - Cycle 257 extension. **best_mean=61.377 ± 0.046**. 8k bought 0.804 PPL improvement vs cycle 257 4k (62.181) — **8× larger than cycle 254's K=128 5b 8k extension (-0.101)** but 0.123 PPL short of CONFIRMED plateau band [61.5, 62.5] and 0.677 above REFUTED ≤60.7. **K=64 5-block is in a slow-descent regime, qualitatively distinct** from K=128 5b plateau and K=1 6b extended descent. All 3 seeds best_step in [6200, 7400] (none at 8k cap). Final@8000 +0.173 above best (mild overshoot, NOT cycle 254's +1.5 plateau-then-climb). NOT a Pareto winner — dominated by cycle 268 K=64 4-block (199K, 55.95).
+
+## Cycle 273
 
 283. **Heterogeneous K eff_rank-guided — blocks [1,4,7,11] at K={512,512,512,22}** — REFUTED
    - Hetero best_mean=52.637 ± 0.060; uniform_k22 control=60.686 ± 0.048. Hetero exceeds REFUTED threshold (≥47) by 5.64 PPL. **Block 11 K=22 lstsq residual MSE=5.20 is 60× block 1 K=512** — operator bottleneck dominates and joint Adam can't absorb it. Hetero is **8.78 PPL WORSE than cycle 266 [1,4]** and 0.71 PPL worse than cycle 272 K=256 4-block at 66% fewer params — strictly DOMINATED. **Cycle 267's activation eff_rank is descriptive, not prescriptive** at the cascade level. Confirms cycle 270's weight-vs-activation SVD mismatch generalizes.
