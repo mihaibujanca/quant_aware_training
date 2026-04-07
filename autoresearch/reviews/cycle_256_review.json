@@ -1,0 +1,26 @@
+{
+  "cycle": 256,
+  "item": 266,
+  "decision": "APPROVE",
+  "brief": "autoresearch/briefs/cycle_256.md",
+  "plan": "autoresearch/plans/cycle_256.md",
+  "template_script": "experiments/adam_6block_earlystop_cycle221.py",
+  "new_script": "experiments/six_block_k256_cycle256.py",
+  "change": "K: 512 -> 256; same BLOCKS=[1,2,4,5,7,8], LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, SEEDS=[42,137,2024], best-state restore",
+  "verdict_thresholds": {
+    "confirmed": "best_mean <= 62.0",
+    "refuted": "best_mean >= 65.0",
+    "inconclusive": "62.0 < best_mean < 65.0"
+  },
+  "baselines": {
+    "cycle_221_k512_6block": 59.515,
+    "cycle_231_k128_6block": 67.562,
+    "cycle_247_hetero_k512_45": 64.453,
+    "cycle_249_hetero_k512_78": 65.275,
+    "float_ppl": 53.895
+  },
+  "trainable_params_est": 1181952,
+  "run_cap_min": 10,
+  "risks": "none - identical machinery to cycles 221/231/240",
+  "notes": "trivial K swap; head-to-head comparison with hetero-K mixes 247/249 at matched param budget"
+}
