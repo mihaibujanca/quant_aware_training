@@ -1,0 +1,83 @@
+Cycle 294 Audit — Item 304
+
+audit_status: PASS
+verdict: CONFIRMED
+item: 304
+commit: e81924d
+
+Verdict reproduced independently:
+  CONFIRMED iff >=2 of 4 K-tiers shift by >=0.5 PPL   -> 4/4 clear the bar
+  REFUTED   iff all 4 K-tiers shift by <=0.1 PPL      -> FALSE (min shift 1.90 PPL)
+  -> CONFIRMED ✓
+
+Measured shifts (cycle 276 4k best_mean − cycle 294 8k best_mean):
+  K=32  +1.9227 PPL (49.64854 -> 47.72583)
+  K=64  +2.3670 PPL (48.04525 -> 45.67821)
+  K=128 +2.2761 PPL (46.93161 -> 44.65550)
+  K=256 +1.8989 PPL (45.38537 -> 43.48650)
+
+Per-seed aggregate verification (independent recomputation of mean and pop std from JSON):
+  K=32  47.7258 ± 0.0223 ✓
+  K=64  45.6782 ± 0.0112 ✓
+  K=128 44.6555 ± 0.0188 ✓
+  K=256 43.4865 ± 0.0263 ✓
+
+Cross-check vs cycle 276 (patched per-seed step-4000 references from cycle 276 raw k_results):
+  9/12 cells bitwise-identical (|Δ|=0.00e+00)
+  3/12 cells at |Δ| ≤ 6.93e-06 (K=256, MPS nondeterminism floor)
+  Max |Δ| after patch = 6.93e-06, well within 1e-4 tolerance
+  -> entire 4k→8k gain unambiguously Adam budget, not init/LR drift
+
+All 12 fits budget-bounded at step 8000 (best at step 8000 for all 12).
+All 12 fits: |restored − best| = 0 (exact restore).
+Per-K init PPLs deterministic across seeds.
+Trainable params asserted per fit: K×768+768 ∈ {25344, 49920, 99072, 197376}.
+
+Pareto reading:
+  Cycle 294 provides 4 new strictly-dominant points on the 1-block [1] channel-K Pareto
+  curve, each dominating its cycle 276 4k counterpart at the same K. Canonical 1-block
+  [1] small-K reference is now cycle 294, not cycle 276.
+
+  vs cycle 287 [1] K=512 8k (393,984 params, 42.785 PPL) — the current K=512 Pareto winner:
+    K=256 8k (197,376, 43.487): +0.70 PPL at 2× fewer params — NEW anchor tile
+    K=128 8k (99,072,  44.656): +1.87 PPL at 4× fewer params
+    K=64  8k (49,920,  45.678): +2.89 PPL at 8× fewer params
+    K=32  8k (25,344,  47.726): +4.94 PPL at 16× fewer params
+
+Geometric reading:
+  - Brief's "smaller K → larger gain" framing FALSIFIED in shape. Gain ordering:
+    K=64 (+2.37) > K=128 (+2.28) > K=32 (+1.92) > K=256 (+1.90). K=32 has most slack
+    but also tightest representational ceiling (rank-32 topk cannot capture enough MLP
+    behavior to benefit fully from 4k more Adam). K=256 has least slack. K=64 and K=128
+    sit in the sweet spot.
+  - All 4 shifts exceed 0.5 threshold by 3.8×–4.7× — budget extension is unambiguously
+    worthwhile across the entire small-K tier.
+  - All 12 fits still budget-bounded at 8000 — floor not found for any K. 16k extension
+    is a natural follow-up (cycle 269 showed [K=1] 5-block 4k→16k gave -5.27 PPL).
+
+Script patch note:
+  Original script CYCLE_276_BEST_PPL_PER_SEED_4K dict had wrong per-seed assignments
+  (values transposed between seeds within some K groups). This only affected the raw
+  JSON cross-check fields `cycle_276_step_4000_ref` and `step_4000_delta` as originally
+  written — NOT the experiment data (eval_at_step_4000, best_ppl, init_ppl, history).
+  JSON was patched post-run with correct per-seed references pulled directly from cycle
+  276's raw k_results; `patches` field in the JSON records the fix. Bug was detected
+  immediately by the first K=64 cross-check printout showing |Δ|=7.59e-02, physically
+  implausible for a matched-config rerun. Future extension templates should pull
+  reference values from cycle source JSONs at runtime rather than hand-copying.
+
+Artifact existence:
+  experiments/one_block_1_k_sweep_8k_cycle294.py                   ✓
+  autoresearch/briefs/cycle_294.md                                 ✓
+  autoresearch/plans/cycle_294.md                                  ✓
+  autoresearch/results/cycle_294_one_block_1_k_sweep_8k.json       ✓
+  autoresearch/results/cycle_294_summary.md                        ✓
+  autoresearch/results/cycle_294_manifest.txt                      ✓
+  autoresearch/results/cycle_294_exec_result.txt                   ✓
+  autoresearch/results/cycle_294_audit.txt                         ✓ (this file)
+  autoresearch/audits/cycle_294.md                                 ✓
+  autoresearch/logs/cycle_294_run.log                              ✓
+  autoresearch/agenda.md (item 304 moved from NEXT P2 to PAST)     ✓
+  autoresearch/logs/experiments.tsv (row 294 appended)             ✓
+
+Final status: PASS — provisional outcome CONFIRMED holds. No corrections required.

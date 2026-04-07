@@ -1,6 +1,6 @@
 Cycle 294 Manifest — Item 304: 1-block [1] K sweep 8000 steps (K∈{32, 64, 128, 256})
 
-Commit: PENDING
+Commit: e81924d
 Branch: geometric_compression
 Verdict: CONFIRMED
 
@@ -162,5 +162,5 @@ autoresearch/logs/experiments.tsv
 item_number: 304
 outcome: CONFIRMED
 key_metric: verdict=CONFIRMED_all_4_K_tiers_shift_ge_0.5_PPL_K32_plus1.923_K64_plus2.367_K128_plus2.276_K256_plus1.899_4k_8k_extension_best_means_K32_47.7258_K64_45.6782_K128_44.6555_K256_43.4865_all_12_fits_BUDGET_BOUNDED_at_step_8000_per_seed_step_4000_evals_match_cycle_276_within_6.93e_06_pure_Adam_budget_gain_attribution_CYCLE_276_SUPERSEDED_4_new_Pareto_points_on_1_block_channel_K_curve_K_256_8k_197376_43.4865_new_frontier_anchor_0.70_PPL_worse_than_cycle_287_K512_8k_at_2x_fewer_params_small_K_gain_INVERSELY_correlated_with_K_except_K32_capacity_bound_smaller_K_cannot_exploit_Adam_slack_peak_gain_at_K64_K128
-commit: PENDING
+commit: e81924d
 paths: experiments/one_block_1_k_sweep_8k_cycle294.py,autoresearch/plans/cycle_294.md,autoresearch/briefs/cycle_294.md,autoresearch/results/cycle_294_one_block_1_k_sweep_8k.json,autoresearch/results/cycle_294_summary.md,autoresearch/logs/cycle_294_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv

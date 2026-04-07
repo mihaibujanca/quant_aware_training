@@ -1,6 +1,11 @@
-# Research Status — 293 Cycles (001–293)
+# Research Status — 294 Cycles (001–294)
 
-## Latest: Cycle 293
+## Latest: Cycle 294
+
+304. **1-block [1] K sweep 8000 steps — K∈{32, 64, 128, 256}** — CONFIRMED
+   - Trivial 4k→8k budget extension of cycle 276. All 4 K-tiers gain 1.90–2.37 PPL, far exceeding the 0.5 threshold (item 304 required ≥2 of 4; 4/4 clear it). K=32: 49.649→**47.726** (+1.923, 25K params); K=64: 48.045→**45.678** (+2.367, 50K); K=128: 46.932→**44.656** (+2.276, 99K); K=256: 45.385→**43.487** (+1.899, 197K). All 12 fits budget-bounded at step 8000 (floor not found). Per-seed step-4000 evals reproduce cycle 276 within |Δ|≤6.93e-06 (MPS noise) — entire gain unambiguously Adam budget. **Gain is LARGER than cycle 287's K=512 4k→8k extension (−1.04 PPL)**: smaller K gains MORE than K=512, consistent with Adam slack ∝ 1/trainable-params, but the "smallest K wins most" framing is falsified in shape — K=64/K=128 are the sweet spot, K=32 is capacity-bound. **Pareto rewrite**: 4 new frontier points, each strictly dominating its cycle 276 4k counterpart at the same K. K=256 8k (197K, 43.49) is the most interesting — only 0.70 PPL worse than cycle 287 [1] K=512 8k at 2× fewer params. Cycle 276 is now superseded as the canonical 1-block [1] small-K reference. Wall 50.6 min.
+
+## Cycle 293
 
 303. **Block 0 rank-72 c_proj weight-SVD retrain** — REFUTED
    - Rank-72 retrain (3 seeds, **56,064 params**): **best_mean=63.133 ± 0.101** ≥ 58 refuted by 5.13 PPL. **First single-block c_proj recipe REFUTATION**. **ABOVE float by +9.24 PPL** — Adam recovery 396.26→63.13 (-333 PPL, largest yet) but the floor lands above float, not below. No-retrain sweep r=10→1939, r=30→914, r=72→396 (init >7× worse than other blocks). Block 0 c_proj weight SVD is the FLATTEST tested (top-5: 25.0/21.1/18.3/17.4/16.3, S[0]/S[4]≈1.5×); top-72 captures only 32.7% matrix energy. **Recipe REFUTED on block 0**: holds for blocks 1/2/3/10/11 (8 data points across 5 blocks) but fails catastrophically on block 0. Block 0 transforms embedding diversity (cycle 198 input rank 269), is irreplaceable as a single block (cycle 187 drop→PPL 1923) — embedding-proximity / depth-0 specialness break the recipe. Block 0 c_proj acts as a **high-rank embedding-to-residual chart**, not a low-rank concentrator. **Pareto reading**: cycle 293 (56,064, 63.13) is STRICTLY DOMINATED on BOTH axes by every other tested single-block c_proj recipe — highest param count AND highest PPL.

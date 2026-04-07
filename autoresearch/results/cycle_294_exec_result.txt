@@ -4,7 +4,7 @@ verdict: CONFIRMED
 item: 304
 title: 1-block [1] K sweep extended budget — 8000 steps for K∈{32, 64, 128, 256}
 script: experiments/one_block_1_k_sweep_8k_cycle294.py
-commit: PENDING
+commit: e81924d
 wall_min: 50.6
 fits_done: 12
 
