@@ -1,0 +1,30 @@
+{
+  "cycle": 260,
+  "item": 271,
+  "decision": "APPROVE",
+  "checks": {
+    "brief_alignment": "PASS",
+    "calib_slice_256_tokens_first_2_seqs_seed42": "PASS",
+    "c_fc_input_hook_cycle218_pattern": "PASS",
+    "hf_conv1d_layout_preact_x_at_W_fc_plus_b": "PASS",
+    "sigma_gelu_prime_autograd_fresh_leaf": "PASS",
+    "sigma_relu_prime_strict_gt_zero": "PASS",
+    "per_token_rank_95_via_svdvals_only": "PASS",
+    "mode_1_aggregate_avg_DJ_then_SVD_top20_left": "PASS",
+    "c_fc_reader_basis_cycle218_top_left_svs_20": "PASS",
+    "principal_cosines_via_svdvals_U_at_B": "PASS",
+    "random_baseline_10_seeds_gaussian_orthonormal": "PASS",
+    "verdict_thresholds_match_item_271": "PASS",
+    "output_namespacing_cycle260": "PASS",
+    "run_cap_under_15_min": "PASS"
+  },
+  "risks": [
+    "Per-token DJ peak 604 MB if built all at once -> per-token loop with running sum for DJ_avg",
+    "MPS linalg.svd for 768x768 float32 -> move DJ to CPU before svdvals",
+    "preact is non-leaf -> z = preact.detach().clone().requires_grad_(True) for torch.autograd.grad",
+    "sigma_relu_prime uses strict > 0 so delta_diag[z==0] = +0.5 not -0.5",
+    "rank_95 = (cum<0.95).sum()+1 cycle 218 convention",
+    "do not use F.linear for Conv1D; use x @ W_fc + b_fc (cycle 218 line 138)"
+  ],
+  "trainable_params": 0
+}
