@@ -1,0 +1,84 @@
+Cycle 292 — Item 302 — Execution Result
+
+Verdict: CONFIRMED
+Commit: TBD
+Branch: geometric_compression
+
+Script: experiments/block1_rank1_cycle292.py
+Log:    autoresearch/logs/cycle_292_run.log
+Result: autoresearch/results/cycle_292_block1_rank1.json
+
+Key metrics:
+  float_ppl                 = 53.895
+  noretrain r=1 PPL         = 59.7513  (energy=0.0459, exact match to cycle 280 ref 59.7513)
+  retrain r=1 best_mean     = 50.0794
+  retrain r=1 best_std      = 0.0479
+  retrain r=1 best_min      = 50.0444  (seed 2024 @4000)
+  retrain r=1 best_max      = 50.1471  (seed 42   @3900)
+  trainable params per fit  = 1,536
+
+Verdict logic (item 302 verbatim):
+  CONFIRMED iff rank-1 retrain best_mean <= 51.0
+  REFUTED   iff rank-1 retrain best_mean >= 53.5
+  INCONCLUSIVE otherwise
+
+  r=1 best_mean 50.0794 <= 51.0  ->  CONFIRMED (margin 0.921 PPL)
+  r=1 best_mean 50.0794 <  53.5  ->  REFUTED clause NOT triggered
+  ->  CONFIRMED
+
+Wall time: ~7 min total (1 no-retrain eval + 3 Adam fits @ ~2 min each).
+
+Sanity checks:
+  float PPL within 0.5 of reference 53.895                     PASS (exact)
+  restore original c_proj.weight after sweep                   PASS (exact)
+  init PPL per seed == noretrain r=1 PPL (59.7513)             PASS all 3 seeds
+  trainable param count == 1,536                               PASS (1*768 + 768)
+  restore best-state per seed (|restored - best| < 1e-3)       PASS all 3 seeds (exact)
+  cross-check noretrain r=1 vs cycle 280 (59.7513)             PASS (|Δ|=0.0000)
+
+Pareto reading:
+  cycle 292 (1,536 params, 50.08 PPL) is a NEW Pareto frontier point and the
+    LOWEST-PARAM single-block c_proj recipe by 33% vs the previous lowest
+    anchor (cycle 280/285 at 2,304 params).
+  cycle 292 STRICTLY DOMINATES cycle 289 b10 r=5 (4,608, 51.47): 3x fewer
+    params AND 1.39 PPL better.
+  cycle 292 STRICTLY DOMINATES cycle 288 b3 r=24 (19,200, 50.59): 12.5x fewer
+    params AND 0.51 PPL better.
+  cycle 292 STRICTLY DOMINATES cycle 270 b11 r=22 (17,664, 54.47): 11.5x
+    fewer params AND 4.39 PPL better.
+  cycle 292 ESSENTIALLY TIES cycle 282 b10 r=17 (13,824, 50.04) on PPL
+    (+0.035) at 9x fewer params — cycle 282 dominated on PPL essentially free.
+  cycle 292 vs cycle 280 b1 r=2 (2,304, 49.03): cycle 292 is +1.05 PPL worse
+    at 33% fewer params — a NEW Pareto tile, NOT dominated (different tier).
+
+Sub-eff_rank success (geometric finding):
+  Block 1 c_proj eff_rank = 1.94 (cycle 278); r=1 is 51% of eff_rank.
+  Top-1 weight-SVD energy fraction = 0.0459 (only 4.6% of matrix norm^2).
+  Init PPL 59.75 (+5.86 vs float). Adam recovery -9.67 PPL over 3900-4000 steps
+  to reach 50.08 — 3.82 PPL BELOW float.
+
+  Cycle 292 is the SECOND sub-eff_rank single-block c_proj success (after
+  cycle 289 block 10 r=5 at r/eff=0.30). Cycle 292 r/eff=0.51 — confirms the
+  sub-eff_rank regime is NOT a single-block fluke; recipe extends to the
+  smallest-eff_rank concentrator block (block 1) at the lowest possible rank.
+
+  Recipe landscape (7 data points, 2 sub-eff_rank now):
+    block 1  r=1  (eff_rank 1.94, r/eff 0.51) -> 50.08 @ 1,536  <-- cycle 292 NEW
+    block 1  r=2  (eff_rank 1.94, r/eff 1.03) -> 49.03 @ 2,304
+    block 2  r=2  (eff_rank 1.05, r/eff 1.90) -> 49.33 @ 2,304
+    block 3  r=24 (eff_rank 24.29, r/eff 0.99)-> 50.59 @ 19,200
+    block 10 r=5  (eff_rank 16.70, r/eff 0.30)-> 51.47 @ 4,608
+    block 10 r=17 (eff_rank 16.70, r/eff 1.02)-> 50.04 @ 13,824
+    block 11 r=22 (eff_rank 22.49, r/eff 0.98)-> 54.47 @ 17,664
+
+Convergence pattern (vs cycle 289):
+  Cycle 292 is BUDGET-BOUNDED — all 3 seeds hit best at step 3900-4000 with
+  seed 2024 best_step=4000 final=best (still descending). Cycle 289 block 10
+  r=5 was FLOOR-LIMITED (best at 1500-1800, then overfit). Different
+  convergence regimes despite both being sub-eff_rank — block 1 r=1 has not
+  yet found its floor, suggesting an 8000-step extension would further reduce
+  best_mean.
+
+Next agenda items: cycle 292 8000-step budget extension (rank-1 floor probe);
+3-block hybrids anchoring on cycle 292 1,536-param tile; cycle 280/292 joint
+b1 LoRA-style two-rank ablation.
