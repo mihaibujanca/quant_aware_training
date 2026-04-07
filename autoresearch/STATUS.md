@@ -1,6 +1,11 @@
-# Research Status — 294 Cycles (001–294)
+# Research Status — 295 Cycles (001–295)
 
-## Latest: Cycle 294
+## Latest: Cycle 295
+
+305. **Spirals/moons MLP eff_rank census** — INCONCLUSIVE (interesting=true)
+   - 32×12 MLPs, 3 seeds, ≥95% train acc (spirals 6k-11k epochs, moons 75-100). Spirals post≤3=11/12 ✓, init≥20=0/12 ✗; moons post≤3=12/12 ✓, init≥20=0/12 ✗. Both CONFIRMED clauses needed. **Substantive finding** (more important than verdict): **collapse is input-dimension-induced, NOT training-induced**. With 2D input, random Gaussian + ReLU cannot create new effective dimensions; init eff_rank already collapses to 1.0 by layer 7 for both datasets. **Hanin & Rolnick N^d bound is the right reference for d=2**. Item 305 is the wrong control for cycle 278's question — the 2D testbed has no opportunity to collapse because it STARTS collapsed. Item 307 needs higher-dim input lift.
+
+## Cycle 294
 
 304. **1-block [1] K sweep 8000 steps — K∈{32, 64, 128, 256}** — CONFIRMED
    - Trivial 4k→8k budget extension of cycle 276. All 4 K-tiers gain 1.90–2.37 PPL, far exceeding the 0.5 threshold (item 304 required ≥2 of 4; 4/4 clear it). K=32: 49.649→**47.726** (+1.923, 25K params); K=64: 48.045→**45.678** (+2.367, 50K); K=128: 46.932→**44.656** (+2.276, 99K); K=256: 45.385→**43.487** (+1.899, 197K). All 12 fits budget-bounded at step 8000 (floor not found). Per-seed step-4000 evals reproduce cycle 276 within |Δ|≤6.93e-06 (MPS noise) — entire gain unambiguously Adam budget. **Gain is LARGER than cycle 287's K=512 4k→8k extension (−1.04 PPL)**: smaller K gains MORE than K=512, consistent with Adam slack ∝ 1/trainable-params, but the "smallest K wins most" framing is falsified in shape — K=64/K=128 are the sweet spot, K=32 is capacity-bound. **Pareto rewrite**: 4 new frontier points, each strictly dominating its cycle 276 4k counterpart at the same K. K=256 8k (197K, 43.49) is the most interesting — only 0.70 PPL worse than cycle 287 [1] K=512 8k at 2× fewer params. Cycle 276 is now superseded as the canonical 1-block [1] small-K reference. Wall 50.6 min.
