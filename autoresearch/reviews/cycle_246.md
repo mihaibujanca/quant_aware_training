@@ -1,0 +1,1 @@
+Approved. Clean orthogonality test: cycle 239 recipe (gelu_noneg+μ+LoRA r=8) × cycle 223 K=128 W_out on [1,4,7]. Install order correct (topk fit on patched I/O, LoRA on compressed W_out). Param count 595,200 checks out; fallback to 573,696 is reasonable. Thresholds 47.0/49.5 tight vs 47.692 baseline — confirm requires meaningful absorption.
