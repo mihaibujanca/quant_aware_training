@@ -1,0 +1,56 @@
+cycle=257
+item=267
+verdict=CONFIRMED
+commit=9eaf5014b4b290f140898197ecd92c37aac5ba31
+float_ppl=53.895
+BLOCKS=[1,2,4,7,8]
+K=64
+seeds=[42,137,2024]
+n_seeds=3
+trainable_params=246720
+
+# Aggregate (best_ppl_mean +/- best_ppl_std)
+init_mean=95.620
+init_std=0.000
+best_mean=62.18060
+best_std=0.05311
+best_step_mean=3967
+best_step_std=47
+final_at_4000_mean=62.19035
+final_at_4000_std=0.06012
+
+# Per-seed (seed, init, best, best_step, final@4000)
+seed_42_init=95.620
+seed_42_best=62.21149
+seed_42_best_step=3900
+seed_42_final_at_4000=62.24080
+
+seed_137_init=95.620
+seed_137_best=62.10589
+seed_137_best_step=4000
+seed_137_final_at_4000=62.10589
+
+seed_2024_init=95.620
+seed_2024_best=62.22441
+seed_2024_best_step=4000
+seed_2024_final_at_4000=62.22441
+
+# Baselines
+baseline_c245_k512_5block=53.826
+baseline_c251_k128_5block=59.119
+baseline_c230_k64_3block=50.781
+float_baseline=53.895
+
+# Deltas
+delta_vs_c245_k512=+8.355
+delta_vs_c251_k128=+3.062
+delta_vs_c230_k64_3block=+11.400
+delta_vs_float=+8.286
+
+verdict_logic=62.181_<=_64.0_->_CONFIRMED_per_agenda_item_267
+restore_roundtrip_clean=true
+plateau_then_climb=false
+monotone_descent_through_4000=true
+k_curve_5block_K64_K128_K512=[62.181,59.119,53.826]
+per_K_halving_cost_PPL=[3.062_for_128->64,5.293_for_512->128]
+artifacts=experiments/five_block_k64_cycle257.py,autoresearch/results/cycle_257_five_block_k64.json,autoresearch/results/cycle_257_summary.md,autoresearch/logs/cycle_257_run.log,autoresearch/results/cycle_257_manifest.txt,autoresearch/plans/cycle_257.md,autoresearch/briefs/cycle_257.md,autoresearch/reviews/cycle_257.md,autoresearch/reviews/cycle_257_review.json
