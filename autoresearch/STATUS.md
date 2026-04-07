@@ -1,6 +1,11 @@
-# Research Status — 240 Cycles (001–240)
+# Research Status — 241 Cycles (001–241)
 
-## Latest: Cycle 240
+## Latest: Cycle 241
+
+251. **W_out + c_fc bias trainable joint Adam at 6 blocks** — REFUTED (interesting=true)
+   - BLOCKS=[1,2,4,5,7,8] K=512, trainable = W_out + b_out + c_fc bias (W_fc matrix FROZEN), 2,382,336 params, 3 seeds. **best_mean=59.533 ± 0.104** ∈ [59, 60.5] refuted band. Lands EXACTLY on cycle 221 W_out-only 59.515 (Δ=+0.018, ≪1σ). c_fc bias is a perfect noop at 6 blocks, mirroring cycle 213's noop at 3 blocks. **Combined with cycle 240** (K=1 6-block REFUTED @ 96.886): the 6-block 59.5 floor is RIGID to parameter-count expansion but COLLAPSES under K reduction — **at 6 blocks K (channel capacity) binds, not parameter count**.
+
+## Cycle 240
 
 250. **K=1 Adam correction at 6 blocks** — REFUTED (interesting=true)
    - BLOCKS=[1,2,4,5,7,8] K=1 (9216 trainable), 3 seeds. **best_mean=96.886 ± 0.071** (96.943/96.786/96.929) ≥ 70 refuted threshold by +26.9 PPL. Init=203.246 (much worse than cycle 221's K=512 init 86.7). Cycle 230's K=1 3-block (59.245) WORKED on mid-cascade slack; at 6 blocks the single-channel projection compounds catastrophically. **Channel capacity binds at 6 blocks even though it doesn't at 3.** Combined with cycle 231 (K=128 6-block 67.562 vs K=512 59.515), the K-vs-PPL curve at 6 blocks is much steeper than at 3. The 59.5 ceiling is NOT a pure structural cascade-depth floor — channel capacity becomes a real constraint when stacked.
