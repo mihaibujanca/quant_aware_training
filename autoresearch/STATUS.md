@@ -1,6 +1,11 @@
-# Research Status — 244 Cycles (001–244)
+# Research Status — 245 Cycles (001–245)
 
-## Latest: Cycle 244
+## Latest: Cycle 245
+
+255. **Drop block 5 from 6-block compression — [1,2,4,7,8]** — CONFIRMED (interesting=true)
+   - K=512 joint Adam W_out+b_out, 3 seeds. **best_mean = 53.826 ± 0.032** ≤ 54.0 confirmed. **Δ vs cycle 221 [1,2,4,5,7,8] = -5.689 PPL** — closes >100% of the joint-cascade gap. **Δ vs float (53.895) = -0.069** (statistical tie). Best at steps 1700/1600/1600. **Block 5 is a structural bottleneck at K=512, not a symmetric contributor**: cycle 243's 4.4× non-additivity was a fixed-fit attribution artifact — dropping block 5 and re-jointly optimizing closes the entire 6-block gap. Explains cycle 233's middle-subset disaster ([3..8]=67.8) and cycle 243's mid-block ordering under one story. **5-block compression at K=512, near-float quality.** Caveat: -0.069 vs float is calib-overfit slack (same family as cycles 206/210/223/225/230/239); not a true gain. 5-block ≠ Pareto winner vs cycle 210's 3-block 46.556 on absolute PPL, but it IS the strictest near-float compression superset yet.
+
+## Cycle 244
 
 254. **Sliding 3-block sweep** — INCONCLUSIVE (interesting=true)
    - K=512 joint Adam W_out+b_out, 3 seeds: **[3,4,5]=49.477±0.052, [5,6,7]=50.899±0.047, [6,7,8]=52.038±0.021**. INCONCLUSIVE per criterion (no window ≤48.5; [3,4,5]/[5,6,7] below 52). **Combined with cycle 242 anchors, the curve is monotone**: [1,2,3]→47.135 → [3,4,5]→49.477 → [5,6,7]→50.899 → [6,7,8]→52.038 → [8,9,10]→55.192. Each step ~1-2 PPL except the final +3.15 jump. Init PPL also monotone (penalty is in topk projection pre-Adam, init→best drop ~16 PPL constant). **Cycle 243's "mid-block heaviest" (block 4/5 dominant) does NOT reproduce as a fresh-fit dip** — fresh-fit cost tracks the DEEPEST block in the window. The cycle 243 mid-block finding was a JOINT-FIT restoration-ranking artifact, not a structural property of the FFN.
