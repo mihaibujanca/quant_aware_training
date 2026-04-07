@@ -6,12 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-295. **Block 2 c_proj rank-r weight-SVD sweep — does cycle 278's eff_rank=1.05 (model minimum) translate to a rank-1 or rank-2 patch that beats cycle 280's 49.03?**
-   - Context: Cycle 278 measured block 2 c_proj output eff_rank = 1.05 (top-1 energy 99.61%) — the LOWEST eff_rank in the model, even more concentrated than block 1 (1.94 → cycle 280 rank-2 retrain 49.03 at 2,304 params). Cycle 281 showed [1,2] K=512 cascade is INCONCLUSIVE (44.339, dominated by [1] alone) and cycle 283 [2] K=16 retrain hits 49.46 at 13,056 params — block 2 IS useful in isolation, just not as a [1]-cascade add. Cycle 280 generalises (cycle 282 block 10 r=17 = 50.04 at 13,824 params): rank-(eff_rank-ish) c_proj weight-SVD + Adam retrain is universally good at single-block. Block 2 has NEVER been tested as a weight-SVD compression target. Hypothesis: rank-1 or rank-2 weight-SVD of block 2 c_proj + Adam retrain reaches ≤49 PPL at 1,536-2,304 trainable params — possibly beating cycle 280's 49.03 anchor on the ultra-low-param Pareto axis.
-   - Setup: New script `experiments/block2_lowrank_cycle285.py`. Mirror cycle 280 (`experiments/block1_lowrank_cycle280.py`) verbatim but with TARGET_BLOCK=2, RANKS_NORETRAIN=[1, 2, 5, 10], RETRAIN_RANK=2 (and a separate r=1 retrain pass if no-retrain sweep shows r=1 is in striking distance — second retrain ~8 min if needed). Per rank: (a) no-retrain forward swap, (b) retrain rank-2 with 3 seeds {42, 137, 2024} joint Adam LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, best-state restore. Disjoint N_CALIB=200/N_EVAL=100, SEQ_LEN=128, MPS. ~8 min wall (matches cycle 280) plus ~8 min if r=1 retrain triggers.
-   - Verdict thresholds: CONFIRMED iff (rank-2 retrained best_mean ≤ 50.0) OR (rank-1 retrained best_mean ≤ 51.0 — i.e. block 2 rank-1 alone beats cycle 270's 54.47 by ≥3.4 PPL with 1,536 params). REFUTED iff rank-2 retrained best_mean ≥ 53.0 (block 2 is NOT a usable c_proj weight-SVD target despite eff_rank=1.05 — would refute the rank-eff_rank-match recipe at the most concentrated block in the model). INCONCLUSIVE otherwise.
-   - Artifacts: experiments/block2_lowrank_cycle285.py, autoresearch/results/cycle_285_block2_lowrank.json
-
 296. **1-block [2] K=512 — does block 2 alone at maximum K beat cycle 271 [1] K=512 (43.82) on the per-block axis?**
    - Context: Cycle 271 established the [1] K=512 1-block recipe at **43.82 PPL / 393,984 params** as the best 1-block K=512 result (and current PPL Pareto winner). Cycle 271 also tested [4] K=512 (44.63) and [7] K=512 (45.37) — block 1 wins by 0.81 / 1.55 PPL. Block 2 has never been tested at K=512. Cycle 281 showed [1,2] K=512 cascade hits 44.34 (dominated by [1] alone), but that does NOT tell us how [2] alone behaves. Cycle 283's [2] K-sweep at K∈{16,32,64} showed [2] BEATS [1] at every matched K (K=64: [2]=47.51 vs [1]=48.05; K=32: [2]=47.90 vs [1]=49.65). Hypothesis: extrapolating cycle 283's per-K [2]-beats-[1] trend, [2] K=512 should land below cycle 271's 43.82 — potentially the first sub-43 1-block K=512 measurement and a new dominant Pareto winner on the PPL axis.
    - Setup: New script `experiments/one_block_2_k512_cycle286.py`. Mirror cycle 271 (`experiments/one_block_k512_sweep_cycle271.py`) verbatim but with BLOCKS=[2] only, K=512, W_out+b_out trainable (cycle 271 form). Joint Adam LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, best-state restore. 3 seeds {42, 137, 2024}. Disjoint N_CALIB=200/N_EVAL=100, SEQ_LEN=128, MPS. ~7 min wall (1 subset × 3 seeds, matches cycle 281's [1,2] timing).
@@ -63,6 +57,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 285
+
+295. **Block 2 c_proj rank-r weight-SVD sweep** *(CONFIRMED — cycle 285)*
+   - **Outcome: CONFIRMED** — r=2 retrain best_mean=**49.329±0.133** at 2,304 trainable params (≤ 50.0 by 0.67 PPL). Below float (53.895) by 4.57 PPL. Block 2 IS a usable rank-2 c_proj weight-SVD target. BUT **cycle 285 is strictly dominated on both axes by cycle 280 b1 r=2** (same 2,304 params, 49.03 PPL, 0.30 PPL better): eff_rank=1.05 at block 2 does NOT translate to a Pareto win over block 1 (eff_rank=1.94). Cycle 285 DOES strictly dominate cycle 283 [2] K=16 (13,056 params, 49.46) on both axes (5.7× fewer params AND 0.13 PPL better) — new best-in-class for block 2 isolation. No-retrain sweep: r=1→72.38, r=2→64.08, r=5→64.09, r=10→62.16 (all far above gate; r=1 retrain NOT triggered). Geometric finding: block 2 c_proj WEIGHT SVD is essentially flat (top-5 SVs 38,15,13,12,12); the cycle 278 eff_rank=1.05 is an OUTPUT-covariance property driven by the input, not a weight-rank property. All 3 seeds hit best step ∈ [3300, 3900], still descending at budget cap. Restore asserts PASS. Init PPL deterministic 64.08 across seeds. Wall ~8 min.
+   - Artifacts: `experiments/block2_lowrank_cycle285.py`, `autoresearch/plans/cycle_285.md`, `autoresearch/briefs/cycle_285.md`, `autoresearch/results/cycle_285_block2_lowrank.json`, `autoresearch/results/cycle_285_summary.md`, `autoresearch/logs/cycle_285_run.log`, `autoresearch/results/cycle_285_manifest.txt`
+
 
 ### Cycle 284
 
