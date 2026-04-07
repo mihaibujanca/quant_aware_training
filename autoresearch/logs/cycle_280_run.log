@@ -1,0 +1,78 @@
+Device: mps
+Loading GPT-2 and data...
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Calibration: 200 seqs, Eval: 100 seqs
+Float baseline PPL...
+
+`loss_type=None` was set in the config but it is unrecognized. Using the default loss: `ForCausalLMLoss`.
+Float PPL: 53.895  (1.4s)
+
+SVD of block 1 c_proj.weight...
+  SVD done in 0.1s; U (3072, 768), S (768,), Vh (768, 768)
+  Top-5 singular values: [28.706462860107422, 23.103559494018555, 18.841386795043945, 13.83397102355957, 13.739469528198242]
+  S[0], S[1], S[4], S[9]: 28.7065, 23.1036, 13.7395, 9.0678
+  S[-1]: 0.134855
+  Energy fractions: r=1: 0.0459, r=2: 0.0757, r=5: 0.1167, r=10: 0.1523
+
+=== No-retrain rank-r sweep ===
+  r=  1: PPL=59.751  (Δfloat=+5.856, +10.87%)  [1.3s, energy=0.0459]
+  r=  2: PPL=57.658  (Δfloat=+3.763, +6.98%)  [1.3s, energy=0.0757]
+  r=  5: PPL=56.833  (Δfloat=+2.938, +5.45%)  [1.3s, energy=0.1167]
+  r= 10: PPL=56.730  (Δfloat=+2.835, +5.26%)  [1.3s, energy=0.1523]
+  Restored original c_proj.weight, PPL=53.895 (should match float 53.895)
+
+=== Retrain at r=2 (3 seeds) ===
+
+--- seed 42 ---
+
+  init PPL (rank-2 no retrain): 57.658
+  Trainable params: 2,304 (expect 2,304 = 2*768 + 768)
+    step  500: eval_ppl=52.6163  best=52.6163@500
+    step 1000: eval_ppl=51.2206  best=51.2206@1000
+    step 1500: eval_ppl=50.2972  best=50.2972@1500
+    step 2000: eval_ppl=49.9269  best=49.7568@1900
+    step 2500: eval_ppl=49.4051  best=49.4051@2500
+    step 3000: eval_ppl=49.4491  best=49.3571@2900
+    step 3500: eval_ppl=49.2268  best=49.2268@3500
+    step 4000: eval_ppl=49.2498  best=49.0603@3900
+  seed 42: init=57.6581 best=49.0603@3900 final@4000=49.2498 restored=49.0603  [2.6 min]
+
+--- seed 137 ---
+
+  init PPL (rank-2 no retrain): 57.658
+  Trainable params: 2,304 (expect 2,304 = 2*768 + 768)
+    step  500: eval_ppl=52.8621  best=52.8621@500
+    step 1000: eval_ppl=50.9879  best=50.9879@1000
+    step 1500: eval_ppl=50.0990  best=50.0990@1500
+    step 2000: eval_ppl=49.8619  best=49.8619@2000
+    step 2500: eval_ppl=49.7622  best=49.7061@2400
+    step 3000: eval_ppl=49.4075  best=49.3620@2900
+    step 3500: eval_ppl=49.2482  best=49.2124@3100
+    step 4000: eval_ppl=49.0741  best=49.0367@3900
+  seed 137: init=57.6581 best=49.0367@3900 final@4000=49.0741 restored=49.0367  [2.6 min]
+
+--- seed 2024 ---
+
+  init PPL (rank-2 no retrain): 57.658
+  Trainable params: 2,304 (expect 2,304 = 2*768 + 768)
+    step  500: eval_ppl=52.7139  best=52.7139@500
+    step 1000: eval_ppl=50.9246  best=50.9246@1000
+    step 1500: eval_ppl=50.1039  best=50.0992@1400
+    step 2000: eval_ppl=49.7048  best=49.7048@2000
+    step 2500: eval_ppl=49.4973  best=49.4973@2500
+    step 3000: eval_ppl=49.3903  best=49.3548@2800
+    step 3500: eval_ppl=49.2728  best=49.2148@3400
+    step 4000: eval_ppl=49.0004  best=49.0004@4000
+  seed 2024: init=57.6581 best=49.0004@4000 final@4000=49.0004 restored=49.0004  [2.6 min]
+
+Retrain at r=2: best_mean=49.0324 ± 0.0246  (n=3)
+
+=== Verdict ===
+  noretrain PPLs: r=1: 59.751, r=2: 57.658, r=5: 56.833, r=10: 56.730
+  any noretrain ≤ 55.0? False
+  all noretrain ≥ 60.0? False
+  r=2 retrain best_mean = 49.0324  (CONFIRMED ≤ 54.0, REFUTED ≥ 55.0)
+  VERDICT: CONFIRMED
+
+Wrote autoresearch/results/cycle_280_block1_lowrank.json
+Wrote autoresearch/results/cycle_280_summary.md
