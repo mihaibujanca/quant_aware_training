@@ -1,0 +1,137 @@
+Cycle 287 — Item 297 — Audit Result
+
+Audit status: PASS
+Auditor verdict: CONFIRMED (unchanged — provisional outcome holds)
+Commit: 920dcde
+Branch: geometric_compression
+
+== Verdict arithmetic ==
+  best_mean = 42.78529
+  CONFIRMED clause: 42.78529 <= 43.0  ?  TRUE  (margin 0.21471 PPL)
+  REFUTED   clause: 42.78529 >= 43.7  ?  FALSE (shortfall 0.91471 PPL)
+  -> CONFIRMED
+
+  Std recomputed from per-seed bests:
+    mean(42.78651988, 42.80000092, 42.76934406) = 42.78528829             match
+    dev^2 sum/3 = 1.5740e-4                                                match
+    sqrt          = 0.012546 ~ 0.012546 reported                           match (5dp)
+
+== Per-seed sanity ==
+  seed 42  : init=54.68924816 best=42.78652@8000 final=42.78652
+  seed 137 : init=54.68924529 best=42.80000@8000 final=42.80000
+  seed 2024: init=54.68924529 best=42.76934@8000 final=42.76934
+
+  init PPL across seeds within 1e-6 (deterministic topk lstsq seed-free)  PASS
+  init PPL matches cycle 271 [1] init 54.68925 exactly                    PASS
+  |restored - best| < 1e-3 per seed                                       PASS (best at terminal)
+  ALL 3 seeds best at step 8000 -- budget-bounded                         NOTE (still descending)
+  trainable params per fit = 393,984                                      PASS asserted
+
+  All 3 seeds individually below 43.0:
+    seed 42  : 42.78652 < 43.0 by 0.21348
+    seed 137 : 42.80000 < 43.0 by 0.20000
+    seed 2024: 42.76934 < 43.0 by 0.23066
+  No seed marginally near the threshold; verdict robust.
+
+== Matched-config sanity vs cycle 271 [1] K=512 4k ==
+  Step-4000 eval per seed (cycle 287 vs cycle 271):
+    seed 42  : 43.82617220 vs 43.82616280 (delta +9.4e-6)
+    seed 137 : 43.84588643 vs 43.84588361 (delta +2.8e-6)
+    seed 2024: 43.78931213 vs 43.78931819 (delta -6.1e-6)
+  All deltas < 1e-4. PASS — only the budget extension differs from cycle 271.
+  EVAL_EVERY change (100->200) does not affect optimizer state (eval is in
+  no_grad). The 1.04 PPL improvement is unambiguously attributable to the
+  additional 4000 Adam steps.
+
+== Plan adherence ==
+  SUBSETS=[[1]]                                                PASS
+  K=512                                                        PASS
+  SEEDS=[42,137,2024]                                          PASS
+  N_STEPS=8000, LR=1e-4, EVAL_EVERY=200                        PASS
+  N_CALIB=200, N_EVAL=100, SEQ_LEN=128, disjoint               PASS
+  MPS, GPT-2 small, wikitext-2 val                             PASS
+  Float PPL 53.895 within 0.5 of reference                     PASS (exact)
+  W_out+b_out trainable, all else frozen (cycle 271 form)      PASS
+
+== Baseline cross-checks (vs manifest) ==
+  cycle 271 [1] K=512 4k     43.82045  match
+  cycle 286 [2] K=512 4k     43.56269  match
+  float                      53.895    match (within 1e-4)
+
+== Delta checks ==
+  vs float                   42.78529 - 53.89489 = -11.10960   match
+  vs cycle 271 [1] K=512 4k  42.78529 - 43.82045 =  -1.03517   match
+  vs cycle 286 [2] K=512 4k  42.78529 - 43.56269 =  -0.77740   match
+
+== Pareto reading ==
+  Cycle 287 [1] K=512 8k (393,984 params, 42.78529 PPL):
+    Beats cycle 286 [2] K=512 4k (393,984, 43.5627) by 0.7774 PPL
+    Beats cycle 271 [1] K=512 4k (393,984, 43.8205) by 1.0352 PPL
+    -> NEW PPL Pareto winner on the 393,984-param tier (replaces cycle 286 [2])
+    Ultra-low param region: cycle 280 b1 r=2 (2,304, 49.03) still dominates
+    Mid-low param region: cycle 282 b10 r=17 (13,824, 50.04) and cycle 283 [2]
+    K=16 (13,056, 49.46) still dominate. Different cells.
+
+  Verdict: CONFIRMED. Manifest and exec_result both call this out correctly.
+  IMPORTANT NUANCE: cycle 287 vs cycle 286 is at MISMATCHED budgets (8k vs 4k).
+  Cycle 286 was also budget-bounded; cycle 286 auditor recommended an 8k retest
+  of [2] K=512. Cycle 287 strengthens this recommendation. Until that retest
+  is done, the [1]-vs-[2] question at K=512 remains open at MATCHED budgets.
+  Cycle 287 takes the 393,984-tier crown by "what we have measured", not by
+  the absolute [1]-vs-[2] comparison.
+
+== Hypothesis full confirmation ==
+  Item 297 hypothesis sub-claims:
+    1. "below 43.0"                       -> TRUE  (42.7853 < 43.0 by 0.215)
+    2. "new dominant PPL Pareto anchor"   -> TRUE  at the 393,984 tier
+  Both confirmed; CONFIRMED is the literally correct verdict.
+
+== Budget-extension family audit ==
+  cycle 269 K=1   6-block 4k->16k  bought -5.27 PPL  (4x extension)
+  cycle 287 [1]   K=512 1-block 4k->8k bought -1.04 PPL  (this; 2x extension)
+  cycle 274 K=64  5-block 4k->8k   bought -0.80 PPL  (2x extension)
+  cycle 254 K=128 5-block 4k->8k   bought -0.10 PPL  (2x extension; plateau)
+  Per-doubling rates: 287 (-1.04) > 274 (-0.80) > 254 (-0.10). Item 297's
+  "fewest trainable -> most slack per param" heuristic is qualitatively
+  consistent (394K is fewest at K=512 among cascades tested; the 287 gain
+  is on the high end of 2x extensions). Not a load-bearing claim.
+
+== Geometric audit ==
+  The matched-config reproducibility (<1e-4 per seed at step 4000) is the
+  strongest possible empirical demonstration that the [1] K=512 4k cap was
+  BUDGET-LIMITED, not floor-limited. Same scorer, same lstsq init, same
+  optimizer state for 4000 steps; the only difference is whether training
+  continues for another 4000. The 1.04 PPL gain is purely from additional
+  gradient descent on the same loss surface. Manifest and exec_result both
+  state this faithfully without overreach.
+
+== Budget-bounded caveat ==
+  All 3 seeds best at step 8000 (terminal). Final ~1000 steps still
+  descending. True floor remains unmeasured -- a 16k extension would
+  likely push best_mean below 42.5. Manifest and exec_result explicitly
+  note this caveat. Auditor concurs.
+
+== Artifacts ==
+  experiments/one_block_1_k512_8k_cycle287.py     present
+  autoresearch/plans/cycle_287.md                 present  (25 lines, 8 headings)
+  autoresearch/briefs/cycle_287.md                present
+  autoresearch/results/cycle_287_one_block_1_k512_8k.json present
+  autoresearch/results/cycle_287_summary.md       present
+  autoresearch/results/cycle_287_manifest.txt     present  (commit=920dcde)
+  autoresearch/results/cycle_287_exec_result.txt  present  (commit=920dcde)
+  autoresearch/logs/cycle_287_run.log             present
+  autoresearch/audits/cycle_287.md                present  (this audit)
+  autoresearch/agenda.md                          updated  (297 moved to PAST as Cycle 287)
+  autoresearch/logs/experiments.tsv               appended (row 287 with 8 cols, commit 920dcde)
+
+== Final ==
+  audit_status: PASS
+  final_verdict: CONFIRMED (unchanged)
+  corrections: none
+  next_action: keep provisional outcome; recommend P0 cycle 286 [2] K=512 8k retest
+
+item_number: 297
+outcome: CONFIRMED
+key_metric: best_mean=42.7853_pm_0.0125_le_43.0_by_0.215_PPL_margin_NEW_PPL_PARETO_winner_393984_tier_BEATS_cycle_286_b2_K512_4k_43.563_by_0.777_BEATS_cycle_271_b1_K512_4k_43.821_by_1.035_matched_config_step_4000_evals_within_1e_4_only_budget_differs_all_3_seeds_step_8000_budget_bounded_audit_PASS
+commit: 920dcde
+paths: autoresearch/audits/cycle_287.md,autoresearch/results/cycle_287_audit.txt
