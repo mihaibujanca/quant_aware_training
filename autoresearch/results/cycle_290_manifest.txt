@@ -1,0 +1,136 @@
+Cycle 290 Manifest — Item 300: 1-block [2] K=512 extended budget — 8000 steps
+
+Commit: PENDING
+Branch: geometric_compression
+Verdict: INCONCLUSIVE
+
+== Verdict logic (item 300 verbatim) ==
+CONFIRMED iff best_mean <= 42.5 (block 2 beats cycle 287 [1] K=512 8k=42.785 by >=0.29 PPL)
+REFUTED   iff best_mean >= 43.0 (block 2 buys < 0.56 PPL from extension; [1] still wins)
+INCONCLUSIVE otherwise (dead zone (42.5, 43.0))
+
+  best_mean = 42.7521 <= 42.5 ?  FALSE  (over by 0.2521 PPL)
+  best_mean = 42.7521 >= 43.0 ?  FALSE  (under by 0.2479 PPL)
+  -> INCONCLUSIVE (dead zone)
+
+== Per-seed [2] K=512 8000-step (n=3 seeds {42, 137, 2024}, population std) ==
+init_ppl_mean    = 55.46118  (deterministic; matches cycle 286 init within 1.1e-5 per seed)
+best_mean        = 42.7521 +/- 0.0317
+best_min         = 42.7074  (seed 2024 @8000)
+best_max         = 42.7767  (seed 42   @8000)
+
+  seed 42:   init=55.46118  best=42.7767 @step 8000  final@8000=42.7767  restored=42.7767
+  seed 137:  init=55.46119  best=42.7723 @step 7800  final@8000=42.7793  restored=42.7723
+  seed 2024: init=55.46118  best=42.7074 @step 8000  final@8000=42.7074  restored=42.7074
+
+best_step_mean = 7933 +/- 94 (seeds 8000, 7800, 8000) — TWO of three seeds at the 8000-step cap
+                still descending; one (seed 137) overfit slightly past 7800. STILL BUDGET-BOUNDED
+                in aggregate, with mild evidence of approaching the floor.
+
+Restore asserts pass for all 3 fits (|restored - best| < 1e-3, exact for all three).
+Float PPL measured in-run: 53.895 (exact match to reference).
+Trainable params per fit: 393,984 = 512*768 (W_out) + 768 (b_out) asserted.
+
+== Cross-checks vs cycle 286 (matched-config reproducibility) ==
+Step-4000 evals (cycle 290 vs cycle 286, must match within 1e-4):
+  seed 42:   cycle 290 = 43.530286  cycle 286 = 43.530270  |Δ|=1.54e-05  PASS
+  seed 137:  cycle 290 = 43.593368  cycle 286 = 43.593362  |Δ|=5.51e-06  PASS
+  seed 2024: cycle 290 = 43.564445  cycle 286 = 43.564442  |Δ|=2.49e-06  PASS
+
+Init PPLs (must match within 1e-4):
+  seed 42:   cycle 290 = 55.4611762  cycle 286 = 55.4611872  |Δ|=1.10e-05  PASS
+  seed 137:  cycle 290 = 55.4611853  cycle 286 = 55.4611822  |Δ|=3.17e-06  PASS
+  seed 2024: cycle 290 = 55.4611763  cycle 286 = 55.4611872  |Δ|=1.08e-05  PASS
+
+The 1e-5 noise across runs is MPS non-determinism on identical operations; well within 1e-4 tolerance.
+The −0.811 PPL gain (43.563 → 42.752) is therefore unambiguously attributed to the extra 4000 Adam steps.
+
+== Baselines ==
+Float baseline ref               =  53.89500
+cycle 286 [2] K=512 4k            =  43.56269  (393,984 params, INCONCLUSIVE 4k cap)
+cycle 287 [1] K=512 8k            =  42.78533  (393,984 params, current PPL Pareto winner)
+cycle 271 [1] K=512 4k            =  43.82045  (393,984 params)
+
+== Deltas ==
+cycle 290 [2] K=512 8k best_mean = 42.7521  at 393,984 params
+delta vs float                            = -11.1429  (below float by 11.14 PPL)
+delta vs cycle 286 [2] K=512 4k           =  -0.8106  (pure budget gain on block 2 from 4k -> 8k)
+delta vs cycle 287 [1] K=512 8k           =  -0.0332  (matched 8k budget [2] vs [1] — barely beats [1], inside 1-sigma)
+delta vs cycle 271 [1] K=512 4k           =  -1.0683
+
+== Pareto reading ==
+- Cycle 290 (393,984 params, 42.752 PPL) vs cycle 287 (393,984 params, 42.785 PPL):
+  cycle 290 is 0.033 PPL BETTER at the SAME param count (1.05x cycle 287's std = 0.013).
+  The 0.033 PPL improvement is INSIDE 1-sigma of either run's best_std and is statistically
+  indistinguishable from a tie. Block 2 nominally edges out block 1 at K=512 8k but the
+  margin is too small to declare a winner.
+- Cycle 290 STRICTLY DOMINATES cycle 286 [2] K=512 4k on PPL axis at SAME param count
+  (-0.811 PPL pure budget gain). Cycle 286 is now superseded.
+- Cycle 290 STRICTLY DOMINATES cycle 271 [1] K=512 4k on PPL axis at SAME param count
+  (-1.068 PPL — slightly better than cycle 287's -1.035 vs the same baseline).
+- BOTH cycle 290 and cycle 287 occupy the same 393,984-param Pareto tile within noise.
+  No clear PPL Pareto winner in the [1]-vs-[2] K=512 8k comparison.
+
+== Per-K [2]-vs-[1] trend (cycle 283 + 286 + 287 + 290) ==
+4k budget (cycle 283 / 271 / 286):
+  K=32:  Δ=-1.75 PPL ([2] better)
+  K=64:  Δ=-0.53 PPL ([2] better)
+  K=512: Δ=-0.258 PPL ([2] better, 4k cap, INCONCLUSIVE)
+8k budget (cycles 287 / 290):
+  K=512: Δ=-0.033 PPL ([2] nominally better, INSIDE noise — TIE)
+
+The "block 2 beats block 1" trend at K=512 from cycle 286 SHRINKS further when both are
+given matched 8k budget — from -0.258 (4k) to -0.033 (8k). At matched budget the gap
+collapses inside noise. The cycle 286 advantage was a budget artifact: block 1's 4k cap
+was binding more tightly than block 2's, so extending block 1 to 8k closed most of the gap.
+After cycle 290, the residual gap is statistically zero.
+
+== Budget-extension family update ==
+[1] K=512  4k -> 8k  (cycle 287): -1.035 PPL  (43.821 -> 42.785)
+[2] K=512  4k -> 8k  (cycle 290): -0.811 PPL  (43.563 -> 42.752)  <-- THIS RUN
+[K=1] 5b   4k -> 16k (cycle 269): -5.27 PPL
+[K=64] 5b  4k -> 8k  (cycle 274): -0.80 PPL
+[K=128] 5b 4k -> 8k  (cycle 254): -0.10 PPL
+
+Both K=512 single-block extensions buy ~1 PPL when doubled to 8k. Cycle 287 buys slightly
+more than cycle 290 (-1.035 vs -0.811), consistent with a slightly LOWER starting point
+relative to the floor for block 2 at 4k. The two converge to within 0.033 PPL at 8k.
+
+== Geometric reading ==
+- Block 2 c_proj cycle 278 OUTPUT eff_rank = 1.05; this is an INPUT-driven 1D-active
+  subspace on block 2's input distribution. Cycle 285 b2 r=2 weight-SVD: 49.33 PPL @
+  2,304 params (DOMINATED by cycle 280 b1 r=2 = 49.03). The "weight-rank vs channel-K"
+  contrast holds: weight-SVD on block 2 underperforms weight-SVD on block 1, but
+  channel-K on block 2 EQUALS channel-K on block 1 within noise. Channel-K topk
+  exploits the input concentration that weight-SVD does not see.
+- The collapse of the [2]-beats-[1] gap from -0.258 (4k) to -0.033 (8k) suggests
+  the per-K trend extrapolation is misleading at the high-K end. K∈{16, 32, 64} have
+  much smaller channel budgets (Adam slack >> floor distance), where block 2's input
+  concentration matters MORE because the topk subset is more sparse. At K=512 the
+  effective subset is wide enough that block 1 and block 2 both saturate their
+  respective floors and the difference vanishes.
+- INCONCLUSIVE: at matched 8k budget, [1] and [2] K=512 are statistically tied.
+  Both are useful and interchangeable for the 393,984-param tile.
+
+== Wall time / fits ==
+Total wall: 12.8 min over 3 fits (4.3 min/fit). Under 30-min cap. Matches cycle 287 (13 min).
+Two of three seeds best at step 8000 (still descending), one (seed 137) at step 7800
+(mild overfit by step 8000). Aggregate is BUDGET-BOUNDED, but the residual descent
+rate from step 4000 to step 8000 is ~0.10 PPL per 1000 steps near the end vs 0.20-0.30
+earlier — slope is decreasing, floor approaching.
+
+== Artifacts ==
+experiments/block2_k512_8k_cycle290.py
+autoresearch/plans/cycle_290.md
+autoresearch/briefs/cycle_290.md
+autoresearch/results/cycle_290_block2_k512_8k.json
+autoresearch/results/cycle_290_summary.md
+autoresearch/logs/cycle_290_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+
+item_number: 300
+outcome: INCONCLUSIVE
+key_metric: best_mean=42.7521_pm_0.0317_dead_zone_42.5_43.0_block_2_K512_8k_393984_params_BEATS_cycle_287_b1_K512_8k_42.785_by_0.033_PPL_INSIDE_1_sigma_TIE_at_matched_8k_budget_per_K_2_beats_1_gap_collapses_from_-0.258_at_4k_to_-0.033_at_8k_block_2_advantage_was_BUDGET_ARTIFACT_step_4000_evals_match_cycle_286_within_2e_5_per_seed
+commit: PENDING
+paths: experiments/block2_k512_8k_cycle290.py,autoresearch/plans/cycle_290.md,autoresearch/briefs/cycle_290.md,autoresearch/results/cycle_290_block2_k512_8k.json,autoresearch/results/cycle_290_summary.md,autoresearch/logs/cycle_290_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv

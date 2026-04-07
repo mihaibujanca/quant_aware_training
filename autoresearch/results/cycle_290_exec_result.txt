@@ -1,0 +1,90 @@
+Cycle 290 — Item 300 — Execution Result
+
+Verdict: INCONCLUSIVE
+Commit: PENDING
+Branch: geometric_compression
+
+Script: experiments/block2_k512_8k_cycle290.py
+Log:    autoresearch/logs/cycle_290_run.log
+Result: autoresearch/results/cycle_290_block2_k512_8k.json
+
+Key metrics:
+  float_ppl                 = 53.895
+  [2] K=512 8k best_mean    = 42.7521
+  [2] K=512 8k best_std     = 0.0317
+  [2] K=512 8k best_min     = 42.7074  (seed 2024 @8000)
+  [2] K=512 8k best_max     = 42.7767  (seed 42   @8000)
+  best_step_mean            = 7933 (seeds 8000, 7800, 8000)
+  trainable params per fit  = 393,984
+
+Verdict logic (item 300 verbatim):
+  CONFIRMED iff best_mean <= 42.5 (block 2 beats cycle 287 [1] K=512 8k=42.785 by >=0.29 PPL)
+  REFUTED   iff best_mean >= 43.0 (block 2 buys <0.56 PPL from extension; [1] still wins)
+  INCONCLUSIVE otherwise
+
+  best_mean 42.7521 > 42.5    ->  CONFIRMED clause NOT triggered (over by 0.252)
+  best_mean 42.7521 < 43.0    ->  REFUTED clause NOT triggered   (under by 0.248)
+  ->  INCONCLUSIVE (dead zone)
+
+Wall time: 12.8 min total (3 Adam fits @ 4.3 min each).
+
+Sanity checks:
+  float PPL within 0.5 of reference 53.895                    PASS (exact)
+  init PPL == cycle 286 init within 1e-4 per seed             PASS (max |Δ|=1.10e-05)
+  step-4000 evals == cycle 286 within 1e-4 per seed           PASS (max |Δ|=1.54e-05)
+  trainable param count == 393,984                            PASS (512*768 + 768)
+  restore best-state per seed (|restored - best| < 1e-3)      PASS all 3 seeds
+
+Cross-check tells us:
+  Init PPL is deterministic (topk+lstsq is seed-free at this seed level on MPS within 1e-5).
+  Step-4000 evals reproduce cycle 286 to 5 decimal places — confirms cycle 290 is the
+  IDENTICAL trajectory through step 4000, and the −0.811 PPL gain (43.563 → 42.752)
+  is unambiguously attributed to the extra 4000 Adam steps, NOT to any config drift.
+
+Pareto reading:
+  cycle 290 (393,984 params, 42.752 PPL) vs cycle 287 (393,984 params, 42.785 PPL):
+    nominally [2] better by 0.033 PPL at SAME param count, but margin is INSIDE 1-sigma
+    of either run's best_std. Statistically a TIE.
+  cycle 290 STRICTLY DOMINATES cycle 286 [2] K=512 4k on PPL at SAME params (-0.811).
+  cycle 286 ([2] K=512 4k) is now superseded by cycle 290.
+  No clear PPL Pareto winner in the [1]-vs-[2] K=512 8k comparison.
+
+Hypothesis falsification (item 300 verbatim):
+  Hypothesis stated: "[2] K=512 drops below 42.0 (matches or beats cycle 287 [1] K=512
+  by ≥0.78 PPL)". Measured: best_mean = 42.752, ABOVE 42.0 by 0.752 PPL. The hypothesis
+  asked for a 0.78 PPL margin over [1]; measured margin is 0.033 PPL, more than 20x
+  smaller. The "block 2 still wins at K=512 IF given the same Adam budget" claim is
+  TECHNICALLY TRUE in sign but FALSE in magnitude — at matched budget, the gap from
+  cycle 286 (-0.258) does NOT extrapolate, it COLLAPSES.
+
+Per-K [2]-vs-[1] trend update (matched-budget where available):
+  K=32  4k: Δ=-1.75 PPL  ([2] better, large margin)
+  K=64  4k: Δ=-0.53 PPL  ([2] better)
+  K=512 4k: Δ=-0.258 PPL ([2] better, INCONCLUSIVE, both budget-bounded)
+  K=512 8k: Δ=-0.033 PPL ([2] nominally better, INSIDE noise — STATISTICAL TIE)
+  Trend: at K=512, the per-K [2]-beats-[1] advantage that cycle 283 documented at
+  small K vanishes once both subsets are given matched 8k Adam budget. The cycle 286
+  4k advantage was a budget artifact — block 1's 4k cap was binding harder.
+
+Budget-extension family (where matched 4k -> 8k double-budget is measured):
+  [1] K=512 cycle 287 : -1.035 PPL (43.821 -> 42.785)
+  [2] K=512 cycle 290 : -0.811 PPL (43.563 -> 42.752)  <-- THIS RUN
+  [K=1] 5-block cycle 269: -5.27 PPL (4k -> 16k)
+  [K=64] 5-block cycle 274: -0.80 PPL
+  [K=128] 5-block cycle 254: -0.10 PPL
+
+  Both K=512 single-block extensions buy ~0.8-1.0 PPL on doubling. Cycle 287 buys more
+  (-1.035) than cycle 290 (-0.811) because cycle 286 had already started lower at 4k.
+  The two converge.
+
+Geometric reading:
+  Block 2 cycle 278 OUTPUT eff_rank = 1.05 (extreme INPUT concentration). Cycle 285 b2 r=2
+  weight-SVD = 49.33 (DOMINATED by b1 r=2 = 49.03). Channel-K topk on block 2 EQUALS
+  channel-K topk on block 1 within noise at K=512 8k. The "structure lives in INPUT not
+  WEIGHT for block 2" reading from cycle 286 holds, but it does NOT imply block 2 will
+  outperform block 1 at large K + matched budget.
+
+Next agenda items: BOTH block 1 K=512 8k AND block 2 K=512 8k are now PPL Pareto
+co-winners at the 393,984-param tile. Future single-block K=512 work should test
+3-block subsets ({1, 2, ?}) at K=512 8k, or push K higher (K=1024). Cycle 290 closes
+the [1]-vs-[2] question at K=512: there is no winner.
