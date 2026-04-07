@@ -1,0 +1,76 @@
+Cycle 278 Manifest — Item 288: All-blocks c_proj output eff_rank census
+
+Commit: f780cbd
+Branch: geometric_compression
+Verdict: INCONCLUSIVE
+
+== Verdict logic (item 288 verbatim) ==
+CONFIRMED iff (block 4 eff_rank <= 50 OR block 7 eff_rank <= 50)
+          AND ALL of {2, 3, 6, 8, 9, 10} eff_rank >= 100
+REFUTED   iff blocks 4 AND 7 BOTH eff_rank >= 100
+INCONCLUSIVE otherwise
+
+  block 4 eff_rank = 49.0399 <= 50  -> CONFIRMED clause 1 TRIGGERS (margin 0.9601)
+  block 7 eff_rank = 297.7935
+  mid-block eff_ranks {2, 3, 6, 8, 9, 10}:
+    block  2 =   1.0503  -> < 100 (FAIL)
+    block  3 =  24.2853  -> < 100 (FAIL)
+    block  6 = 290.9718  -> >= 100 PASS
+    block  8 = 291.4056  -> >= 100 PASS
+    block  9 = 195.4961  -> >= 100 PASS
+    block 10 =  16.7024  -> < 100 (FAIL)
+  -> CONFIRMED clause 2 FAILS (3 of 6 mid-blocks below 100)
+  -> REFUTED clause: b4 AND b7 BOTH >= 100? b4 = 49.04 < 100 -> FAIL
+  -> INCONCLUSIVE
+
+== 12-block eff_rank profile ==
+  block  0: eff_rank =   71.9302, top1_energy = 0.2771
+  block  1: eff_rank =    1.9448, top1_energy = 0.9294   (cycle 267 sanity, delta=0)
+  block  2: eff_rank =    1.0503, top1_energy = 0.9961
+  block  3: eff_rank =   24.2853, top1_energy = 0.5887
+  block  4: eff_rank =   49.0399, top1_energy = 0.4795
+  block  5: eff_rank =  179.1913, top1_energy = 0.2462   (cycle 267 sanity, delta=0)
+  block  6: eff_rank =  290.9718, top1_energy = 0.1421
+  block  7: eff_rank =  297.7935, top1_energy = 0.1535
+  block  8: eff_rank =  291.4056, top1_energy = 0.1452
+  block  9: eff_rank =  195.4961, top1_energy = 0.2263
+  block 10: eff_rank =   16.7024, top1_energy = 0.5889
+  block 11: eff_rank =   22.4887, top1_energy = 0.4895   (cycle 267 sanity, delta=0)
+
+Sanity check vs cycle 267: blocks {1, 5, 11} reproduce to abs delta = 0 (identical numerics on identical 200-doc calib slice). assert |cur - ref| < 1e-3 passed for all 3.
+
+== Setup ==
+Pure analysis. 0 trainable params. No Adam, no retraining.
+Single forward pass over 200 calib seqs (25,600 tokens) wikitext-2 val SEQ_LEN=128 MPS GPT-2 small.
+Hooks on all 12 model.transformer.h[l].mlp.c_proj modules; per-block covariance C_l = Y_l^T Y_l / N (768x768).
+torch.linalg.eigh -> eff_rank = exp(H(p)) where p = eigvals/sum(eigvals).
+Per-block c_proj.weight (3072x768) SVD top-20 sv (operator side).
+Wall ~5 min total.
+
+== Geometric reading ==
+- U-shape hypothesis is REFUTED at the descriptive level. Actual pattern is bathtub-with-block-0-bump:
+  - 4 contiguous low-rank concentrators at blocks 1-4 (eff_rank 1.05-49.04)
+  - block 0 intermediate (71.93)
+  - 5 contiguous high-rank diffusers at blocks 5-9 (eff_rank 179.19-297.79)
+  - 2 low-rank concentrators at the late edge blocks 10-11 (16.70, 22.49)
+- Block 2 is essentially rank-1 (eff_rank 1.05, top-1 energy 99.61%) — even more concentrated than block 1.
+- Block 10 is the surprise: eff_rank 16.70 < block 11 (22.49). Block 10 is the most rank-concentrated late block in the model and is currently unexploited by any cycle.
+- Block 4 is on the boundary (49.04, just under the 50 threshold).
+- Block 7 is HIGH-rank (297.79). Pareto-winning [1,4,7] cascade includes one concentrator + one boundary + one diffuser — cascade does NOT pick blocks by activation eff_rank. Cycle 273 already REFUTED eff_rank-guided hetero K at the cascade level.
+- Eff_rank ordering vs cycle 271 1-block PPL ordering: [1]=43.82 < [4]=44.63 < [7]=45.37 in same direction as eff_rank 1.94 < 49.04 < 297.79 — weak monotone correlation but 150x rank range maps to only 1.55 PPL spread.
+- Two unexploited candidates: block 2 (rank ~1, untested) and block 10 (rank ~17, untested). Both have lower eff_rank than block 11 (the only late-block rank patch tested in cycle 270).
+
+== Wall time ==
+Wall ~5 min (single forward pass over 200 seqs + 12 small SVDs). 0 trainable params. No fits.
+
+== Artifacts (SHA256) ==
+c8e6a663669a6b9887b219622253f43dd2b24206677de6b8c2962c27f9238233  experiments/all_blocks_eff_rank_cycle278.py
+fe144e269fa19ac75cef30de18ceaffe01c7f4b07b238afde872d908badac581  autoresearch/plans/cycle_278.md
+6edc9fdca462922133322ecb841e57a4b35dda6de088ef1ddfa9579c7e627d7e  autoresearch/briefs/cycle_278.md
+0cad59ecf73e266f6d7b6a4467ef8798007fbbcbe68f9d5dbc4ac69440e6729f  autoresearch/results/cycle_278_all_blocks_eff_rank.json
+3a246fee05d6b56facf08041ea474aba31bd7f406ba2d7243253933c9e55908b  autoresearch/results/cycle_278_summary.md
+384fe75479efb68014e5b01061b587341665293adc4ca16255d6964ee09abbeb  autoresearch/logs/cycle_278_run.log
+
+== Pareto update ==
+None directly: cycle 278 is pure analysis with 0 trainable params and produces no PPL points.
+Implications for future cycles: blocks 2 and 10 flagged as unexploited rank-concentrated single-block-patch candidates (parallel to cycle 270 block 11 rank-22). Predicted analogues: block 10 rank-16 single-block weight-SVD ~52-55 PPL after retrain (cycle 270 analogue), block 2 K=1-2 single-block compression ~50-60 PPL (untested rank-1 regime).

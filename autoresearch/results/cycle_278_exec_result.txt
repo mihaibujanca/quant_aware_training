@@ -1,0 +1,38 @@
+Cycle 278 — Item 288: All-blocks c_proj output eff_rank census
+
+Commit: f780cbd
+Verdict: INCONCLUSIVE (CONFIRMED clause 1 PASSES by 0.96, clause 2 FAILS, REFUTED clause FAILS)
+
+Summary:
+  block 4 eff_rank = 49.0399  (<= 50 by 0.96 — clause 1 of CONFIRMED triggers)
+  block 7 eff_rank = 297.7935 (>= 100 — block 7 is high-rank)
+  mid-block eff_ranks {2, 3, 6, 8, 9, 10} = {1.05, 24.29, 290.97, 291.41, 195.50, 16.70}
+    blocks {2, 3, 10} fail the >= 100 threshold -> CONFIRMED clause 2 FAILS
+  REFUTED clause (b4 AND b7 both >= 100): b4 = 49.04 < 100 -> FAILS
+  -> INCONCLUSIVE
+
+12-block eff_rank profile:
+  block  0:  71.93   block  6: 290.97
+  block  1:   1.94   block  7: 297.79
+  block  2:   1.05   block  8: 291.41
+  block  3:  24.29   block  9: 195.50
+  block  4:  49.04   block 10:  16.70
+  block  5: 179.19   block 11:  22.49
+
+Sanity check vs cycle 267: blocks {1, 5, 11} reproduce to abs delta = 0 (identical numerics).
+
+Wall ~5 min, 0 trainable params, single forward pass + 12 small SVDs.
+
+Key finding: U-shape hypothesis REFUTED at descriptive level. Actual pattern = bathtub-with-block-0-bump.
+4 contiguous low-rank concentrators at blocks 1-4 + 5 contiguous high-rank diffusers at blocks 5-9 + 2 low-rank concentrators at late edge blocks 10-11.
+Two unexploited candidates: block 2 (rank ~1) and block 10 (rank ~17, lower than block 11). Cycle 270 single-block weight-SVD recipe should be tried at block 10 next.
+Block 7 is HIGH-rank (298) — Pareto-winning [1,4,7] cascade does NOT pick blocks by activation eff_rank, consistent with cycle 273 REFUTED finding that eff_rank is descriptive not prescriptive.
+
+Artifacts:
+  experiments/all_blocks_eff_rank_cycle278.py
+  autoresearch/plans/cycle_278.md
+  autoresearch/briefs/cycle_278.md
+  autoresearch/logs/cycle_278_run.log
+  autoresearch/results/cycle_278_all_blocks_eff_rank.json
+  autoresearch/results/cycle_278_summary.md
+  autoresearch/results/cycle_278_manifest.txt
