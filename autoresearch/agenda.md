@@ -6,17 +6,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-277. **Block 11 c_proj output rank decomposition — what makes block 11 special at PPL?**
-   - **Motivation**: cycle 264 found that block 11 dominates the cycle 173 single-block C3 PPL ranking (+4.02%) but is the 11th-most disruptive in pullback κ (‖Δκ‖₁=2.48e-6, 700× smaller than block 2). The clean reading: late-block PPL damage is from output-channel structure (c_proj's read into the residual stream that feeds LN_f / lm_head), NOT trajectory geometry. Cycle 263 additionally found block 11 has the highest local linearity defect ε of any block at every scale, ~10× higher than blocks 1-9 — block 11 IS structurally different. The OPEN question: what is the rank/concentration structure of block 11's c_proj output that makes it so PPL-load-bearing? If c_proj_11's output has a very low effective rank (e.g. eff_rank ≤ 50 vs the mid-block typical ~350 from cycle 252), then a small number of output channels are driving most of the PPL contribution and a TARGETED compression of those channels would let us touch block 11 cheaply. If c_proj_11 is high-rank but the top SVs project strongly onto the lm_head reading direction (which we can measure as the cosine between top SVs of c_proj_11.weight and the lm_head weight rows), then the PPL-load is from *alignment*, not concentration.
-   - **Setup**: forward pass on the standard 200×128 wikitext-2 val calib slice (seed 42) collecting the FFN-output activation `mlp_out_11 = c_proj_11(σ(c_fc_11(ln2_out)))` at block 11 — shape (25600, 768). Compute SVD of `mlp_out_11.T @ mlp_out_11 / N` (768×768 covariance) to get eff_rank, top-k SV energy fractions (k=1, 5, 20, 50, 100, 200), and top-20 right singular vectors. SVD of `c_proj_11.weight` (768×3072) for the operator-level top-20 directions. Compute pairwise cosines between top-20 SVs of `mlp_out_11` and the rows of `lm_head.weight` (50257×768) — the strongest alignments tell us which lm_head reading channels block 11 feeds. As a control, run the same pipeline on block 5 (cycle 252's "structurally normal" mid-block) and block 1 (the structurally distinct early block from cycles 218/260). Pure analysis, no training. **Trainable_params=0**. Reuse cycle 252's geometric deep-dive harness with c_proj output collection added.
-   - **Hypothesis**: block 11 c_proj output has eff_rank ≤ 50 (concentration story) OR top-5 SVs of c_proj_11 align ≥0.5 cosine median with the top-200 lm_head reading directions (alignment story) — at least one of the two clean explanations holds.
-   - **Outcomes**:
-     - **CONFIRMED** if eff_rank ≤ 50 OR median top-5 cosine with top-200 lm_head rows ≥ 0.5: block 11's PPL load is structurally explained at the operator level; opens targeted "compress block 11 only on its load-bearing subspace" probe.
-     - **REFUTED** if eff_rank ≥ 200 AND median cosine ≤ 0.2: block 11 is not concentrated and not aligned; the PPL load comes from somewhere else (e.g. cross-block dynamics, attention-V interaction, position-dependent gating); dead end for output-channel-level explanations.
-     - **INCONCLUSIVE** if eff_rank ∈ (50, 200) OR median cosine ∈ (0.2, 0.5): partial structure visible but not load-bearing on its own; record the data and move on.
-   - **Baselines**: cycle 252 block 5 SVD-eff_rank ~358 (post-GELU activation, not c_proj output); cycle 264 block 11 ‖Δκ‖₁=2.48e-6 (rank 11/12 in κ); cycle 263 block 11 ε ~10× mid-block (highest local linearity defect); cycle 173 block 11 PPL +4.02%.
-   - **Run cap**: ~10 minutes (single forward pass + SVD + cosine sweep).
-   - Depends on: cycle 252 / cycle 263 infrastructure (forward pass with hooks).
+*(empty — item 277 closed in cycle 267; see PAST EXPERIMENTS)*
 
 ### P1
 
@@ -69,6 +59,16 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 267
+
+277. **Block 11 c_proj output rank decomposition — what makes block 11 special at PPL?** *(CONFIRMED — cycle 267)*
+   - Concentration story holds. Block 11 c_proj output eff_rank = 22.49 (≤50 threshold); top-1 eigenvector carries 48.95% of variance, top-5 carries 68.18%, top-20 carries 74.87%. Block 5 comparison eff_rank = 179.19 (mid-block high-rank anti-pattern: top-1 = 24.62%, top-5 = 30.79%); block 1 eff_rank = 1.94 (near rank-1 operator: top-1 = 92.94%). The ordering block 1 (1.94) << block 11 (22.49) << block 5 (179.19) inverts the "mid-block structurally normal" picture: both earliest and latest blocks have concentrated c_proj outputs; the mid block is high-rank.
+   - Alignment story REFUTED for all blocks. No top-5 V_mlp direction aligns with top-200 lm_head rows at >0.35; median of top-5 is ≤0.159 for all three blocks (block 1 = 0.159, block 5 = 0.130, block 11 = 0.123). Opening to ALL 50257 lm_head rows raises block 11's first two V_mlp max cos to 0.586 and 0.623, but only top 2/5 hit high values (3rd onward ≤0.24), median stays 0.239. PPL load of block 11 is NOT from reading into high-norm unembedding rows.
+   - Operator-level V_wp (SVD of c_proj.weight) mirrors: block 11 top V_wp max cos 0.353 with top-200 lm_head rows, median top-5 = 0.147.
+   - c_proj.weight top SV: block 1 = 28.71, block 5 = 27.62, block 11 = 60.99 (block 11's operator has ~2× overall scale); 20th SV ratios similar (≈3-4×).
+   - Compression implication: block 11's ~22-dim concentration opens a targeted probe — compress block 11's OUTPUT side on a rank-22 (or rank-5, which already captures 68%) subspace. Block 5 is the opposite: distributed across ~179 dims, output-side low-rank compression will fail; must compress the 3072-dim INPUT side instead. Matches the 4-/2-block sweep pattern where block 5 is rarely in winning subsets (K=512 2-block min is [1,4]).
+   - Artifacts: `experiments/block11_cproj_decomp_cycle267.py`, `autoresearch/plans/cycle_267.md`, `autoresearch/briefs/cycle_267.md`, `autoresearch/results/cycle_267_block11_cproj_decomp.json`, `autoresearch/results/cycle_267_summary.md`, `autoresearch/logs/cycle_267_run.log`, `autoresearch/results/cycle_267_manifest.txt`
 
 ### Cycle 266
 

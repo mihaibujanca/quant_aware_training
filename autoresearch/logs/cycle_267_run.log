@@ -1,0 +1,52 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Device: mps
+Loading GPT-2...
+lm_head weight shape: (50257, 768)
+lm_head row norm range: [2.4537, 6.3155]
+lm_head top-200 row norm range: [5.2083, 6.3155]
+Loading calibration data...
+Calibration: 200 seqs x 128 tokens = 25600 tokens
+Running forward passes...
+  forward done in 2.7s
+Captured mlp_out shape: torch.Size([25600, 768])
+=== Block 1 ===
+  eff_rank = 1.94  (eigh 0.0s)
+  top-  1 energy = 0.9294
+  top-  5 energy = 0.9415
+  top- 20 energy = 0.9482
+  top- 50 energy = 0.9559
+  top-100 energy = 0.9645
+  top-200 energy = 0.9761
+  c_proj SVD 0.1s, top sv = 28.7065, s20 = 7.5670
+  V_mlp top-5 max-cos top-200 lm_head: [0.17980815470218658, 0.1790039986371994, 0.15856462717056274, 0.15658564865589142, 0.1136334240436554] -> median 0.1586
+  V_mlp top-5 max-cos ALL   lm_head: [0.3521326780319214, 0.3039577901363373, 0.19676294922828674, 0.18365417420864105, 0.15378668904304504] -> median 0.1968
+  V_wp  top-5 max-cos top-200 lm_head: [0.20149722695350647, 0.1224108636379242, 0.12377966195344925, 0.05266031622886658, 0.050372201949357986] -> median 0.1224
+=== Block 5 ===
+  eff_rank = 179.19  (eigh 0.0s)
+  top-  1 energy = 0.2462
+  top-  5 energy = 0.3079
+  top- 20 energy = 0.3750
+  top- 50 energy = 0.4636
+  top-100 energy = 0.5691
+  top-200 energy = 0.7135
+  c_proj SVD 0.1s, top sv = 27.6176, s20 = 9.9273
+  V_mlp top-5 max-cos top-200 lm_head: [0.16939513385295868, 0.23635828495025635, 0.10503420978784561, 0.1294676959514618, 0.10090292990207672] -> median 0.1295
+  V_mlp top-5 max-cos ALL   lm_head: [0.30556488037109375, 0.3822154700756073, 0.13987623155117035, 0.1518586128950119, 0.2825147807598114] -> median 0.2825
+  V_wp  top-5 max-cos top-200 lm_head: [0.19685395061969757, 0.11917618662118912, 0.13151782751083374, 0.12683188915252686, 0.08793429285287857] -> median 0.1268
+=== Block 11 ===
+  eff_rank = 22.49  (eigh 0.0s)
+  top-  1 energy = 0.4895
+  top-  5 energy = 0.6818
+  top- 20 energy = 0.7487
+  top- 50 energy = 0.7936
+  top-100 energy = 0.8388
+  top-200 energy = 0.8959
+  c_proj SVD 0.1s, top sv = 60.9931, s20 = 17.7632
+  V_mlp top-5 max-cos top-200 lm_head: [0.34674808382987976, 0.11805984377861023, 0.06607300043106079, 0.19337154924869537, 0.12309496849775314] -> median 0.1231
+  V_mlp top-5 max-cos ALL   lm_head: [0.5862365961074829, 0.6226996779441833, 0.1623145192861557, 0.23906753957271576, 0.21026737987995148] -> median 0.2391
+  V_wp  top-5 max-cos top-200 lm_head: [0.3526264429092407, 0.12434060126543045, 0.20152975618839264, 0.14742369949817657, 0.08500291407108307] -> median 0.1474
+=== Verdict (block 11) ===
+  eff_rank         = 22.49
+  med top5 cos top200 = 0.1231
+  VERDICT: CONFIRMED
+Wrote autoresearch/results/cycle_267_block11_cproj_decomp.json
