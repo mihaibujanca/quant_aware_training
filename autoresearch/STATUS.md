@@ -1,6 +1,11 @@
-# Research Status — 264 Cycles (001–264)
+# Research Status — 265 Cycles (001–265)
 
-## Latest: Cycle 264
+## Latest: Cycle 265
+
+275. **K=128 4-block sweep — Pareto chase** — INCONCLUSIVE
+   - 3 seeds per subset (9 fits, 21 min). **min best_mean = 53.647 ± 0.066 on [1,2,4,7]** ∈ (53, 56) inconclusive. All 3 subsets within ±1 PPL of float (53.895). Subset ordering [1,2,4,7] < [1,4,7,8] < [1,2,7,8] mostly matches cycle 255 K=512. **DOMINATED by cycle 223 K=128 3-block [1,4,7] (297K params, 48.99 PPL) on both Pareto axes** (more params + worse PPL). Naive linear K=128 extrapolation predicted ~50.7; actual 53.65 → **K=128 cascade is sub-linear at low block counts and adding block 2 to the K=128 surface is HARMFUL, not helpful**. K=128 + 4-block is not on the Pareto frontier.
+
+## Cycle 264
 
 274. **Per-block swap κ heatmap** — INCONCLUSIVE (interesting=true)
    - 12×11 Δκ matrix from installing ReLU+b_leak[k] at block k only (k ∈ {0..11}). Baseline matches cycle 258 bit-identically; restore PPL=45.0637 clean. **Strict causal lower triangle**: 86/132 entries bit-zero (l < k-1, expected). **Diagonal band (k-1, k, k+1)**: max=8.00e-4 at (k=2, l=2), mean=1.15e-4 vs off-diagonal mean 2.15e-5 — substantive ratio ≈ 5.4×. **L1 ranking**: k=2 ≫ k=3 > k=1 > k=4 > k=0 ≫ k=5..11. Load-bearing zone = blocks 1-4, matches cycle 258 GELU κ peak at layers 2-4. **Clause 2 (late-layer monotone amplification as k decreases) FAILS 0/4** — l=7 column over k=0..6 oscillates [1.0, 1.4, 2.8, 4.7, 1.9, 9.7, 1.9]e-6. The "early swaps have more downstream impact" hypothesis is empirically false. **Cycle 173 PPL ranking does NOT track κ ranking** (block 11 = #2 in PPL but #11 in κ) — late-block damage is from output-channel structure, not trajectory geometry.
