@@ -1,6 +1,11 @@
-# Research Status — 249 Cycles (001–249)
+# Research Status — 250 Cycles (001–250)
 
-## Latest: Cycle 249
+## Latest: Cycle 250
+
+260. **6-block [1,2,3,4,7,8] — drop 5, add 3** — REFUTED (interesting=true)
+   - K=512 joint Adam, 3 seeds. **best_mean=60.023 ± 0.020** ≥ 58 refuted threshold. Δ vs cycle 221 [1,2,4,5,7,8] (59.515) = +0.508 (within noise). **CONTRADICTS cycle 245's "block 5 is special" interpretation**: substituting block 3 for block 5 changes cascade by only +0.5 PPL. **Cycle 245's 5.7 PPL gain was a COUNT TRANSITION (6→5), not block-5 removal**. Combined with cycle 244 (sliding cost tracks deepest block), each early-mid compressed K=512 block adds ~5-6 PPL of cascade penalty REGARDLESS of identity, bounding 6-block K=512 to a ~59-60 PPL band. Item 262 (block-5 geometric deep-dive) becomes less urgent.
+
+## Cycle 249
 
 259. **Heterogeneous K complement — K=512 on {7,8}, K=128 on {1,2,4,5}** — REFUTED (interesting=true)
    - K_PER_BLOCK={1:128,2:128,4:128,5:128,7:512,8:512}, 6-block joint Adam, 3 seeds. **best_mean=65.275 ± 0.094** ≥ 65 refuted threshold (+0.275 margin). Per-block residual MSE on blocks 7, 8 dropped ~28-29% under K=512 (cycle 247 hypothesis worked LOCALLY) but downstream PPL got worse: Δ vs cycle 247 = +0.822, gap recovery 28.4% vs cycle 247's 38.6%. **Local block fit decoupled from cascade PPL**. **Paired with cycle 247, this closes the "localize K-bandwidth penalty to a 2-of-6 block subset at 1.18M params" sub-family**: NEITHER cycle 243's restoration ranking (cycle 247 used it) NOR cycle 247's residual MSE ranking (cycle 249 used it) predicts heterogeneous-fit PPL.
