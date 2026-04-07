@@ -1,0 +1,9 @@
+item_number=260
+outcome=refuted
+key_metric=best_mean=60.023_best_std=0.020_init_mean=85.582_best_step_mean=1567_final_mean=70.965_float=53.895_c221=59.515_c245=53.826_delta_vs_c221=+0.508_delta_vs_c245=+6.197_delta_vs_float=+6.128_BLOCKS=[1,2,3,4,7,8]_K=512_trainable=2363904
+commit=b6bf720a5f7fc8c0500ad1db9ad15af0edf19266
+paths=experiments/six_block_no5_add3_cycle250.py,autoresearch/results/cycle_250_six_block_no5_add3.json,autoresearch/results/cycle_250_summary.md,autoresearch/logs/cycle_250_run.log,autoresearch/plans/cycle_250.md
+sha256=experiments/six_block_no5_add3_cycle250.py:41ed60e7e33d2ddb39766d8faef92a670283273bf872cd48b73275490523c1de,autoresearch/results/cycle_250_six_block_no5_add3.json:665888f421645c1f3b5e0a73909f410aa92cd54c9d6b82d233a82d32724d5b99,autoresearch/results/cycle_250_summary.md:778a78d7cfb174e19ab2a18f14fac73b3fc29bf3890893cd3a1f6baf0d0bd59e,autoresearch/logs/cycle_250_run.log:8e31d5401ecf01c52137e4f36f97ec80122049b3ce3d8ea08f50c8ce3f3bfbd7,autoresearch/plans/cycle_250.md:38c8b55d2d203576f45a043679aa368ef89b82249b7ec01d0091889bd7964973
+learned=Replacing block 5 with block 3 in the cycle 221 6-block set leaves the best PPL within 0.5 of cycle 221 (60.023 vs 59.515) and 6.2 PPL worse than cycle 245 5-block — the cycle 221 6-block floor is a COUNT-driven cascade phenomenon, NOT a block-5-specific phenomenon. Cycle 245's 5-block near-float success was about block count (5 vs 6), not selection identity. Cycle 243's per-block attribution under fixed joint fit does not predict cascade tolerance under rejoint fit.
+next=(a) 6-block complement tests [0,1,2,4,7,8] or [1,2,4,6,7,8] to test universality of the 60-PPL ceiling; (b) item 262 block-5 geometric deep-dive is now LESS urgent since block 5 is not structurally special; (c) the open question shifts to: what is the cascade constant bounding K=512 6-block compression to ~60 PPL regardless of selection
+tsv_path=autoresearch/logs/experiments.tsv
