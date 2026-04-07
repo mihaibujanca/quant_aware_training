@@ -1,6 +1,11 @@
-# Research Status — 254 Cycles (001–254)
+# Research Status — 255 Cycles (001–255)
 
-## Latest: Cycle 254
+## Latest: Cycle 255
+
+265. **4-block K=512 sweep** — CONFIRMED (interesting=true)
+   - 3 seeds per subset (9 fits, 22.8 min, no fallback). **min best_mean=49.609 ± 0.080 on [1,2,4,7]** — 4.29 PPL below float. All 3 subsets clear ≤51 threshold: [1,2,4,7]=49.609, [1,2,7,8]=50.209±0.011, [1,4,7,8]=50.712±0.053. **Cross-subset spread 1.1 PPL ≫ within-seed std (0.011-0.080)** — at 4-block scale, BLOCK IDENTITY matters statistically (unlike cycle 250 at 6-block where it didn't). **Count-driven cascade story confirmed monotonically**: 6b→59.5, 5b→53.8, 4b→49.6, 3b→46.6 — each block dropped saves ~3-6 PPL. Opens "compress N blocks below float for N ∈ {3, 4, 5}" recipe family.
+
+## Cycle 254
 
 264. **5-block K=128 8000 steps** — REFUTED (interesting=true)
    - Cycle 251 extension to 8000 steps. **best_mean=59.018 ± 0.041** ≥ 58.5 refuted threshold. Δ vs cycle 251 4k (59.119) = -0.101 (within seed noise). All 3 seeds plateau at step 4400-5200 then climb to 60.4-60.6 by step 8000 (overfit pattern). **Cycle 251's "still descending" linear extrapolation falsified**: descent flattened, 4× budget bought essentially nothing. **5-block K=128 ceiling is structurally bounded near 59 PPL**, does NOT close the K=512 gap regardless of budget.
