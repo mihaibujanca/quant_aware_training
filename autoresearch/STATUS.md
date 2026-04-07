@@ -1,6 +1,11 @@
-# Research Status — 274 Cycles (001–274)
+# Research Status — 275 Cycles (001–275)
 
-## Latest: Cycle 274
+## Latest: Cycle 275
+
+285. **Hybrid [1] K=512 + block 11 rank-22 c_proj** — REFUTED (interesting=true)
+   - Cycle 271 [1] K=512 (43.82) + cycle 270 block 11 rank-22 weight-SVD (54.47) joint Adam, 3 seeds. **best_mean=48.200 ± 0.048** (seeds still descending at N_STEPS=4000). Δ vs cycle 271 [1] alone = **+4.38 PPL WORSE**. **Hybrid strictly DOMINATED on BOTH Pareto axes** (more params AND worse PPL). **REFUTES "disjoint-block Pareto winners compose additively" hypothesis**. Consistent with cycle 273 channel-K variant (REFUTED at 52.64); weight-SVD is 4.4 PPL milder than channel-K at equal rank but still destructive when composed with block 1 compression. **Block 11 rank-22 c_proj weight-SVD is an isolated-patch operator, not cascade-compatible**.
+
+## Cycle 274
 
 284. **K=64 5-block 8000 steps** — INCONCLUSIVE
    - Cycle 257 extension. **best_mean=61.377 ± 0.046**. 8k bought 0.804 PPL improvement vs cycle 257 4k (62.181) — **8× larger than cycle 254's K=128 5b 8k extension (-0.101)** but 0.123 PPL short of CONFIRMED plateau band [61.5, 62.5] and 0.677 above REFUTED ≤60.7. **K=64 5-block is in a slow-descent regime, qualitatively distinct** from K=128 5b plateau and K=1 6b extended descent. All 3 seeds best_step in [6200, 7400] (none at 8k cap). Final@8000 +0.173 above best (mild overshoot, NOT cycle 254's +1.5 plateau-then-climb). NOT a Pareto winner — dominated by cycle 268 K=64 4-block (199K, 55.95).
