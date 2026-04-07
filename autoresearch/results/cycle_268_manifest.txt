@@ -1,0 +1,21 @@
+Cycle 268 — Item 278: K=64 4-block sweep
+Verdict: CONFIRMED
+Commit: 5664a91
+
+Artifacts:
+  experiments/four_block_k64_sweep_cycle268.py
+  autoresearch/plans/cycle_268.md
+  autoresearch/briefs/cycle_268.md
+  autoresearch/logs/cycle_268_run.log
+  autoresearch/results/cycle_268_four_block_k64_sweep.json
+  autoresearch/results/cycle_268_summary.md
+  autoresearch/results/cycle_268_manifest.txt
+  autoresearch/agenda.md
+  autoresearch/logs/experiments.tsv
+
+Result: min best_mean = 55.9533 ([1,4,7,8]), 9 fits, 20.9 min wall, no seed drop.
+Per-subset best_mean (n=3):
+  [1,2,4,7] = 56.0675 ± 0.0443
+  [1,4,7,8] = 55.9533 ± 0.0923  (min)
+  [1,2,7,8] = 57.2766 ± 0.1199
+Threshold: CONFIRMED iff min ≤ 56.0; PASS by 0.047 PPL.
