@@ -1,6 +1,11 @@
-# Research Status — 291 Cycles (001–291)
+# Research Status — 292 Cycles (001–292)
 
-## Latest: Cycle 291
+## Latest: Cycle 292
+
+302. **Block 1 rank-1 c_proj weight-SVD retrain** — CONFIRMED (interesting=true)
+   - Rank-1 retrain (3 seeds, **only 1,536 params**): **best_mean=50.079 ± 0.048** (≤51 confirmed by 0.92 PPL). **Below float by 3.82 PPL** at 1,536 trainable — **new lowest-param single-block c_proj anchor** (33% below cycle 280's 2,304). **Sub-eff_rank r/eff=0.514** (block 1 eff_rank 1.94); second sub-eff_rank success after cycle 289 (0.30). All 3 seeds budget-bounded at step 3900-4000 (still descending, unlike cycle 289's floor-limited regime). **Major Pareto rewrite**: strictly dominates cycles 270, 288, 289 on both axes; essentially ties cycle 282 (13,824) on PPL at 9× fewer params.
+
+## Cycle 291
 
 301. **Rank hybrid [1] rank-2 + [10] rank-5** — REFUTED
    - Homogeneous low-rank weight-SVD hybrid, 6,912 trainable. **best_mean=51.801 ± 0.041** > 51.5 refuted threshold by 0.30. **Strictly Pareto-dominated on BOTH axes by both component anchors**: cycle 280 b1 r=2 (2,304, 49.03; 3× fewer params AND -2.77 PPL) AND cycle 289 b10 r=5 (4,608, 51.47; 1.5× fewer params AND -0.33 PPL). **Composition destructive**: b1 anchor damaged +2.77 PPL, b10 anchor +0.33 PPL. **Pattern across 5 b1-composition attempts** (273/275/281/284/291): only cycle 284 succeeded (b11 r=22, HIGH rank slack). **Partner RANK SLACK gates non-destructive composition; depth distance is NOT predictive** (1-10 and 1-11 are similar distances but opposite outcomes).
