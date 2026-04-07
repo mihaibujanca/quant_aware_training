@@ -6,15 +6,69 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-*(P0 queue drained by cycle 246; promote from P1 next cycle.)*
+259. **Heterogeneous K complement — K=512 on {7,8}, K=128 on {1,2,4,5} — does the residual-MSE-driven block selection beat cycle 247?**
+   - **Motivation**: cycle 247 (INCONCLUSIVE, 64.453) put K=512 on {4,5} and K=128 on {1,2,7,8} based on cycle 243's per-block ΔPPL ranking, recovering only 38.6% of the K=128→K=512 gap. Cycle 247's per-block residual MSE diagnostic (seed 42) showed the OPPOSITE story: blocks **7 (0.581) and 8 (0.818)** have far higher K=128 lstsq residual than blocks **4 (0.162) and 5 (0.224)**. The plan-failure note in cycle 247 explicitly proposed swapping the K=512 allocation onto {7,8}. Cycle 243's joint-fit per-block ranking and cycle 247's residual-MSE ranking are TWO DIFFERENT measures of "block difficulty" and they disagree. This experiment lets the residual-MSE story compete head-to-head with the joint-fit story at matched parameter budget.
+   - **Setup**: BLOCKS=[1,2,4,5,7,8], K_PER_BLOCK={1:128, 2:128, 4:128, 5:128, 7:512, 8:512}. Reuse cycle 247's `experiments/hetero_k_6block_cycle247.py` infrastructure with the K mapping flipped. W_out+b_out trainable, joint Adam LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024}, disjoint calib=all_ids[:200]/eval=all_ids[200:300], SEQ_LEN=128. Expected trainable params ≈ 1.18M (same as cycle 247 since same K=128/K=512 split, just different blocks).
+   - **Hypothesis**: residual-MSE selection is the better predictor → best_mean ≤ 62.0 (recover ≥69% of the 8.05 gap, vs cycle 247's 38.6%).
+   - **Outcomes**:
+     - **CONFIRMED** if best_mean ≤ 62.0 (recovers ≥69% of K-gap): residual-MSE-driven selection wins, residual is the right block-difficulty signal under heterogeneous K.
+     - **REFUTED** if best_mean ≥ 65.0 (recovers ≤32% of K-gap): {7,8} upgrade fails to help, residual-MSE story dies, both rankings useless for block allocation.
+     - **INCONCLUSIVE** if best_mean ∈ (62, 65): both residual-MSE and joint-fit rankings give comparable mid-tier recovery; neither story localises the K-bandwidth penalty cleanly.
+   - **Baselines**: cycle 247 hetero {4,5} 64.453, cycle 231 K=128 6-block 67.562, cycle 221 K=512 6-block 59.515, float 53.895.
+   - **Run cap**: ~7 minutes (matches cycle 247 wall clock).
+   - Depends on: cycle 247 infrastructure (already merged).
+
+260. **6-block superset [1,2,3,4,7,8] — drop block 5, add block 3 — does adding an early block to cycle 245's float-equivalent 5-block recover float at 6 blocks?**
+   - **Motivation**: cycle 245 CONFIRMED that 5-block [1,2,4,7,8] hits 53.826 ≈ float 53.895 (statistical tie). Cycle 244's sliding window showed [1,2,3] (47.135) is the cheapest 3-block window — block 3 is structurally easy. Cycle 243 identified block 5 as the rank-1 contributor (Δ=+5.10) of the cycle 221 6-block gap. The hypothesis under test: the 6-block ceiling is **driven by including block 5**, NOT by block COUNT per se. If we replace block 5 with block 3 (an "easy" block from cycle 244), can a 6-block compression set still hit float? This directly tests whether the cycle 221 floor at 59.5 is a count-driven cascade phenomenon or a block-5-specific phenomenon.
+   - **Setup**: BLOCKS=[1,2,3,4,7,8] (drop 5, insert 3), K=512 W_out+b_out trainable joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024}, disjoint calib=all_ids[:200]/eval=all_ids[200:300], SEQ_LEN=128. Trainable params ≈ 2,363,904 (matches cycle 221). Reuse cycle 245's `experiments/drop_block5_cycle245.py` with BLOCKS list edited.
+   - **Hypothesis**: block 5 is the structural bottleneck, block 3 is structurally easy → best_mean ≤ 55.0 (within 1.1 PPL of float, beats cycle 221 59.515 by ≥4.5 PPL, validates "block 5 is the bottleneck").
+   - **Outcomes**:
+     - **CONFIRMED** if best_mean ≤ 55.0: 6-block compression at near-float quality is achievable when block 5 is excluded; the cycle 221 floor is a block-5 phenomenon, not a count-driven cascade phenomenon.
+     - **REFUTED** if best_mean ≥ 58.0: substituting block 3 for block 5 does NOT help meaningfully (within 1.5 PPL of cycle 221); the 6-block penalty is count-driven, not block-5-driven; cycle 245's success was about block COUNT (5 vs 6), not block IDENTITY.
+     - **INCONCLUSIVE** if best_mean ∈ (55, 58): partial improvement; block 5 carries some but not all of the structural cost.
+   - **Baselines**: cycle 245 5-block [1,2,4,7,8] 53.826, cycle 221 6-block [1,2,4,5,7,8] 59.515, float 53.895, cycle 244 [1,2,3] window 47.135 (proves block 3 is easy).
+   - **Run cap**: ~10 minutes.
+   - Depends on: cycle 245 infrastructure.
+
+261. **5-block [1,2,4,7,8] at K=128 — does cycle 245's float-equivalent compression survive lower channel count?**
+   - **Motivation**: cycle 245 hit float at K=512 5-block. Cycle 231 showed K=128 at the cycle 221 6-block ceiling adds +8.05 PPL (59.5 → 67.6). The open question: is the cycle 245 5-block float-tie ROBUST to K reduction, or does it inherit cycle 231's K-bandwidth penalty? If 5-block at K=128 stays close to float, we have an even more aggressive near-float compression (5 blocks × 25% K = 12.5% MLP-channel cost on those blocks vs the 50% at K=512). If the K=128 penalty is similar to cycle 231's +8 PPL gap, the 5-block recipe is K-fragile and the float-tie was K-specific.
+   - **Setup**: BLOCKS=[1,2,4,7,8], K=128, W_out+b_out trainable joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024}, disjoint calib=all_ids[:200]/eval=all_ids[200:300], SEQ_LEN=128. Trainable params ≈ 987,520. Reuse cycle 245 script with K=128.
+   - **Hypothesis**: 5-block tolerance survives at K=128 → best_mean ≤ 56.0 (within 2.1 PPL of float, far below cycle 231's K=128 6-block 67.6).
+   - **Outcomes**:
+     - **CONFIRMED** if best_mean ≤ 56.0: 5-block recipe is K-robust; float-equivalent compression is achievable at K=128 too; 5-block is the dominant near-float compression family.
+     - **REFUTED** if best_mean ≥ 60.0: 5-block at K=128 inherits the K-bandwidth penalty (+6 PPL or more vs K=512); cycle 245's float-tie was K-specific, not block-set-specific.
+     - **INCONCLUSIVE** if best_mean ∈ (56, 60): partial K tolerance; K=128 5-block is meaningfully better than K=128 6-block but still pays a real K-penalty.
+   - **Baselines**: cycle 245 K=512 5-block 53.826, cycle 231 K=128 6-block 67.562, cycle 223 K=128 3-block 48.989, float 53.895.
+   - **Run cap**: ~10 minutes.
+   - Depends on: cycle 245 infrastructure.
 
 ### P1
 
-*(item 257 closed INCONCLUSIVE by cycle 247; promote from P2 next cycle.)*
+262. **Block 5 geometric deep-dive — what makes block 5 a structural bottleneck vs blocks 1/2/4/7/8?** (analysis-only, no training)
+   - **Motivation**: cycle 245 found block 5 alone accounts for >100% of the cycle 221 6-block compression gap (drop block 5 → close 5.69 PPL gap; but per-block restore in cycle 243 said only 5.10 PPL). Cycle 243 showed block 5 ΔPPL=5.10 is rank-1 but residual MSE is only mid-tier (0.324). The OPEN question: WHY is block 5's MLP output structurally hard for K=512 topk to fit, when its raw residual MSE is comparable to other blocks? An analysis cycle, not a training cycle. This is the kind of geometric deep-dive cycle 243 explicitly asked for: "is block 5's MLP output distribution atypical (check std, kurtosis, effective rank of c_proj input distribution at block 5 vs 1/2/4/7/8)?"
+   - **Setup**: For each of blocks {1, 2, 3, 4, 5, 6, 7, 8}, on calib=all_ids[:200] SEQ_LEN=128: extract the c_fc activation tensor (post-GELU pre-c_proj input), shape (200, 128, 3072). Compute per-block: (a) per-channel std distribution; (b) per-channel kurtosis distribution; (c) effective rank (entropy of singular value distribution) of the (200·128, 3072) flattened activation matrix; (d) top-128 vs top-512 channel coverage (sum of top-K std-weighted norms / total norm); (e) cosine similarity matrix between c_proj rows (3072×768 → row similarity); (f) approximate block linearisation residual: for each block, compare ‖f_block(x) − f_block(x_centroid) − J_block(x_centroid)·(x − x_centroid)‖ on a small set of Jacobian centroids. Report a 1-page table comparing block 5 vs its neighbours on all 6 metrics, plus 2 plots (per-channel std distribution and singular value spectrum overlay).
+   - **Hypothesis**: block 5 will look an outlier on at least 2 of the 6 metrics — most likely effective rank (higher) or topk concentration (lower), explaining why K=512 topk leaves more residual at block 5 even when raw MSE is mid-tier (the residual is in directions that downstream attention reads more than the lower-MSE blocks' residuals do).
+   - **Outcomes**:
+     - **CONFIRMED** if block 5 is ≥1.5σ outlier on ≥2 of the 6 metrics, AND the outlier direction is "harder for K=512 topk" (e.g. higher effective rank, lower topk-512 coverage, broader singular spectrum): structural justification for the cycle 245 finding.
+     - **REFUTED** if block 5 is within 1σ of the {1,2,4,7,8} cohort on ALL 6 metrics: block 5 is geometrically typical, the structural bottleneck is downstream interaction (block 5's output reads/writes to a sensitive direction in attention/LN), NOT intrinsic FFN geometry.
+     - **INCONCLUSIVE** if block 5 is outlier on exactly 1 metric: weak signal, can't pin down the cause.
+   - **Baselines**: comparison cohort is the other compressed blocks {1, 2, 4, 7, 8} from cycle 245 plus the cycle 244 sliding-window blocks {3, 6}. NO training, NO compression. Pure geometry diagnostic.
+   - **Run cap**: ~15 minutes (forward passes only on 200 calib seqs, plus SVD on 12 (25600, 3072) matrices ≈ 30s each).
+   - Depends on: nothing new; reuses standard nanochat/gpt2 forward-pass infrastructure.
 
 ### P2
 
-*(item 258 closed REFUTED by cycle 248; P2 queue empty, promote from review next cycle.)*
+263. **gelu_noneg + μ targeted to compressed blocks only — does activation surgery on the 3 compressed blocks (not all 12) help K=512 topk?**
+   - **Motivation**: cycle 246 (REFUTED) tried gelu_noneg+μ on all 12 blocks AND K=128 W_out compression on [1,4,7] and found the activation fix and channel compression DON'T compose — the patched activation target gives WORSE topk lstsq init (106.74 vs cycle 223's ~50.8). The audit recommendation in the cycle 246 follow-ups was: "(b) swap the install order: K=128 topk+lstsq on raw GELU first, THEN patch gelu_noneg+μ on the remaining 9 blocks only (no μ correction on the compressed blocks) and see if leaving the compressed blocks on raw GELU recovers cycle 223's 48.989 baseline." This experiment tests the COMPLEMENT: patch gelu_noneg+μ ONLY on the compressed blocks [1,4,7], leave the 9 uncompressed blocks on raw GELU, then run the standard K=512 topk+lstsq+Adam recipe on those 3 blocks against the patched targets. This isolates whether the activation surgery is a per-block target-side improvement or a whole-model change. NOTE: this is NOT cycle 239 again — cycle 239 ran LoRA+gelu_noneg+μ at K=∞ (no channel compression). This is K=512 channel compression on patched targets at exactly 3 blocks.
+   - **Setup**: BLOCKS=[1,4,7], precompute μ_l on calib=all_ids[:200] for blocks {1,4,7} only (using `relu(gelu(z))` shift), patch ONLY those 3 blocks with `GeluNonegCorrected(μ_l)`, leave blocks {0,2,3,5,6,7,8,9,10,11} on raw GELU. THEN apply K=512 topk+lstsq on the patched [1,4,7] block targets, then joint Adam W_out+b_out LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024}, disjoint calib=all_ids[:200]/eval=all_ids[200:300], SEQ_LEN=128. Trainable params ≈ 1.18M (W_out+b_out for 3 blocks at K=512). Reuse cycle 246's GeluNonegCorrected patch class but apply selectively.
+   - **Hypothesis**: targeted activation surgery on compressed blocks only sidesteps cycle 246's "all-12 patch hurts the topk basis on raw blocks" failure mode → best_mean ≤ 46.0 (beats cycle 210 K=512 [1,4,7] 46.556 by ≥0.5 PPL).
+   - **Outcomes**:
+     - **CONFIRMED** if best_mean ≤ 46.0: targeted activation surgery improves topk lstsq fit on the patched blocks AND survives joint Adam, validates the "patch only what you compress" composition rule.
+     - **REFUTED** if best_mean ≥ 47.0: targeted patch is no better than cycle 210 raw GELU (or worse); activation surgery genuinely doesn't help K=512 topk fitting at all, regardless of whether it's whole-model or targeted.
+     - **INCONCLUSIVE** if best_mean ∈ (46.0, 47.0): targeted patch is statistical noise vs cycle 210; can't distinguish hypothesis from null.
+   - **Baselines**: cycle 210 K=512 [1,4,7] raw-GELU 46.556 (the direct comparison), cycle 246 all-12-patched K=128 57.811 (what NOT to do), cycle 239 LoRA+gelu_noneg all-12 47.692 (patches all blocks but no compression), float 53.895.
+   - **Run cap**: ~10 minutes.
+   - Depends on: cycle 246 GeluNonegCorrected patch class (already in `experiments/gelu_noneg_lora_k128_cycle246.py`).
 
 
 
