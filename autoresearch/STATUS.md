@@ -1,6 +1,11 @@
-# Research Status — 281 Cycles (001–281)
+# Research Status — 282 Cycles (001–282)
 
-## Latest: Cycle 281
+## Latest: Cycle 282
+
+292. **Block 10 rank-17 c_proj weight-SVD** — CONFIRMED (interesting=true)
+   - No-retrain sweep: r=5 59.92, r=17 59.38, r=50 58.27 (all ≥ 57). **Retrain r=17 (3 seeds, 13,824 params)**: **best_mean=50.044 ± 0.057**. **Below float by 3.85 PPL**. **NEW PARETO POINT**: (13,824, 50.04) **strictly DOMINATES cycle 270 block 11 r=22 (17,664, 54.47)** on BOTH axes — 22% fewer params AND -4.42 PPL. Cycle 280 block 1 r=2 (2,304, 49.03) still dominates cycle 282. **First positive eff_rank-as-prescriptive result at single-block c_proj weight-SVD + Adam retrain level**. **Monotone ordering across three cycles**: block 1 (eff_rank 1.94 → 49.03) < block 10 (16.70 → 50.04) < block 11 (22.49 → 54.47). Cycle 270 block 11 rank-22 is now deprecated by cycle 282 on both Pareto axes.
+
+## Cycle 281
 
 291. **2-block [1,2] K=512** — INCONCLUSIVE
    - 3 seeds. **best_mean=44.339 ± 0.007** in dead zone (43.9, 44.5) — fails CONFIRMED by 0.44, fails REFUTED by 0.16. Δ vs cycle 266 [1,4] (43.852) = **+0.486 worse**. Δ vs cycle 271 [1] (43.821) = **+0.518 worse** (strictly dominated on both axes). **Block 2 (eff_rank 1.05, lowest in model) is NOT a cheap cascade add** — third independent refutation (after cycles 273, 280) of activation eff_rank as prescriptive for cascade compression. Tight std 0.007 (4× tighter than comparable 2-block) → low eff_rank correlates with flat joint-Adam surface.
