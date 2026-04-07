@@ -1,6 +1,6 @@
 Cycle 293 Manifest — Item 303: Block 0 rank-r c_proj weight-SVD sweep
 
-Commit: PENDING
+Commit: 7368ff5
 Branch: geometric_compression
 Verdict: REFUTED
 
@@ -119,5 +119,5 @@ autoresearch/logs/experiments.tsv
 item_number: 303
 outcome: REFUTED
 key_metric: best_mean=63.1327_pm_0.1009_ge_58.0_by_5.133_PPL_block_0_rank_72_c_proj_weight_SVD_retrain_56064_params_REFUTED_first_single_block_recipe_failure_recipe_breaks_on_embedding_proximate_block_0
-commit: PENDING
+commit: 7368ff5
 paths: experiments/block0_lowrank_cycle293.py,autoresearch/plans/cycle_293.md,autoresearch/briefs/cycle_293.md,autoresearch/results/cycle_293_block0_lowrank.json,autoresearch/results/cycle_293_summary.md,autoresearch/logs/cycle_293_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv

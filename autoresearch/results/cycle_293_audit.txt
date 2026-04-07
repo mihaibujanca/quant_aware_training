@@ -1,0 +1,102 @@
+Cycle 293 Audit — Item 303
+
+Audit status: PASS
+Commit: 7368ff5
+Verdict: REFUTED (provisional outcome held)
+
+Item 303 thresholds (verbatim):
+  CONFIRMED iff rank-72 retrain best_mean <= 55.0
+  REFUTED   iff rank-72 retrain best_mean >= 58.0
+  INCONCLUSIVE otherwise
+
+Measured: best_mean = 63.13265 +/- 0.10085 (n=3 seeds)
+  -> 63.13265 >= 58.0 by 5.133 PPL -> REFUTED clause fires
+  -> 63.13265 >  55.0           -> CONFIRMED clause NOT triggered
+  -> REFUTED (matches manifest, exec_result, JSON)
+
+Per-seed (independent recompute from JSON):
+  seed 42  : init=396.25818  best=63.05820 @4000  final@4000=63.05820  restored=63.05820
+  seed 137 : init=396.25818  best=63.06452 @4000  final@4000=63.06452  restored=63.06452
+  seed 2024: init=396.25818  best=63.27523 @3900  final@4000=63.55822  restored=63.27523
+
+Aggregate recompute (population std):
+  mean = (63.05820 + 63.06452 + 63.27523) / 3 = 189.39795 / 3 = 63.13265 [matches]
+  deviations = (-0.07445, -0.06813, +0.14258)
+  squared    = ( 0.005543, 0.004642, 0.020330); sum=0.030515; /3=0.010172
+  std        = sqrt(0.010172) = 0.10085 [matches]
+  min = 63.05820 [matches]; max = 63.27523 [matches]
+
+Sanity:
+  - All 3 seeds init PPL identical (deterministic SVD init): PASS
+  - |restored - best| = 0.0 for all 3 seeds: PASS
+  - Restore original c_proj.weight after sweep: PPL=53.895 (exact match to float): PASS
+  - Float PPL within 0.5 of 53.895 reference: PASS (exact)
+  - Trainable params per fit = 56,064 = 72*768 + 768: PASS (asserted in script)
+  - Best step distribution: 4000, 4000, 3900 — all 3 BUDGET-BOUNDED at the cap
+
+No-retrain sweep:
+  r=10: PPL=1939.006 (energy 0.1495)
+  r=30: PPL= 913.701 (energy 0.2241)
+  r=72: PPL= 396.258 (energy 0.3271)
+  Energy strictly monotone in r: PASS
+  PPL strictly monotone-decreasing in r: PASS
+
+Plan adherence (cycle_293.md vs experiments/block0_lowrank_cycle293.py):
+  TARGET_BLOCK=0; RANKS_NORETRAIN=[10,30,72]; RETRAIN_RANK=72;
+  SEEDS=[42,137,2024]; LR=1e-4; N_STEPS=4000; EVAL_EVERY=100;
+  N_CALIB=200; N_EVAL=100; SEQ_LEN=128; MPS; GPT-2 small; wikitext-2 val
+  All matched: PASS
+
+Baseline cross-checks (manifest vs JSON):
+  float                  53.895   ==  53.895   PASS
+  cycle 280 b1 r=2       49.0324  ==  49.0324  PASS
+  cycle 285 b2 r=2       49.3290  ==  49.3290  PASS
+  cycle 282 b10 r=17     50.0445  ==  50.0445  PASS
+  cycle 288 b3 r=24      50.5935  ==  50.5935  PASS
+  cycle 270 b11 r=22     54.4687  ==  54.4687  PASS
+  cycle 292 b1 r=1       50.0794  ==  50.0794  PASS
+  cycle 278 b0 eff_rank  71.93    ==  71.93    PASS
+
+Delta cross-checks:
+  vs float            +9.23776   PASS
+  vs c282 b10 r=17    +13.08815  PASS
+  vs c288 b3 r=24     +12.53915  PASS
+  vs c270 b11 r=22    +8.66395   PASS
+  vs c280 b1 r=2      +14.10025  PASS
+  vs c292 b1 r=1      +13.05325  PASS
+  vs c285 b2 r=2      +13.80365  PASS
+
+Pareto reading:
+  Cycle 293 (56,064, 63.13) is STRICTLY DOMINATED on BOTH axes by every other
+  tested single-block c_proj recipe anchor. Highest param count AND highest PPL
+  in the entire single-block c_proj recipe family. Not a Pareto point.
+
+Geometric reading:
+  - First single-block c_proj recipe REFUTATION (8 prior data points across 5
+    blocks all CONFIRMED).
+  - Recipe holds for blocks 1/2/3/10/11; FAILS catastrophically on block 0.
+  - Block 0 is qualitatively distinct: input rank 269 (cycle 198), drop=PPL 1923
+    (cycle 187), eff_rank 71.93 (cycle 278) — far above the concentrator cluster.
+  - Block 0 c_proj weight SVD is the FLATTEST tested (S[0]/S[4] ~1.5x).
+  - Top-72 captures only 32.7% matrix energy.
+  - r/eff_rank = 1.001 — recipe tested at the most generous configuration possible.
+  - Adam recovery -333 PPL (largest yet) but floor lands +9.24 PPL ABOVE float.
+  - Failure is STRUCTURAL (block 0's role in the model), not budget-limited.
+
+Artifact existence:
+  experiments/block0_lowrank_cycle293.py             EXISTS
+  autoresearch/plans/cycle_293.md (8 H2 headings)    EXISTS
+  autoresearch/briefs/cycle_293.md                   EXISTS
+  autoresearch/results/cycle_293_block0_lowrank.json EXISTS (valid JSON, verdict=REFUTED)
+  autoresearch/results/cycle_293_summary.md          EXISTS
+  autoresearch/results/cycle_293_manifest.txt        EXISTS (commit=7368ff5)
+  autoresearch/results/cycle_293_exec_result.txt     EXISTS (commit=7368ff5)
+  autoresearch/logs/cycle_293_run.log                EXISTS
+  Primary commit 7368ff5                             EXISTS in git log
+  TSV row 293 appended                               PASS (8 columns)
+  agenda.md item 303 NEXT->PAST                      PASS
+  STATUS.md cycle 293 entry prepended                PASS
+
+Corrections: NONE
+Provisional outcome holds: REFUTED
+Final status: PASS
