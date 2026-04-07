@@ -1,6 +1,11 @@
-# Research Status — 250 Cycles (001–250)
+# Research Status — 251 Cycles (001–251)
 
-## Latest: Cycle 250
+## Latest: Cycle 251
+
+261. **5-block [1,2,4,7,8] at K=128** — INCONCLUSIVE (interesting=true)
+   - 5-block K=128, 3 seeds. **best_mean=59.119 ± 0.009** ∈ (56, 62) inconclusive (Adam still descending at step 4000). Δ vs cycle 245 K=512 (53.826) = +5.293 K-penalty. Δ vs cycle 231 K=128 6-block (67.562) = -8.443. **Cycle 245's float-tie is K=512-specific**, not recipe-specific. **Pareto finding**: 5-block K=128 (59.119, 495K params) matches cycle 221 6-block K=512 floor (~59.5, 2.36M params) — **4× parameter win at matched PPL**. Per-block K-penalty scales sublinearly with block count (3→0.81, 5→1.06, 6→1.34 PPL/block).
+
+## Cycle 250
 
 260. **6-block [1,2,3,4,7,8] — drop 5, add 3** — REFUTED (interesting=true)
    - K=512 joint Adam, 3 seeds. **best_mean=60.023 ± 0.020** ≥ 58 refuted threshold. Δ vs cycle 221 [1,2,4,5,7,8] (59.515) = +0.508 (within noise). **CONTRADICTS cycle 245's "block 5 is special" interpretation**: substituting block 3 for block 5 changes cascade by only +0.5 PPL. **Cycle 245's 5.7 PPL gain was a COUNT TRANSITION (6→5), not block-5 removal**. Combined with cycle 244 (sliding cost tracks deepest block), each early-mid compressed K=512 block adds ~5-6 PPL of cascade penalty REGARDLESS of identity, bounding 6-block K=512 to a ~59-60 PPL band. Item 262 (block-5 geometric deep-dive) becomes less urgent.
