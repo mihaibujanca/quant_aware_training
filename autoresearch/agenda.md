@@ -6,19 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-307. **Effective rank trajectory through training — when does the collapse happen?**
-   - **Motivation**: the "why" question, training-dynamics flavor. Cycle 278 measures eff_rank only at the trained endpoint. We don't know whether the collapse to rank-2 is (a) **gradual** through training (slow implicit regularization concentration), (b) a **phase transition** at a specific step (grokking-adjacent), or (c) **already present at init** (would falsify the "training collapses rank" story). Phase-transition would connect to "Deep Grokking: Local Complexity" (lit map line 115). Gradual would connect to Saxe group's "Gradient Descent Quantizes ReLU Network Features" (lit map line 779).
-   - **Setup**: train a fresh spirals 32×12 net (item 305 setup) with eff_rank-of-every-layer recorded at every 100 training steps. Plot eff_rank_ℓ(step) for ℓ ∈ {0..11} on a single axis. Also plot train loss and held-out accuracy. **3 seeds.** Identify whether per-layer collapse is gradual or step-localized; cross-reference with the loss curve. Report (i) initial eff_rank per layer; (ii) final eff_rank per layer; (iii) max single-window collapse rate (max drop in eff_rank within any 100-step window per layer); (iv) step at which each layer first reaches 1.5× its final eff_rank value.
-   - **Hypothesis**: eff_rank collapse is gradual and tracks train loss monotonically. No phase transition.
-   - **Outcomes**:
-     - **CONFIRMED gradual** if per-layer eff_rank curves are monotone-decreasing across the entire training run AND no layer drops by ≥50% within any 100-step window: implicit regularization story holds, smooth concentration.
-     - **CONFIRMED phase-transition** if any layer's eff_rank drops by ≥50% within a 100-step window: discrete phase transition (grokking-adjacent), worth locating relative to the loss curve.
-     - **CONFIRMED init-rank** if initial eff_rank is already ≤ 5 for ≥6 layers: random init was the explanation, training didn't cause the collapse.
-     - **REFUTED** if eff_rank doesn't collapse at all (item 305 already addresses this).
-   - **Baselines**: random init effective rank ≈ 32 expected. Final eff_rank from item 305.
-   - **Run cap**: ~10 minutes.
-   - Depends on: 305.
-
 ### P1
 
 308. **SDF rank census + LASER replication on 3D mesh fitting**
@@ -125,6 +112,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 297
+
+307. **Effective rank trajectory through training — when does the collapse happen?** *(CONFIRMED-init-rank — cycle 297)*
+   - **Outcome: CONFIRMED-init-rank** (3/3 seeds) — verbatim per item 307: initial eff_rank ≤ 5 in **12/12 layers** for all 3 seeds, exceeding the ≥6/12 threshold. Random init was the explanation; training did NOT cause the collapse. Per-seed init eff_rank: seed 42 = [2.78, 3.03, 1.70, 1.13, 1.05, 1.01, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00]; seed 137 = [2.86, 2.32, 1.69, 1.29, 1.09, 1.01, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00]; seed 2024 = [3.30, 2.70, 2.20, 1.13, 1.04, 1.01, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00]. Per-seed final eff_rank (epoch 12000): seed 42 = [3.13, 3.58, 2.51, 1.80, 1.35, 1.17, 1.13, 1.22, 1.39, 1.16, 1.12, 1.16]; seed 137 = [2.95, 2.67, 2.34, 2.07, 1.96, 1.84, 2.46, 2.84, 2.04, 2.22, 2.04, 2.12]; seed 2024 = [3.58, 2.92, 2.85, 2.75, 2.11, 2.25, 1.90, 1.96, 1.61, 1.30, 1.17, 1.15]. **Substantive finding (the result the verbatim verdict cannot fully capture)**: training does NOT collapse eff_rank — it LIFTS it. In all 3 seeds, final > init in every layer (or essentially equal). The "collapse to rank-2" framing has the sign wrong on this 2D-input testbed: the layers START at eff_rank ≈ 1.0 (already collapsed by ReLU contraction on a 2D input — Hanin & Rolnick N^d bound, cycle 295) and training mildly TWISTS the activation manifold up to eff_rank ≈ 1.2-2.8. None of the 3 seeds is monotone non-increasing (False for all), and none has any 100-epoch window with a ≥50% drop (max relative drop across all layers/seeds = 0.325, far below 0.50). The CONFIRMED-phase-transition and CONFIRMED-gradual (which requires monotone non-increasing) clauses both fail directly. The REFUTED clause fails too (the changes are real, just upward, not downward). The "phase transition vs gradual" question collapses to "did anything go DOWN at all?" — answer: essentially no. The trajectory is upward and gradual (no phase transition), reflecting Adam slowly building up activation diversity from a 1-D start. Train accuracy reaches 0.97-0.99 by epoch 12000 (all 3 seeds converged ≥95% by their respective convergence epochs); held-out follows. **Implication for cycle 278**: the spirals/moons testbed is unusable for the cycle 278 trajectory question because there is no rank to lose. The CONFIRMED-init-rank clause that fires here is the same conclusion already drawn from cycle 295's init census, applied to the trajectory. To answer cycle 278's question on a testbed where collapse is possible (high init eff_rank), need a higher-dim input lift (100D embedding from MEMORY.md, or run on transformer layers directly). epoch_at_1.5x_final is undefined for ALL layers in ALL seeds because init < 1.5*final everywhere (the trajectory is upward, not downward, so 1.5× the final value is above the starting point). All 3 seeds reached train_acc ≥ 0.95 (final 0.97-0.99) by 12000 epochs. Trainable per net = 11,745. Wall: 28.8s. Config: HIDDEN=32, DEPTH=12, N=2000 (1000 train / 1000 held per seed), LR=1e-3, MAX_EPOCHS=12000, SNAPSHOT_EVERY=100, INPUT_SCALE=2.0 (MEMORY.md depth-12 recipe), spirals(noise=0.5, n_turns=3), seeds {42, 137, 2024}, full-batch BCEWithLogits, CPU. The verdict is the literal verbatim threshold result (CONFIRMED-init-rank fires cleanly); the substantive answer to item 307's question is "the collapse happens at random initialization, not during training, and training actually moves rank UP slightly".
+   - Artifacts: `experiments/eff_rank_trajectory_cycle297.py`, `autoresearch/plans/cycle_297.md`, `autoresearch/briefs/cycle_297.md`, `autoresearch/results/cycle_297_eff_rank_trajectory.json`, `autoresearch/results/cycle_297_summary.md`, `autoresearch/results/cycle_297_trajectory.png`, `autoresearch/results/cycle_297_manifest.txt`, `autoresearch/results/cycle_297_exec_result.txt`, `autoresearch/audits/cycle_297.md`, `autoresearch/results/cycle_297_audit.txt`, `autoresearch/logs/cycle_297_run.log`
 
 ### Cycle 296
 

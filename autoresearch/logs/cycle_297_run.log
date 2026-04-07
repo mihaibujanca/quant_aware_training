@@ -1,0 +1,33 @@
+Cycle 297 / item 307 — eff_rank trajectory through spirals training
+config: HIDDEN=32 DEPTH=12 N=2000 LR=0.001 MAX_EPOCHS=12000 SNAPSHOT_EVERY=100 INPUT_SCALE=2.0 EARLY_STOP_ACC=0.99 seeds=[42, 137, 2024]
+  seed=42 n_params=11745
+    converged@epoch=3900 train_acc=0.9560
+    seed=42 final_epoch=12000 train_acc=0.9800 converged=True n_snapshots=121 wall=9.8s
+    init eff_rank: [2.777, 3.026, 1.695, 1.13, 1.046, 1.006, 1.002, 1.0, 1.0, 1.0, 1.0, 1.0]
+    final eff_rank: [3.129, 3.583, 2.51, 1.798, 1.352, 1.165, 1.125, 1.222, 1.392, 1.156, 1.123, 1.16]
+    max_window_rel_drop: [0.002, 0.196, 0.05, 0.125, 0.283, 0.325, 0.323, 0.303, 0.123, 0.252, 0.186, 0.252]
+    epoch_at_1.5x_final: [None, None, None, None, None, None, None, None, None, None, None, None]
+    flags: ['CONFIRMED-init-rank']
+  seed=137 n_params=11745
+    converged@epoch=3000 train_acc=0.9530
+    seed=137 final_epoch=12000 train_acc=0.9700 converged=True n_snapshots=121 wall=9.5s
+    init eff_rank: [2.861, 2.315, 1.69, 1.291, 1.086, 1.011, 1.002, 1.001, 1.0, 1.0, 1.0, 1.0]
+    final eff_rank: [2.947, 2.668, 2.338, 2.074, 1.957, 1.839, 2.456, 2.842, 2.035, 2.223, 2.038, 2.121]
+    max_window_rel_drop: [0.013, 0.039, 0.006, 0.009, 0.021, 0.202, 0.059, 0.092, 0.135, 0.07, 0.131, 0.078]
+    epoch_at_1.5x_final: [None, None, None, None, None, None, None, None, None, None, None, None]
+    flags: ['CONFIRMED-init-rank']
+  seed=2024 n_params=11745
+    converged@epoch=1700 train_acc=0.9540
+    seed=2024 final_epoch=12000 train_acc=0.9870 converged=True n_snapshots=121 wall=9.5s
+    init eff_rank: [3.296, 2.7, 2.196, 1.129, 1.038, 1.013, 1.002, 1.001, 1.0, 1.0, 1.0, 1.0]
+    final eff_rank: [3.584, 2.917, 2.848, 2.746, 2.11, 2.251, 1.897, 1.955, 1.611, 1.297, 1.17, 1.151]
+    max_window_rel_drop: [0.006, 0.306, 0.231, 0.007, 0.044, 0.054, 0.033, 0.053, 0.153, 0.204, 0.105, 0.103]
+    epoch_at_1.5x_final: [None, None, None, None, None, None, None, None, None, None, None, None]
+    flags: ['CONFIRMED-init-rank']
+
+=== Per-seed verdicts ===
+  seed=42: ['CONFIRMED-init-rank']
+  seed=137: ['CONFIRMED-init-rank']
+  seed=2024: ['CONFIRMED-init-rank']
+OVERALL: CONFIRMED-init-rank  flag_counts={'CONFIRMED-init-rank': 3}
+total wall: 28.8s

@@ -1,0 +1,119 @@
+Cycle 297 Exec Result — Item 307
+
+verdict: CONFIRMED-init-rank
+item: 307
+title: Effective rank trajectory through training — when does the collapse happen?
+script: experiments/eff_rank_trajectory_cycle297.py
+wall_sec: 28.8
+fits_done: 3 (3 seeds; 12000 epochs each; 121 snapshots/seed)
+
+Verdict logic (item 307 verbatim):
+  CONFIRMED gradual         iff per-layer eff_rank curves are monotone-decreasing
+                                across the entire training run AND no layer drops
+                                by >= 50% within any 100-step window
+  CONFIRMED phase-transition iff any layer drops by >= 50% within a 100-step window
+  CONFIRMED init-rank        iff initial eff_rank is already <= 5 for >= 6 layers
+  REFUTED                    iff eff_rank doesn't collapse at all
+  Multiple CONFIRMED-* clauses can apply simultaneously.
+
+Per-seed flags:
+  seed=42:   ['CONFIRMED-init-rank']  (n_init_le5=12/12; max_rel_drop=0.325; monotone=False)
+  seed=137:  ['CONFIRMED-init-rank']  (n_init_le5=12/12; max_rel_drop=0.202; monotone=False)
+  seed=2024: ['CONFIRMED-init-rank']  (n_init_le5=12/12; max_rel_drop=0.306; monotone=False)
+  overall: CONFIRMED-init-rank (3/3)
+
+CONFIRMED-init-rank fires cleanly: every seed has init eff_rank <= 5 in 12/12 layers
+(>= 6 required). CONFIRMED-phase rejected (max single-window relative drop 0.325 << 0.50
+threshold). CONFIRMED-gradual rejected (NOT monotone non-increasing — final > init in
+essentially every layer for every seed). REFUTED rejected (changes are real, just upward
+not downward).
+
+Per-seed init / final / max_rel_drop:
+  seed 42:
+    init  : [2.78, 3.03, 1.70, 1.13, 1.05, 1.01, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00]
+    final : [3.13, 3.58, 2.51, 1.80, 1.35, 1.17, 1.13, 1.22, 1.39, 1.16, 1.12, 1.16]
+    rdrop : [0.00, 0.20, 0.05, 0.13, 0.28, 0.33, 0.32, 0.30, 0.12, 0.25, 0.19, 0.25]
+  seed 137:
+    init  : [2.86, 2.32, 1.69, 1.29, 1.09, 1.01, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00]
+    final : [2.95, 2.67, 2.34, 2.07, 1.96, 1.84, 2.46, 2.84, 2.04, 2.22, 2.04, 2.12]
+    rdrop : [0.01, 0.04, 0.01, 0.01, 0.02, 0.20, 0.06, 0.09, 0.14, 0.07, 0.13, 0.08]
+  seed 2024:
+    init  : [3.30, 2.70, 2.20, 1.13, 1.04, 1.01, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00]
+    final : [3.58, 2.92, 2.85, 2.75, 2.11, 2.25, 1.90, 1.96, 1.61, 1.30, 1.17, 1.15]
+    rdrop : [0.01, 0.31, 0.23, 0.01, 0.04, 0.05, 0.03, 0.05, 0.15, 0.20, 0.10, 0.10]
+
+epoch_at_1.5x_final per layer (item 307 metric iv):
+  ALL 36 entries are None — for every (seed, layer), init < 1.5*final, so 1.5x the final
+  value lies above the starting value and is never crossed. The metric is undefined when
+  the trajectory is upward (final > init), which is the case for every cell here.
+  This is itself the substantive finding: training does NOT bring eff_rank down to its
+  final value from above; it brings it UP from below.
+
+Convergence (CLAUDE.md "verify task performance before analysis"):
+  seed 42:   12000 epochs, train_acc=0.9800, converged ge 0.95 within run
+  seed 137:  12000 epochs, train_acc=0.9700
+  seed 2024: 12000 epochs, train_acc=0.9870
+  All 3 seeds reached train_acc >= 0.95 inside the budget; ran to MAX_EPOCHS by design
+  to capture full post-convergence trajectory. None hit EARLY_STOP_ACC=0.99.
+
+Substantive finding (the result the verbatim verdict cannot fully capture):
+  Training does NOT collapse eff_rank on this 2D-input testbed -- it LIFTS it. In all 3
+  seeds, the per-layer trajectory is upward (final > init in every layer or essentially
+  equal). The "collapse to rank-2" framing has the WRONG SIGN here:
+    - layers START at eff_rank ~ 1.0 (already collapsed by ReLU contraction on 2D input;
+      cycle 295 / Hanin-Rolnick N^d bound, lit map line 594)
+    - training mildly TWISTS the activation manifold UP to eff_rank ~ 1.2 - 2.8
+
+  None of the 3 seeds is monotone non-increasing across the run. Max single-window
+  relative drop across ALL 3 seeds * 12 layers = 0.325 (seed 42 layer 5), well below the
+  0.50 phase-transition threshold. The "phase transition vs gradual" question on this
+  testbed collapses to "did anything go DOWN?" Answer: not really.
+
+  Only CONFIRMED-init-rank fires. The substantive answer to item 307's question on this
+  testbed is: the collapse happens at random initialization. By the time training starts,
+  layers 0-2 sit at eff_rank 1.7-3.3 and layers 3-11 sit at 1.0-1.3. Training pulls the
+  deeper layers UP by 0.1-1.5 over 12000 epochs, never down.
+
+  This confirms (and extends) cycle 295's substantive reading via the trajectory itself.
+  Cycle 278's GPT-2 b1/b2 collapse to eff_rank 1.94/1.05 cannot be studied via this
+  testbed because the testbed has no opportunity to collapse -- it starts collapsed.
+
+  Implications for next planner:
+  - The 2D-input spirals/moons testbed is unusable for trajectory analysis on cycle 278's
+    question. It is the wrong control. Stop trying to use it for that purpose.
+  - Principled follow-up A: rerun item 307 with a higher-dim input lift (100D embedding
+    from MEMORY.md, or random 32D linear lift) so init eff_rank can plausibly be > 5 and
+    actually drop during training.
+  - Principled follow-up B (better, IMO): instrument GPT-2 directly during cycle 280's
+    4000-step Adam retrain to see whether eff_rank moves at all during the LASER fine-tune
+    that produced the cycle 280 result. This is the trajectory question on the actual
+    object of interest, not a 2D toy proxy.
+
+Config:
+  HIDDEN=32 DEPTH=12 N=2000 (1000 train / 1000 held per seed) LR=1e-3 MAX_EPOCHS=12000
+  SNAPSHOT_EVERY=100 TRAIN_ACC_TARGET=0.95 EARLY_STOP_ACC=0.99 INPUT_SCALE=2.0
+  spirals: noise=0.5 n_turns=3
+  seeds=[42, 137, 2024]
+  MLP: aleph.models.MLP(2, 32, 1, depth=12, ReLU)
+  Trainable per net = 11,745
+  CPU full-batch BCEWithLogitsLoss
+  121 snapshots per seed (epoch 0 + every 100 epochs through epoch 12000)
+
+Plot: autoresearch/results/cycle_297_trajectory.png
+  - Top-left: per-layer eff_rank (mean across 3 seeds), 12 viridis lines
+  - Top-right: train BCE loss per seed
+  - Bottom-left: held-out accuracy per seed
+  - Bottom-right: per-layer eff_rank for seed 42 (full curves)
+
+Artifacts:
+  experiments/eff_rank_trajectory_cycle297.py
+  autoresearch/plans/cycle_297.md
+  autoresearch/briefs/cycle_297.md
+  autoresearch/results/cycle_297_eff_rank_trajectory.json
+  autoresearch/results/cycle_297_summary.md
+  autoresearch/results/cycle_297_trajectory.png
+  autoresearch/results/cycle_297_manifest.txt
+  autoresearch/results/cycle_297_exec_result.txt
+  autoresearch/logs/cycle_297_run.log
+  autoresearch/agenda.md
+  autoresearch/logs/experiments.tsv

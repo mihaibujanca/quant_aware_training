@@ -1,0 +1,141 @@
+Cycle 297 Manifest — Item 307: Effective rank trajectory through training on spirals
+
+Commit: pending
+Branch: geometric_compression
+Verdict: CONFIRMED-init-rank
+
+== Verdict logic (item 307 verbatim) ==
+CONFIRMED gradual         iff per-layer eff_rank curves are monotone-decreasing
+                              across the entire training run AND no layer drops
+                              by >= 50% within any 100-step window
+CONFIRMED phase-transition iff any layer drops by >= 50% within a 100-step window
+CONFIRMED init-rank        iff initial eff_rank is already <= 5 for >= 6 layers
+REFUTED                    iff eff_rank doesn't collapse at all
+Multiple CONFIRMED-* clauses can apply simultaneously.
+
+== Per-seed flags ==
+seed=42:   ['CONFIRMED-init-rank']
+seed=137:  ['CONFIRMED-init-rank']
+seed=2024: ['CONFIRMED-init-rank']
+overall: CONFIRMED-init-rank (3/3 seeds)
+flag_counts: {'CONFIRMED-init-rank': 3}
+
+CONFIRMED-init-rank reasoning per seed: init eff_rank <= 5 in 12/12 layers (>=6 required).
+CONFIRMED-phase rejected per seed: max single-window relative drop = 0.325 (max across all
+  layers/seeds), well below 0.50.
+CONFIRMED-gradual rejected per seed: trajectories are NOT monotone non-increasing
+  (final > init in essentially every layer for every seed).
+REFUTED rejected per seed: init/final differences are real (init mostly ~1.0; final ~1.2-2.8).
+
+== Per-seed init / final eff_rank ==
+
+seed=42  final_epoch=12000  train_acc=0.9800  converged=True  snapshots=121
+  init  : [2.777, 3.026, 1.695, 1.130, 1.046, 1.006, 1.002, 1.000, 1.000, 1.000, 1.000, 1.000]
+  final : [3.129, 3.583, 2.510, 1.798, 1.352, 1.165, 1.125, 1.222, 1.392, 1.156, 1.123, 1.160]
+  rdrop : [0.002, 0.196, 0.050, 0.125, 0.283, 0.325, 0.323, 0.303, 0.123, 0.252, 0.186, 0.252]
+  monotone_nonincreasing: False
+  n_init_le5: 12/12
+
+seed=137  final_epoch=12000  train_acc=0.9700  converged=True  snapshots=121
+  init  : [2.861, 2.315, 1.690, 1.291, 1.086, 1.011, 1.002, 1.001, 1.000, 1.000, 1.000, 1.000]
+  final : [2.947, 2.668, 2.338, 2.074, 1.957, 1.839, 2.456, 2.842, 2.035, 2.223, 2.038, 2.121]
+  rdrop : [0.013, 0.039, 0.006, 0.009, 0.021, 0.202, 0.059, 0.092, 0.135, 0.070, 0.131, 0.078]
+  monotone_nonincreasing: False
+  n_init_le5: 12/12
+
+seed=2024 final_epoch=12000  train_acc=0.9870  converged=True  snapshots=121
+  init  : [3.296, 2.700, 2.196, 1.129, 1.038, 1.013, 1.002, 1.001, 1.000, 1.000, 1.000, 1.000]
+  final : [3.584, 2.917, 2.848, 2.746, 2.110, 2.251, 1.897, 1.955, 1.611, 1.297, 1.170, 1.151]
+  rdrop : [0.006, 0.306, 0.231, 0.007, 0.044, 0.054, 0.033, 0.053, 0.153, 0.204, 0.105, 0.103]
+  monotone_nonincreasing: False
+  n_init_le5: 12/12
+
+epoch_at_1.5x_final: None for ALL 36 (3 seeds * 12 layers) entries — because init < 1.5*final
+in every cell. The trajectory is UPWARD (final > init), so 1.5x the final value is above the
+starting value and never crossed. The metric is undefined when the layer doesn't go down.
+
+== Substantive finding ==
+
+Training does NOT collapse eff_rank on this 2D-input testbed — it LIFTS it. In all 3 seeds,
+the per-layer trajectory is upward (final > init in every layer). The "collapse to rank-2"
+framing has the wrong sign here:
+  - layers START at eff_rank ~ 1.0 (already collapsed at random init by ReLU contraction
+    on a 2D input; cycle 295 / Hanin-Rolnick N^d bound)
+  - training mildly TWISTS the activation manifold up to eff_rank ~ 1.2 - 2.8
+
+None of the 3 seeds is monotone non-increasing across the run (False for all three).
+Max single-window relative drop across ALL layers and ALL seeds = 0.325 (seed 42, layer 5),
+well below the 0.50 phase-transition threshold. CONFIRMED-phase clause does not fire.
+CONFIRMED-gradual clause requires monotone non-increasing AND no >=50% drop; the first
+condition fails on every seed (the curves go UP). REFUTED clause requires "doesn't collapse
+at all" — the changes are real but upward, not downward, so REFUTED doesn't fire either.
+
+Only CONFIRMED-init-rank fires. The substantive answer to item 307's question ("when does
+the collapse happen?") on this testbed: at random initialization. By the time training
+starts, layers 0-2 sit at eff_rank 1.7-3.3 and layers 3-11 sit at 1.0-1.3. Training pulls
+layers 3-11 up by 0.1-1.5 over 12000 epochs, never down. The "phase transition vs gradual"
+distinction is moot; there is no collapse to characterize.
+
+This is the same conclusion as cycle 295's init census, now confirmed by the trajectory:
+the 2D input completely dominates the eff_rank profile. Cycle 278's GPT-2 b1/b2 collapse
+to eff_rank 1.94/1.05 cannot be studied via this testbed because there is no opportunity
+to collapse — the testbed starts collapsed.
+
+Implication for cycle 278's training-dynamics question: the spirals testbed is unusable
+for trajectory analysis. The principled follow-up is a higher-dim input lift (100D
+embedding from MEMORY.md), or — better — instrument GPT-2 directly during cycle 280's
+4000-step Adam retrain to see whether eff_rank moves at all during the LASER fine-tune
+that produced the cycle 280 result.
+
+== Convergence (CLAUDE.md "verify task performance before analysis") ==
+seed 42:   12000 epochs, train_acc=0.9800 (converged ge 0.95 within run)
+seed 137:  12000 epochs, train_acc=0.9700
+seed 2024: 12000 epochs, train_acc=0.9870
+All 3 seeds reached train_acc >= 0.95 inside the 12000-epoch budget.
+None hit the 0.99 EARLY_STOP threshold; all ran to MAX_EPOCHS (intentional — captures
+the full post-convergence trajectory for the "did anything happen" question).
+
+== Config ==
+HIDDEN=32  DEPTH=12  N_SAMPLES=2000 (1000 train / 1000 held per seed)
+LR=1e-3  MAX_EPOCHS=12000  SNAPSHOT_EVERY=100  TRAIN_ACC_TARGET=0.95  EARLY_STOP_ACC=0.99
+INPUT_SCALE=2.0 (MEMORY.md depth-12 spirals trainability recipe)
+spirals: noise=0.5  n_turns=3
+seeds = {42, 137, 2024}
+MLP: aleph.models.MLP(input_size=2, hidden_size=32, output_size=1, depth=12, ReLU)
+Trainable params/net: 11,745 (asserted at runtime)
+Loss: nn.BCEWithLogitsLoss, full-batch Adam
+Hardware: CPU (~12K params trivial)
+
+121 snapshots per seed (epoch 0 + every 100 epochs through epoch 12000).
+
+== Baselines ==
+Cycle 295 spirals init_mean per layer (3 seeds, full N=2000):
+  [2.994, 2.705, 1.874, 1.187, 1.058, 1.010, 1.002, 1.001, 1.000, 1.000, 1.000, 1.000]
+Cycle 297 init values per seed are within range (uses 1000 train subset, slightly different
+random subsample; the qualitative shape -- layer 0 ~3, layer 7+ ~1.0 -- matches exactly).
+Cycle 295 spirals post_mean per layer (3 seeds, after train_acc>=0.95):
+  [3.143, 2.859, 2.106, 2.088, 2.151, 1.937, 1.986, 2.072, 2.049, 2.032, 1.756, 1.736]
+Cycle 297 final values are also in this range, confirming the same endpoint manifold.
+
+== Wall time ==
+Total wall: 28.8 seconds (well under 10-minute cap)
+Per seed: 9.5-9.8s (12000 epochs + 121 snapshots each, eigvalsh on 32x32 matrices is trivial)
+
+== Artifacts ==
+experiments/eff_rank_trajectory_cycle297.py
+autoresearch/plans/cycle_297.md
+autoresearch/briefs/cycle_297.md
+autoresearch/results/cycle_297_eff_rank_trajectory.json
+autoresearch/results/cycle_297_summary.md
+autoresearch/results/cycle_297_trajectory.png
+autoresearch/results/cycle_297_manifest.txt
+autoresearch/results/cycle_297_exec_result.txt
+autoresearch/logs/cycle_297_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+
+item_number: 307
+outcome: CONFIRMED-init-rank
+key_metric: verdict=CONFIRMED-init-rank_3of3_seeds_n_init_le5_12of12_all_seeds_max_window_rel_drop_0.325_far_below_0.50_phase_threshold_monotone_nonincreasing_FALSE_all_seeds_REFUTED_clause_does_not_fire_changes_real_but_UPWARD_init_seed42_2.78_3.03_1.70_1.13_1.05_1.01_1.00_seven_layers_init_seed137_2.86_2.32_1.69_1.29_1.09_1.01_1.00_seven_layers_init_seed2024_3.30_2.70_2.20_1.13_1.04_1.01_1.00_seven_layers_final_seed42_3.13_3.58_2.51_1.80_1.35_1.17_1.13_1.22_1.39_1.16_1.12_1.16_final_seed137_2.95_2.67_2.34_2.07_1.96_1.84_2.46_2.84_2.04_2.22_2.04_2.12_final_seed2024_3.58_2.92_2.85_2.75_2.11_2.25_1.90_1.96_1.61_1.30_1.17_1.15_substantive_training_LIFTS_not_collapses_eff_rank_layers_3_to_11_inherit_eff_rank_1.0_at_init_from_ReLU_contraction_2D_input_HanInRolnick_Nd_bound_training_twists_manifold_upward_to_1.2_2.8_collapse_to_rank2_framing_has_wrong_sign_on_2D_testbed_epoch_at_1.5x_final_undefined_all_36_entries_init_below_1.5x_final_trajectory_upward_phase_vs_gradual_question_moot_no_collapse_to_characterize_2D_testbed_unusable_for_cycle_278_trajectory_question_principled_followup_higher_dim_input_lift_100D_embedding_or_instrument_GPT2_directly_during_cycle_280_retrain_all_3_seeds_train_acc_0.97_0.99_at_epoch_12000_converged_ge_0.95_within_run_wall_28.8s
+commit: pending
+paths: experiments/eff_rank_trajectory_cycle297.py,autoresearch/plans/cycle_297.md,autoresearch/briefs/cycle_297.md,autoresearch/results/cycle_297_eff_rank_trajectory.json,autoresearch/results/cycle_297_summary.md,autoresearch/results/cycle_297_trajectory.png,autoresearch/results/cycle_297_manifest.txt,autoresearch/results/cycle_297_exec_result.txt,autoresearch/logs/cycle_297_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv
