@@ -1,6 +1,11 @@
-# Research Status — 280 Cycles (001–280)
+# Research Status — 281 Cycles (001–281)
 
-## Latest: Cycle 280
+## Latest: Cycle 281
+
+291. **2-block [1,2] K=512** — INCONCLUSIVE
+   - 3 seeds. **best_mean=44.339 ± 0.007** in dead zone (43.9, 44.5) — fails CONFIRMED by 0.44, fails REFUTED by 0.16. Δ vs cycle 266 [1,4] (43.852) = **+0.486 worse**. Δ vs cycle 271 [1] (43.821) = **+0.518 worse** (strictly dominated on both axes). **Block 2 (eff_rank 1.05, lowest in model) is NOT a cheap cascade add** — third independent refutation (after cycles 273, 280) of activation eff_rank as prescriptive for cascade compression. Tight std 0.007 (4× tighter than comparable 2-block) → low eff_rank correlates with flat joint-Adam surface.
+
+## Cycle 280
 
 290. **Block 1 c_proj rank-r weight-SVD sweep** — CONFIRMED (interesting=true)
    - **No-retrain**: r=1 59.75, r=2 57.66, r=5 56.83, r=10 56.73. **Retrain r=2 (3 seeds, only 2,304 params)**: **best_mean=49.032 ± 0.025** — **4.86 PPL BELOW float (53.895)**. CONFIRMED via retrain clause (≤54) by 4.97 PPL margin. **NEW LOWEST-PARAM PARETO ANCHOR**: **(2,304, 49.03)** strictly dominates cycle 270 block 11 rank-22 (17,664, 54.47) on BOTH axes — **7.7× fewer trainable params AND -5.44 PPL**. All 3 seeds still descending at step ≥3900 (budget-bounded). Confirms cycle 270's "weight-SVD ≠ activation-SVD" lesson at a second block (top-2 weight energy only 7.57% vs activation top-1 92.94%), but eff_rank IS directionally predictive of retrained compressibility.
