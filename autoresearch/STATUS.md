@@ -1,6 +1,11 @@
-# Research Status — 263 Cycles (001–263)
+# Research Status — 264 Cycles (001–264)
 
-## Latest: Cycle 263
+## Latest: Cycle 264
+
+274. **Per-block swap κ heatmap** — INCONCLUSIVE (interesting=true)
+   - 12×11 Δκ matrix from installing ReLU+b_leak[k] at block k only (k ∈ {0..11}). Baseline matches cycle 258 bit-identically; restore PPL=45.0637 clean. **Strict causal lower triangle**: 86/132 entries bit-zero (l < k-1, expected). **Diagonal band (k-1, k, k+1)**: max=8.00e-4 at (k=2, l=2), mean=1.15e-4 vs off-diagonal mean 2.15e-5 — substantive ratio ≈ 5.4×. **L1 ranking**: k=2 ≫ k=3 > k=1 > k=4 > k=0 ≫ k=5..11. Load-bearing zone = blocks 1-4, matches cycle 258 GELU κ peak at layers 2-4. **Clause 2 (late-layer monotone amplification as k decreases) FAILS 0/4** — l=7 column over k=0..6 oscillates [1.0, 1.4, 2.8, 4.7, 1.9, 9.7, 1.9]e-6. The "early swaps have more downstream impact" hypothesis is empirically false. **Cycle 173 PPL ranking does NOT track κ ranking** (block 11 = #2 in PPL but #11 in κ) — late-block damage is from output-channel structure, not trajectory geometry.
+
+## Cycle 263
 
 273. **Local linearity defect ε_l(x, h)** — REFUTED (interesting=true)
    - 64 tokens × 32 directions × 4 ε scales × 12 blocks × 2 activations. ε_defect = ‖f(x+h) - f(x) - J(x)h‖_G / ‖h‖²_G. **Per-block ratios at smallest scale (ε=0.01·‖x‖_G) cluster within ±27% of unity at every block**: median ε_G/ε_R range [0.748, 1.127], p99 ε_R/ε_G range [0.964, 1.218]. Clause A (median G/R ≥5 in ≥3 of blocks 0-4) FAILS 0/5 — max early-band median = 1.006 at block 4 (~5× below threshold). REFUTED triggers (all 12 blocks both ratios ∈ [0.5, 2]). **Geometric reading**: c_fc + c_proj linear envelope + cycle 258 b_leak first-moment correction together wash out the elementwise σ distinction at the BLOCK-function level. Hypothesis was correct at the activation-function level (gelu'' smooth, relu'' delta) but wrong about block-function curvature. Consistent with cycles 258/260: GELU/ReLU disagreement is real and structured at the operator level but distributed enough to average out into near-identical per-direction quadratic-form magnitudes. **Bonus**: median ε(scale) decreases with scale for both σ types — residual grows ~linearly in ‖h‖ rather than quadratically.
