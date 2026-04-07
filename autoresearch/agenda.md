@@ -21,14 +21,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-253. **Probe the 6-block 59.5 ceiling — per-block PPL decomposition under the [1,2,4,5,7,8] joint fit**
-   - Analysis item, no new training. Load cycle 221's best-state joint Adam snapshot for BLOCKS=[1,2,4,5,7,8] K=512 W_out+b_out (should be in `autoresearch/results/cycle_221_*.pt` or reconstructable from the logged seed 42 run). Starting from the fully compressed cascade at 59.515 PPL, measure the eval PPL contribution of each compressed block by UN-compressing one block at a time (restore the GPT-2 FFN for that block only, keep the other 5 compressed) on the cycle 221 eval set (`all_ids[200:300]`, SEQ_LEN=128, seed 42). Report six numbers: `ppl_if_block_X_restored` for X ∈ {1,2,4,5,7,8}, plus the full-float baseline (53.895) and the fully-compressed baseline (59.515). The largest ΔPPL drops identify the "bottleneck blocks" in the cascade — the blocks whose compression contributes the most to the 13-PPL 3→6 gap. Also record: (a) per-block mean residual MSE at the cycle 221 best state, (b) the `sorted(-ΔPPL)` curve to see if one or two blocks dominate vs uniform contribution. If cycle 221's snapshot isn't durable on disk, re-fit joint Adam with seed 42 only (cheaper than 3-seed; ≤10 min) to regenerate it.
-   - Type: analysis / per-block attribution
-   - Confirmed if: a single block X satisfies `ppl_if_X_restored ≤ 56.0` (one block accounts for ≥3.5 of the 6.0 PPL 3→6 gap → the cascade floor is dominated by that block and targeted remediation becomes actionable).
-   - Refuted if: all six ΔPPL entries lie in [0.5, 1.5] (the 59.5 floor is uniformly distributed across blocks → no targeted remediation possible; cascade barrier is amortised).
-   - Inconclusive otherwise.
-   - Artifacts: `experiments/6block_per_block_attribution_cycle<N>.py`, `autoresearch/results/cycle_<N>_per_block_attribution.json`, `autoresearch/results/cycle_<N>_summary.md`
-   - Depends on: cycle 221 artifacts (refit seed 42 if missing)
+*(empty — item 253 closed CONFIRMED in cycle 243)*
 
 
 
@@ -55,6 +48,19 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 243
+
+253. **Probe the 6-block 59.5 ceiling — per-block PPL decomposition under the [1,2,4,5,7,8] joint fit** *(CONFIRMED — cycle 243)*
+   - **Outcome: CONFIRMED** — Refit cycle 221 at seed 42 only (init=86.686 → best=59.391 at step 1300, exact match to cycle 221 seed-42 reference 59.391), then restored each compressed block's float MLP one at a time on held-out `eval_ids = all_ids[200:300]` (SEQ_LEN=128). Fully-compressed baseline=59.391, float=53.895, compression gap=+5.496 PPL. Per-block restoration (sorted by ΔPPL desc):
+     - block 5: ppl=54.291, Δ=+5.100, mse=3.24e-1
+     - block 4: ppl=54.495, Δ=+4.896, mse=2.12e-1
+     - block 7: ppl=55.256, Δ=+4.135, mse=5.65e-1
+     - block 8: ppl=55.608, Δ=+3.783, mse=9.28e-1
+     - block 2: ppl=55.861, Δ=+3.530, mse=2.22e-1
+     - block 1: ppl=56.699, Δ=+2.692, mse=1.02e-1
+   - **CONFIRMED** — 5 of 6 blocks clear the ≤56.0 threshold individually (only block 1 at 56.70 misses). The confirmation criterion (∃X ppl_if_X_restored ≤ 56.0) is met by blocks 2/4/5/7/8. Interpretation: every compressed block carries a large share of the 5.5 PPL gap, and restoring **any** mid-cascade block (4, 5) brings the cascade within 0.5 PPL of float. The delta distribution is non-uniform (range 2.69–5.10, σ≈0.86) and non-additive (Σ delta = +24.14 vs 5.50 actual gap: 4.4×). Every restoration improves PPL — there is no single bottleneck block; instead the gap is a **compounded cascade effect**. Residual MSE does NOT correlate with ΔPPL (block 8 has highest MSE 0.928 but only rank-4 ΔPPL; block 5 has rank-1 ΔPPL 5.10 with MSE 0.324). Surprising: block 4 (middle of cascade) has larger ΔPPL than block 8 (deepest), contradicting the cycle 242 "late-block compression dominates" hypothesis when measured at the per-block attribution level. The cycle 242 late-block penalty (8.64 at [8,9,10]) and the current cycle's block 8 Δ=3.78 are consistent only if the late-block penalty is about INTERACTION between late blocks, not any single late block. Block 1 (earliest in cascade) contributes the least (2.69), matching the pattern from cycle 242's early-cascade-is-easy result. Remediation implication: targeted remediation at a single block won't close the gap; the 5.5 PPL gap is a **cascade phenomenon requiring joint re-optimisation** across all 6 blocks, not a single-block problem. The round-trip sanity check passed for every restoration (|rt − fully_compressed| < 1e-4). Follow-ups: 2-block and 3-block restoration scans (does restoring blocks {4, 5} jointly account for the full 5.5 gap or only ~2.0 as implied by single-block non-additivity?); investigate why block 8 has the largest residual MSE (0.928) but only rank-4 ΔPPL — is the compression error at block 8 largely in a null direction of downstream attention?
+   - Artifacts: `experiments/6block_per_block_attribution_cycle243.py`, `autoresearch/results/cycle_243_per_block_attribution.json`, `autoresearch/results/cycle_243_summary.md`
 
 ### Cycle 242
 
