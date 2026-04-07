@@ -1,0 +1,42 @@
+cycle=273
+item=283
+verdict=REFUTED
+commit=fbffd3a
+status=SUCCESS
+
+hetero_best_mean=52.6366
+control_best_mean=60.6862
+threshold_C_hetero_le=44.5
+threshold_C_control_ge=60.0
+threshold_R_hetero_ge=47.0
+margin_over_R=5.637
+margin_to_C=-8.137
+
+per_config_best_mean:
+  hetero      (K=[512,512,512,22]): 52.6366 +/- 0.0595 (init 72.198, best_step ~2800, final@4000 52.9953, trainable 1,199,616)
+  uniform_k22 (K=[22,22,22,22]):    60.6862 +/- 0.0483 (init 82.787, best_step all 4000, final@4000 60.6862, trainable 70,656)
+
+per_seed_hetero=[52.6645@2600, 52.6912@2800, 52.5539@3000]
+per_seed_uniform_k22=[60.7519@4000, 60.6697@4000, 60.6371@4000]
+
+float_ppl=53.895
+delta_hetero_vs_c266_k512_2b_[1,4]=+8.785
+delta_hetero_vs_c255_k512_4b_[1,2,4,7]=+3.028
+delta_hetero_vs_c270_block11_r22=-1.832
+delta_hetero_vs_c272_k256_4b=+0.714
+delta_hetero_vs_float=-1.258
+delta_control_vs_float=+6.791
+
+per_block_init_mse_seed42_hetero={1:0.0843,4:0.1616,7:0.4149,11:5.2002}
+per_block_init_mse_seed42_uniform_k22={1:0.1610,4:0.2641,7:0.6996,11:5.2002}
+
+trainable_params_hetero=1199616
+trainable_params_uniform_k22=70656
+fits=6_of_6
+wall_time_min~25
+no_seed_drop=true
+
+verdict_logic=hetero_best_mean_52.6366>=47.0_REFUTED_by_5.637_PPL
+interpretation=block11_K=22_lstsq_fit_residual_MSE_5.20_dominant_vs_K=512_blocks_(0.08,0.16,0.41)_adam_cannot_joint_recover_cascade_hetero_K_guided_by_eff_rank_damages_recipe_cycle_267_activation_eff_rank_descriptive_not_prescriptive_uniform_K=22_catastrophic_at_60.69_confirms_lower_bound_hetero_worse_than_cycle_266_2block_[1,4]_by_8.78_and_worse_than_cycle_272_K256_4block_by_0.71
+
+artifacts=experiments/hetero_k_eff_rank_cycle273.py,autoresearch/plans/cycle_273.md,autoresearch/briefs/cycle_273.md,autoresearch/logs/cycle_273_run.log,autoresearch/results/cycle_273_hetero_eff_rank.json,autoresearch/results/cycle_273_summary.md,autoresearch/results/cycle_273_manifest.txt
