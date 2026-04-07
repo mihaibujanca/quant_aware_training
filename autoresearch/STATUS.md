@@ -1,6 +1,11 @@
-# Research Status — 272 Cycles (001–272)
+# Research Status — 273 Cycles (001–273)
 
-## Latest: Cycle 272
+## Latest: Cycle 273
+
+283. **Heterogeneous K eff_rank-guided — blocks [1,4,7,11] at K={512,512,512,22}** — REFUTED
+   - Hetero best_mean=52.637 ± 0.060; uniform_k22 control=60.686 ± 0.048. Hetero exceeds REFUTED threshold (≥47) by 5.64 PPL. **Block 11 K=22 lstsq residual MSE=5.20 is 60× block 1 K=512** — operator bottleneck dominates and joint Adam can't absorb it. Hetero is **8.78 PPL WORSE than cycle 266 [1,4]** and 0.71 PPL worse than cycle 272 K=256 4-block at 66% fewer params — strictly DOMINATED. **Cycle 267's activation eff_rank is descriptive, not prescriptive** at the cascade level. Confirms cycle 270's weight-vs-activation SVD mismatch generalizes.
+
+## Cycle 272
 
 282. **K=256 4-block sweep** — CONFIRMED
    - 9 fits, 21 min. **min best_mean=51.9224 ± 0.020 on [1,2,4,7]** (≤52 confirmed by 0.078 PPL). Per-subset: [1,2,4,7]=51.92, [1,4,7,8]=52.47, [1,2,7,8]=52.68. **K-curve at 4 blocks now fully mapped**: K∈{64,128,256,512}→{55.95, 53.65, 51.92, 49.61}. Per-K-halving cost {2.31, 1.73, 2.31} — roughly linear in log K with flat midstep, NOT strictly concave-up. Canonical [1,2,4,7] ordering returns (cycle 268's K=64 flip was K-specific). **NOT a Pareto winner**: dominated by cycle 271 K=512 1-block [1] (394K, 43.82) at HALF params and 8.1 PPL better.
