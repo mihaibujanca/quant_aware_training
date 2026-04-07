@@ -1,6 +1,11 @@
-# Research Status — 262 Cycles (001–262)
+# Research Status — 263 Cycles (001–263)
 
-## Latest: Cycle 262
+## Latest: Cycle 263
+
+273. **Local linearity defect ε_l(x, h)** — REFUTED (interesting=true)
+   - 64 tokens × 32 directions × 4 ε scales × 12 blocks × 2 activations. ε_defect = ‖f(x+h) - f(x) - J(x)h‖_G / ‖h‖²_G. **Per-block ratios at smallest scale (ε=0.01·‖x‖_G) cluster within ±27% of unity at every block**: median ε_G/ε_R range [0.748, 1.127], p99 ε_R/ε_G range [0.964, 1.218]. Clause A (median G/R ≥5 in ≥3 of blocks 0-4) FAILS 0/5 — max early-band median = 1.006 at block 4 (~5× below threshold). REFUTED triggers (all 12 blocks both ratios ∈ [0.5, 2]). **Geometric reading**: c_fc + c_proj linear envelope + cycle 258 b_leak first-moment correction together wash out the elementwise σ distinction at the BLOCK-function level. Hypothesis was correct at the activation-function level (gelu'' smooth, relu'' delta) but wrong about block-function curvature. Consistent with cycles 258/260: GELU/ReLU disagreement is real and structured at the operator level but distributed enough to average out into near-identical per-direction quadratic-form magnitudes. **Bonus**: median ε(scale) decreases with scale for both σ types — residual grows ~linearly in ‖h‖ rather than quadratically.
+
+## Cycle 262
 
 268. **K=1 + c_fc bias trainable 3-block** — INCONCLUSIVE
    - BLOCKS=[1,4,7] K=1, FullCompressedMLP {W_out + b_out + c_fc bias slice (1 scalar/block)} = 4,611 trainable. 3 seeds. **best_mean=59.131 ± 0.027** ∈ (58.5, 59.5). Δ vs cycle 230 K=1 W_out only (59.245) = -0.114 PPL (~37% from REFUTED to CONFIRMED). All seeds best at step 4000. b_fc consistently shifted positive at all 3 blocks all 3 seeds (block 7 ≈ +1.17, seed-std 0.0005) — optimizer found a real direction but ~6.5× too small to clear the +0.745 PPL threshold. **The cycles 213/241/248/262 series (K=512/512/128/1) now spans 4 endpoints all showing near-noop bias retraining**: W_out absorbs the DOF regardless of K.
