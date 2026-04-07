@@ -4,24 +4,59 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## NEXT EXPERIMENTS
 
-### P0 — Bump latent feature extraction + causal tests (interpretability)
+### P0
 
-**Goal**: test whether the cycle 218 alignment story is real by extracting latent features from the centred per-token bump vector Δ̃, decoding them to vocab, and intervening causally on the residual stream. Each item below MUST save concrete example outputs (token contexts, before/after predictions) so the results can be loaded and explored in a notebook the next morning. See `notebooks/bump_features_explore.py` for the loader scaffold and the exact artifact contracts these items must satisfy.
+254. **Sliding 3-block sweep — where does the cascade penalty bite?** (empirical)
+   - **Goal**: cycle 242 tested [1,2,3] (Δ=+0.58) and [8,9,10] (Δ=+8.64). Fill the gap. Test [3,4,5], [5,6,7], [6,7,8] at matched recipe to map the ΔPPL-vs-start-depth curve, localising the exact depth where the cascade penalty turns steep. Cycle 243 flagged blocks 4 and 5 as the heaviest per-block contributors inside the jointly-fit 6-block cascade; this sweep tests whether the "mid-cascade is fragile" story holds at 3-block isolation.
+   - **Recipe**: K=512, trainable = W_out + b_out (W_fc frozen), topk+lstsq init, joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, disjoint calib=all_ids[:200] / eval=all_ids[200:300], SEQ_LEN=128, 3 seeds {42, 137, 2024}. Float held-out PPL=53.895. Cycle 210 [1,4,7] baseline 46.556.
+   - **Confirmed**: any 3-block window in {[3,4,5], [5,6,7], [6,7,8]} lands ≤48.5 PPL mean (matches early-cascade regime).
+   - **Refuted**: every window ≥52.0 PPL mean (entire mid-to-late range is uniformly hard).
+   - **Inconclusive**: mixed or straddling the 48.5-52.0 band.
+   - **Report**: per-config mean ± std, per-seed best ppl + best step, init ppl (lstsq) per config, ΔPPL vs float and vs cycle 210 [1,4,7]. Plot ΔPPL vs window start index overlaid with the cycle 242 [1,2,3] / [8,9,10] anchors.
+   - Artifacts: `experiments/sliding_3block_cycle254.py`, `autoresearch/results/cycle_254_sliding_3block.json`, `autoresearch/results/cycle_254_summary.md`
 
-**Shared config across items 246-248**:
-- Model: `gpt2` (HF) on MPS, eval/forward in fp32
-- Calibration corpus: wikitext-2 train split, N_SEQS=200, SEQ_LEN=512 (≈100K tokens after dropping pads). Use seed 42.
-- Held-out corpus: wikitext-2 validation split, distinct from calibration, N_SEQS=200, SEQ_LEN=512.
-- All Δ̃_l computed as `GELU_FFN_l(x) − ReLU_FFN_l(x) − E_calib[GELU_FFN_l − ReLU_FFN_l]` where the centring mean is computed on the calibration corpus only and applied to held-out evaluation.
-- All artifacts must be loadable by `notebooks/bump_features_explore.py` without modification — the loader expects exact filenames listed under each item's `Artifacts:` block.
+255. **Drop block 5 from 6-block compression — can we beat the 59.5 floor by dropping cycle 243's biggest contributor?** (empirical)
+   - **Goal**: cycle 243 phase 1 identified block 5 as the largest single-block ΔPPL contributor (+5.10) in the jointly-fit [1,2,4,5,7,8] cascade. If the joint floor 59.515 PPL is dominated by the block-5 cost, removing block 5 from the compression set (leaving it float) should measurably drop the floor. Test [1,2,4,7,8] (5 blocks, drop 5). This is a direct structural counter to the cycle 243 non-additivity observation (Σ delta 24.14 vs 5.50 actual) — if the gap is truly joint-cascade and not single-block, dropping the biggest contributor should move the ceiling only modestly; if the gap is dominated by block 5, the drop should close most of it.
+   - **Recipe**: BLOCKS=[1,2,4,7,8] K=512, trainable W_out+b_out, topk+lstsq init, joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore, disjoint calib=all_ids[:200] / eval=all_ids[200:300], SEQ_LEN=128, 3 seeds. Compare to cycle 221 6-block 59.515 ± 0.094 and cycle 242 3-block early 47.135 and cycle 210 3-block [1,4,7] 46.556.
+   - **Confirmed**: best_mean ≤ 54.0 (beats cycle 221 6-block by ≥5.5 PPL, i.e. block 5 accounted for most of the 59.5 floor).
+   - **Refuted**: best_mean ≥ 57.0 (dropping block 5 moves the floor by ≤2.5 PPL — cascade-joint story confirmed, no single-block remediation works).
+   - **Inconclusive**: in (54.0, 57.0).
+   - **Report**: per-seed best + mean ± std + best step, init PPL, trainable param count, ΔPPL vs cycle 221. Also one-shot 4-block [1,2,4,8] and [1,2,7,8] as cheap controls if the 5-block main clears the gate (decide after main result).
+   - Artifacts: `experiments/drop_block5_cycle255.py`, `autoresearch/results/cycle_255_drop_block5.json`, `autoresearch/results/cycle_255_summary.md`
+
+256. **gelu_noneg + μ + LoRA r=8 + K=128 W_out compression — does the bump-removed activation absorb channel compression?** (empirical)
+   - **Goal**: combine cycle 239's confirmed recipe (gelu_noneg + per-channel μ_l + LoRA r=8 on c_proj, all 12 blocks, 47.692 ± 0.143 held-out) with K=128 W_out channel compression on the same [1,4,7] 3-block set cycle 223 tested alone (K=128 W_out-only: 48.989). Hypothesis: removing the GELU bump before compression changes the W_out target subspace — the bump-removed block output may concentrate signal into fewer channels, making K=128 topk a tighter fit. Tests whether activation change and channel compression are orthogonal mechanisms or whether they trade.
+   - **Recipe**: All 12 blocks patched with `relu(gelu(z)) + μ_l` (μ precomputed on calibration), LoRA r=8 on every block's `mlp.c_proj`. On TOP of that, BLOCKS=[1,4,7] have K=128 W_out topk+lstsq compression with W_out+b_out trainable. Joint Adam 4000 steps, LR=1e-4, disjoint calib/eval, 3 seeds. Careful: LoRA and K=128 W_out both touch `mlp.c_proj[1,4,7]` — LoRA must be installed on the COMPRESSED W_out, not the float, so the residual LoRA absorbs what the K=128 lstsq init cannot. Plan must specify the install order exactly: (1) apply gelu_noneg+μ, (2) run K=128 topk+lstsq on [1,4,7] and replace those blocks' c_proj with the compressed parameterisation, (3) install LoRA r=8 on all 12 blocks (compressed or float c_proj), (4) joint Adam trains LoRA + compressed W_out + b_out.
+   - **Baselines**: cycle 223 K=128 W_out only [1,4,7] 48.989. Cycle 239 gelu_noneg+μ+LoRA all-12 no compression 47.692. Cycle 210 K=512 W_out [1,4,7] 46.556.
+   - **Confirmed**: held-out best_mean ≤ 47.0 (beats both ablations — the combination is strictly better).
+   - **Refuted**: best_mean ≥ 49.5 (worse than pure K=128, compression and activation fix do not compose).
+   - **Inconclusive**: (47.0, 49.5).
+   - **Report**: per-seed best + std, LoRA sanity checks (zero-init reproduces the cycle 228/239 floors on blocks without K=128, post-init reproduces cycle 223 init 50.8 on [1,4,7] if LoRA A=0), trainable param count breakdown, init vs best PPL.
+   - Artifacts: `experiments/gelu_noneg_lora_k128_cycle256.py`, `autoresearch/results/cycle_256_gelu_noneg_lora_k128.json`, `autoresearch/results/cycle_256_summary.md`
 
 ### P1
 
-*(empty — item 252 closed CONFIRMED in cycle 242)*
+257. **Heterogeneous K — K=512 on cascade-binding blocks, K=128 elsewhere** (empirical)
+   - **Goal**: cycle 243 showed blocks 4 and 5 carry the most per-block ΔPPL inside the [1,2,4,5,7,8] joint fit. Cycle 231 showed K=128 at 6 blocks lands at 67.562 (+8.05 PPL above K=512). If the K=128 penalty concentrates on the few "binding" blocks, upgrading ONLY those blocks to K=512 while leaving the rest K=128 should recover most of the gap at a parameter budget closer to K=128.
+   - **Recipe**: BLOCKS=[1,2,4,5,7,8], heterogeneous K: blocks 4, 5 ← K=512; blocks 1, 2, 7, 8 ← K=128. W_out+b_out trainable, joint Adam LR=1e-4, 4000 steps, 3 seeds, disjoint split. Parameter count target: 4×(768×128 + 128) + 2×(768×512 + 512) = 4×98,432 + 2×393,728 = 393,728 + 787,456 = 1,181,184 trainable params per seed (vs cycle 221 K=512 6-block 2,363,904 — ~50% of K=512 cost).
+   - **Baselines**: cycle 221 K=512 6-block 59.515 (upper quality bound), cycle 231 K=128 6-block 67.562 (lower cost bound).
+   - **Confirmed**: best_mean ≤ 61.0 (recovers ≥81% of the K=512→K=128 gap with half the params on the two binding blocks). Also report (best_mean − 59.515) / (67.562 − 59.515) = "fraction of gap recovered".
+   - **Refuted**: best_mean ≥ 65.0 (the K=128 penalty is distributed, not localised — heterogeneous K does not help).
+   - **Inconclusive**: (61.0, 65.0).
+   - **Report**: per-seed best + std, init PPL, trainable count, per-block residual MSE at end (to check whether block 4/5 MSE drops to cycle 221 level while blocks 1/2/7/8 stay at cycle 231 level, confirming the heterogeneous structure worked as intended).
+   - Artifacts: `experiments/hetero_k_6block_cycle257.py`, `autoresearch/results/cycle_257_hetero_k.json`, `autoresearch/results/cycle_257_summary.md`
 
 ### P2
 
-*(empty — item 253 closed CONFIRMED in cycle 243)*
+258. **K=128 + W_out + W_fc trainable at 6 blocks — does unfreezing W_fc help where bias alone failed?** (empirical)
+   - **Goal**: cycle 241 showed adding the pre-topk c_fc BIAS to the 6-block K=512 trainable surface is a noop (59.533 vs 59.515). Cycle 231 showed K=128 6-block W_out-only is 67.562. The open question: at the more constrained K=128 surface, does unfreezing the full c_fc MATRIX (not just bias) in the trainable set give W_out+b_out room to re-route through nonlinear mixing? This is explicitly the direction cycle 241's "forbidden by agenda budget" note carves out — test it once at K=128 where the W_out-only ceiling is worse and there is more gap to close.
+   - **Recipe**: BLOCKS=[1,2,4,5,7,8] K=128, trainable={W_out, b_out, c_fc full matrix (3072, 768), b_fc (3072,)}. Parameter count: 6×(768×128 + 128 + 3072×768 + 3072) ≈ 6×2,458,880 = 14,753,280 trainable params — much larger than cycle 221's 2.36M W_out-only, but this is P2 precisely because it burns parameter budget. Joint Adam LR=5e-5 (lower than default; large trainable surface benefits from smaller steps), 4000 steps, 3 seeds, disjoint split. Freeze LM head, attention, and all blocks outside [1,2,4,5,7,8]. Init: topk+lstsq on W_out as usual; c_fc starts at float.
+   - **Baselines**: cycle 231 K=128 6-block W_out-only 67.562 (same K, fewer trainables). Cycle 221 K=512 6-block 59.515 (quality ceiling regardless of surface). Float 53.895.
+   - **Confirmed**: best_mean ≤ 61.0 (large jump from 67.562 — W_fc matrix absorbs meaningful capacity that bias cannot).
+   - **Refuted**: best_mean ≥ 66.0 (W_fc matrix noop like bias was; surface enlargement does not help at K=128 6-block either).
+   - **Inconclusive**: (61.0, 66.0).
+   - **Report**: per-seed best + std, init PPL, ||ΔW_fc||_F / ||W_fc||_F at end to confirm W_fc actually moved off float, trainable param count, wall-clock (this item is expected to be slow).
+   - Artifacts: `experiments/k128_wout_wfc_6block_cycle258.py`, `autoresearch/results/cycle_258_k128_wout_wfc.json`, `autoresearch/results/cycle_258_summary.md`
 
 
 
