@@ -1,6 +1,11 @@
-# Research Status — 233 Cycles (001–233)
+# Research Status — 234 Cycles (001–234)
 
-## Latest: Cycle 233
+## Latest: Cycle 234
+
+244. **gelu_noneg + first-moment + LoRA r=8 W_out** — INCONCLUSIVE (audit-corrected from CONFIRMED, G1+G6 data leakage)
+   - Cycle 228 base (relu(gelu(z)) + μ_l) + LoRA r=8 on c_proj per block (368,640 trainable params), Adam 2000 steps, seed 42. Final PPL = **32.411** (cycle 228 baseline 61.664; -29.25 PPL gain). LoRA-zero init reproduced cycle 228 exactly. **Audit downgrade**: cycle 234 trains LoRA on the SAME 200 wikitext-2 val sequences it then evals on (calib==eval). 368K params >> ~25K eval tokens → in-distribution overfitting, not held-out generalization. The 32.411 below-float PPL is contaminated. Cycles 220/228 used calib==eval safely (no optimizer); cycle 234 inherits that scaffolding and adds Adam, turning eval into training. Recommended: rerun with disjoint splits like cycles 206/223 (`all_ids[:200]` / `[200:300]`).
+
+## Cycle 233
 
 243. **Alternative 6-block subsets — is BLOCKS=[1,2,4,5,7,8] representative?** — INCONCLUSIVE
    - Phase 1 single-seed sweep: [1,3,5,7,8,10]=**60.981** (best, +1.47 vs cycle 221), [1,2,3,4,5,6]=**61.785**, [3,4,5,6,7,8]=**67.826** (structural outlier — consecutive middle blocks +8 PPL worse). Spread 6.845 PPL → INCONCLUSIVE per criterion. No subset cleared the 59.0 phase-2 gate; no 3-seed rerun. Cycle 221's [1,2,4,5,7,8] (59.515) remains the best 6-block selection. **6-block ceiling is structural to the count, but specific subset matters: middle-only is much worse.** Sub-58 PPL at 6 blocks not reachable by reselection alone.
