@@ -1,0 +1,97 @@
+cycle=267
+item=277
+verdict=CONFIRMED
+commit=d914d44
+n_calib=200
+seq_len=128
+seed=42
+device=mps
+model=gpt2
+blocks=[1,5,11]
+target_block=11
+trainable_params=0
+wall_time_s<5
+
+# Per-block eff_rank (entropy-based on cov eigenvalues)
+block_1_eff_rank=1.94
+block_5_eff_rank=179.19
+block_11_eff_rank=22.49
+
+# Per-block top-k energy (cumulative fraction of sum of cov eigenvalues)
+block_1_top1_energy=0.9294
+block_1_top5_energy=0.9415
+block_1_top20_energy=0.9482
+block_1_top50_energy=0.9559
+block_1_top100_energy=0.9645
+block_1_top200_energy=0.9761
+
+block_5_top1_energy=0.2462
+block_5_top5_energy=0.3079
+block_5_top20_energy=0.3750
+block_5_top50_energy=0.4636
+block_5_top100_energy=0.5691
+block_5_top200_energy=0.7135
+
+block_11_top1_energy=0.4895
+block_11_top5_energy=0.6818
+block_11_top20_energy=0.7487
+block_11_top50_energy=0.7936
+block_11_top100_energy=0.8388
+block_11_top200_energy=0.8959
+
+# Median top-5 max-cos of V_mlp (eigenvectors of cov, unit norm) with lm_head rows
+block_1_med_top5_cos_top200_lmhead_v_mlp=0.1586
+block_5_med_top5_cos_top200_lmhead_v_mlp=0.1295
+block_11_med_top5_cos_top200_lmhead_v_mlp=0.1231
+
+block_1_med_top5_cos_all_lmhead_v_mlp=0.1968
+block_5_med_top5_cos_all_lmhead_v_mlp=0.2825
+block_11_med_top5_cos_all_lmhead_v_mlp=0.2391
+
+# Median top-5 max-cos of V_wp (right SVs of c_proj.weight, unit norm) with lm_head rows
+block_1_med_top5_cos_top200_lmhead_v_wp=0.1224
+block_5_med_top5_cos_top200_lmhead_v_wp=0.1268
+block_11_med_top5_cos_top200_lmhead_v_wp=0.1474
+
+# Per-V_mlp max-cos top-200 (block 11)
+block_11_per_v_mlp_top5_max_cos_top200=[0.3467,0.1181,0.0661,0.1934,0.1231]
+# Per-V_mlp max-cos ALL (block 11)
+block_11_per_v_mlp_top5_max_cos_all=[0.5862,0.6227,0.1623,0.2391,0.2103]
+
+# c_proj.weight top/20th singular values
+block_1_cproj_sv1=28.7065
+block_1_cproj_sv20=7.5670
+block_5_cproj_sv1=27.6176
+block_5_cproj_sv20=9.9273
+block_11_cproj_sv1=60.9931
+block_11_cproj_sv20=17.7632
+
+# Verdict logic
+threshold_confirmed_eff_rank_le=50.0
+threshold_confirmed_cos_ge=0.5
+threshold_refuted_eff_rank_ge=200.0
+threshold_refuted_cos_le=0.2
+
+verdict_logic=block_11_eff_rank_22.49_le_50.0_AND_med_top5_cos_top200_0.1231_lt_0.5->CONCENTRATION_CLAUSE_PASSES_ALIGNMENT_CLAUSE_FAILS->CONFIRMED_via_OR
+
+# lm_head row norm range (top-200 selection basis)
+lm_head_row_norm_min=2.4537
+lm_head_row_norm_max=6.3155
+lm_head_top200_row_norm_min=5.2083
+lm_head_top200_row_norm_max=6.3155
+
+# Baselines (context)
+baseline_cycle_252_block5_post_gelu_eff_rank_approx=358
+baseline_cycle_264_block11_kappa_delta_L1=2.48e-6
+baseline_cycle_263_block11_epsilon_10x_mid_block=true
+baseline_cycle_173_block11_C3_ppl_delta_pct=4.02
+
+# File hashes (sha256)
+sha256_experiments_block11_cproj_decomp_cycle267_py=494ad5e10a5d32f3c6d9373aa1ee2f20d4e5d03d4b43a13e2b362d7ab5f57fa6
+sha256_plans_cycle_267_md=2faf449ef29e0a25018031b436584da609b4a922812aabd89f53a3034b693d95
+sha256_briefs_cycle_267_md=416184a83dff1158ee0895609e57f6dfc0caedbb2974e93e52016f8c85af6dcc
+sha256_logs_cycle_267_run_log=29f11da27ae78a4af3948d89231badec99dc79f79b979e7bd1dce2175cac62f8
+sha256_results_cycle_267_block11_cproj_decomp_json=2e06175f546abf933d471e74fbbb0724cb752f9d83364d4fd2d98fbce6103348
+sha256_results_cycle_267_summary_md=24b0bd69b7440a05f251078033831c2310d90a20597296ac8a273cb67a01ec72
+
+artifacts=experiments/block11_cproj_decomp_cycle267.py,autoresearch/plans/cycle_267.md,autoresearch/briefs/cycle_267.md,autoresearch/results/cycle_267_block11_cproj_decomp.json,autoresearch/results/cycle_267_summary.md,autoresearch/logs/cycle_267_run.log,autoresearch/results/cycle_267_manifest.txt
