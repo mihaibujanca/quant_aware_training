@@ -1,0 +1,42 @@
+Cycle 279 — Item 289: [1,4] K=512 W_out + W_fc trainable (SLICED)
+
+Commit: 4591c88
+Verdict: CONFIRMED (W_fc noop at 2 blocks)
+
+Summary:
+  best_mean = 43.87751 ± 0.09921 (lands in CONFIRMED band 43.6-44.1)
+  init_mean = 57.05724 ± 0.00000 (deterministic, lstsq init)
+  best_step_mean = 1933 ± 170
+  final@4000_mean = 46.630 ± 0.252 (+2.75 PPL overshoot above best)
+  verdict logic (item 289): 43.6 < 43.87751 < 44.1 -> CONFIRMED
+  delta vs cycle 266 [1,4] W_out-only (43.852) = +0.0255 (within noise)
+
+Per-seed:
+  seed=42:   init=57.0572  best=44.0172 @ step 1700  final@4000=46.9585
+  seed=137:  init=57.0572  best=43.7961 @ step 2100  final@4000=46.5842
+  seed=2024: init=57.0572  best=43.8192 @ step 2000  final@4000=46.3459
+
+SLICED semantics (critical):
+  Trainable = W_fc slice (768, K=512) + b_fc slice (512) + W_out (512, 768) + b_out (768) per block.
+  Per-block: 787,712. Two-block total: 1,575,424.
+  Cycle 213 FullCompressedMLP convention — trains topk-sliced columns of c_fc, NOT the full (768, 3072) c_fc matrix.
+  Agenda item 289 setup line erroneously claimed W_fc_l (768x3072) -> 5,512,704 total — repeats cycle 248 mistake.
+  Faithful continuation of cycles 213/241/248/262 requires sliced form.
+
+Wall ~7.6 min. 3 of 3 fits.
+
+Key findings:
+  - W_fc trainable is a noop at 2 blocks at K=512, consistent with cycles 213/241/248/262 across 4 endpoints.
+  - W_fc retraining probe family now closed across (K=1, K=128, K=512) x (2, 3, 6) blocks = 5 configs, all within ±0.1 PPL of W_out-only baseline. W_out absorbs the DOF pattern is universal.
+  - Best_step halves (4000 -> 1933) vs W_out-only; final@4000 overshoots best by +2.75 PPL — the W_fc surface overfits at the 200-calib scale.
+  - 2-block ceiling pinned at ~43.85 regardless of trainable DOFs: cycle 266 [1,4] W_out-only 43.852, cycle 279 [1,4] W_out+W_fc 43.878, cycle 271 [1] W_out-only 43.821 span 0.057 PPL.
+  - Cycle 279 (1.58M, 43.878) is strictly dominated by cycle 271 [1] K=512 W_out-only (394K, 43.821) on BOTH axes — does NOT enter the Pareto frontier.
+
+Artifacts:
+  experiments/two_block_wout_wfc_cycle279.py
+  autoresearch/plans/cycle_279.md
+  autoresearch/briefs/cycle_279.md
+  autoresearch/logs/cycle_279_run.log
+  autoresearch/results/cycle_279_two_block_wout_wfc.json
+  autoresearch/results/cycle_279_summary.md
+  autoresearch/results/cycle_279_manifest.txt

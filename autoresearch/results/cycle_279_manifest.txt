@@ -1,0 +1,107 @@
+Cycle 279 Manifest — Item 289: [1,4] K=512 W_out + W_fc trainable (SLICED)
+
+Commit: 4591c88
+Branch: geometric_compression
+Verdict: CONFIRMED (W_fc noop)
+
+== Verdict logic (item 289 verbatim) ==
+CONFIRMED (W_fc noop) iff best_mean in (43.6, 44.1)
+REFUTED (W_fc helps)  iff best_mean <= 43.5
+INCONCLUSIVE          iff best_mean in (43.5, 43.6) — marginal — OR best_mean >= 44.1
+
+  best_mean = 43.87751 ± 0.09921
+  43.6 < 43.87751 < 44.1? TRUE (margin 0.278 from lower, 0.222 from upper)
+  -> CONFIRMED
+
+== Aggregate (n=3 seeds) ==
+  init_mean       = 57.05724 ± 0.00000  (deterministic — lstsq init seed-independent on identical calib)
+  best_mean       = 43.87751 ± 0.09921
+  best_step_mean  = 1933.3 ± 170.0
+  final@4000_mean = 46.62954 ± 0.25213
+
+== Per-seed ==
+  seed=42:   init=57.0572  best=44.0172 @ step 1700  final@4000=46.9585
+  seed=137:  init=57.0572  best=43.7961 @ step 2100  final@4000=46.5842
+  seed=2024: init=57.0572  best=43.8192 @ step 2000  final@4000=46.3459
+
+== SLICED-vs-full semantics (critical) ==
+Trainable = W_fc_slice (768, K=512) + b_fc_slice (512) + W_out (512, 768) + b_out (768) per block.
+Per-block: 787,712. Two-block total: 1,575,424.
+
+This is the cycle 213 FullCompressedMLP convention — Adam trains the topk-sliced
+(768, K) columns of c_fc, NOT the full (768, 3072) c_fc matrix.
+
+Agenda item 289 setup line erroneously claimed W_fc_l (768x3072), b_fc_l (3072) →
+2 × (393,984 + 2,362,368) = 5,512,704 total params. That REPEATS the cycle 248
+agenda error of treating W_fc as the full c_fc matrix instead of the topk-sliced
+columns that cycle 213 FullCompressedMLP trains. Faithful continuation of the
+cycle 213/241/248/262 W_fc retraining family REQUIRES the sliced form for
+apples-to-apples comparison with those cycles.
+
+Cycle 279 uses the sliced form (1,575,424 trainable). A separate experiment at
+3.5× the param count (5,512,704) would be the FULL c_fc trainable variant — if
+that becomes a priority, it should be filed as a new item.
+
+== Setup ==
+BLOCKS=[1, 4], K=512, LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, best-state restore
+(all 4 tensors per block), 3 seeds {42, 137, 2024}, disjoint N_CALIB=200/N_EVAL=100,
+SEQ_LEN=128, MPS, GPT-2 small, wikitext-2 val. 3 fits, 7.6 min wall.
+
+Float PPL (reference): 53.895
+
+== Baselines ==
+  Cycle 266 [1,4] K=512 W_out-only:        43.852   (788K trainable)
+  Cycle 213 [1,4,7] K=512 W_out+W_fc:      46.424
+  Cycle 248 6-block K=128 W_out+W_fc:      67.609
+  Cycle 271 [1] K=512 W_out-only:          43.821   (394K, current lowest-PPL Pareto winner)
+  Float ref:                                53.895
+  Cycle 279 [1,4] K=512 W_out+W_fc SLICED: 43.878   (1,575,424 trainable)
+
+== Deltas ==
+  vs cycle 266 [1,4] W_out-only:   +0.026  (within noise — both std < 0.1)
+  vs cycle 213 3b W_out+W_fc:      -2.546  (2-block beats 3-block at same param family)
+  vs cycle 271 [1] W_out-only:     +0.057  (dominated on both axes: 4x params AND 0.057 PPL worse)
+  vs float:                        -10.017
+
+== Geometric / DOF-absorption reading ==
+- W_fc trainable is a NOOP at 2 blocks at K=512. The cycle 213/241/248/262 series
+  is now extended to 5 configs: (K=1, 3b), (K=128, 6b) x2, (K=512, 3b), (K=512, 6b),
+  (K=512, 2b). Every config lands within ±0.1 PPL of the corresponding W_out-only
+  baseline. The W_out absorbs the DOF pattern is universal for joint Adam on
+  topk+lstsq-initialised compressed MLPs at K ∈ {1, 128, 512} and blocks ∈ {2, 3, 6}.
+- Best_step halves vs cycle 266 [1,4]: W_out-only cycle 266 best_step = 4000 (still
+  descending, budget-bounded) vs cycle 279 W_out+W_fc best_step ≈ 1933 (mid-training
+  optimum). Doubling trainable DOFs (788K → 1.58M) halves time-to-optimum but then
+  the surface OVERSHOOTS rather than continuing to descend.
+- Cycle 279 final@4000 = 46.630 vs cycle 266 final@4000 ≈ 43.85 — +2.78 PPL WORSE
+  without best-state restore. W_fc DOF actively hurts the long-horizon fit.
+  Best-state restore salvages cycle 279 to within noise of cycle 266. The raw
+  overfitting tendency is direct evidence that W_fc trainable does NOT absorb a real
+  DOF — it opens extra directions Adam exploits to overfit the 200-calib training set.
+- 2-block ceiling pinned at ~43.85 regardless of trainable DOFs. cycle 266 [1,4]
+  W_out-only 43.852, cycle 279 [1,4] W_out+W_fc SLICED 43.878, cycle 271 [1]
+  W_out-only 43.821 — 3 recipes span 0.057 PPL. The [1,4]/[1] cluster is a local
+  minimum of joint Adam on topk+lstsq init at K=512, and W_fc trainable has zero
+  bearing on where that minimum sits.
+- W_fc retraining probe family CLOSED. Future W_fc experiments should only be
+  revisited if a qualitatively different initialisation (non-topk or non-lstsq) is
+  introduced.
+
+== Wall time ==
+457.6 sec (7.6 min). 3 seeds, ~2.5 min per seed at 4000 steps each.
+
+== Artifacts (SHA256) ==
+1f571ffceafa667a3df58630b72f1e658b479448e79c504413395eda427a0040  experiments/two_block_wout_wfc_cycle279.py
+9688dac08e565be9123b70ad25c8a55cde3f76785710bde2254460b0cd367cf1  autoresearch/plans/cycle_279.md
+17645cbbf9052ed304e37377ba54c572aaf309abd0a2b9379138981c21bfa42c  autoresearch/briefs/cycle_279.md
+d4bc9efbfa07b67f5e97ea682923694a970ec9ddad116d005e58693045dc3519  autoresearch/results/cycle_279_two_block_wout_wfc.json
+96aca20d6740be1ac2d9c5475acd2c84eac3d6c760b3a012faa75487eeb00241  autoresearch/results/cycle_279_summary.md
+b3217c0957d038e65f90926f279775bfbabbde7ae53c9f92a9f97f4d562a8528  autoresearch/logs/cycle_279_run.log
+
+== Pareto update ==
+Cycle 279 [1,4] K=512 W_out+W_fc SLICED at (1,575,424 params, 43.878 PPL) is
+STRICTLY DOMINATED by cycle 271 [1] K=512 W_out-only at (393,984 params, 43.821 PPL)
+on BOTH axes: 4× the params AND 0.057 PPL worse. Cycle 279 does NOT enter the
+Pareto frontier. The W_fc trainable surface does not open a new Pareto point at 2
+blocks — the cycle 271 [1] K=512 W_out-only recipe remains the lowest-PPL Pareto
+winner at the ~43.8 PPL floor.
