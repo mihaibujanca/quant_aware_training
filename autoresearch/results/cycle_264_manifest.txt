@@ -1,0 +1,101 @@
+cycle=264
+item=274
+verdict=INCONCLUSIVE
+commit=8c947eaed77200bc63c6ab9e4a8bea4afc2f42c3
+trainable_params=0
+
+# Config
+model=gpt2
+n_eval=200
+seq_len=128
+seed=42
+device=mps
+n_blocks=12
+b_leak_recipe=cycle_258_E_x[gelu(z)-relu(z)]_per_block_per_channel_3072d
+patch_module=ReluPlusBleak_cycle258_verbatim
+trajectory_layers=13
+kappa_layers=11
+
+# Sanity
+baseline_ppl_calib_slice=45.0637
+post_restore_baseline_ppl=45.0637
+restore_roundtrip_clean=true
+
+# Per-swap patched PPL (k=0..11)
+patched_ppl_k_0=45.0860
+patched_ppl_k_1=45.6715
+patched_ppl_k_2=46.0503
+patched_ppl_k_3=45.9652
+patched_ppl_k_4=46.1116
+patched_ppl_k_5=45.9834
+patched_ppl_k_6=45.8505
+patched_ppl_k_7=45.7750
+patched_ppl_k_8=45.6363
+patched_ppl_k_9=45.6122
+patched_ppl_k_10=45.1888
+patched_ppl_k_11=45.4558
+
+# Δκ matrix shape
+delta_kappa_shape=12x11
+delta_kappa_rows=swap_location_k_in_0_to_11
+delta_kappa_cols=kappa_index_l_in_0_to_10_corresponding_to_layers_1_to_11
+nonzero_entries_count=46_of_132
+strict_lower_triangle_causal_zeros=86_of_132_with_l_lt_k_minus_1_bit_identical
+
+# Per-swap ‖Δκ‖₁ (descending L1 ranking)
+l1_k_2=1.7799e-3
+l1_k_3=1.2242e-3
+l1_k_1=5.9954e-4
+l1_k_4=4.3588e-4
+l1_k_0=4.1935e-4
+l1_k_5=1.4890e-4
+l1_k_6=4.3154e-5
+l1_k_7=1.1357e-5
+l1_k_8=6.1091e-6
+l1_k_9=3.7940e-6
+l1_k_11=2.4792e-6
+l1_k_10=1.0422e-6
+l1_ranking_descending=[2,3,1,4,0,5,6,7,8,9,11,10]
+
+# Diagonal band stats (band = κ indices {k-1, k, k+1} ∩ {0..10})
+diagonal_band_max_abs_delta=8.00e-4_at_k_2_l_2
+diagonal_band_mean_abs_delta=1.15e-4
+diagonal_band_n_entries=32
+
+# Off-diagonal stats
+offdiag_n_entries=100
+offdiag_n_zero_entries=54_strict_causal_zeros
+offdiag_nonzero_n=46
+offdiag_mean_with_zeros=9.89e-6
+offdiag_nonzero_mean=2.15e-5
+offdiag_nonzero_median=1.24e-6
+
+# Diagonal vs off-diagonal ratios
+diag_over_offdiag_with_zeros_ratio=inf_median_zero_artifact
+diag_mean_over_offdiag_mean_with_zeros=11.6
+diag_mean_over_offdiag_nonzero_mean=5.4
+
+# Verdict logic
+clause1_diag_band_dominant_iff_max_diag_over_median_offdiag_ge_3=True_trivially_inf_substantively_5.4x
+clause2_late_monotone_iff_ge_3_of_4_late_cols_in_l_7_to_10_non_decreasing_as_k_decreases=False_0_of_4
+late_col_l_7_k_0_to_6=[1.03e-6,1.45e-6,2.76e-6,4.73e-6,1.88e-6,9.73e-6,1.90e-6]
+late_col_l_8_k_0_to_6=[3.59e-7,2.31e-7,1.40e-7,1.63e-6,3.32e-7,1.98e-7,2.10e-6]
+late_col_l_9_k_0_to_6=[3.16e-8,1.33e-7,2.51e-7,9.91e-8,1.35e-7,1.19e-7,1.65e-7]
+late_col_l_10_k_0_to_6=[6.51e-9,2.72e-7,1.59e-7,5.12e-8,3.64e-7,2.40e-7,8.55e-8]
+confirmed_iff=clause1_AND_clause2
+confirmed=False
+refuted_iff=diag_over_offdiag_lt_1_OR_max_diag_lt_median_offdiag
+refuted=False
+verdict=INCONCLUSIVE
+
+# Files
+plan=autoresearch/plans/cycle_264.md
+brief=autoresearch/briefs/cycle_264.md
+script=experiments/per_block_swap_curvature_cycle264.py
+run_log=autoresearch/logs/cycle_264_run.log
+result_json=autoresearch/results/cycle_264_per_block_swap_curvature.json
+summary_md=autoresearch/results/cycle_264_summary.md
+heatmap_png=autoresearch/results/cycle_264_swap_kappa_heatmap.png
+manifest=autoresearch/results/cycle_264_manifest.txt
+
+artifacts=experiments/per_block_swap_curvature_cycle264.py,autoresearch/plans/cycle_264.md,autoresearch/briefs/cycle_264.md,autoresearch/results/cycle_264_per_block_swap_curvature.json,autoresearch/results/cycle_264_summary.md,autoresearch/results/cycle_264_swap_kappa_heatmap.png,autoresearch/logs/cycle_264_run.log,autoresearch/results/cycle_264_manifest.txt
