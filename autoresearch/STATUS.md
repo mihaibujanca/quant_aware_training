@@ -1,6 +1,11 @@
-# Research Status — 237 Cycles (001–237)
+# Research Status — 238 Cycles (001–238)
 
-## Latest: Cycle 237
+## Latest: Cycle 238
+
+248. **T4: Activation patching across token pairs (bump-only)** — REFUTED (interesting=true)
+   - 100 (A, B, p) pairs from wikitext-2 val (margin>2 both sides), 5 blocks × 100 = 500 records. Per-block MEDIAN bump_attribution: [0.0083, 0.0117, -0.0093, -0.0038, 0.0167] — all under 0.05 refuted gate. Mean diverges (block 9 mean 2.79 vs median 0.017, std 27.15) due to unbounded ratio tails — design review pre-approved median substitution. Median was pre-declared in script, not post-hoc. **Critical metric weakness**: full_patched_delta on B_top is positive in only 42-64% of pairs (denominator unreliable), itself a negative result on token-specific transport. **Closes the 4-item bump investigation coherently**: cycles 235 (T1) CONFIRMED-G3, 236 (T2) INCONCLUSIVE wte mismatch, 237 (T3) CONFIRMED 23k× subspace ablation, 238 (T4) REFUTED per-pair attribution. **The bump subspace is causally critical aggregate-wise but NOT linearly decodable AND NOT token-specific.** Substantial reframing of cycle 218's "inter-block communication" claim — the bump encodes collective cascade behavior, not interpretable per-token features.
+
+## Cycle 237
 
 247. **T3: Bump subspace ablation vs random subspace baseline** — CONFIRMED (interesting=true)
    - Top-10 right SVs of centred Δ̃ per block (from cycle 235 T1) ablated via projector P_l = V_l V_l^T applied to block output. baseline=34.514 (wikitext-2 val 200×512). **joint_bump_ppl = 2,344,386 vs joint_random_mean = 101.298 ± 8.137 (3 seeds) → ratio 23,143× ≥ 1.5 gate ✓**. **9/12 blocks ≥ 2× per-block random gate ✓**. Per-block ratios: [19.9, 12.9, 10.6, 30.2, 22.1, 25.2, **797.7**, 11.2, 1.65, 1.45, 1.51, **928.4**]. **Block 6 and 11 are single-block catastrophic** (must NOT compress); **blocks 8/9/10 are bump-random-like** (compression candidates). Full-FFN top-10 baseline destroys DIFFERENT blocks (3 and 11), confirming bump subspace is structurally distinct from raw FFN top PCs. **Reconciles cycle 236 T2 INCONCLUSIVE**: T2 killed the wte@v linear DECODER, but T3 confirms the SUBSPACE is causally critical via direct PPL ablation. The bump directions are real, just non-linearly decoded.
