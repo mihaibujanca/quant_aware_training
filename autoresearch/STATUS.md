@@ -1,6 +1,11 @@
-# Research Status — 236 Cycles (001–236)
+# Research Status — 237 Cycles (001–237)
 
-## Latest: Cycle 236
+## Latest: Cycle 237
+
+247. **T3: Bump subspace ablation vs random subspace baseline** — CONFIRMED (interesting=true)
+   - Top-10 right SVs of centred Δ̃ per block (from cycle 235 T1) ablated via projector P_l = V_l V_l^T applied to block output. baseline=34.514 (wikitext-2 val 200×512). **joint_bump_ppl = 2,344,386 vs joint_random_mean = 101.298 ± 8.137 (3 seeds) → ratio 23,143× ≥ 1.5 gate ✓**. **9/12 blocks ≥ 2× per-block random gate ✓**. Per-block ratios: [19.9, 12.9, 10.6, 30.2, 22.1, 25.2, **797.7**, 11.2, 1.65, 1.45, 1.51, **928.4**]. **Block 6 and 11 are single-block catastrophic** (must NOT compress); **blocks 8/9/10 are bump-random-like** (compression candidates). Full-FFN top-10 baseline destroys DIFFERENT blocks (3 and 11), confirming bump subspace is structurally distinct from raw FFN top PCs. **Reconciles cycle 236 T2 INCONCLUSIVE**: T2 killed the wte@v linear DECODER, but T3 confirms the SUBSPACE is causally critical via direct PPL ablation. The bump directions are real, just non-linearly decoded.
+
+## Cycle 236
 
 246. **T2: Causal intervention on top bump directions** — INCONCLUSIVE (interesting=true)
    - For each block, top 5 T1 directions intervened with α∈[-3,-1,0,1,3]·std on held-out 1024 tokens. **Effects are real**: max effect_size = 29.23× random baseline (block 11, dir 0); 18/60 directions cross effect≥3 gate; per-block max effect monotone with depth [5.23, 3.62, 2.34, 2.72, 2.62, 2.20, 3.47, 2.85, 4.20, 5.88, 8.05, **29.23**]. Refute branch ruled out. **BUT T1's wte @ v vocab predictions FAIL to match actual logit shifts**: only 1/60 directions reach jaccard ≥ 0.3. Joint confirm gate (effect≥3 AND jaccard≥0.3) passes 0/12 blocks. This is exactly the "directions cause shifts but don't match T1 predictions" inconclusive case. **T1's wte-column-space decoder is the wrong probe** — the bump directions are causally real but their effect propagates through non-linear downstream paths, not through a simple unembedding readout. Cycle 218's "Δ̃ writes into c_fc reading subspace" story survives only at the weak (correlational) level. T3 (cycle 237) is the next gating test.
