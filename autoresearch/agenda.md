@@ -15,27 +15,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 - All Δ̃_l computed as `GELU_FFN_l(x) − ReLU_FFN_l(x) − E_calib[GELU_FFN_l − ReLU_FFN_l]` where the centring mean is computed on the calibration corpus only and applied to held-out evaluation.
 - All artifacts must be loadable by `notebooks/bump_features_explore.py` without modification — the loader expects exact filenames listed under each item's `Artifacts:` block.
 
-246. **T2: Causal intervention on top bump directions**
-   - Take the top 5 directions per block from item 245 (skip blocks where 245 found <5 coherent directions). On a held-out 1000-token batch (subset of held-out wikitext-2 val):
-     - Forward pass to residual stream after block l → save `x_l ∈ R^(B, T, 768)`
-     - For each direction v_{l,i} and α ∈ {-3, -1, 0, +1, +3} (units = std of `U_l[:, i]` from calibration):
-       - Modified forward: `x_l' = x_l + α · v_{l,i}`, continue through blocks l+1..11 + ln_f + lm_head
-       - Logit shift = logits(x_l') − logits(x_l)
-       - Top 20 boosted/suppressed vocab items by mean logit shift across the batch
-       - **10 concrete example records**: pick 10 tokens from the held-out batch where the L2 of the logit shift is largest. For each: `{context: str, original_top1: str, intervened_top1: str, top5_orig: list, top5_intervened: list, alpha: float, logit_delta_top: float}`.
-   - Random direction baseline: same procedure with 10 v_random ∈ R^768 unit-norm Gaussian seeds. Report mean logit shift L2 for each block.
-   - Artifacts (REQUIRED):
-     - `experiments/bump_t2_intervention_cycle<N>.py`
-     - `autoresearch/results/cycle_<N>_t2_logit_shifts.pt` — {`block_<l>`: {`direction_<i>`: {`alpha_<a>`: tensor(B*T, vocab_size)}}} (full tensors; can be subsampled to top-1000 tokens to save space)
-     - `autoresearch/results/cycle_<N>_t2_intervention.json` — per (block, direction, alpha): top vocab boost/suppress, effect size vs random baseline, T1-decoding-overlap (Jaccard top-20)
-     - `autoresearch/results/cycle_<N>_t2_examples.md` — the concrete (context, before, after) records, organized by block and direction. Format: heading with (block, direction, alpha), then a 5-row table of (context | orig_top1 | new_top1 | logit_delta).
-     - `autoresearch/results/cycle_<N>_t2_summary.md` — verdict + per-block effect-size table (causal effect at α=3 vs random baseline)
-   - Type: interpretability / causal intervention
-   - Confirmed if: ≥3 directions per block (in ≥6 of 12 blocks) have BOTH (a) logit shift L2 at α=3 ≥ 3× random baseline mean, AND (b) Jaccard overlap of top-20 boosted vocab between intervention result and the T1-predicted boost list ≥ 0.3.
-   - Refuted if: no direction in any block produces a logit shift distinguishable from random (effect size <1.2× baseline).
-   - Inconclusive if: directions cause shifts but the shifts don't match T1's vocab predictions (the alignment in 218 was correlational only).
-   - Depends on: 245
-
 247. **T3: Bump subspace ablation vs random subspace baseline**
    - For each block, take the top-10 right singular vectors of centred Δ̃ from item 245's `cycle_<N>_t1_features.pt`. Define the projector `P_l = V_l[:,:10] @ V_l[:,:10].T` and the ablation: after the FFN output of block l is added to the residual stream, replace `x_l ← x_l − P_l x_l`. Measure full-model PPL on held-out wikitext-2 val (N_SEQS=200, SEQ_LEN=512).
    - Comparisons:
@@ -148,6 +127,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 236
+
+246. **T2: Causal intervention on top bump directions** *(INCONCLUSIVE — cycle 236)*
+   - **Outcome: INCONCLUSIVE** — held-out wikitext-2 val 8×128=1024 tokens disjoint from calibration (wikitext-2 train 200×512). For each of 12 blocks, top-5 directions by variance_explained from cycle 235 intervened on residual stream entering block l+1 (or ln_f at l=11) with alpha ∈ {-3,-1,0,+1,+3} × std_l[i] (std recomputed from calibration). Random baseline: 10 unit-norm Gaussian seeds scaled by mean(std_l). Verdict gate: joint effect_size≥3 AND jaccard_top20≥0.3 in ≥3 of top-5 dirs in ≥6 of 12 blocks. **Result: n_blocks_pass = 0/12** — directions DO cause strong, highly non-random logit shifts (max effect size 29.23 at block 11 dir 0; 18/60 directions have effect ≥3x random; 4/12 blocks pass effect-only gate), but their top-20 boosted vocab does NOT match T1's wte@v predicted boost set — max Jaccard 0.333 (single direction: block 11 dir 4), only 1/60 directions satisfy jaccard ≥0.3. Per-block max effect size: [5.23, 3.62, 2.34, 2.72, 2.62, 2.20, 3.47, 2.85, 4.20, 5.88, 8.05, 29.23] — effect grows monotonically with depth, consistent with the post-ln_f + lm_head amplification of a direct writer direction at the last block. Sanity clean: α=0 no-op gives zero diff (max |Δlogit|=0.00e+00), α=±1 L2 always ≤ α=±3 L2, std_l finite and O(1) per block (means 0.67 → 1.42 increasing with depth). This is the "correlational alignment" failure mode the cycle 235 summary flagged: the centred bump directions are causally active (they DO shift logits far above random), but T1's vocab decoding via wte @ v_{l,i} does NOT predict which tokens they shift. The cycle 218 alignment story — "Δ̃ writes into the downstream reading subspaces the unembedding uses" — is refuted at the top-SVD-direction level as stated, but a weaker version ("Δ̃ writes into SOME downstream subspace, just not the unembedding column space") survives. Next: direct wte decoding was the wrong probe; a better probe would measure which residual-stream directions the boosted tokens correspond to (e.g. downstream V_l at later blocks, or logit-lens-style probes of the intermediate residual stream). T3 (item 247, subspace ablation PPL test) is independent and still worth running — it measures the aggregate compression relevance of the bump subspace, which does NOT depend on the per-direction T1 story surviving.
+   - Artifacts: `experiments/bump_t2_intervention_cycle236.py`, `autoresearch/results/cycle_236_t2_logit_shifts.pt`, `autoresearch/results/cycle_236_t2_intervention.json`, `autoresearch/results/cycle_236_t2_examples.md`, `autoresearch/results/cycle_236_t2_summary.md`
 
 ### Cycle 235
 
