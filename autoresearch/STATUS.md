@@ -1,6 +1,11 @@
-# Research Status — 257 Cycles (001–257)
+# Research Status — 258 Cycles (001–258)
 
-## Latest: Cycle 257
+## Latest: Cycle 258
+
+269. **Pullback κ/S — GELU vs ReLU+b_leak vs gelu_noneg+μ** — CONFIRMED (interesting=true)
+   - Pullback geometry on 3 variants (200×128 wikitext-2 calib, seed 42). Calib PPL: GELU=45.064, ReLU+b_leak=60.082, gelu_noneg+μ=61.664. **ρ(S_l, κ_l) over layers 1-11: GELU=-0.380, ReLU=-0.380, noneg=-0.388** (identical to 4 decimals — the S↔κ coupling is unchanged by activation patches). **Early-band max |Δκ|/κ_GELU for ReLU = 0.4772 at layer 4** (clears 0.30 threshold). **ReLU INCREASES κ in layers 2-6 by 14-48%** — kinks the trajectory rather than flattening it. The +33% PPL hit of ReLU+b_leak is geometrically visible as a κ spike in the layers cycle 173 flagged as most damaging. Stale agenda reference: cycle 252 was block-5 deep-dive, NOT a pullback κ baseline. Cycle 258 supplies the actual GELU baseline ρ=-0.380 (NOT the agenda's claimed -0.745). Restore round-trip clean.
+
+## Cycle 257
 
 267. **5-block K=64** — CONFIRMED
    - 5-block [1,2,4,7,8] K=64, 3 seeds. **best_mean=62.181 ± 0.053** ≤ 64 confirmed threshold by 1.82 PPL. Monotone descent through full 4k budget, no plateau-then-climb. Δ vs cycle 245 K=512 (53.826)=+8.36; vs cycle 251 K=128 (59.119)=+3.06; vs float (53.895)=+8.29. **K-curve at 5 blocks** {K=64,128,512} = {62.18, 59.12, 53.83}: per-K-halving cost 3.06 (128→64) < 5.29 (512→128) — concave-up in PPL vs K. Trainable 249,600 (50% of cycle 251 K=128).
