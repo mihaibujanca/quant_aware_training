@@ -1,0 +1,97 @@
+Cycle 291 — Item 301 — Execution Result
+
+Verdict: REFUTED
+Commit: PENDING
+Branch: geometric_compression
+
+Script: experiments/rank_hybrid_1_10_cycle291.py
+Log:    autoresearch/logs/cycle_291_run.log
+Result: autoresearch/results/cycle_291_rank_hybrid_1_10.json
+
+Key metrics:
+  float_ppl                  = 53.895
+  hybrid b1r2+b10r5 best_mean = 51.8008
+  hybrid b1r2+b10r5 best_std  = 0.0407
+  hybrid b1r2+b10r5 best_min  = 51.7511 (seed 42  @3900)
+  hybrid b1r2+b10r5 best_max  = 51.8509 (seed 137 @3800)
+  init_mean                   = 64.4650 (deterministic, both patches active)
+  trainable params per fit    = 6,912 = (2*768+768) + (5*768+768)
+  best_step distribution      = {3900, 3800, 4000} -- 2/3 floor-limited
+
+Verdict logic (item 301 verbatim):
+  CONFIRMED iff best_mean <= 49.5 (non-destructive composition; ≤0.47 PPL above b1 anchor)
+  REFUTED   iff best_mean >= 51.5 (composition damages b1 anchor by ≥2.5 PPL)
+  INCONCLUSIVE otherwise
+
+  best_mean 51.8008 > 49.5    ->  CONFIRMED clause NOT triggered (over by 2.301)
+  best_mean 51.8008 > 51.5    ->  REFUTED   clause TRIGGERED     (over by 0.301)
+  ->  REFUTED
+
+Wall time: ~7.5 min total (3 Adam fits @ ~2.5 min each).
+
+Sanity checks:
+  float PPL within 0.5 of reference 53.895                    PASS (exact)
+  trainable param count == 6,912                              PASS ((2+1)*768 + (5+1)*768)
+  restore best-state per seed (|restored - best| < 1e-3)      PASS all 3 seeds
+  init PPL deterministic across seeds (max |Δ| < 1e-5)        PASS
+  init PPL > both individual anchor inits (57.66 / 59.92)     PASS (64.4650 > both)
+
+Cross-check tells us:
+  Init PPL 64.4650 is HIGHER than either anchor's individual init (57.66 b1 only,
+  59.92 b10 only). The two patches stack additively in init perturbation magnitude,
+  with the joint init exceeding both component inits by 4.55 / 6.81 PPL respectively.
+  This confirms both LowRankCProj modules are simultaneously active in the forward pass.
+
+Pareto reading:
+  cycle 291 (6,912 params, 51.80 PPL) vs:
+    cycle 280 b1 r=2 (2,304 params, 49.03 PPL): cycle 280 has 3x FEWER params AND
+      2.77 PPL LOWER -- cycle 291 strictly DOMINATED on BOTH axes by its own b1 anchor.
+    cycle 289 b10 r=5 (4,608 params, 51.47 PPL): cycle 289 has 1.5x FEWER params AND
+      0.33 PPL LOWER -- cycle 291 strictly DOMINATED on BOTH axes by its own b10 anchor.
+    cycle 282 b10 r=17 (13,824 params, 50.04 PPL): cycle 291 has 2x fewer params but
+      1.76 PPL worse -- different tier, not directly comparable.
+  Cycle 291 does NOT add a new Pareto tile. The hybrid is strictly Pareto-dominated by
+  BOTH of its component anchors. Composition is destructive.
+
+Hypothesis falsification (item 301 verbatim):
+  Hypothesis stated: "joint Adam over rank-2 (block 1) + rank-5 (block 10) c_proj
+  patches reaches ≤49.5 PPL at ~6,912 trainable params -- adds block 10 essentially
+  for free on top of cycle 280's anchor and creates a new Pareto tile between
+  cycle 280 (2.3K, 49.03) and cycle 282 (13.8K, 50.04)."
+
+  Measured: best_mean = 51.80, ABOVE 49.5 by 2.30 PPL. The hypothesis asked for
+  block 10 to be added "essentially for free" on top of b1; measured cost on b1 is
+  +2.77 PPL, far from "free". Cycle 291 also fails to land between cycle 280 (49.03)
+  and cycle 282 (50.04) on the PPL axis -- it lands ABOVE both, alongside cycle 289
+  (51.47). The "two non-adjacent weight-SVD patches compose non-destructively"
+  generalization from cycle 284 is FALSIFIED for the (b1, b10) pair.
+
+Composition family update (2-block compositions involving block 1):
+  cycle 273: heterogeneous K-mix [1] + others       REFUTED
+  cycle 275: heterogeneous [1] K=512 + b11 r=22     REFUTED
+  cycle 281: [1, 2] K=512 channel-K                 INCONCLUSIVE
+  cycle 284: homogeneous b1 r=2 + b11 r=22 SVD      CONFIRMED  (the only winner)
+  cycle 291: homogeneous b1 r=2 + b10 r=5  SVD      REFUTED    (this run)
+
+  Pattern: 2-block compositions with b1 succeed only when the partner block has HIGH
+  rank (b11 r=22) — i.e., the partner must have enough trainable directions to absorb
+  the joint perturbation. Low-rank partners (b10 r=5) damage the b1 anchor.
+
+Geometric reading:
+  (i)  Patches stack additively in init: 64.46 > 59.92 > 57.66, neither is "free".
+  (ii) Joint Adam recovery (12.66 PPL drop) is LARGER than either component's solo
+       recovery (8.63 / 8.45 PPL) but the floor reached (51.80) is HIGHER than either
+       solo floor (49.03 / 51.47). More descent, worse landing.
+  (iii) The "rank ≈ eff_rank + Adam retrain" recipe works for SINGLE blocks but does
+        NOT preserve under composition unless the partner block has rank slack
+        (b11 r=22 had slack; b10 r=5 does not).
+
+Next agenda items:
+  - Test b1 r=2 + b3 r=24 (b3 has 24 trainable directions like b11) to verify the
+    "high-rank partner = non-destructive composition" pattern.
+  - Test b1 r=2 + b10 r=17 (use b10 at its eff_rank rather than below it) to isolate
+    whether the b10 r=5 sub-eff_rank regime is the cause of cycle 291's destruction.
+  - Reconsider the Pareto frontier: the cheapest 2-block composition involving b1
+    found so far is cycle 284 (19,968 params, 52.88 PPL) -- 8.7x more params than
+    cycle 280 alone for +3.85 PPL worse. There may be NO cheap 2-block composition
+    that beats single-block anchors on the PPL Pareto frontier.

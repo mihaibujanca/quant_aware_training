@@ -1,0 +1,142 @@
+Cycle 291 Manifest — Item 301: 2-block rank-hybrid [1] r=2 + [10] r=5 c_proj weight-SVD
+
+Commit: PENDING
+Branch: geometric_compression
+Verdict: REFUTED
+
+== Verdict logic (item 301 verbatim) ==
+CONFIRMED iff best_mean <= 49.5 (<=0.47 PPL above cycle 280 b1 r=2; non-destructive composition; new Pareto tile at ~6.9K params)
+REFUTED   iff best_mean >= 51.5 (composition damages cycle 280's anchor by >=2.5 PPL — like cycle 275)
+INCONCLUSIVE otherwise
+
+  best_mean = 51.8008 <= 49.5 ?  FALSE  (over by 2.3008 PPL)
+  best_mean = 51.8008 >= 51.5 ?  TRUE   (over by 0.3008 PPL)
+  -> REFUTED
+
+== Per-seed hybrid b1 r=2 + b10 r=5 (n=3 seeds {42, 137, 2024}, population std) ==
+init_ppl_mean    = 64.46495  (deterministic; both replacements active simultaneously)
+best_mean        = 51.8008 +/- 0.0407
+best_min         = 51.7511  (seed 42   @3900)
+best_max         = 51.8509  (seed 137  @3800)
+
+  seed 42:   init=64.46495  best=51.7511 @step 3900  restored=51.7511
+  seed 137:  init=64.46495  best=51.8509 @step 3800  restored=51.8509
+  seed 2024: init=64.46495  best=51.8004 @step 4000  restored=51.8004
+
+best_step distribution: {3900, 3800, 4000} -- one seed at 4000 cap (still descending),
+two seeds peaked before cap and overfit. Aggregate is FLOOR-limited not budget-limited.
+
+Restore asserts pass for all 3 fits (|restored - best| < 1e-3).
+Float PPL measured in-run: 53.895 (exact match to reference).
+Trainable params per fit: 6,912 = (2*768 + 768) + (5*768 + 768) asserted.
+
+== SVD summaries ==
+block  1 c_proj.weight (3072,768) rank-2: top-5 S = 28.706 23.104 18.841 13.834 13.739
+block 10 c_proj.weight (3072,768) rank-5: top-5 S = 41.585 28.194 21.173 20.170 19.657
+
+== Composition init cross-check ==
+Cycle 280 init (b1 r=2 only)  = 57.6581  (cycle 280 reported)
+Cycle 289 init (b10 r=5 only) = 59.9179  (cycle 289 reported)
+Cycle 291 init (BOTH active)  = 64.4650  (above either alone, as expected — patches stack)
+
+The init PPL is NOT a product (the brief mentioned a "product" check that was misleading;
+neither errors nor PPL multiply). The hybrid no-retrain init exceeds both individual
+no-retrain inits by 4.55 / 6.81 PPL respectively, confirming both patches are simultaneously
+applied and the perturbations compound through the network.
+
+== Baselines ==
+Float baseline ref                              = 53.89500
+cycle 280 [1] r=2 retrain                       = 49.03245   (2,304 params)
+cycle 289 [10] r=5 retrain                      = 51.46586   (4,608 params)
+cycle 282 [10] r=17 retrain                     = 50.04450   (13,824 params)
+cycle 284 hybrid b1r2 + b11r22                  = 52.88000   (19,968 params, CONFIRMED)
+cycle 275 heterogeneous [1] K=512 + b11 r=22   = 48.20040   (different scoring axis)
+
+== Deltas ==
+cycle 291 hybrid b1 r=2 + b10 r=5 best_mean = 51.8008  at 6,912 params
+delta vs float                              =  -2.0941  (still beats float)
+delta vs cycle 280 b1 r=2  (anchor)         =  +2.7684  (composition DESTROYS b1 anchor by 2.77 PPL)
+delta vs cycle 289 b10 r=5                  =  +0.3349  (composition damages b10 anchor by 0.33 PPL)
+delta vs cycle 282 b10 r=17                 =  +1.7563  (DOMINATED by cycle 282 on PPL; 2x fewer params however)
+delta vs cycle 284 hybrid b1r2+b11r22       =  -1.0792  (better PPL than b1+b11 hybrid; 2.9x fewer params)
+
+== Pareto reading ==
+- Cycle 291 (6,912 params, 51.80 PPL):
+  - DOMINATED by cycle 280 b1 r=2 (2,304 params, 49.03 PPL): cycle 280 has 3x fewer
+    params AND 2.77 PPL better. Cycle 291 is strictly worse on BOTH axes.
+  - DOMINATED by cycle 289 b10 r=5 (4,608 params, 51.47 PPL): cycle 289 has 1.5x fewer
+    params AND 0.33 PPL better. Cycle 291 is strictly worse on BOTH axes.
+  - DOMINATED by cycle 282 b10 r=17 (13,824 params, 50.04 PPL) on PPL axis only;
+    cycle 291 has 2x fewer params but 1.76 PPL worse. Different tier.
+- Cycle 291 does NOT add a new Pareto tile. The hybrid is strictly Pareto-dominated by
+  BOTH of its component anchors. The composition is destructive in the precise sense
+  required by the REFUTED clause: combining b1 r=2 and b10 r=5 produces a result that
+  is worse than either patch alone — Adam over the joint surface cannot recover the
+  per-anchor floor.
+
+== Comparison to cycle 284 (homogeneous hybrid that CONFIRMED non-destructive) ==
+Cycle 284 (b1 r=2 + b11 r=22 — adjacent rank tiers, blocks at depth 1 and 11):
+  best_mean = 52.88 vs b11 r=22 alone (54.47): -1.59 PPL gain (composition non-destructive
+  for b11; b11 BENEFITS from b1's presence). cycle 284 CONFIRMED.
+Cycle 291 (b1 r=2 + b10 r=5 — both small ranks, depth 1 and 10):
+  best_mean = 51.80 vs b1 r=2 alone (49.03): +2.77 PPL loss (composition destructive
+  for b1; b1 is DAMAGED by b10's presence). cycle 291 REFUTED.
+
+The asymmetry of cycle 284 (b11 benefits, b1 not measured isolated alongside) was the
+warning. Cycle 291 measures both anchors and finds:
+- The smaller-rank patch (b1 r=2 — 2,304 params, low capacity) is the one that gets
+  damaged. b1's 2-direction subspace cannot absorb the additional perturbation from
+  b10's 5 trainable directions interacting through 9 frozen blocks of GPT-2.
+- The larger-rank patch (b10 r=5 — 4,608 params) is also damaged, but mildly (+0.33).
+- Joint Adam over 6,912 params cannot find a basin that respects both anchors
+  simultaneously when the perturbation magnitude (b10 r=5 init PPL gap from float
+  is 6.0 PPL, vs b1 r=2 gap of 3.7 PPL) overwhelms b1's recovery capacity.
+
+The "two weight-SVD low-rank patches at non-adjacent depths compose non-destructively
+the way cycle 284 did for blocks 1 and 11" hypothesis is REFUTED. The compositional
+property of cycle 284 does NOT generalize to (b1, b10) — the depth-related dependency
+is real, but it interacts with rank capacity, not just depth distance. b10 r=5 is
+"too much" perturbation for b1 r=2 to absorb.
+
+== Geometric reading ==
+(i) The hybrid init PPL 64.46 is HIGHER than either anchor alone (57.66 / 59.92).
+    Both patches stack additively in init perturbation magnitude — neither is "free" in
+    the joint forward pass.
+(ii) Joint Adam recovers from 64.46 to 51.80 (12.66 PPL), comparable to b1 r=2 alone
+     recovering from 57.66 to 49.03 (8.63 PPL) and b10 r=5 alone recovering from 59.92
+     to 51.47 (8.45 PPL). The joint recovery is LARGER (12.66) but the floor is HIGHER
+     (51.80) than either component's floor (49.03, 51.47).
+(iii) The recipe "rank ~ eff_rank + Adam retrain" works for SINGLE blocks but composition
+      to TWO blocks at non-adjacent depths damages the lower-rank anchor. The cycle 284
+      result (b1 r=2 + b11 r=22 non-destructive) was driven by b11 being SO HIGH-RANK
+      (22 trainable directions) that it had slack to absorb b1's perturbation. b10 r=5
+      does NOT have that slack.
+(iv) Cycle 281 [1, 2] K=512 was INCONCLUSIVE — block 2 cannot be added cheaply to [1].
+     Cycle 291 [1, 10] WEIGHT-SVD is REFUTED — block 10 cannot be added cheaply to [1].
+     Cycle 284 [1, 11] WEIGHT-SVD was CONFIRMED. Pattern: b1 composes with HIGH-RANK
+     b11, not with low-rank b10 nor channel-K b2.
+
+== Wall time / fits ==
+Total wall: ~7.5 min over 3 fits (~2.5 min/fit). Under 10-min cap. Matches cycle 284
+template scaling (cycle 284 was ~9 min for 19,968 params; cycle 291 with 6,912 params
+is faster per-fit due to smaller backward pass over the trainable set).
+
+Two of three seeds peaked before the 4000-step cap (3800, 3900) and overfit by step 4000;
+one seed (2024) at the cap still descending. Aggregate is FLOOR-limited (most seeds
+done) with mild evidence of slack (one seed budget-bounded).
+
+== Artifacts ==
+experiments/rank_hybrid_1_10_cycle291.py
+autoresearch/plans/cycle_291.md
+autoresearch/briefs/cycle_291.md
+autoresearch/results/cycle_291_rank_hybrid_1_10.json
+autoresearch/results/cycle_291_summary.md
+autoresearch/logs/cycle_291_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+
+item_number: 301
+outcome: REFUTED
+key_metric: best_mean=51.8008_pm_0.0407_ge_51.5_by_0.301_PPL_REFUTED_hybrid_b1_r2_plus_b10_r5_c_proj_weight_SVD_6912_params_DESTRUCTIVE_composition_DOMINATED_by_BOTH_anchors_cycle_280_b1_r2_2304_49.03_3x_fewer_params_AND_2.77_PPL_better_cycle_289_b10_r5_4608_51.47_1.5x_fewer_params_AND_0.33_PPL_better_b1_anchor_DAMAGED_by_2.77_PPL_b10_anchor_DAMAGED_by_0.33_PPL_init_PPL_64.4650_deterministic_above_both_individual_inits_57.66_b1_only_59.92_b10_only_per_seed_42_best_51.7511_at_3900_137_best_51.8509_at_3800_2024_best_51.8004_at_4000_2_of_3_seeds_floor_limited_overfit_inside_budget_restore_asserts_PASS_trainable_6912_asserted_SVD_b1_top5_28.7_23.1_18.8_13.8_13.7_b10_top5_41.6_28.2_21.2_20.2_19.7_delta_vs_float=-2.0941_delta_vs_cycle_280_b1_r2=+2.7684_delta_vs_cycle_289_b10_r5=+0.3349_delta_vs_cycle_282_b10_r17=+1.7563_delta_vs_cycle_284_hybrid_b1_b11=-1.0792_NOT_a_new_Pareto_tile_strictly_dominated_by_both_components_cycle_284_homogeneous_hybrid_was_CONFIRMED_b1_b11_because_b11_high_rank_22_had_slack_to_absorb_b1_perturbation_b10_r5_does_NOT_have_that_slack_pattern_b1_composes_with_high_rank_b11_NOT_with_low_rank_b10_or_channel_K_b2_cycle_281_INCONCLUSIVE_cycle_273_REFUTED_cycle_275_REFUTED_cycle_291_REFUTED_only_cycle_284_CONFIRMED_for_2_block_compositions_with_b1_wall_7.5_min
+commit: PENDING
+paths: experiments/rank_hybrid_1_10_cycle291.py,autoresearch/plans/cycle_291.md,autoresearch/briefs/cycle_291.md,autoresearch/results/cycle_291_rank_hybrid_1_10.json,autoresearch/results/cycle_291_summary.md,autoresearch/results/cycle_291_manifest.txt,autoresearch/results/cycle_291_exec_result.txt,autoresearch/logs/cycle_291_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv
