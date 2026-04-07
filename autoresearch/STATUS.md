@@ -1,6 +1,11 @@
-# Research Status — 267 Cycles (001–267)
+# Research Status — 268 Cycles (001–268)
 
-## Latest: Cycle 267
+## Latest: Cycle 268
+
+278. **K=64 4-block sweep** — CONFIRMED
+   - 9 fits, 21 min. **min best_mean=55.953 ± 0.092 on [1,4,7,8]** (≤56 confirmed by 0.047 PPL). Per-subset: [1,2,4,7]=56.067±0.044, [1,4,7,8]=**55.953**, [1,2,7,8]=57.277±0.120. **Subset ordering FLIPS at K=64**: [1,4,7,8] < [1,2,4,7], opposite of K=128/K=512 ordering (within ~1.2σ but consistent across seeds). **K-curve at 4 blocks {64,128,512} = {55.95, 53.65, 49.61}** — concave-up holds. 4-block K=64 does NOT beat float (+2.06 PPL above). **NEW LOW-PARAM PARETO ANCHOR**: (200K, 55.95) DOMINATES cycle 251 K=128 5-block (495K, 59.12).
+
+## Cycle 267
 
 277. **Block 11 c_proj output rank decomposition** — CONFIRMED (interesting=true)
    - For blocks {1, 5, 11}: SVD of mlp_out covariance → eff_rank, top-K energy. **Block 11 c_proj output eff_rank = 22.49** (≤50 confirmed). Top-1 = 48.95%, top-5 = 68.18%, top-20 = 74.87% of variance. **Concentration story HOLDS**. **Alignment story REFUTED**: median top-5 cos with top-200 lm_head rows ≤ 0.159 across all blocks (b1=0.159, b5=0.130, b11=0.123). Not a direct-read. **Surprising ordering**: block 1 eff_rank=1.94 (essentially rank-1, 92.94% top-1 energy — clean geometric characterization of cycles 218/260's "early block does almost nothing new" finding) ≪ block 11 eff_rank=22.49 ≪ block 5 eff_rank=179.19 (mid-block is high-rank). Both endpoints are rank-concentrated. **Explains cycle 173 PPL dominance + cycle 264 low κ disruption jointly**: block 11 writes into residual via low-rank high-norm operator feeding LN_f/lm_head directly → PPL sensitive, κ not. **Opens targeted probe**: compress block 11 output on rank-5 or rank-22 subspace.
