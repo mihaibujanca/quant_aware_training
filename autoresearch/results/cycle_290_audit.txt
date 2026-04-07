@@ -1,0 +1,163 @@
+Cycle 290 — Item 300 — Audit Result
+
+Audit status: PASS
+Auditor verdict: INCONCLUSIVE (unchanged — provisional outcome holds)
+Commit: df14bf0
+Branch: geometric_compression
+
+== Verdict arithmetic ==
+  best_mean = 42.75211
+  CONFIRMED clause: 42.75211 <= 42.5 ?  FALSE  (over by 0.25211)
+  REFUTED   clause: 42.75211 >= 43.0 ?  FALSE  (under by 0.24789)
+  -> INCONCLUSIVE (dead zone, almost dead-center: 0.252 from CONFIRMED, 0.248 from REFUTED)
+
+  Std recomputed from per-seed bests:
+    mean(42.7767, 42.7723, 42.7074) = 42.75213          match (reported 42.75211 within rounding)
+    dev^2 sum / 3 = 0.0010034                            match
+    sqrt           = 0.03168 ~ 0.03169 reported          match (4dp)
+
+== Per-seed sanity ==
+  seed 42  : init=55.46118 best=42.7767@8000 final@8000=42.7767 restored=42.7767
+  seed 137 : init=55.46119 best=42.7723@7800 final@8000=42.7793 restored=42.7723
+  seed 2024: init=55.46118 best=42.7074@8000 final@8000=42.7074 restored=42.7074
+
+  init PPL ~55.46118 across seeds (max |Δ|=9e-7 MPS noise)        PASS
+  |restored - best| < 1e-3 per seed                                PASS (all three)
+  best_step in {8000, 7800, 8000}                                  PASS
+  2 of 3 seeds at step 8000 cap (still budget-bounded)             PASS
+  trainable params per fit = 393,984                               PASS (512*768 + 768 asserted)
+
+== Cross-checks vs cycle 286 (matched-config reproducibility) ==
+
+  Step-4000 evals (must match within 1e-4 per seed):
+    seed 42  : c290=43.530286  c286=43.530270  |Δ|=1.54e-05  PASS
+    seed 137 : c290=43.593368  c286=43.593362  |Δ|=5.51e-06  PASS
+    seed 2024: c290=43.564445  c286=43.564442  |Δ|=2.49e-06  PASS
+
+  Init PPLs (must match within 1e-4 per seed):
+    seed 42  : c290=55.4611762 c286=55.4611872 |Δ|=1.10e-05  PASS
+    seed 137 : c290=55.4611853 c286=55.4611822 |Δ|=3.17e-06  PASS
+    seed 2024: c290=55.4611763 c286=55.4611872 |Δ|=1.08e-05  PASS
+
+  Reproducibility worst case 1.54e-5 << 1e-4 tolerance.
+  -0.811 PPL gain (43.563 -> 42.752) unambiguously attributed to extra 4000 Adam steps.
+
+== Plan adherence ==
+  SUBSETS=[[2]]                                                   PASS
+  K=512                                                           PASS
+  N_STEPS=8000, EVAL_EVERY=200                                    PASS
+  LR=1e-4                                                         PASS
+  SEEDS=[42,137,2024]                                             PASS
+  best-state restore                                              PASS
+  N_CALIB=200, N_EVAL=100, SEQ_LEN=128, disjoint                  PASS
+  MPS, GPT-2 small, wikitext-2 val                                PASS
+  Float PPL 53.89489 within 0.5 of reference 53.895               PASS (exact)
+  Template (cycle 287 [1] K=512 8k) adapted verbatim              PASS
+
+== Baseline cross-checks (vs manifest) ==
+  float                          53.895       match (53.89489)
+  cycle 286 [2] K=512 4k         43.56269     match
+  cycle 287 [1] K=512 8k         42.78533     match
+  cycle 271 [1] K=512 4k         43.82045     match
+
+== Delta checks ==
+  vs float            42.75211 - 53.89489 = -11.14278  match (manifest -11.143)
+  vs cycle 286 4k     42.75211 - 43.56269 =  -0.81058  match (manifest -0.811)  pure budget gain
+  vs cycle 287 8k     42.75211 - 42.78533 =  -0.03322  match (manifest -0.033)  matched 8k vs [1]
+  vs cycle 271 4k     42.75211 - 43.82045 =  -1.06834  match (manifest -1.068)
+
+== Hypothesis falsification audit ==
+
+  Item 300 stated Hypothesis (verbatim):
+    "[2] K=512 drops below 42.0 (matches or beats cycle 287 [1] K=512 by >=0.78 PPL)"
+
+  Clause 1: best_mean < 42.0 ?
+    Measured 42.752 > 42.0 by 0.752 PPL.  FALSE.
+
+  Clause 2: margin over [1] >= 0.78 PPL ?
+    Measured 42.785 - 42.752 = 0.033 PPL.  Required >= 0.78.
+    Ratio: 0.033 / 0.78 = 0.042 (4.2% of predicted).
+    FALSE by factor of 23.
+
+  Both Hypothesis clauses FALSIFIED in magnitude. Sign preserved (+0.033 in [2]'s favor)
+  but margin sits INSIDE 1-sigma of either run's std (cycle 287 0.0125, cycle 290 0.0317).
+  Statistically a TIE.
+
+  The "cycle 286 4k advantage of [2] over [1] (-0.258) was BUDGET ARTIFACT" interpretation
+  is supported:
+    4k:  Δ([2]-[1]) = 43.56269 - 43.82045 = -0.258
+    8k:  Δ([2]-[1]) = 42.75211 - 42.78533 = -0.033
+    Gap shrinks by factor 7.8x when both are doubled to 8k.
+
+== Pareto reading ==
+
+  cycle 290 (393,984 params, 42.752 PPL) at the 393,984-param tile:
+    TIE/co-winner with cycle 287 [1] K=512 8k (42.785) — nominal +0.033 PPL but inside noise
+    STRICTLY DOMINATES cycle 286 [2] K=512 4k (43.563) by -0.811 PPL at SAME params
+    STRICTLY DOMINATES cycle 271 [1] K=512 4k (43.821) by -1.068 PPL at SAME params
+
+  All four data points sit at SAME 393,984-param tile. No new Pareto tier.
+  cycles 290 and 287 are co-winners at this tile; cycles 286 and 271 are now dominated.
+
+== Per-K [2]-vs-[1] trend audit ==
+
+  4k budget: K=32 -1.75; K=64 -0.53; K=512 -0.258
+  8k budget: K=512 -0.033 (TIE)
+
+  The "[2] beats [1]" trend at K∈{16,32,64,512} dies at K=512 + matched 8k. Reading:
+    at small K and matched budget, block 2's input concentration matters because the
+    topk subset is sparse; at K=512 the 512-channel subset is wide enough that block 1
+    and block 2 saturate the same floor and the difference vanishes.
+
+== Budget-extension family update ==
+
+  [1] K=512  cycle 287 : -1.035 PPL  (43.821 -> 42.785)
+  [2] K=512  cycle 290 : -0.811 PPL  (43.563 -> 42.752)  <-- THIS RUN
+  [K=1] 5b   cycle 269 : -5.27 PPL   (4k -> 16k)
+  [K=64] 5b  cycle 274 : -0.80 PPL   (4k -> 8k)
+  [K=128] 5b cycle 254 : -0.10 PPL   (4k -> 8k)
+
+  Both K=512 single-block extensions buy ~0.8-1.0 PPL when doubled to 8k. cycle 287
+  buys slightly more (-1.035 > -0.811) consistent with cycle 271 starting further
+  from the floor than cycle 286.
+
+== Geometric reading ==
+
+  Block 2 c_proj cycle 278 OUTPUT eff_rank = 1.05 (extreme INPUT concentration).
+  Cycle 285 b2 r=2 weight-SVD = 49.33 (DOMINATED by b1 r=2 = 49.03).
+  "Structure lives in INPUT not WEIGHT for block 2" reading from cycle 286 holds:
+  channel-K topk b2 reaches 42.75 PPL while weight-SVD b2 plateaus at ~49 PPL.
+
+  However, the per-K [2]-beats-[1] advantage that cycle 283 documented at small K
+  vanishes at K=512 + matched budget. Block 2's input concentration is helpful at
+  small channel budgets (sparse subset) but not at K=512 (wide subset, both saturate).
+
+  Auditor recommendation: cycle 290 closes [1]-vs-[2] K=512 question. Future
+  follow-up directions: (a) joint [1,2] K=512 8k (cycle 281 INCONCLUSIVE was at 4k);
+  (b) push K higher (K=1024); (c) extend to 16k steps to test if [1] and [2] separate
+  at deeper Adam budget.
+
+== Artifacts ==
+  experiments/block2_k512_8k_cycle290.py            present
+  autoresearch/plans/cycle_290.md                   present  (<= 25 lines, 8 headings)
+  autoresearch/briefs/cycle_290.md                  present
+  autoresearch/results/cycle_290_block2_k512_8k.json present  (verdict=INCONCLUSIVE)
+  autoresearch/results/cycle_290_summary.md         present
+  autoresearch/results/cycle_290_manifest.txt       present  (commit=df14bf0)
+  autoresearch/results/cycle_290_exec_result.txt    present  (commit=df14bf0)
+  autoresearch/logs/cycle_290_run.log               present
+  autoresearch/audits/cycle_290.md                  present  (this audit)
+  autoresearch/agenda.md                            updated  (300 moved to PAST as Cycle 290)
+  autoresearch/logs/experiments.tsv                 appended (row 290 with 8 cols)
+
+== Final ==
+  audit_status: PASS
+  final_verdict: INCONCLUSIVE (unchanged)
+  corrections: none
+  next_action: keep provisional outcome; recommended follow-up — joint [1,2] K=512 8k.
+
+item_number: 300
+outcome: INCONCLUSIVE
+key_metric: best_mean=42.7521_pm_0.0317_dead_zone_42.5_43.0_TIE_with_cycle_287_b1_K512_8k_42.785_margin_0.033_inside_1_sigma_per_K_2_beats_1_gap_collapses_4k_to_8k_-0.258_to_-0.033_block_2_advantage_BUDGET_ARTIFACT_step_4000_evals_match_cycle_286_within_1.54e_5_audit_PASS
+commit: df14bf0
+paths: autoresearch/audits/cycle_290.md,autoresearch/results/cycle_290_audit.txt

@@ -1,6 +1,6 @@
 Cycle 290 Manifest — Item 300: 1-block [2] K=512 extended budget — 8000 steps
 
-Commit: PENDING
+Commit: df14bf0
 Branch: geometric_compression
 Verdict: INCONCLUSIVE
 
@@ -132,5 +132,5 @@ autoresearch/logs/experiments.tsv
 item_number: 300
 outcome: INCONCLUSIVE
 key_metric: best_mean=42.7521_pm_0.0317_dead_zone_42.5_43.0_block_2_K512_8k_393984_params_BEATS_cycle_287_b1_K512_8k_42.785_by_0.033_PPL_INSIDE_1_sigma_TIE_at_matched_8k_budget_per_K_2_beats_1_gap_collapses_from_-0.258_at_4k_to_-0.033_at_8k_block_2_advantage_was_BUDGET_ARTIFACT_step_4000_evals_match_cycle_286_within_2e_5_per_seed
-commit: PENDING
+commit: df14bf0
 paths: experiments/block2_k512_8k_cycle290.py,autoresearch/plans/cycle_290.md,autoresearch/briefs/cycle_290.md,autoresearch/results/cycle_290_block2_k512_8k.json,autoresearch/results/cycle_290_summary.md,autoresearch/logs/cycle_290_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv
