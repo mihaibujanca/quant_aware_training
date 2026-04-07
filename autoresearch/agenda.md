@@ -8,33 +8,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 **Goal**: test whether the cycle 218 alignment story is real by extracting latent features from the centred per-token bump vector Δ̃, decoding them to vocab, and intervening causally on the residual stream. Each item below MUST save concrete example outputs (token contexts, before/after predictions) so the results can be loaded and explored in a notebook the next morning. See `notebooks/bump_features_explore.py` for the loader scaffold and the exact artifact contracts these items must satisfy.
 
-**Shared config across items 245-248**:
+**Shared config across items 246-248**:
 - Model: `gpt2` (HF) on MPS, eval/forward in fp32
 - Calibration corpus: wikitext-2 train split, N_SEQS=200, SEQ_LEN=512 (≈100K tokens after dropping pads). Use seed 42.
 - Held-out corpus: wikitext-2 validation split, distinct from calibration, N_SEQS=200, SEQ_LEN=512.
 - All Δ̃_l computed as `GELU_FFN_l(x) − ReLU_FFN_l(x) − E_calib[GELU_FFN_l − ReLU_FFN_l]` where the centring mean is computed on the calibration corpus only and applied to held-out evaluation.
 - All artifacts must be loadable by `notebooks/bump_features_explore.py` without modification — the loader expects exact filenames listed under each item's `Artifacts:` block.
-
-245. **T1: Centred Δ̃ feature SVD with concrete example extraction**
-   - For each of the 12 blocks, on the calibration corpus, compute Δ̃_l per token (~100K tokens × 768). SVD → top 32 right singular vectors V_l ∈ R^(768×32), singular values S_l ∈ R^32, left singular vectors (token coefficients) U_l ∈ R^(N_tokens×32). For each direction v_{l,i} (i ∈ 0..31):
-     - **Top 100 corpus tokens** ranked by |U_l[token, i]|, with each token's surrounding 5-token context window AND a one-line "this token in this position is X" tag (raw token id, decoded string, position in sequence)
-     - **Top 50 boosted vocab items** = top entries of `W_U @ v_{l,i}` (W_U = `model.transformer.wte.weight.T`, since GPT-2 ties embeddings)
-     - **Top 50 suppressed vocab items** = bottom entries
-     - **Variance explained** = s_i² / Σ_j s_j²
-     - **Heuristic coherence label**: try to detect if top-100 corpus tokens form a coherent class (punctuation cluster ≥40%, stopword cluster ≥40%, capitalized cluster ≥40%, number cluster ≥40%, single-token-repeat ≥30%). Output one of: `punctuation`, `stopword`, `capitalized`, `number`, `repeated`, `mixed`, `incoherent`.
-   - **Notebook contract**: every direction's decoding must be loadable as a structured JSON record with keys `block`, `direction_idx`, `singular_value`, `variance_explained`, `top_corpus_tokens` (list of {token_id, token_str, context_left, context_right, position, score}), `top_vocab_boost` (list of {token_id, token_str, score}), `top_vocab_suppress` (list of {token_id, token_str, score}), `coherence_label`.
-   - Artifacts (REQUIRED — exact filenames):
-     - `experiments/bump_t1_features_cycle<N>.py`
-     - `autoresearch/results/cycle_<N>_t1_features.pt` — torch dict {`block_<l>`: {`V`: tensor(768,32), `S`: tensor(32), `mean_delta`: tensor(768)}} for l ∈ 0..11
-     - `autoresearch/results/cycle_<N>_t1_calibration_meta.pt` — {`token_ids`: tensor(N_tokens), `seq_index`: tensor(N_tokens), `pos_in_seq`: tensor(N_tokens)} so any token row can be looked back to its source
-     - `autoresearch/results/cycle_<N>_t1_decoded.json` — list of decoded direction records (12 blocks × 32 = 384 records)
-     - `autoresearch/results/cycle_<N>_t1_examples.md` — human-readable per-block top-5 directions with full example contexts and decoded vocab. THIS IS THE FILE THE USER WILL READ FIRST IN THE MORNING. Format each direction as: heading with (block, idx, var, coherence), then a 3-row table of (context_left | TOKEN | context_right) for top-3 corpus tokens, then a 2-line `boost: [...]` / `suppress: [...]` line.
-     - `autoresearch/results/cycle_<N>_t1_summary.md` — verdict, headline, coherence count per block
-   - Type: interpretability / latent feature extraction
-   - Confirmed if: ≥5 of 32 directions per block have a coherence_label ∉ {mixed, incoherent} in ≥6 of 12 blocks.
-   - Refuted if: <2 directions per block have a coherent label in ALL 12 blocks (entire latent space is noise).
-   - Inconclusive otherwise.
-   - Depends on: none
 
 246. **T2: Causal intervention on top bump directions**
    - Take the top 5 directions per block from item 245 (skip blocks where 245 found <5 coherent directions). On a held-out 1000-token batch (subset of held-out wikitext-2 val):
@@ -169,6 +148,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 235
+
+245. **T1: Centred Δ̃ feature SVD with concrete example extraction** *(CONFIRMED — cycle 235)*
+   - **Outcome: CONFIRMED** — on wikitext-2 train split, N_SEQS=200 × SEQ_LEN=512 = 102,400 tokens, seed 42, gpt2 on MPS fp32. For each of 12 blocks extracted Δ̃_l = (GELU-ReLU)(c_fc_input @ W_fc + b_fc) @ W_proj − μ_l, SVD → top 32 right singular vectors V_l (768, 32), singular values S_l (32,), U_l (102400, 32). Per direction: top-100 corpus tokens by |U_l[:, i]| with 5-token contexts, top-50 boost/suppress via wte @ v, heuristic coherence label (punctuation/stopword/capitalized/number/repeated/mixed/incoherent). All 384 records (12×32) saved to cycle_235_t1_decoded.json; human-readable per-block top-5 examples in cycle_235_t1_examples.md. Verdict thresholds: CONFIRMED ≥6 blocks with ≥5 coherent directions; REFUTED all 12 blocks <2 coherent; else INCONCLUSIVE. Result: **12/12 blocks pass the ≥5-coherent threshold**, per-block coherent counts [27, 23, 24, 27, 21, 19, 19, 15, 17, 15, 12, 10] (descending with depth from block 0 → block 11). Dominant label by far is `repeated` (mode_count ≥ 30 in top-100), consistent with the left-singular coefficient putting most mass on a single high-frequency token id per direction; `stopword`, `capitalized`, `punctuation`, `number` appear as second-tier labels. σ₀ and σ₁ per block are ~2× the cycle 218 values (c218 used val split + SEQ_LEN=128 = 25.6K tokens; c235 uses train split + SEQ_LEN=512 = 102.4K tokens, so the singular values scale roughly with √(n_tokens/25600) = 2.0). The centred bump space admits interpretable surface features at this heuristic level in every block, unlocking T2/T3/T4 (items 246-248). Caveat: "repeated" is a cheap surface label — it says the top-100 mass is concentrated on one token, not that the direction causally boosts that token's logit. T2 (item 246) is the causal test: apply α·v_{l,i} to the residual stream and measure whether the actual logit shift matches the T1 vocab prediction. Until then, these are a correlational feature inventory.
+   - Artifacts: `experiments/bump_t1_features_cycle235.py`, `autoresearch/results/cycle_235_t1_features.pt`, `autoresearch/results/cycle_235_t1_calibration_meta.pt`, `autoresearch/results/cycle_235_t1_decoded.json`, `autoresearch/results/cycle_235_t1_examples.md`, `autoresearch/results/cycle_235_t1_summary.md`
 
 ### Cycle 234
 
