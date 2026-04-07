@@ -1,0 +1,45 @@
+Cycle 294 Exec Result — Item 304
+
+verdict: CONFIRMED
+item: 304
+title: 1-block [1] K sweep extended budget — 8000 steps for K∈{32, 64, 128, 256}
+script: experiments/one_block_1_k_sweep_8k_cycle294.py
+commit: PENDING
+wall_min: 50.6
+fits_done: 12
+
+Key metrics (cycle 294 8k best_mean ± std over 3 seeds, population std):
+  K=32  (25,344 params): 47.7258 ± 0.0223  shift vs cyc 276 4k = +1.9228 PPL
+  K=64  (49,920 params): 45.6782 ± 0.0112  shift vs cyc 276 4k = +2.3670 PPL
+  K=128 (99,072 params): 44.6555 ± 0.0188  shift vs cyc 276 4k = +2.2761 PPL
+  K=256 (197,376 params): 43.4865 ± 0.0263  shift vs cyc 276 4k = +1.8989 PPL
+
+Verdict logic (item 304 verbatim):
+  CONFIRMED iff ≥ 2 of 4 K-tiers shift by ≥ 0.5 PPL -> 4/4 clear the bar -> CONFIRMED
+  REFUTED   iff all 4 K-tiers shift by ≤ 0.1 PPL -> FALSE
+  -> CONFIRMED
+
+All 12 fits budget-bounded at step 8000 (all seeds, all K). No fit found its floor.
+Per-seed step-4000 evals reproduce cycle 276 best_ppl within |Δ| ≤ 6.93e-06 (MPS noise).
+The entire 4k→8k PPL gain is unambiguously Adam budget, not randomness.
+
+Script note: CYCLE_276_BEST_PPL_PER_SEED_4K dict had wrong per-seed assignments in the
+original source; the raw JSON cross-check fields were patched post-run from cycle 276's
+actual k_results. Experiment data (eval_at_step_4000, best_ppl, init_ppl, history) are
+unaffected. The `patches` field in the JSON records the fix.
+
+Pareto rewrite: all 4 K-tiers at 8k strictly dominate their cycle 276 4k counterparts at
+the same param count. K=256 8k (197K, 43.487) is a new Pareto anchor 0.70 PPL worse than
+cycle 287 [1] K=512 8k at 2× fewer params.
+
+Artifacts:
+  experiments/one_block_1_k_sweep_8k_cycle294.py
+  autoresearch/plans/cycle_294.md
+  autoresearch/briefs/cycle_294.md
+  autoresearch/results/cycle_294_one_block_1_k_sweep_8k.json
+  autoresearch/results/cycle_294_summary.md
+  autoresearch/results/cycle_294_manifest.txt
+  autoresearch/results/cycle_294_exec_result.txt
+  autoresearch/logs/cycle_294_run.log
+  autoresearch/agenda.md
+  autoresearch/logs/experiments.tsv
