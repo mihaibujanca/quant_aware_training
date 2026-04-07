@@ -1,6 +1,11 @@
-# Research Status — 269 Cycles (001–269)
+# Research Status — 270 Cycles (001–270)
 
-## Latest: Cycle 269
+## Latest: Cycle 270
+
+280. **Block 11 low-rank c_proj compression** — CONFIRMED (interesting=true)
+   - Float=53.895. **Rank-r weight-SVD no-retrain**: r=5→60.99, **r=22→59.68**, r=50→58.63, r=100→57.31 (top-22 energy only 14.14%). **Retrain r=22 (3 seeds, 17,664 params): best_mean=54.469 ± 0.024**. CONFIRMED clause 2 (retrain ≤54.5) by 0.031 PPL. **Headline: weight-SVD ≠ activation-SVD**. Cycle 267's eff_rank=22.49 was on OUTPUT activations, not c_proj.weight (which is full-rank, condition number ≈38). Brief's "≤1 PPL no-retrain" prediction missed by 4.7 PPL. **NEW PARETO POINT: (17.7K, 54.47) dominates cycle 268 K=64 4-block (200K, 55.95) at 8.7% of params**. Opens hybrid recipe: cycle 266 [1,4] K=512 (788K, 43.85) + block 11 rank-22 retrain.
+
+## Cycle 269
 
 279. **K=1 6-block 16000 steps** — CONFIRMED (structural)
    - Cycle 240 4× extension. **best_mean=91.613 ± 0.037** (all seeds best at step 16000). Δ vs cycle 240 4k (96.886) = -5.273 PPL — extending budget 4× bought only 5.27 PPL (closed **14%** of K=1-vs-K=512 6-block gap). Step 4000 PPLs reproduce cycle 240 to 3 d.p. **Trajectory descent rate per 1000 steps**: 4-8k=3.2, 8-12k=1.5, 12-16k=0.6 — asymptotically slow but not flatlined; linear extrapolation to 32k → ~89.2 (still above refuted). **Cycle 240's catastrophe is real and structural**: the K=1 endpoint cannot pay for cascade depth, regardless of budget.
