@@ -1,6 +1,11 @@
-# Research Status — 296 Cycles (001–296)
+# Research Status — 297 Cycles (001–297)
 
-## Latest: Cycle 296
+## Latest: Cycle 297
+
+307. **Eff_rank trajectory through training (spirals)** — CONFIRMED init-rank (interesting=true)
+   - 3 seeds. All 3 fire **CONFIRMED-init-rank only**: init eff_rank ≤5 in 12/12 layers. Phase-transition rejected (max single-window drop 0.325 < 0.50). Gradual rejected (not monotone; **trajectories are mildly UPWARD, not downward**). **Training does NOT collapse eff_rank — it LIFTS it** from ~1.0 at init to 1.2-2.8 after 12k epochs. The "collapse to rank-2" framing has the WRONG SIGN here. Cycle 297 closes the loop opened by cycle 295: **the 2D-input spirals testbed cannot answer cycle 278's training-dynamics question** because there is no opportunity to collapse. Principled follow-ups: higher-dim input lift (100D embedding per MEMORY.md), OR instrument GPT-2 directly during cycle 280's Adam retrain (partially covered by item 309 in NEXT).
+
+## Cycle 296
 
 306. **LASER recipe on spirals/moons MLP** — INCONCLUSIVE (near miss) / context CONFIRMED
    - **Spirals**: float held=0.8270; rank-2 retrain 0.8207 (gap +0.63%, 0.13% over the 0.5% CONFIRMED threshold; within 1 std of 3.0%); rank-2 no-retrain 76.94% of float (3.06% under 80% threshold, within 1 std of 8.6%). REFUTED (>5%) NOT triggered. **Moons**: rank-1 retrain 0.9963 ≈ float 0.9967 ("rank-1 might match" CONFIRMED); rank-2 retrain exact tie. Spirals rank-1 fails by 4.4% ("rank-1 fails by ≥3%" holds). **Spirals rank-5 BEATS float by 0.37%** (cycle 280 GPT-2 b1 below-float behavior reproduced). **Recipe replicates in shape**; literal thresholds too tight for held-out N=1000.
