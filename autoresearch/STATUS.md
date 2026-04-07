@@ -1,6 +1,11 @@
-# Research Status — 253 Cycles (001–253)
+# Research Status — 254 Cycles (001–254)
 
-## Latest: Cycle 253
+## Latest: Cycle 254
+
+264. **5-block K=128 8000 steps** — REFUTED (interesting=true)
+   - Cycle 251 extension to 8000 steps. **best_mean=59.018 ± 0.041** ≥ 58.5 refuted threshold. Δ vs cycle 251 4k (59.119) = -0.101 (within seed noise). All 3 seeds plateau at step 4400-5200 then climb to 60.4-60.6 by step 8000 (overfit pattern). **Cycle 251's "still descending" linear extrapolation falsified**: descent flattened, 4× budget bought essentially nothing. **5-block K=128 ceiling is structurally bounded near 59 PPL**, does NOT close the K=512 gap regardless of budget.
+
+## Cycle 253
 
 263. **gelu_noneg + μ targeted to compressed blocks only** — INCONCLUSIVE
    - Patch ONLY blocks [1,4,7] with relu(gelu(z))+μ_l, leave other 9 blocks on raw GELU. K=512 topk+lstsq init on patched targets, joint Adam W_out+b_out, 3 seeds. **best_mean=46.510 ± 0.038** ∈ (46, 47) inconclusive. Δ vs cycle 210 raw GELU [1,4,7] (46.556) = -0.046 (within 1σ, statistically inert). Targeted patching sidesteps cycle 246's "all-12 hurts uncompressed blocks" failure but yields no measurable benefit either. **Closes the gelu_noneg activation-surgery line at both extremes**: cycle 246 (all-12 + K=128) REFUTED, cycle 253 (targeted + K=512) INCONCLUSIVE. Activation surgery is statistically inert at K=512 channel compression.
