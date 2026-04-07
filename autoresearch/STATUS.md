@@ -1,6 +1,11 @@
-# Research Status — 288 Cycles (001–288)
+# Research Status — 289 Cycles (001–289)
 
-## Latest: Cycle 288
+## Latest: Cycle 289
+
+299. **Block 10 rank-5 sub-eff_rank stress test** — CONFIRMED (interesting=true)
+   - Rank-5 retrain (3 seeds, 4,608 params): **best_mean=51.466 ± 0.009** ≤53 confirmed by 1.53 PPL. **First sub-eff_rank success**: r/eff_rank = 5/16.70 = 0.30. Floor-limited (all seeds converge then overfit within 4000-step budget, -2.43 PPL vs float). Noretrain r=5 = 59.918 matches cycle 282 within 0.002. Adam recovery -8.45 PPL (largest in 282-family). **Block 10 rank-5 (51.47) BEATS block 11 rank-22 (54.47) at 3.8× fewer params**. **New Pareto tile at 4.6K params**: strictly dominates cycle 270 block 11 rank-22 and cycle 288 block 3 rank-24 on both axes. Still dominated by cycle 280/285 block 1/2 rank-2 (2.3K).
+
+## Cycle 288
 
 298. **Block 3 rank-r c_proj weight-SVD** — CONFIRMED
    - Rank-24 retrain (3 seeds, 19,200 params): **best_mean=50.594 ± 0.040** (≤55 by 4.41 PPL). Per-seed 50.64/50.58/50.55 at steps 3900/3900/4000. **NOT a Pareto winner**: dominated on both axes by cycle 282 block 10 rank-17 (13.8K, 50.04). Dominates cycle 270 block 11 rank-22 on PPL only. **Recipe "rank ≈ eff_rank + Adam retrain → 3-5 PPL below float" now confirmed on 5/5 concentrator blocks** (1, 2, 3, 10, 11). Block 11 remains the soft outlier; early-vs-late block depth does NOT clearly order retrain PPL.
