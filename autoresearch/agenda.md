@@ -6,15 +6,84 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-(none)
+305. **Effective rank census on trained spirals/moons MLPs — controlled comparison to cycle 278**
+   - **Motivation**: cycle 278 found GPT-2 c_proj output eff_rank ranges {block 1: 1.94, block 2: 1.05, block 5: 179.19, block 11: 22.49}. Cannot tell from cycle 278 alone whether the collapse is **transformer-specific** or **a generic consequence of training a wide network on a low-D task**. Spirals (2D input → 1D output) and moons (2D input → 1D output) are the controlled case where the target function is provably ≤2 dimensional. If the same collapse happens on spirals, GPT-2's result is generic implicit regularization on overparameterized nets. If it doesn't, GPT-2's collapse needs a transformer-specific explanation. Connection to literature: Hanin & Rolnick (lit map line 594) bounds activation patterns by N^d where d=input dim — for d=2 this predicts very few effective dimensions of variation regardless of width. See also new lit map entry: LASER (Sharma, Ash, Misra 2023, arXiv 2312.13558).
+   - **Setup**: `aleph.make_mlp(hidden_dim=32, depth=12, input_dim=2, output_dim=1)` (existing). Train on spirals (`make_spirals(n_samples=2000, noise=0.5, n_turns=3)`) and moons (`make_moons(n_samples=2000, noise=0.1)`) with lr=0.001 Adam, ≥95% train acc target (per MEMORY.md spirals recipe). For each hidden layer ℓ ∈ {0..11}, capture post-ReLU activations Y_ℓ ∈ R^(N, 32) over the training set. Compute output covariance C_ℓ = Y_ℓ^T Y_ℓ / N, eigendecompose, report eff_rank_ℓ = exp(-Σ p_i log p_i). Plot eff_rank vs layer ℓ for both datasets, both at init (random) and post-training. **3 seeds {42, 137, 2024}.** **Trainable params: ~13K (the spirals net).**
+   - **Hypothesis**: post-training median hidden eff_rank ≤ 3 in ≥8 of 12 layers (matching the 2D input dimension); init eff_rank ≥ 20 in ≥8 of 12 layers (random init has nearly full effective rank). The collapse happens during training.
+   - **Outcomes**:
+     - **CONFIRMED** if post-training eff_rank ≤ 3 in ≥8 of 12 layers AND init eff_rank ≥ 20 in ≥8 of 12 layers: same phenomenon as GPT-2 cycle 278, generic to overparameterized training on low-D tasks. The cycle 280 LASER recipe is not transformer-specific.
+     - **REFUTED** if post-training eff_rank ≥ 10 in ≥6 layers: spirals doesn't collapse the way GPT-2 does — GPT-2's collapse needs a different (transformer-specific) explanation.
+     - **INCONCLUSIVE** otherwise.
+   - **Baselines**: cycle 278 GPT-2 c_proj output eff_rank profile {0: 71.93, 1: 1.94, 2: 1.05, 3: 24.29, 4: 49.04, 5: 179.19, 6-8: 290+, 9: 195.5, 11: 22.49}. Random-init effective rank for a 32-wide layer is ≈ 32.
+   - **Run cap**: ~5 minutes.
+   - Depends on: `aleph/datasets.py:make_spirals/make_moons`, `aleph/__init__.py:make_mlp`.
+
+306. **LASER recipe on spirals — does cycle 280 replicate on a known-2D task?**
+   - **Motivation**: this is the cycle 280 replication on the spirals testbed (depends on item 305 to identify which layer to compress). If GPT-2 block 1 admits a rank-2 weight replacement that beats float, a spirals MLP hidden layer should admit rank-2 replacements that *match* float — because the target function is provably 2D. If spirals beats float by a large margin under the same LASER+retrain recipe, that confirms cycle 280 is generic denoising. If rank-2 fails on spirals (where 2 is provably enough), then GPT-2's success is a coincidence and rank-2 is hiding something. See lit map LASER and SVD-LLM entries.
+   - **Setup**: from item 305's trained spirals net (32×12, ≥95% acc), pick the layer ℓ* with the smallest measured eff_rank. SVD its weight matrix W ∈ R^(32, 32): A = U[:, :r]·diag(Σ[:r]) ∈ R^(32, r) (frozen), B = Vh[:r, :] ∈ R^(r, 32) (trainable, init from SVD), bias trainable. Sweep r ∈ {1, 2, 3, 5}. For each r: (i) report no-retrain held-out acc; (ii) Adam fine-tune B + bias for 500 steps on train, report best held-out acc. Repeat for moons. **3 seeds.** Trainable params per fit ≈ 32(r+1).
+   - **Hypothesis**: rank-2 retrain matches float held-out acc within 0.5% on spirals. rank-1 fails by ≥3% (need at least 2 dimensions for the spiral). On moons, rank-1 might already match (the moons separator is ~1D after a coordinate change).
+   - **Outcomes**:
+     - **CONFIRMED** if rank-2 retrain held-out acc ≥ float held-out acc − 0.5% on spirals AND no-retrain rank-2 has ≥ 80% of float accuracy: rank-2 sufficient for a provably-2D task and the gap is recovered by retraining a tiny B factor — cycle 280 shape replicates.
+     - **REFUTED** if rank-2 retrain held-out gap > 5% from float: spirals needs more than rank-2 even though the target is 2D — cycle 280's success at GPT-2 block 1 needs a different explanation.
+     - **INCONCLUSIVE** between.
+   - **Baselines**: cycle 280 block 1 rank-2 retrain (49.03 PPL, −4.86 vs float 53.90). Cycle 292 block 1 rank-1 retrain (50.08 PPL, −3.82 vs float). Float spirals/moons accuracy from item 305.
+   - **Run cap**: ~5 minutes.
+   - Depends on: 305.
+
+307. **Effective rank trajectory through training — when does the collapse happen?**
+   - **Motivation**: the "why" question, training-dynamics flavor. Cycle 278 measures eff_rank only at the trained endpoint. We don't know whether the collapse to rank-2 is (a) **gradual** through training (slow implicit regularization concentration), (b) a **phase transition** at a specific step (grokking-adjacent), or (c) **already present at init** (would falsify the "training collapses rank" story). Phase-transition would connect to "Deep Grokking: Local Complexity" (lit map line 115). Gradual would connect to Saxe group's "Gradient Descent Quantizes ReLU Network Features" (lit map line 779).
+   - **Setup**: train a fresh spirals 32×12 net (item 305 setup) with eff_rank-of-every-layer recorded at every 100 training steps. Plot eff_rank_ℓ(step) for ℓ ∈ {0..11} on a single axis. Also plot train loss and held-out accuracy. **3 seeds.** Identify whether per-layer collapse is gradual or step-localized; cross-reference with the loss curve. Report (i) initial eff_rank per layer; (ii) final eff_rank per layer; (iii) max single-window collapse rate (max drop in eff_rank within any 100-step window per layer); (iv) step at which each layer first reaches 1.5× its final eff_rank value.
+   - **Hypothesis**: eff_rank collapse is gradual and tracks train loss monotonically. No phase transition.
+   - **Outcomes**:
+     - **CONFIRMED gradual** if per-layer eff_rank curves are monotone-decreasing across the entire training run AND no layer drops by ≥50% within any 100-step window: implicit regularization story holds, smooth concentration.
+     - **CONFIRMED phase-transition** if any layer's eff_rank drops by ≥50% within a 100-step window: discrete phase transition (grokking-adjacent), worth locating relative to the loss curve.
+     - **CONFIRMED init-rank** if initial eff_rank is already ≤ 5 for ≥6 layers: random init was the explanation, training didn't cause the collapse.
+     - **REFUTED** if eff_rank doesn't collapse at all (item 305 already addresses this).
+   - **Baselines**: random init effective rank ≈ 32 expected. Final eff_rank from item 305.
+   - **Run cap**: ~10 minutes.
+   - Depends on: 305.
 
 ### P1
 
-303. **Block 0 c_proj rank-r weight-SVD sweep — testing the highest-eff_rank concentrator the census exposed**
-   - Context: Cycle 278 census discovered block 0 has eff_rank = 71.93 — anomalously high relative to its concentrator neighbors (blocks 1, 2 are 1.94 and 1.05) and the only "early high-eff_rank" block in the bathtub. Block 0 has NEVER been tested as a single-block patch. The "rank ≈ eff_rank + Adam retrain" recipe is now confirmed across 5 blocks (1, 2, 3, 10, 11) but all of them have eff_rank ≤ 24.29 except indirectly via cycle 271's [4] K=512. Block 0 is the highest eff_rank in the concentrator cluster — testing whether the recipe scales to ~72 dimensions or whether block 0's input proximity (LM embedding output, untrained-by-FFN) makes it qualitatively different. Hypothesis: rank-72 retrain reaches ≤55 PPL at 56,064 trainable params (72×768 + 768) — extends the eff_rank-recipe to the largest concentrator and tests whether early-block depth helps or hurts.
-   - Setup: New script `experiments/block0_lowrank_cycle303.py`. Mirror cycle 282 (`experiments/block10_lowrank_cycle282.py`) verbatim but with TARGET_BLOCK=0, RANKS_NORETRAIN=[10, 30, 72], RETRAIN_RANK=72. Joint Adam LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, best-state restore. 3 seeds {42, 137, 2024}. Disjoint N_CALIB=200/N_EVAL=100, SEQ_LEN=128, MPS. ~8 min wall.
-   - Verdict thresholds: CONFIRMED iff retrained best_mean ≤ 55.0 (block 0 fits the rank-eff_rank recipe at the high end of the concentrator scale). REFUTED iff retrained best_mean ≥ 58.0 (block 0 does NOT fit — embedding-proximity or depth-0 specialness breaks the recipe). INCONCLUSIVE otherwise.
-   - Artifacts: experiments/block0_lowrank_cycle303.py, autoresearch/results/cycle_303_block0_lowrank.json
+308. **SDF rank census + LASER replication on 3D mesh fitting**
+   - **Motivation**: same question as item 305, but on the 3D regression case the project already has tooling for. SDF fitting is interesting because the input is 3D but the function values live on a 2D manifold (the level set is a 2D surface in 3D ambient space). So the "right" intrinsic dimension is somewhere between 2 and 3, and the gradient ensemble eff_rank should reflect the surface dim while the output covariance eff_rank reflects the input dim. `aleph/geometric_compression.py` already has `jacobian_rank_profile()` (gradient ensemble SVD via `compute_gradient`) and the mesh SDF training pipeline; this experiment turns the existing knobs.
+   - **Setup**: train an MLP on a mesh SDF (`aleph.geometric_compression` config, hidden_dim=256, depth=4, Stanford bunny or similar). For each hidden layer, compute output-covariance eff_rank (same as 305). Compute `jacobian_rank_profile` (gradient ensemble SVD over the SDF input domain) — this measures the *function's* effective dimension, not just the layer's. Then apply the cycle 280 recipe: SVD truncate the layer's weight matrix at r ∈ {2, 3, 5, 10}, retrain B + bias for 500 steps, evaluate held-out SDF MSE and qualitatively compare marching-cubes mesh quality.
+   - **Hypothesis**: hidden eff_rank converges to 3 (matching input dim). Gradient ensemble eff_rank ≈ 2 (matching the surface manifold dim). Rank-3 weight retrain matches float SDF MSE. Rank-2 *fails* to recover the surface fully (loses normal-direction information).
+   - **Outcomes**:
+     - **CONFIRMED** if (a) hidden output-covariance eff_rank ∈ [2.5, 3.5] post-training, (b) gradient ensemble eff_rank ∈ [1.8, 2.5], AND (c) rank-3 retrain held-out MSE ≤ 1.1× float MSE.
+     - **REFUTED** if hidden eff_rank stays ≥ 8 OR rank-3 retrain MSE ≥ 2× float: SDF function is computed in higher dimensions than the input or surface manifold suggests.
+     - **INCONCLUSIVE** between.
+   - **Baselines**: cycle 280 GPT-2 block 1 rank-2 retrain. Spirals item 305/306 results (whichever is available when this runs).
+   - **Run cap**: ~15 minutes (SDF training is the slow part).
+   - Depends on: `aleph/geometric_compression.py` (existing).
+
+309. **Cycle 280 retrain decomposition — what does Adam's 8.6 PPL recovery actually move?**
+   - **Motivation**: cycle 280's init at SVD-only is +6.98% PPL; after 4000 Adam steps on B + bias it's −9.0%. The 16 PPL gap is "what Adam buys" — but we don't know what Adam does. Two stories: (a) **subspace stays fixed, B rotates within the rank-2 subspace** to find a calibration optimum — Adam is fine-tuning the projection map. (b) **B drifts out of the SVD subspace into something genuinely different** — the SVD init was just a starting point and Adam is finding a better rank-2 operator unrelated to the SVD truncation. The two have different implications for whether eff_rank → rank picking is principled.
+   - **Setup**: re-run cycle 280's block 1 rank-2 retrain with extra logging. Save B(t) at every 100 steps, plus calib and held-out PPL. Compute (i) Frobenius angle between B(t) and B(0); (ii) cosine of the row spaces of B(t) and Vh[:2, :] (the SVD init row space); (iii) the implicit composite operator W(t) = A · B(t), and its top-2 right singular vectors vs the originals; (iv) cosine of W(t)'s top-2 right SVs with the original `c_proj.weight`'s top-2 right SVs. Plot vs training step.
+   - **Hypothesis**: B(t) drifts substantially — row-space cosine ≤ 0.6 with the SVD initialization Vh[:2, :] by step 4000. The Adam optimum is *not* the SVD truncation refined; it's a different rank-2 operator with a column space fixed by the frozen A factor.
+   - **Outcomes**:
+     - **CONFIRMED drift** if row-space cosine ≤ 0.6 by step 4000 AND held-out PPL improvement tracks the drift: Adam is finding a different rank-2 operator, SVD init was just a basin hint. Implication: eff_rank predicts r but not the optimal B; the recipe is "pick r, train B from any reasonable init."
+     - **CONFIRMED stay-put** if cosine ≥ 0.95 throughout: B is rotating within the SVD subspace; the rank-2 weight is essentially the SVD truncation plus a tiny correction. Implication: pure SVD-LLM closed-form solution could match cycle 280 without Adam.
+     - **INCONCLUSIVE** between.
+   - **Baselines**: cycle 280 trajectory (init 57.66, best 49.03, 8.6 PPL recovery).
+   - **Run cap**: ~10 minutes (re-runs cycle 280 with extra state saves).
+   - Depends on: cycle 280 script.
+
+310. **What are the 2 directions? — semantic decomposition of cycle 280's frozen A factor**
+   - **Motivation**: the "how" question, interpretability flavor. The frozen A = U[:, :2]·diag(Σ[:2]) in cycle 280 has shape (3072, 2). It is the input projection from FFN intermediate (3072) into the rank-2 bottleneck of block 1's c_proj. Whatever block 1 computes for the rest of GPT-2, those 2 columns of A are the channels through which it does it. The "how" question reduces to: **what do those 2 columns represent semantically?** Both at the input side (which FFN-intermediate channels does each load on?) and at the output side (which residual-stream / unembedding directions does each write to via the trained B factor?).
+   - **Setup**: take the trained cycle 280 model. Extract A = U[:, :2]·diag(Σ[:2]) and the trained B ∈ R^(2, 768). For each of the 2 rank-2 directions i ∈ {0, 1}:
+     1. **Input side**: rank A[:, i] by absolute value, list top-20 FFN-intermediate channels. For those channels, compute σ_c (cycle 261 sign frequency), `‖W_fc[:, c]‖`, and the per-channel pre-activation distribution under calib. Are they mostly-positive channels? Mostly-negative? GELU bump channels?
+     2. **Output side**: B[i, :] is a 768-dim residual-stream write direction. Compute (a) cosine with each of the 50,257 unembedding rows — top-20 most-promoted/suppressed tokens; (b) cosine with block 2's Q/K/V reading rows (top-5 cos for each), reusing cycle 218 infrastructure; (c) cosine with subsequent c_fc reading bases for blocks 2..11.
+     3. **Vocabulary projection**: for each direction i, compute `wte @ B[i, :]` and report top tokens.
+     4. **Compare with the no-retrain SVD direction** (Vh[:2, :]) — does the retrained B point at semantically meaningful tokens that Vh[:2, :] does not? Isolates what the retrain step recovers.
+   - **Hypothesis**: direction 0 loads on `<eos>`/punctuation/stopwords (the unigram-frequency axis seen in cycles 217 and 235). Direction 1 loads on a more semantically structured subspace. Both directions are dominated by mostly-negative-regime FFN channels — i.e., the rank-2 c_proj reads mostly from the "GELU bump" channels, not the positive ones.
+   - **Outcomes**:
+     - **CONFIRMED structured** if at least one of the 2 directions has top-20 unembedding cosine > 0.3 with a semantically coherent token cluster (manual review of top-20 tokens under each direction).
+     - **CONFIRMED unigram** if both directions are dominated by `wte` rows whose top-20 tokens are punctuation/stopwords/frequent-tokens — the rank-2 bottleneck encodes "how often does each token appear" only.
+     - **REFUTED interpretable** if the 2 directions look like random projections of the unembedding (no top-20 cluster, no Q/K/V alignment above noise).
+   - **Baselines**: cycle 218 c_fc top-5 cos sum 2.97 vs random 1.27. Cycle 217 SV0 unigram-frequency axis. Cycle 261 σ_c per channel.
+   - **Run cap**: ~10 minutes.
+   - Depends on: cycle 280 saved model, cycle 218 infrastructure.
 
 ### P2
 
@@ -23,6 +92,18 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Setup: New script `experiments/one_block_1_ksweep_8k_cycle304.py`. Mirror cycle 276 (whatever experiments/one_block_1_ksweep_cycle276.py is named) verbatim but with N_STEPS=8000, EVAL_EVERY=200. SUBSETS=[[1]], K∈{32, 64, 128, 256}. Joint Adam LR=1e-4, best-state restore. 3 seeds {42, 137, 2024}. Disjoint N_CALIB=200/N_EVAL=100, SEQ_LEN=128, MPS. ~28 min wall (4 K values × 3 seeds × 2× cycle 276's per-K time). Cross-check: step-4000 evals must match cycle 276 within 1e-4 per (K, seed) cell (no init or LR drift).
    - Verdict thresholds: CONFIRMED iff at least 2 of 4 K-tiers shift by ≥0.5 PPL (extension is broadly worthwhile across the K-curve). REFUTED iff all 4 K-tiers shift by ≤0.1 PPL (4k was the floor for all small-K [1] subsets — extension is K=512-specific). INCONCLUSIVE otherwise (mixed gains).
    - Artifacts: experiments/one_block_1_ksweep_8k_cycle304.py, autoresearch/results/cycle_304_one_block_1_ksweep_8k.json
+
+311. **GELU bump's effect on the rank-2 subspace specifically — connecting cycle 258 back to cycle 280**
+   - **Motivation**: cycle 258 found the GELU bump kinks κ in layers 3–5 by 36–48% under ReLU swap — measured across all 768 residual-stream dimensions. Cycle 280 says block 1's contribution to the residual stream lives in 2 dimensions, with the other 766 dimensions of c_proj output being noise. If the bump's effect at block 1 is mostly in the *discarded 766 dimensions*, then ReLU-swapping block 1 should have *no PPL impact* on a model where block 1 has been rank-2 truncated — because the rank-2 subspace doesn't see the noise the bump creates. If it has equal impact, the bump operates within the rank-2 subspace and the cycle 258 finding is in the operational signal, not the discarded one. This experiment unifies the geometric thread (item 269) with the rank-collapse thread (cycle 280) at a single block.
+   - **Setup**: take the trained cycle 280 model (block 1 rank-2 c_proj, B + bias trained, held-out PPL 49.03). Apply the cycle 258 ReLU+b_leak swap at **block 1 only** (one block, not all 12). Measure held-out PPL. Compare to (a) trained cycle 280 model with no swap (49.03 baseline), (b) baseline GPT-2 with the same block-1 ReLU swap (per-block PPL from cycle 173), (c) baseline GPT-2 with no swap (53.90 float). The 4 PPL values give a clean 2×2 contrast: rank-2-truncated vs full × ReLU-swapped vs GELU.
+   - **Hypothesis**: rank-2 truncated block 1 + ReLU swap has PPL within ±0.5 of rank-2 truncated block 1 alone — the bump's contribution at block 1 was in the discarded 766-dim subspace, and the LASER recipe denoised the bump for free.
+   - **Outcomes**:
+     - **CONFIRMED** if rank-2 + ReLU swap PPL is within ±0.5 of rank-2 alone (49.03): the bump at block 1 lives in the noise subspace, the LASER recipe denoises the bump as a side effect. This would connect the bump-investigation thread (cycles 173, 181, 258) to the rank-collapse thread (cycles 278, 280) at a single point.
+     - **REFUTED** if rank-2 + ReLU swap PPL is ≥ 2 above rank-2 alone: the bump operates *within* the rank-2 subspace and is doing something operationally important even after truncation. Implies the cycle 258 κ kink finding is in the load-bearing 2D, not the noisy 766D.
+     - **INCONCLUSIVE** between.
+   - **Baselines**: cycle 280 b1 r=2 retrain (49.03). Cycle 173 block 1 single-swap (+1.2% from baseline). Float (53.90). Cycle 258 κ shift +47.7% at layer 4.
+   - **Run cap**: ~5 minutes.
+   - Depends on: cycle 280 saved model, cycle 258 patch.
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
@@ -47,6 +128,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 293
+
+303. **Block 0 c_proj rank-72 weight-SVD — testing the highest-eff_rank concentrator** *(REFUTED — cycle 293)*
+   - **Outcome: REFUTED** — rank-72 retrain best_mean=**63.1327 ± 0.1009** at 56,064 trainable params (72×768 B + 768 bias), exceeds REFUTED threshold (≥58.0) by **5.133 PPL**. **ABOVE float (53.895) by +9.24 PPL** — first single-block c_proj recipe failure. Per-seed (all init=396.2582 deterministic): 42 best=63.0582@4000, 137 best=63.0645@4000, 2024 best=63.2752@3900 — all 3 BUDGET-BOUNDED. No-retrain sweep: r=10→1939.01, r=30→913.70, r=72→396.26. Adam recovery 396.26→63.13 = −333 PPL (largest single-block recovery yet) but the floor lands ABOVE float, not below. Block 0 c_proj weight SVD top-5 = (25.0, 21.1, 18.3, 17.4, 16.3), S[0]/S[4]≈1.5× — flattest tested. Top-72 captures only 32.7% matrix energy. **Pareto reading**: cycle 293 (56,064, 63.13) is STRICTLY DOMINATED on BOTH axes by every other tested single-block c_proj rank patch — highest param count AND highest PPL. **Recipe REFUTED on block 0**: the "rank ≈ eff_rank + Adam retrain below float" recipe holds for blocks 1/2/3/10/11 (8 data points across 5 blocks) but FAILS catastrophically on block 0. Block 0 transforms embedding diversity (cycle 198: input rank 269) and is irreplaceable as a single block (cycle 187: drop → PPL 1923). Embedding-proximity / depth-0 specialness break the recipe: block 0's c_proj acts as a high-rank embedding-to-residual chart, not a low-rank concentrator. The "early-vs-late" question has a clean answer — block 0 is special even relative to other early concentrators. Wall ~9 min. Config: TARGET_BLOCK=0, RANKS_NORETRAIN=[10,30,72], RETRAIN_RANK=72, joint Adam LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, best-state restore, 3 seeds {42,137,2024}, disjoint N_CALIB=200/N_EVAL=100, SEQ_LEN=128, MPS, GPT-2 small, wikitext-2 val.
+   - Artifacts: `experiments/block0_lowrank_cycle293.py`, `autoresearch/plans/cycle_293.md`, `autoresearch/briefs/cycle_293.md`, `autoresearch/results/cycle_293_block0_lowrank.json`, `autoresearch/results/cycle_293_summary.md`, `autoresearch/logs/cycle_293_run.log`, `autoresearch/results/cycle_293_manifest.txt`, `autoresearch/results/cycle_293_exec_result.txt`, `autoresearch/audits/cycle_293.md`, `autoresearch/results/cycle_293_audit.txt`
 
 ### Cycle 292
 

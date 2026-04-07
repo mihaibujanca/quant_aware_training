@@ -1,0 +1,123 @@
+Cycle 293 Manifest — Item 303: Block 0 rank-r c_proj weight-SVD sweep
+
+Commit: PENDING
+Branch: geometric_compression
+Verdict: REFUTED
+
+== Verdict logic (item 303 verbatim) ==
+CONFIRMED iff rank-72 retrain best_mean <= 55.0
+REFUTED   iff rank-72 retrain best_mean >= 58.0
+INCONCLUSIVE otherwise
+
+  r=72 retrain best_mean = 63.1327 >= 58.0 -> REFUTED (margin 5.133 PPL above REFUTED threshold)
+  r=72 retrain best_mean = 63.1327 >  55.0 -> CONFIRMED clause NOT triggered
+  -> REFUTED
+
+== No-retrain rank-r sweep ==
+r=10: PPL=1939.006  (Δfloat=+1885.111, +3497.75%, top-10 energy=0.1495)
+r=30: PPL=913.701   (Δfloat= +859.806, +1595.34%, top-30 energy=0.2241)
+r=72: PPL=396.258   (Δfloat= +342.363,  +635.24%, top-72 energy=0.3271)
+
+Restore original c_proj.weight between stages: PPL 53.895 (exact match to float).
+
+== Per-seed retrain r=72 (n=3 seeds {42, 137, 2024}, population std) ==
+init_ppl_mean   = 396.25818  (all 3 seeds identical: 396.25818) — deterministic, as expected
+best_mean       = 63.13270 +/- 0.10092
+best_min        = 63.05820   (seed 42   @4000)
+best_max        = 63.27523   (seed 2024 @3900)
+final_at_4000_mean = 63.21929
+
+  seed 42:   init=396.2582  best=63.0582 @step 4000  final@4000=63.0582  restored=63.0582
+  seed 137:  init=396.2582  best=63.0645 @step 4000  final@4000=63.0645  restored=63.0645
+  seed 2024: init=396.2582  best=63.2752 @step 3900  final@4000=63.5582  restored=63.2752
+
+All 3 fits BUDGET-BOUNDED — best at step 3900 or 4000, all still descending at the cap.
+Restore asserts pass for all 3 fits (|restored - best| < 1e-3, exact for all three).
+Init PPL deterministic across seeds (SVD init seed-independent).
+Float PPL measured in-run: 53.89489152418256 (exact match to reference 53.895).
+Trainable params per fit: 56,064 = 72*768 (B) + 768 (bias) asserted.
+
+== SVD of c_proj_0.weight (3072, 768) ==
+Top-5 singular values: 25.0331, 21.0536, 18.3372, 17.3806, 16.2563
+S[0] = 25.0331, S[9] (=S at r=10), S[29] (=S at r=30), S[71] (=S at r=72), S_min > 0 (full rank 768).
+Energy fractions: r=10: 0.1495, r=30: 0.2241, r=72: 0.3271
+Cycle 278 block 0 c_proj OUTPUT eff_rank = 71.93.
+
+GEOMETRIC NOTE: Block 0 c_proj WEIGHT SVD is FLAT and BOTTOM-HEAVY — top-5
+are 25.0, 21.1, 18.3, 17.4, 16.3 (S[0]/S[4] ≈ 1.5x, even flatter than other
+tested blocks). Top-72 captures only 32.7% of weight matrix energy. Block 0
+is qualitatively different from blocks 1/2/3/10/11: at noretrain r=72 it
+collapses to PPL 396 (vs ~57 for block 3 at r=24, ~60 for block 10 at r=5).
+Adam recovers from 396 to 63.13 (recovery -333 PPL) but the floor is +9.24
+PPL above float, +13.05 PPL above the cycle 282 anchor, and +12.55 PPL
+above cycle 288's block 3 r=24 result. Block 0 transforms embedding
+diversity (cycle 198: input rank 269) and is irreplaceable as a single
+block (cycle 187: drop -> PPL 1923) — its c_proj acts as a high-rank
+embedding-to-residual chart, not a low-rank concentrator.
+
+== Baselines ==
+Float baseline ref              =  53.89500
+cycle 280 block 1  c_proj r=2   =  49.03240  (  2,304 params)
+cycle 285 block 2  c_proj r=2   =  49.32900  (  2,304 params)
+cycle 282 block 10 c_proj r=17  =  50.04450  ( 13,824 params)
+cycle 288 block 3  c_proj r=24  =  50.59350  ( 19,200 params)
+cycle 270 block 11 c_proj r=22  =  54.46870  ( 17,664 params)
+cycle 292 block 1  c_proj r=1   =  50.07940  (  1,536 params)
+
+== Deltas ==
+cycle 293 block 0 r=72 best_mean -> 63.13270  at 56,064 params
+delta vs float                            = +9.23770  (ABOVE float by 9.24 PPL — recipe FAILS)
+delta vs cycle 282 b10 r=17 (13,824)      = +13.08820 (4.06x more params, 13.09 PPL WORSE)
+delta vs cycle 288 b3 r=24 (19,200)       = +12.53920 (2.92x more params, 12.54 PPL WORSE)
+delta vs cycle 270 b11 r=22 (17,664)      = +8.66400  (3.17x more params, 8.66 PPL WORSE)
+delta vs cycle 280 b1 r=2 (2,304)         = +14.10030 (24.3x more params, 14.10 PPL WORSE)
+delta vs cycle 292 b1 r=1 (1,536)         = +13.05330 (36.5x more params, 13.05 PPL WORSE)
+delta vs cycle 285 b2 r=2 (2,304)         = +13.80370 (24.3x more params, 13.80 PPL WORSE)
+
+== Pareto reading ==
+- Cycle 293 (56,064 params, 63.13 PPL) is STRICTLY DOMINATED on BOTH axes by
+  EVERY other tested single-block c_proj rank patch. Highest param count AND
+  highest PPL among all single-block c_proj recipe points.
+- Cycle 293 is the FIRST single-block c_proj recipe REFUTATION. The recipe
+  ("rank ≈ eff_rank + Adam retrain recovers below float") generalizes to
+  blocks 1, 2, 3, 10, 11 (5 blocks confirmed) but BREAKS on block 0.
+- Block 0's failure is qualitative not quantitative: noretrain r=72 PPL 396
+  is ~7x worse than any other block's noretrain start, and Adam can only
+  recover to 63.1 (still ABOVE float by 9.2 PPL). This is the first time
+  Adam retrain fails to take a c_proj patch below float on a single block.
+
+== Recipe generalization (across 6 blocks now) ==
+- block 0  r=72 (eff_rank 71.93): retrain 63.13 @ 56,064 params  <-- new, REFUTED, ABOVE float
+- block 1  r=1  (eff_rank 1.94):  retrain 50.08 @  1,536 params
+- block 1  r=2  (eff_rank 1.94):  retrain 49.03 @  2,304 params
+- block 2  r=2  (eff_rank 1.05):  retrain 49.33 @  2,304 params
+- block 3  r=24 (eff_rank 24.29): retrain 50.59 @ 19,200 params
+- block 10 r=5  (eff_rank 16.70): retrain 51.47 @  4,608 params
+- block 10 r=17 (eff_rank 16.70): retrain 50.04 @ 13,824 params
+- block 11 r=22 (eff_rank 22.49): retrain 54.47 @ 17,664 params
+The "rank ≈ eff_rank + Adam retrain below float" pattern HOLDS for blocks
+1/2/3/10/11 (8 data points across 5 blocks) but FAILS catastrophically on
+block 0. Block 0 is qualitatively different — embedding-proximity and
+input-rank-269 specialness break the recipe. The "early-vs-late" question
+the agenda posed has a clean answer: block 0 (depth 0) is a special case
+even relative to other early concentrators.
+
+== Wall time / fits ==
+Total wall: ~9 min over 1 no-retrain sweep (3 evals) + 3 retrain fits (2.7
+min/fit). Under 30-min cap. No budget-extension triggered.
+
+== Artifacts ==
+experiments/block0_lowrank_cycle293.py
+autoresearch/plans/cycle_293.md
+autoresearch/briefs/cycle_293.md
+autoresearch/results/cycle_293_block0_lowrank.json
+autoresearch/results/cycle_293_summary.md
+autoresearch/logs/cycle_293_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+
+item_number: 303
+outcome: REFUTED
+key_metric: best_mean=63.1327_pm_0.1009_ge_58.0_by_5.133_PPL_block_0_rank_72_c_proj_weight_SVD_retrain_56064_params_REFUTED_first_single_block_recipe_failure_recipe_breaks_on_embedding_proximate_block_0
+commit: PENDING
+paths: experiments/block0_lowrank_cycle293.py,autoresearch/plans/cycle_293.md,autoresearch/briefs/cycle_293.md,autoresearch/results/cycle_293_block0_lowrank.json,autoresearch/results/cycle_293_summary.md,autoresearch/logs/cycle_293_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv

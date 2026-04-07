@@ -1,6 +1,11 @@
-# Research Status — 292 Cycles (001–292)
+# Research Status — 293 Cycles (001–293)
 
-## Latest: Cycle 292
+## Latest: Cycle 293
+
+303. **Block 0 rank-72 c_proj weight-SVD retrain** — REFUTED
+   - Rank-72 retrain (3 seeds, **56,064 params**): **best_mean=63.133 ± 0.101** ≥ 58 refuted by 5.13 PPL. **First single-block c_proj recipe REFUTATION**. **ABOVE float by +9.24 PPL** — Adam recovery 396.26→63.13 (-333 PPL, largest yet) but the floor lands above float, not below. No-retrain sweep r=10→1939, r=30→914, r=72→396 (init >7× worse than other blocks). Block 0 c_proj weight SVD is the FLATTEST tested (top-5: 25.0/21.1/18.3/17.4/16.3, S[0]/S[4]≈1.5×); top-72 captures only 32.7% matrix energy. **Recipe REFUTED on block 0**: holds for blocks 1/2/3/10/11 (8 data points across 5 blocks) but fails catastrophically on block 0. Block 0 transforms embedding diversity (cycle 198 input rank 269), is irreplaceable as a single block (cycle 187 drop→PPL 1923) — embedding-proximity / depth-0 specialness break the recipe. Block 0 c_proj acts as a **high-rank embedding-to-residual chart**, not a low-rank concentrator. **Pareto reading**: cycle 293 (56,064, 63.13) is STRICTLY DOMINATED on BOTH axes by every other tested single-block c_proj recipe — highest param count AND highest PPL.
+
+## Cycle 292
 
 302. **Block 1 rank-1 c_proj weight-SVD retrain** — CONFIRMED (interesting=true)
    - Rank-1 retrain (3 seeds, **only 1,536 params**): **best_mean=50.079 ± 0.048** (≤51 confirmed by 0.92 PPL). **Below float by 3.82 PPL** at 1,536 trainable — **new lowest-param single-block c_proj anchor** (33% below cycle 280's 2,304). **Sub-eff_rank r/eff=0.514** (block 1 eff_rank 1.94); second sub-eff_rank success after cycle 289 (0.30). All 3 seeds budget-bounded at step 3900-4000 (still descending, unlike cycle 289's floor-limited regime). **Major Pareto rewrite**: strictly dominates cycles 270, 288, 289 on both axes; essentially ties cycle 282 (13,824) on PPL at 9× fewer params.

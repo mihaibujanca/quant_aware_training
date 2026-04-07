@@ -1,0 +1,57 @@
+Cycle 293 Execution Result — Item 303
+
+Verdict: REFUTED
+Commit: PENDING
+
+Item 303 thresholds (verbatim):
+  CONFIRMED iff rank-72 retrain best_mean <= 55.0
+  REFUTED   iff rank-72 retrain best_mean >= 58.0
+  INCONCLUSIVE otherwise
+
+Measured: rank-72 retrain best_mean = 63.13270 +/- 0.10092 (n=3 seeds)
+  -> 63.13270 >= 58.0 by 5.133 PPL -> REFUTED clause fires
+  -> 63.13270  > 55.0           -> CONFIRMED clause NOT triggered
+  -> REFUTED
+
+Per seed (all init=396.25818 deterministic):
+  seed 42:   best=63.0582 @4000  final@4000=63.0582  restored=63.0582
+  seed 137:  best=63.0645 @4000  final@4000=63.0645  restored=63.0645
+  seed 2024: best=63.2752 @3900  final@4000=63.5582  restored=63.2752
+
+Aggregate (population std):
+  best_mean = 63.13270, best_std = 0.10092, best_min = 63.05820, best_max = 63.27523
+
+No-retrain sweep (block 0 c_proj.weight rank-r SVD swap):
+  r=10: PPL=1939.006   (energy 0.1495)
+  r=30: PPL=913.701    (energy 0.2241)
+  r=72: PPL=396.258    (energy 0.3271)
+  Restored c_proj.weight -> PPL=53.895 (exact match to float)
+
+Float PPL: 53.89489152418256 (within 0.5 of reference 53.895 - exact)
+
+Trainable params per fit: 56,064 = 72*768 (B) + 768 (bias) asserted
+
+Adam recovery: 396.26 -> 63.13 = -333.13 PPL (largest single-block recovery yet) but
+floor 63.13 lands +9.24 PPL ABOVE float, not below. First single-block c_proj
+recipe REFUTATION. Block 0's embedding-proximate position and high input rank
+(cycle 198: 269) break the recipe. Cycle 187 already showed dropping b0 -> PPL 1923;
+cycle 293 confirms even rank-72 (matching eff_rank 71.93) is insufficient.
+
+Geometric reading: block 0 c_proj weight SVD top-5 = 25.0, 21.1, 18.3, 17.4, 16.3
+(S[0]/S[4] ~1.5x, FLATTEST tested). Top-72 captures only 32.7% matrix energy.
+Block 0 transforms embedding diversity into the residual stream and is irreplaceable
+as a single block. The eff_rank-recipe assumed concentrator structure (top-1 OUTPUT
+energy 0.5-0.99 in tested blocks) but block 0 has no comparable measurement and the
+empirical PPL collapse shows it does NOT behave like a low-rank concentrator.
+
+Wall time: ~9 min total (1.5s float baseline + 1.3s/r * 3 noretrain + 2.7 min/seed * 3 = 8.1+ min wall).
+Under 30-min cap. No budget-extension triggered.
+
+Files written:
+  experiments/block0_lowrank_cycle293.py
+  autoresearch/plans/cycle_293.md
+  autoresearch/briefs/cycle_293.md (pre-existing from brief stage)
+  autoresearch/results/cycle_293_block0_lowrank.json
+  autoresearch/results/cycle_293_summary.md
+  autoresearch/results/cycle_293_manifest.txt
+  autoresearch/logs/cycle_293_run.log
