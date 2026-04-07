@@ -1,0 +1,98 @@
+cycle=262
+item=268
+verdict=INCONCLUSIVE
+commit=81ac769589d93d6e0e0ed9834625408dc1e0b64b
+trainable_params=4611
+
+# Config
+model=gpt2
+BLOCKS=[1,4,7]
+K=1
+N_CALIB=200
+N_EVAL=100
+SEQ_LEN=128
+LR=1e-4
+N_STEPS=4000
+EVAL_EVERY=100
+SEEDS=[42,137,2024]
+device=mps
+trainable_per_block=1537
+trainable_per_block_decomp=W_out_768+b_out_768+b_fc_1
+trainable_total=4611
+calib_split=all_ids[:200]
+eval_split=all_ids[200:300]
+disjoint_splits=true
+
+# Float / baselines
+float_ppl=53.895
+cycle_230_K1_3block_W_out_only_baseline=59.245
+cycle_213_K512_3block_W_out_plus_b_fc=noop
+cycle_241_K512_6block_W_out_plus_b_fc=noop_59.533_vs_59.515
+cycle_248_K128_6block_W_fc_full=noop
+cycle_240_K1_6block=96.886_catastrophic
+cycle_210_K512_3block=46.556
+
+# Per-seed
+seed_42_init=71.409
+seed_42_best=59.098
+seed_42_best_step=4000
+seed_42_final=59.098
+seed_137_init=71.409
+seed_137_best=59.165
+seed_137_best_step=4000
+seed_137_final=59.165
+seed_2024_init=71.409
+seed_2024_best=59.130
+seed_2024_best_step=4000
+seed_2024_final=59.130
+
+# Aggregate
+init_mean=71.409
+init_std=0.000
+best_mean=59.131
+best_std=0.027
+best_step_mean=4000
+best_step_std=0
+final_mean=59.131
+final_std=0.027
+
+# Delta vs cycle 230
+delta_vs_cycle_230=-0.114
+relative_to_thresholds=31pct_from_REFUTED_to_CONFIRMED
+verdict_threshold_CONFIRMED=58.5
+verdict_threshold_REFUTED=59.5
+inconclusive_band=58.5_to_59.5
+in_inconclusive_band=true
+
+# Final b_fc per block per seed
+seed_42_b_fc_block_1=+0.3817
+seed_42_b_fc_block_4=+0.3530
+seed_42_b_fc_block_7=+1.1657
+seed_137_b_fc_block_1=+0.4199
+seed_137_b_fc_block_4=+0.3584
+seed_137_b_fc_block_7=+1.1664
+seed_2024_b_fc_block_1=+0.4260
+seed_2024_b_fc_block_4=+0.3560
+seed_2024_b_fc_block_7=+1.1655
+
+# b_fc movement
+b_fc_block_1_init=approx_0.0
+b_fc_block_4_init=approx_-0.04
+b_fc_block_7_init=approx_+0.984
+b_fc_all_blocks_all_seeds_shifted_positive=true
+b_fc_seed_stable_std_under_0.03=true
+
+# Verdict logic
+best_mean_le_58.5=False_value=59.131
+best_mean_ge_59.5=False_value=59.131
+inconclusive=True_band_(58.5,59.5)
+verdict=INCONCLUSIVE
+
+# Sanity
+init_ppl_deterministic_across_seeds=True_71.409
+all_seeds_best_at_step_4000=True_still_improving
+restore_round_trip_clean=True_within_1e-3
+n_trainable_assert_4611_passed=True
+brief_2313_count_omitted_W_out=True_actual=4611
+
+artifacts=experiments/k1_wfc_bias_cycle262.py,autoresearch/results/cycle_262_k1_wfc_bias.json,autoresearch/results/cycle_262_summary.md,autoresearch/logs/cycle_262_run.log,autoresearch/plans/cycle_262.md,autoresearch/briefs/cycle_262.md
