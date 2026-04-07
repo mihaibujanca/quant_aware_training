@@ -1,0 +1,105 @@
+Cycle 287 Manifest — Item 297: 1-block [1] K=512 extended budget (8000 steps)
+
+Commit: PENDING
+Branch: geometric_compression
+Verdict: CONFIRMED
+
+== Verdict logic (item 297 verbatim) ==
+CONFIRMED iff best_mean <= 43.0  (extension buys >= 0.82 PPL — parallel to cycle 269 14% gap-closing)
+REFUTED   iff best_mean >= 43.7  (extension buys < 0.12 PPL — 4k essentially the floor)
+INCONCLUSIVE otherwise
+
+  best_mean = 42.78529 <= 43.0  -> TRUE  (CONFIRMED clause passes by 0.21471 PPL margin)
+  -> CONFIRMED
+
+== Per-seed [1] K=512 8k (n=3 seeds {42, 137, 2024}, population std) ==
+init_ppl_mean   = 54.68925  (all 3 seeds within 1e-6: 54.68925 — deterministic topk lstsq init)
+best_mean       = 42.78529 +/- 0.01255
+best_min        = 42.76934  (seed 2024 @8000)
+best_max        = 42.80000  (seed 137  @8000)
+final_at_8000_mean = 42.78529  (== best — all 3 seeds best at terminal step 8000)
+
+  seed 42:   init=54.68925  best=42.78652 @step 8000  final@8000=42.78652  restored=42.78652
+  seed 137:  init=54.68925  best=42.80000 @step 8000  final@8000=42.80000  restored=42.80000
+  seed 2024: init=54.68925  best=42.76934 @step 8000  final@8000=42.76934  restored=42.76934
+
+ALL 3 fits hit best at step 8000 — budget-bounded, still descending.
+Restore asserts pass for all 3 fits (|restored - best| < 1e-3, all exact).
+Init PPL deterministic across seeds (topk lstsq is seed-free); matches cycle 271 [1] init 54.68925 exactly.
+Float PPL measured in-run: 53.89489152418256 (exact match to reference 53.895).
+Trainable params per fit: 393,984 = 512*768 (W_out) + 768 (b_out) asserted in-script.
+Wall time: 13.0 min over 1 subset x 3 seeds = 3 fits.
+
+== Matched-config sanity vs cycle 271 [1] K=512 4k ==
+Step-4000 eval PPL per seed (cycle 287 vs cycle 271):
+  seed 42  : cycle 287 = 43.82617  vs  cycle 271 = 43.82616  (delta < 1e-4)  PASS
+  seed 137 : cycle 287 = 43.84589  vs  cycle 271 = 43.84588  (delta < 1e-4)  PASS
+  seed 2024: cycle 287 = 43.78931  vs  cycle 271 = 43.78932  (delta < 1e-4)  PASS
+Identical step-4000 trajectory confirms only the budget extension differs (LR, scorer, init, optimizer all identical).
+
+== Baselines ==
+Float baseline ref               = 53.89500
+cycle 271 [1] K=512 4k           = 43.82045  (393,984 params)  -- prior PPL anchor at this tier
+cycle 286 [2] K=512 4k           = 43.56269  (393,984 params)  -- prior PPL Pareto winner at this tier (cycle 286)
+
+== Deltas ==
+cycle 287 [1] K=512 8k best_mean -> 42.78529  at 393,984 params
+delta vs float                          = -11.10960  (below float by 11.11 PPL)
+delta vs cycle 271 [1] K=512 4k         =  -1.03517  (8k extension buys 1.04 PPL on [1] K=512)
+delta vs cycle 286 [2] K=512 4k         =  -0.77740  (NEW PPL Pareto winner at 393,984-param tier; replaces cycle 286 [2])
+
+== Pareto reading ==
+- Cycle 287 [1] K=512 8k (393,984 params, 42.78529 PPL):
+  SAME parameter count as cycle 286 [2] K=512 4k (43.56269) and cycle 271 [1] K=512 4k (43.82045).
+  Cycle 287 STRICTLY DOMINATES BOTH on the PPL axis at this param tier:
+    -0.78 PPL vs cycle 286 [2] K=512 4k  (overtakes the prior winner)
+    -1.04 PPL vs cycle 271 [1] K=512 4k  (the matched-config 4k baseline)
+  -> NEW PPL PARETO WINNER on the 393,984-param tier; replaces cycle 286 [2].
+- The hypothesis ("8000 steps drops [1] K=512 below 43.0") is fully confirmed:
+  best_mean=42.785 < 43.0 by 0.215 PPL margin; per-seed all 3 below 43.0
+  (42.7693, 42.7865, 42.8000); range tight at +/- 0.013.
+- Budget-extension family update:
+    cycle 269 K=1   6-block 4k->16k  bought -5.27 PPL  (large)
+    cycle 287 [1]   K=512 1-block 4k->8k bought -1.04 PPL  (this cycle)
+    cycle 274 K=64  5-block 4k->8k   bought -0.80 PPL
+    cycle 254 K=128 5-block 4k->8k   bought -0.10 PPL  (plateau)
+  Per-doubling [1] K=512 -1.04 PPL is between cycle 269's heavy gain and cycle 274's intermediate.
+  Item 297's slack-per-param hypothesis (fewest trainable -> most Adam slack) holds qualitatively:
+  the [1] K=512 4k cap was budget-limited, not floor-limited.
+- All 3 seeds best at step 8000 (terminal) -- still descending. A 16k run would likely
+  push best_mean below 42.5; this is left for future cycles.
+
+== Geometric reading ==
+- The [1] K=512 cycle 271 4k value (43.82) was BUDGET-LIMITED, not a true compression floor.
+  At 8k it falls to 42.79 — a 1.04 PPL gain from 2x training time alone, no architecture change.
+  This validates the agenda 297 framing: "[1] K=512 1-block has the FEWEST trainable params of
+  any cascade tested at K=512 (394K) -> most Adam slack per param -> most likely to benefit
+  from longer training". The fewest-trainable-most-slack heuristic is empirically supported.
+- The cycle 286 [2] K=512 vs cycle 271 [1] K=512 cross-over also need re-testing at 8k:
+  cycle 286 was also budget-bounded (all seeds best @ step 4000). At matched 8k both blocks
+  may be much closer or [2] may again take the lead. This cycle does NOT establish that [1]
+  beats [2] in absolute terms — only that at 8k vs cycle 286's 4k the [1] PPL is lower.
+  The audit-of-audit note from cycle 286 (auditor recommended 8k retest of [2] K=512) should
+  now be elevated to a P0 follow-up agenda item.
+- Step-4000 evals identical to cycle 271 to <1e-4 — matched-config reproducibility is exact.
+  This is the cleanest budget-extension reproduction in the cascade family so far.
+
+== Wall time / fits ==
+Total wall: 13.0 min over 1 subset x 3 seeds = 3 fits (~4.3 min/fit). 2.0x cycle 271 per-fit
+time as expected (2x N_STEPS, same EVAL_EVERY count).
+
+== Artifacts ==
+experiments/one_block_1_k512_8k_cycle287.py
+autoresearch/plans/cycle_287.md
+autoresearch/briefs/cycle_287.md
+autoresearch/results/cycle_287_one_block_1_k512_8k.json
+autoresearch/results/cycle_287_summary.md
+autoresearch/logs/cycle_287_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+
+item_number: 297
+outcome: CONFIRMED
+key_metric: best_mean=42.7853_pm_0.0125_le_43.0_by_0.215_PPL_margin_block_1_K512_393984_params_8000_steps_extension_NEW_PPL_PARETO_WINNER_on_393984_tier_REPLACES_cycle_286_b2_K512_4k_43.563_BEATS_BY_0.777_PPL_at_SAME_params_BEATS_cycle_271_b1_K512_4k_43.821_by_1.035_PPL_matched_config_step_4000_evals_match_cycle_271_within_1e_4_per_seed_42:42.7865_137:42.8000_2024:42.7693_all_at_step_8000_budget_bounded_still_descending_init_PPL_54.68925_deterministic_topk_lstsq_seed_free_matches_cycle_271_b1_init_exactly_trainable_per_fit=393984=512x768_W_out_plus_768_b_out_asserted_joint_Adam_LR=1e-4_N_STEPS=8000_EVAL_EVERY=200_best_state_restore_all_3_seeds_restore_assert_pass_float_ppl_53.895_delta_vs_float=-11.110_extension_family_per_doubling_269_-5.27_287_-1.04_274_-0.80_254_-0.10_fewest_trainable_most_Adam_slack_heuristic_empirically_supported_cycle_286_b2_K512_8k_retest_now_recommended_wall_13.0_min
+commit: PENDING
+paths: experiments/one_block_1_k512_8k_cycle287.py,autoresearch/plans/cycle_287.md,autoresearch/briefs/cycle_287.md,autoresearch/results/cycle_287_one_block_1_k512_8k.json,autoresearch/results/cycle_287_summary.md,autoresearch/logs/cycle_287_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv

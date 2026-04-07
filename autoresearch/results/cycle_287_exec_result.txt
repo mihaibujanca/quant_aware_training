@@ -1,0 +1,83 @@
+Cycle 287 — Item 297 — Execution Result
+
+Verdict: CONFIRMED
+Commit: PENDING
+Branch: geometric_compression
+
+Script: experiments/one_block_1_k512_8k_cycle287.py
+Log:    autoresearch/logs/cycle_287_run.log
+Result: autoresearch/results/cycle_287_one_block_1_k512_8k.json
+
+Key metrics:
+  float_ppl                     = 53.895
+  init_ppl (deterministic)      = 54.68925 (all 3 seeds within 1e-6; matches cycle 271 [1] init exactly)
+  [1] K=512 8k best_mean        = 42.78529
+  [1] K=512 8k best_std         = 0.01255
+  [1] K=512 8k best_min         = 42.76934 (seed 2024 @ step 8000)
+  [1] K=512 8k best_max         = 42.80000 (seed 137  @ step 8000)
+  trainable params per fit      = 393,984 = 512*768 + 768
+
+Verdict logic (item 297 verbatim):
+  CONFIRMED iff best_mean <= 43.0
+  REFUTED   iff best_mean >= 43.7
+  INCONCLUSIVE otherwise
+
+  42.78529 <= 43.0  ->  TRUE  (CONFIRMED clause passes by 0.21471 PPL margin)
+  ->  CONFIRMED
+
+Wall time: 13.0 min over 3 fits (~4.3 min/fit). 2.0x cycle 271 per-fit time as expected.
+
+Sanity checks:
+  float PPL within 0.5 of reference 53.895                          PASS (exact match)
+  trainable param count == 393,984                                  PASS asserted in-script
+  init PPL deterministic across seeds (topk lstsq seed-free)        PASS (all 3 within 1e-6)
+  init PPL matches cycle 271 [1] exactly (54.68925)                 PASS (delta < 1e-5)
+  restore best-state per seed (|restored - best| < 1e-3)            PASS all 3 seeds (exact)
+  step-4000 eval matches cycle 271 [1] per seed (within 0.05)       PASS (delta < 1e-4 per seed)
+  all 3 seeds best at step 8000 -- budget-bounded                   NOTE: still descending
+
+Matched-config sanity vs cycle 271 [1] K=512 4k (step-4000 eval per seed):
+  seed 42  : cycle 287 = 43.82617  vs  cycle 271 = 43.82616  (delta < 1e-4)
+  seed 137 : cycle 287 = 43.84589  vs  cycle 271 = 43.84588  (delta < 1e-4)
+  seed 2024: cycle 287 = 43.78931  vs  cycle 271 = 43.78932  (delta < 1e-4)
+Identical step-4000 trajectory confirms only the budget extension differs.
+This is the cleanest budget-extension reproduction in the cascade family so far.
+
+Pareto reading:
+  Cycle 287 [1] K=512 8k (393,984 params, 42.78529 PPL) vs prior anchors at this tier:
+    cycle 286 [2] K=512 4k (393,984 params, 43.56269 PPL) -- BEATEN by 0.78 PPL
+    cycle 271 [1] K=512 4k (393,984 params, 43.82045 PPL) -- BEATEN by 1.04 PPL
+  -> NEW PPL Pareto winner on the 393,984-param tier; replaces cycle 286 [2].
+
+  Hypothesis ("8000 steps drops [1] K=512 below 43.0 -- establishes a new dominant
+  PPL Pareto anchor") is fully confirmed: best_mean=42.785 < 43.0 by 0.215 PPL,
+  per-seed all 3 below 43.0, range tight at +/- 0.013.
+
+Budget-extension family update:
+  cycle 269 K=1   6-block 4k->16k  bought -5.27 PPL  (large)
+  cycle 287 [1]   K=512 1-block 4k->8k bought -1.04 PPL  (this cycle)
+  cycle 274 K=64  5-block 4k->8k   bought -0.80 PPL
+  cycle 254 K=128 5-block 4k->8k   bought -0.10 PPL  (plateau)
+  -> Item 297's "fewest trainable -> most Adam slack" heuristic is empirically supported:
+     [1] K=512 4k cap was budget-limited, not floor-limited.
+
+Geometric finding:
+  The matched-config step-4000 reproducibility (<1e-4 per seed) means the
+  scorer / lstsq init / Adam optimizer / dataloader RNG path are all
+  deterministic in this configuration. Only the budget differs. The 1.04 PPL
+  improvement is therefore unambiguously attributed to the extra 4000 Adam
+  steps -- not to any architectural or initialization change.
+
+  All 3 seeds STILL DESCENDING at step 8000 -- a 16k extension would likely
+  push best_mean below 42.5. The true [1] K=512 floor remains unmeasured.
+
+Implications for cycle 286 [2] K=512:
+  Cycle 286 was also budget-bounded (all 3 seeds best @ step 4000, INCONCLUSIVE
+  per agenda thresholds, fell 0.063 PPL above CONFIRMED line). Cycle 287
+  demonstrates that the [1] K=512 4k cap was budget-limited; by symmetry the
+  [2] K=512 4k cap is almost certainly also budget-limited. A cycle 286-style
+  retest at 8000 steps for [2] K=512 should now be a P0 follow-up agenda item
+  (auditor of cycle 286 already recommended this). At matched 8k budgets, the
+  per-K [2]-vs-[1] cross-over may be much closer or [2] may again take the
+  lead -- this cycle does NOT establish that [1] beats [2] in absolute terms,
+  only that at 8k vs cycle 286's 4k the [1] PPL is lower.

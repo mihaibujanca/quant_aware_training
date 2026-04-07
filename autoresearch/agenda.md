@@ -4,14 +4,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## NEXT EXPERIMENTS
 
-### P0
-
-297. **Cycle 271 [1] K=512 extended budget — 8000 steps — can Adam push the cascade floor below 43.82?**
-   - Context: Cycle 271 measured [1] K=512 best_mean=43.8205 ± 0.0234 at N_STEPS=4000. Per-seed: 42→43.8074@3700, 137→43.7873@3500, 2024→43.8669@3800 — ALL best at step ≥3500, still descending at the budget cap. The cascade extension family (cycles 254/269/274) shows extending budget is sometimes worth several PPL: cycle 269 K=1 6-block 4k→16k bought −5.27 PPL; cycle 274 K=64 5-block 4k→8k bought −0.80 PPL; cycle 254 K=128 5-block 4k→8k bought only −0.10 PPL (plateau). [1] K=512 1-block has the FEWEST trainable params of any cascade tested at K=512 (394K) → most Adam slack per param → most likely to benefit from longer training. Hypothesis: 8000 steps drops cycle 271 [1] K=512 below 43.0 — establishes a new dominant PPL Pareto anchor.
-   - Setup: New script `experiments/one_block_k512_extended_cycle287.py`. Mirror cycle 271 verbatim with BLOCKS=[1], K=512, but N_STEPS=8000 (2× extension). 3 seeds {42, 137, 2024}, joint Adam LR=1e-4, EVAL_EVERY=100, best-state restore. Disjoint N_CALIB=200/N_EVAL=100, SEQ_LEN=128, MPS. ~14 min wall (2× cycle 271's 7 min).
-   - Verdict thresholds: CONFIRMED iff best_mean ≤ 43.0 (extension buys ≥0.82 PPL, parallel to cycle 269's 14% gap-closing). REFUTED iff best_mean ≥ 43.7 (extension buys < 0.12 PPL — confirms 4k is essentially the [1] K=512 floor like cycle 254). INCONCLUSIVE otherwise. Per-seed best_step ≥6000 trace expected.
-   - Artifacts: experiments/one_block_k512_extended_cycle287.py, autoresearch/results/cycle_287_one_block_k512_extended.json
-
 ### P1
 
 298. **Block 3 c_proj rank-r weight-SVD sweep — extending cycle 280/282 to the third-lowest eff_rank concentrator**
@@ -51,6 +43,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 287
+
+297. **Cycle 271 [1] K=512 extended budget — 8000 steps** *(CONFIRMED — cycle 287)*
+   - **Outcome: CONFIRMED** — best_mean=**42.7853±0.0125** at 393,984 trainable params, passes CONFIRMED clause (≤43.0) by 0.215 PPL margin. **NEW PPL PARETO WINNER on the 393,984-param tier**: cycle 287 [1] K=512 8k (42.7853) STRICTLY DOMINATES cycle 286 [2] K=512 4k (43.5627) by 0.777 PPL and cycle 271 [1] K=512 4k (43.8205) by 1.035 PPL — replaces cycle 286 [2] as the best 1-block K=512 result. Per-seed all 3 below 43.0 (42.7693/42.7865/42.8000), all best at step 8000 — STILL DESCENDING. **Matched-config reproducibility exact**: step-4000 evals match cycle 271 [1] within 1e-4 per seed (43.82617/43.84589/43.78931 vs 43.82616/43.84588/43.78932) — confirms only the budget extension differs (LR, scorer, lstsq init, optimizer, dataloader RNG all identical). The 1.04 PPL gain is unambiguously attributed to the extra 4000 Adam steps. **Geometric reading**: the [1] K=512 4k cap was BUDGET-LIMITED, not floor-limited — agenda 297's "fewest trainable → most Adam slack" heuristic (394K is fewest of any K=512 cascade tested) is empirically supported. Budget-extension family update: cycle 269 K=1 6b 4k→16k −5.27, cycle 287 [1] K=512 4k→8k −1.04 (this), cycle 274 K=64 5b 4k→8k −0.80, cycle 254 K=128 5b 4k→8k −0.10. Init PPL 54.68925 deterministic across seeds, matches cycle 271 [1] init exactly. Restore asserts PASS; trainable=393,984 asserted. Wall ~13.0 min. Config: SUBSETS=[[1]], K=512, W_out+b_out trainable, joint Adam LR=1e-4, N_STEPS=8000, EVAL_EVERY=200, best-state restore, 3 seeds {42, 137, 2024}, disjoint N_CALIB=200/N_EVAL=100, SEQ_LEN=128, MPS, GPT-2 small, wikitext-2 val. **Follow-up flagged**: cycle 286 [2] K=512 was also budget-bounded; an 8k retest of [2] K=512 should be added as a P0 follow-up agenda item to determine the actual [2]-vs-[1] cross-over at matched 8k budgets (cycle 286's auditor already recommended this).
+   - Artifacts: `experiments/one_block_1_k512_8k_cycle287.py`, `autoresearch/plans/cycle_287.md`, `autoresearch/briefs/cycle_287.md`, `autoresearch/results/cycle_287_one_block_1_k512_8k.json`, `autoresearch/results/cycle_287_summary.md`, `autoresearch/logs/cycle_287_run.log`, `autoresearch/results/cycle_287_manifest.txt`
 
 ### Cycle 286
 
