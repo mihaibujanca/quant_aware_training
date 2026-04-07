@@ -1,6 +1,11 @@
-# Research Status — 245 Cycles (001–245)
+# Research Status — 246 Cycles (001–246)
 
-## Latest: Cycle 245
+## Latest: Cycle 246
+
+256. **gelu_noneg + μ + LoRA r=8 + K=128 W_out compression** — REFUTED (interesting=true)
+   - All 12 blocks gelu_noneg+μ + LoRA r=8 + BLOCKS=[1,4,7] additional K=128 topk+lstsq W_out compression. Trainable=595,200 (verified). 3 seeds. **best_mean=57.811 ± 0.277** ≥ 49.5 refuted threshold by +8.3 PPL. Δ vs cycle 223 K=128 alone (48.989) = **+8.82**. Δ vs cycle 239 LoRA alone (47.692) = +10.12. **Root cause**: K=128 topk+lstsq init against the gelu_noneg+μ patched target is **106.74** PPL — actively WORSE than the μ-only baseline (74.30) before Adam runs. The bump-removed target is HARDER for K=128 lstsq, not easier. **Activation-level fix and channel compression do NOT compose** — they share a linearization budget. Adam's 595K trainable surface can't close a 56 PPL starting gap in 2000 steps.
+
+## Cycle 245
 
 255. **Drop block 5 from 6-block compression — [1,2,4,7,8]** — CONFIRMED (interesting=true)
    - K=512 joint Adam W_out+b_out, 3 seeds. **best_mean = 53.826 ± 0.032** ≤ 54.0 confirmed. **Δ vs cycle 221 [1,2,4,5,7,8] = -5.689 PPL** — closes >100% of the joint-cascade gap. **Δ vs float (53.895) = -0.069** (statistical tie). Best at steps 1700/1600/1600. **Block 5 is a structural bottleneck at K=512, not a symmetric contributor**: cycle 243's 4.4× non-additivity was a fixed-fit attribution artifact — dropping block 5 and re-jointly optimizing closes the entire 6-block gap. Explains cycle 233's middle-subset disaster ([3..8]=67.8) and cycle 243's mid-block ordering under one story. **5-block compression at K=512, near-float quality.** Caveat: -0.069 vs float is calib-overfit slack (same family as cycles 206/210/223/225/230/239); not a true gain. 5-block ≠ Pareto winner vs cycle 210's 3-block 46.556 on absolute PPL, but it IS the strictest near-float compression superset yet.
