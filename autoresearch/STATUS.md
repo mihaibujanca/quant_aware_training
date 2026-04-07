@@ -1,6 +1,11 @@
-# Research Status — 271 Cycles (001–271)
+# Research Status — 272 Cycles (001–272)
 
-## Latest: Cycle 271
+## Latest: Cycle 272
+
+282. **K=256 4-block sweep** — CONFIRMED
+   - 9 fits, 21 min. **min best_mean=51.9224 ± 0.020 on [1,2,4,7]** (≤52 confirmed by 0.078 PPL). Per-subset: [1,2,4,7]=51.92, [1,4,7,8]=52.47, [1,2,7,8]=52.68. **K-curve at 4 blocks now fully mapped**: K∈{64,128,256,512}→{55.95, 53.65, 51.92, 49.61}. Per-K-halving cost {2.31, 1.73, 2.31} — roughly linear in log K with flat midstep, NOT strictly concave-up. Canonical [1,2,4,7] ordering returns (cycle 268's K=64 flip was K-specific). **NOT a Pareto winner**: dominated by cycle 271 K=512 1-block [1] (394K, 43.82) at HALF params and 8.1 PPL better.
+
+## Cycle 271
 
 281. **K=512 1-block compression sweep** — INCONCLUSIVE (interesting=true)
    - 9 fits, 22 min. **Per-subset best_mean**: [1]=43.8205±0.0234, [4]=44.6330±0.0270, [7]=45.3745±0.0026. min=43.8205 ([1]); failed CONFIRMED ≤43 by 0.82, failed REFUTED ≥46 (all <46). **Cascade FLATLINES at 1 block**: 6→5 saves 5.69, 5→4 4.22, 4→3 3.05, 3→2 2.70, **2→1 only 0.032 PPL**. Brief's "2.0-2.5 PPL further drop" prediction REFUTED. Cycle 173's no-retrain ordering [7]≈[1]>[4] also REFUTED — actual joint-Adam ordering [1]<[4]<[7] with block 1 best by 0.81 PPL. **NEW PARETO WINNER**: (394K, 43.82) dominates cycle 266 [1,4] (788K, 43.85) at HALF the trainable params for essentially the same PPL.
