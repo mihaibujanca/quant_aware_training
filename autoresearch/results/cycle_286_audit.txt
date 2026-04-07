@@ -1,0 +1,115 @@
+Cycle 286 — Item 296 — Audit Result
+
+Audit status: PASS
+Auditor verdict: INCONCLUSIVE (unchanged — provisional outcome holds)
+Commit: 1e4c5ca
+Branch: geometric_compression
+
+== Verdict arithmetic ==
+  best_mean = 43.5627
+  CONFIRMED clause: 43.5627 <= 43.5 ?  FALSE  (shortfall 0.0627 PPL)
+  REFUTED   clause: 43.5627 >= 44.5 ?  FALSE  (shortfall 0.9373 PPL)
+  -> INCONCLUSIVE (dead zone (43.5, 44.5))
+
+  Std recomputed from per-seed bests:
+    mean(43.53027, 43.59336, 43.56444) = 43.56269             match
+    dev^2 sum/3 = 0.000665                                    match
+    sqrt          = 0.02579 ~ 0.02579 reported                match (5dp)
+
+== Per-seed sanity ==
+  seed 42  : init=55.46118 best=43.5303@4000 final=43.5303
+  seed 137 : init=55.46119 best=43.5934@4000 final=43.5934
+  seed 2024: init=55.46119 best=43.5644@4000 final=43.5644
+
+  init PPL across seeds within 1e-4 (deterministic topk lstsq)  PASS
+  |restored - best| < 1e-3 per seed                            PASS (best at terminal)
+  ALL 3 seeds best at step 4000 — budget-bounded               NOTE (still descending)
+  trainable params per fit = 393,984                           PASS asserted
+
+== Plan adherence ==
+  SUBSETS=[[2]]                                                PASS
+  K=512                                                        PASS
+  SEEDS=[42,137,2024]                                          PASS
+  N_STEPS=4000, LR=1e-4, EVAL_EVERY=100                        PASS
+  N_CALIB=200, N_EVAL=100, SEQ_LEN=128, disjoint               PASS
+  MPS, GPT-2 small, wikitext-2 val                             PASS
+  Float PPL 53.895 within 0.5 of reference                     PASS (exact)
+  W_out+b_out trainable, all else frozen (cycle 271 form)      PASS
+
+== Baseline cross-checks (vs manifest) ==
+  cycle 271 [1] K=512        43.821    match
+  cycle 271 [4] K=512        44.630    match
+  cycle 271 [7] K=512        45.370    match
+  cycle 283 [2] K=64         47.5114   match (full precision from cycle 283 JSON)
+  cycle 283 [2] K=32         47.897    match
+  cycle 283 [2] K=16         49.462    match
+  float                      53.895    match (within 1e-4)
+
+== Delta checks ==
+  vs float                  43.5627 - 53.8949 = -10.3322       match
+  vs cycle 271 [1] K=512    43.5627 - 43.821  =  -0.2583       match
+  vs cycle 271 [4] K=512    43.5627 - 44.630  =  -1.0673       match
+  vs cycle 271 [7] K=512    43.5627 - 45.370  =  -1.8073       match
+  vs cycle 283 [2] K=64     43.5627 - 47.5114 =  -3.9488       match
+
+== Pareto reading ==
+  Cycle 286 [2] K=512 (393,984 params, 43.5627 PPL):
+    SAME params as cycle 271 [1] K=512 (43.821) — STRICTLY DOMINATES on PPL by 0.258
+    -> NEW PPL Pareto winner on the 393,984-param tier (replaces cycle 271 [1])
+    Cycle 286 dominates cycle 271 [4] K=512 (393,984, 44.630) by 1.07 PPL
+    Cycle 286 dominates cycle 271 [7] K=512 (393,984, 45.370) by 1.80 PPL
+    Cycle 280 b1 r=2 (2,304, 49.03) still dominates ultra-low param region (different cell)
+
+  Verdict-vs-Pareto distinction: INCONCLUSIVE per agenda thresholds (failed CONFIRMED
+  by 0.063 PPL) but IS a new PPL Pareto winner at the 393,984 tier. Manifest and
+  exec_result both call this out correctly.
+
+== Hypothesis partial confirmation ==
+  Item 296 hypothesis sub-claims:
+    1. "below cycle 271's 43.82"        -> TRUE  (43.5627 < 43.821)
+    2. "first sub-43"                   -> FALSE (43.5627 > 43.0)
+    3. "new dominant Pareto winner"     -> TRUE  at the 393,984 tier
+  Agenda CONFIRMED threshold (43.5) lies between sub-43 and cycle 271's 43.82.
+  Cycle 286 lands in (43.5, 43.821) — confirms directional claim, fails quantitative.
+  -> INCONCLUSIVE is the literally correct verdict per item 296 verbatim thresholds.
+
+== Geometric audit ==
+  Per-K {[2] - [1]} trend: K=32 -1.75, K=64 -0.53, K=512 -0.258 (monotone shrink).
+  Cycle 285 (rank-2 weight-SVD): block 1 r=2 (49.03) dominates block 2 r=2 (49.33).
+  Different operators -> different orderings -> consistent with cycle 285's audit
+  finding that eff_rank=1.05 is OUTPUT covariance (joint of weight x input), not
+  weight-rank. Manifest's "right operator depends on whether structure lives in
+  WEIGHT or INPUT" framing is plausible but not empirically isolated by cycle 286
+  alone — flagged as speculation, consistent with cycle 285 prior audit.
+
+== Budget-bounded caveat ==
+  All 3 seeds best at step 4000 (terminal). Final ~1000 steps still descending
+  monotonically. True floor likely below 43.5. A follow-up at 8000 steps would
+  likely flip to CONFIRMED. Methodological weakness in cycle 286 plan: N_STEPS
+  inherited from cycle 271 without accounting for block 2's slower descent at
+  high K. Manifest and exec_result explicitly note this caveat.
+
+== Artifacts ==
+  experiments/block2_k512_cycle286.py             present
+  autoresearch/plans/cycle_286.md                 present  (30 lines, 8 headings)
+  autoresearch/briefs/cycle_286.md                present
+  autoresearch/results/cycle_286_block2_k512.json present
+  autoresearch/results/cycle_286_summary.md       present
+  autoresearch/results/cycle_286_manifest.txt     present  (commit=1e4c5ca)
+  autoresearch/results/cycle_286_exec_result.txt  present  (commit=1e4c5ca)
+  autoresearch/logs/cycle_286_run.log             present
+  autoresearch/audits/cycle_286.md                present  (this audit)
+  autoresearch/agenda.md                          updated  (296 moved to PAST as Cycle 286)
+  autoresearch/logs/experiments.tsv               appended (row 286 with 8 cols, commit 1e4c5ca)
+
+== Final ==
+  audit_status: PASS
+  final_verdict: INCONCLUSIVE (unchanged)
+  corrections: none
+  next_action: keep provisional outcome; proceed to next cycle (item 297)
+
+item_number: 296
+outcome: INCONCLUSIVE
+key_metric: best_mean=43.5627_pm_0.0258_dead_zone_43.5_44.5_NEW_PPL_PARETO_winner_393984_tier_BEATS_cycle_271_b1_K512_43.821_by_0.258_PPL_at_SAME_params_BUT_fails_CONFIRMED_43.5_by_0.063_all_3_seeds_step_4000_budget_bounded_audit_PASS
+commit: 1e4c5ca
+paths: autoresearch/audits/cycle_286.md,autoresearch/results/cycle_286_audit.txt

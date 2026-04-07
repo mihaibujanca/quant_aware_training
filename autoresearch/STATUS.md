@@ -1,6 +1,11 @@
-# Research Status — 285 Cycles (001–285)
+# Research Status — 286 Cycles (001–286)
 
-## Latest: Cycle 285
+## Latest: Cycle 286
+
+296. **1-block [2] K=512** — INCONCLUSIVE
+   - 3 seeds {42,137,2024}. **best_mean=43.5627 ± 0.0258** at 393,984 trainable params, in dead zone (43.5, 44.5) — fails CONFIRMED (≤43.5) by 0.063 PPL; fails REFUTED (≥44.5) by 0.937 PPL. **NEW PPL PARETO WINNER on the 393,984-param tier**: STRICTLY DOMINATES cycle 271 [1] K=512 (43.821) at SAME param count by 0.258 PPL — replaces cycle 271 [1] as the best 1-block K=512 result. Per-K [2]-beats-[1] trend extrapolates but margin shrinks: K=32 −1.75, K=64 −0.53, K=512 −0.258. **All 3 seeds best at step 4000 (budget-bounded, still descending)** — the true floor is below 43.5; a follow-up at 8000 steps would likely flip to CONFIRMED. Init PPL 55.4612 deterministic. **Geometric reading**: block 2 eff_rank=1.05 is INPUT-driven (joint of weight × input); channel-K with topk exploits it, weight-SVD does not (cf. cycle 285 where block 2 r=2 is dominated by block 1 r=2). Right operator depends on whether structure lives in WEIGHT or INPUT. Wall ~7.8 min.
+
+## Cycle 285
 
 295. **Block 2 rank-r c_proj weight-SVD** — CONFIRMED
    - No-retrain sweep: r=1:72.38, r=2:64.08, r=5:64.09, r=10:62.16. r=1 gate (≤55) did NOT fire. **Retrain r=2 (3 seeds, 2,304 params)**: **best_mean=49.329 ± 0.133**. CONFIRMED (≤50 by 0.67). **NOT a Pareto winner**: dominated by cycle 280 block 1 r=2 (same 2,304 params, 49.03) by 0.30 PPL. **Dominates cycle 283 [2] K=16 (13K, 49.46)** on both axes (5.7× fewer params). **Geometric finding**: block 2 c_proj WEIGHT SVD is FLAT (top-5 SVs: 38, 15, 13, 12, 12). **Cycle 278 eff_rank=1.05 is an OUTPUT-covariance property driven by input, NOT a weight-rank property** — lower output eff_rank does NOT imply better rank-r weight-SVD. Refines the "activation eff_rank ≠ weight-SVD rank" lesson from cycles 270/273/280.
