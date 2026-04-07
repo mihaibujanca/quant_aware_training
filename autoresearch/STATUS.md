@@ -1,6 +1,11 @@
-# Research Status — 275 Cycles (001–275)
+# Research Status — 276 Cycles (001–276)
 
-## Latest: Cycle 275
+## Latest: Cycle 276
+
+286. **1-block [1] K sweep {32, 64, 128, 256}** — CONFIRMED
+   - 12 fits, 30.7 min. **K=256=45.385 (≤45.5 confirmed), K=128=46.932 (≤47 confirmed), K=64=48.045, K=32=49.649**. All 4 K beat float (53.895); all 12 fits budget-bounded at step 4000. **1-block K-curve is concave-up but SHALLOWER than multi-block** (per-halving cost ~1.46 PPL vs 4-block ~2.31, 5-block ~2.65) — fewer blocks = more Adam slack. **FOUR NEW PARETO POINTS**: (25K, 49.65) becomes lowest-param winner **dominating cycle 270 block-11 r22 (17.7K, 54.47) on PPL by 4.82 PPL**; (49.9K/99K/197K) all dominate cycle 272 K=256 4-block on both axes.
+
+## Cycle 275
 
 285. **Hybrid [1] K=512 + block 11 rank-22 c_proj** — REFUTED (interesting=true)
    - Cycle 271 [1] K=512 (43.82) + cycle 270 block 11 rank-22 weight-SVD (54.47) joint Adam, 3 seeds. **best_mean=48.200 ± 0.048** (seeds still descending at N_STEPS=4000). Δ vs cycle 271 [1] alone = **+4.38 PPL WORSE**. **Hybrid strictly DOMINATED on BOTH Pareto axes** (more params AND worse PPL). **REFUTES "disjoint-block Pareto winners compose additively" hypothesis**. Consistent with cycle 273 channel-K variant (REFUTED at 52.64); weight-SVD is 4.4 PPL milder than channel-K at equal rank but still destructive when composed with block 1 compression. **Block 11 rank-22 c_proj weight-SVD is an isolated-patch operator, not cascade-compatible**.
