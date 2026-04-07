@@ -1,6 +1,11 @@
-# Research Status — 238 Cycles (001–238)
+# Research Status — 239 Cycles (001–239)
 
-## Latest: Cycle 238
+## Latest: Cycle 239
+
+249. **gelu_noneg + μ + LoRA r=8 disjoint splits** — CONFIRMED (interesting=true)
+   - Cycle 234 leakage rerun with disjoint calib[:200] / eval[200:300] (asserted disjoint). 3 seeds: **final_eval_ppl = 47.692 ± 0.143** (47.666/47.531/47.879). ≤48 confirmed by 0.31 PPL. **LoRA beats float on eval slice by 6.20 PPL (-11.5%)** — gelu_noneg + per-channel μ + LoRA r=8 (368K trainable params) GENERALIZES on held-out. Cycle 234's leaked 32.411 was indeed ~15 PPL of calib overfit (47.69 - 32.41 = +15.28); the residual generalizes. Lands between cycle 210 K=512 W_out (46.556) and cycle 223 K=128 W_out (48.989) at ~similar 368K trainable param budget but via a STRUCTURALLY DIFFERENT mechanism (activation modification + low-rank c_proj residual instead of channel selection). Closes cycle 234 audit loop.
+
+## Cycle 238
 
 248. **T4: Activation patching across token pairs (bump-only)** — REFUTED (interesting=true)
    - 100 (A, B, p) pairs from wikitext-2 val (margin>2 both sides), 5 blocks × 100 = 500 records. Per-block MEDIAN bump_attribution: [0.0083, 0.0117, -0.0093, -0.0038, 0.0167] — all under 0.05 refuted gate. Mean diverges (block 9 mean 2.79 vs median 0.017, std 27.15) due to unbounded ratio tails — design review pre-approved median substitution. Median was pre-declared in script, not post-hoc. **Critical metric weakness**: full_patched_delta on B_top is positive in only 42-64% of pairs (denominator unreliable), itself a negative result on token-specific transport. **Closes the 4-item bump investigation coherently**: cycles 235 (T1) CONFIRMED-G3, 236 (T2) INCONCLUSIVE wte mismatch, 237 (T3) CONFIRMED 23k× subspace ablation, 238 (T4) REFUTED per-pair attribution. **The bump subspace is causally critical aggregate-wise but NOT linearly decodable AND NOT token-specific.** Substantial reframing of cycle 218's "inter-block communication" claim — the bump encodes collective cascade behavior, not interpretable per-token features.
