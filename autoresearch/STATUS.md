@@ -1,6 +1,11 @@
-# Research Status — 247 Cycles (001–247)
+# Research Status — 248 Cycles (001–248)
 
-## Latest: Cycle 247
+## Latest: Cycle 248
+
+258. **K=128 + W_out + W_fc + b_fc trainable at 6 blocks** — REFUTED (interesting=true)
+   - BLOCKS=[1,2,4,5,7,8] K=128, FullCompressedMLP (W_out + b_out + W_fc_slice + b_fc_slice trainable). LR=5e-5, 4000 steps, 3 seeds. **best_mean=67.609 ± 0.047** ≥ 66 refuted threshold. Δ vs cycle 231 K=128 W_out-only (67.562) = +0.047 (noop). Δ vs cycle 221 K=512 6-block (59.515) = +8.094. **W_fc relative Frobenius drift 7.85e-2** (range 0.049-0.098 per block) — W_fc trained meaningfully but had no effect on PPL. **Two-endpoint closure**: combined with cycle 241 (W_fc bias at K=512 noop), W_fc surface enlargement is refuted at BOTH K endpoints. **The K=128→K=512 gap is a K-BANDWIDTH phenomenon, not a surface-size phenomenon.** Note: agenda's "14.77M trainable" formula was an arithmetic error (assumed full 768×3072 W_fc despite K=128 compression); plan correctly used the cycle 213 sliced (768, K) semantics → 1.19M.
+
+## Cycle 247
 
 257. **Heterogeneous K — K=512 on blocks 4,5 + K=128 on 1,2,7,8** — INCONCLUSIVE (interesting=true)
    - 6-block joint Adam, 3 seeds. **best_mean=64.453 ± 0.123** ∈ [61, 65) inconclusive (0.55 PPL from refuted, leans refuted). Recovers only **38.6%** of the K=512→K=128 gap at 50.1% of the K=512 parameter cost. **Plan hypothesis rejected**: per-block residual MSE at K=128 (seed 42) shows blocks **7, 8 (0.581, 0.818)** are HIGHER than blocks **4, 5 (0.162, 0.224)**. Cycle 243's per-block restoration ranking under fixed-fit ≠ per-block ranking under heterogeneous-K fit. **Two different measures of "block difficulty" disagree.** Concrete pivot: swap K=512 onto {7, 8} at the same 1.18M budget to test the residual-MSE ranking directly.
