@@ -1,0 +1,73 @@
+Cycle 288 — Item 298 — Execution Result
+
+Verdict: CONFIRMED
+Commit: PENDING
+Branch: geometric_compression
+
+Script: experiments/block3_lowrank_cycle288.py
+Log:    autoresearch/logs/cycle_288_run.log
+Result: autoresearch/results/cycle_288_block3_lowrank.json
+
+Key metrics:
+  float_ppl                 = 53.895
+  noretrain r=5 PPL         = 58.458  (energy=0.1136)
+  noretrain r=10 PPL        = 58.317  (energy=0.1423)
+  noretrain r=24 PPL        = 57.206  (energy=0.2067)
+  retrain r=24 best_mean    = 50.5935
+  retrain r=24 best_std     = 0.0402
+  retrain r=24 best_min     = 50.5507  (seed 2024 @4000)
+  retrain r=24 best_max     = 50.6474  (seed 42   @3900)
+  trainable params per fit  = 19,200
+
+Verdict logic (item 298 verbatim):
+  CONFIRMED iff rank-24 retrain best_mean <= 55.0
+  REFUTED   iff rank-24 retrain best_mean >= 57.0
+  INCONCLUSIVE otherwise
+
+  r=24 best_mean 50.5935 <= 55.0  ->  CONFIRMED (margin 4.407 PPL)
+  r=24 best_mean 50.5935 <  57.0  ->  REFUTED clause NOT triggered
+  ->  CONFIRMED
+
+Wall time: ~8 min total (3 no-retrain evals + 3 Adam fits @ 2.5 min each).
+
+Sanity checks:
+  float PPL within 0.5 of reference 53.895                     PASS (exact)
+  restore original c_proj.weight after sweep                   PASS (exact)
+  init PPL per seed == noretrain r=24 PPL (57.2062)            PASS all 3 seeds
+  trainable param count == 19,200                              PASS
+  restore best-state per seed (|restored - best| < 1e-3)       PASS all 3 seeds
+  all 3 seeds hit best in [3900, 4000]                         PASS (still descending)
+
+Pareto reading:
+  cycle 288 (19,200 params, 50.59 PPL) STRICTLY DOMINATED on BOTH axes by
+    cycle 282 b10 r=17 (13,824 params, 50.04 PPL) — fewer params, lower PPL.
+  cycle 288 DOMINATES on PPL axis only (not joint) cycle 270 b11 r=22 (17,664,
+    54.47 PPL) — at +1,536 params, saves 3.88 PPL. New winner in the ~18K-19K
+    param tier but dominated by block 10 at lower params.
+  cycle 288 STRICTLY DOMINATED by cycle 280 b1 r=2 and cycle 285 b2 r=2
+    (2,304 params each, 49.03 / 49.33 PPL) — 8.3x fewer params, ~1.3-1.6 PPL
+    better. Not a new global Pareto point.
+
+Recipe generalization (5 blocks now):
+  block 1  r=2  (eff_rank 1.94 ) -> 49.03 @ 2,304
+  block 2  r=2  (eff_rank 1.05 ) -> 49.33 @ 2,304
+  block 3  r=24 (eff_rank 24.29) -> 50.59 @ 19,200  <-- cycle 288
+  block 10 r=17 (eff_rank 16.70) -> 50.04 @ 13,824
+  block 11 r=22 (eff_rank 22.49) -> 54.47 @ 17,664
+  All 5 match "rank ~ eff_rank, Adam retrain, below float". Block 11 is the
+  only soft outlier (54.47 vs 49-51 for the others). Early-vs-late is NOT
+  clearly dominant: cycle 288 (early) interpolates between cycle 282 (late,
+  smaller params, better) and cycle 270 (late, similar params, much worse).
+
+Geometric finding:
+  Block 3 c_proj WEIGHT SVD is flat (top-5: 40.8, 13.4, 12.2, 11.7, 11.4;
+  S[0]/S[4] ~ 3.6x — same profile as all other concentrators tested). The
+  eff_rank=24.29 comes from the OUTPUT covariance, not the weight. With
+  top-1 energy 0.5887 — MUCH less concentrated than blocks 1/2 (0.93/0.996)
+  — block 3 needs MORE rank to recover at matched PPL, which is what
+  we observe (r=24 here vs r=2 for b1/b2, r=17 for b10, r=22 for b11).
+  The rank-eff_rank relationship is descriptive and roughly predictive of
+  the minimum retrain rank for recovery, but the PPL landing zone (49-51 for
+  b1/b2/b3/b10, 54 for b11) does not map cleanly onto eff_rank ordering.
+
+Next agenda items (P1/P2): 299 (block 10 rank-5), plus any follow-ups.

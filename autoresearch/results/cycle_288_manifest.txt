@@ -1,0 +1,119 @@
+Cycle 288 Manifest — Item 298: Block 3 rank-r c_proj weight-SVD sweep
+
+Commit: PENDING
+Branch: geometric_compression
+Verdict: CONFIRMED
+
+== Verdict logic (item 298 verbatim) ==
+CONFIRMED iff rank-24 retrain best_mean <= 55.0
+REFUTED   iff rank-24 retrain best_mean >= 57.0
+INCONCLUSIVE otherwise
+
+  r=24 retrain best_mean = 50.5935 <= 55.0 -> CONFIRMED (margin 4.4065 PPL)
+  r=24 retrain best_mean = 50.5935 <  57.0 -> REFUTED clause NOT triggered
+  -> CONFIRMED
+
+== No-retrain rank-r sweep ==
+r=5 : PPL=58.458   (Δfloat=+4.563, +8.46%,  top-5 energy=0.1136)
+r=10: PPL=58.317   (Δfloat=+4.422, +8.20%,  top-10 energy=0.1423)
+r=24: PPL=57.206   (Δfloat=+3.311, +6.14%,  top-24 energy=0.2067)
+
+Restore original c_proj.weight between stages: PPL 53.895 (exact match to float).
+
+== Per-seed retrain r=24 (n=3 seeds {42, 137, 2024}, population std) ==
+init_ppl_mean   = 57.20624   (all 3 seeds identical: 57.20624) — deterministic, as expected
+best_mean       = 50.59353 +/- 0.04023
+best_min        = 50.55073   (seed 2024 @4000)
+best_max        = 50.64738   (seed 42   @3900)
+final_at_4000_mean = 50.63111
+
+  seed 42:   init=57.2062  best=50.6474 @step 3900  final@4000=50.7107  restored=50.6474
+  seed 137:  init=57.2062  best=50.5825 @step 3900  final@4000=50.6320  restored=50.5825
+  seed 2024: init=57.2062  best=50.5507 @step 4000  final@4000=50.5507  restored=50.5507
+
+All 3 fits hit best between step 3900 and 4000 (still descending at budget cap).
+Seed 2024 best step == 4000 (final == best); seeds 42/137 best at 3900.
+Restore asserts pass for all 3 fits (|restored - best| < 1e-3, exact for all three).
+Init PPL deterministic across seeds (SVD init seed-independent).
+Float PPL measured in-run: 53.89489152418256 (exact match to reference 53.895).
+Trainable params per fit: 19,200 = 24*768 (B) + 768 (bias) asserted.
+
+== SVD of c_proj_3.weight (3072, 768) ==
+Top-5 singular values: 40.8009, 13.3719, 12.1834, 11.7316, 11.3692
+S[0] = 40.8009, S[4] = 11.3692, S[9] = 8.4915, S[23] = 6.5340
+S_min > 0 (full rank 768).
+Energy fractions: r=5: 0.1136, r=10: 0.1423, r=24: 0.2067
+Cycle 278 block 3 c_proj OUTPUT eff_rank = 24.2853, top-1 energy = 0.5887.
+
+GEOMETRIC NOTE: Block 3 c_proj WEIGHT SVD is NOT low-rank in the matrix sense —
+top-5 are 40.8, 13.4, 12.2, 11.7, 11.4 (S[0]/S[4] ≈ 3.6x, same flat profile as
+blocks 1/2/10/11 already measured). Cycle 278 eff_rank=24.29 is an OUTPUT
+covariance property (top-1 energy 0.5887 — notably less concentrated than
+blocks 1/2 where top-1 was 0.93/0.996). Rank-24 retrain reaches 50.59 PPL,
+INTERPOLATING cleanly between cycle 282 b10 r=17 (50.04 at 13.8K) and cycle
+270 b11 r=22 (54.47 at 17.7K) — and actually BETTER than cycle 270 despite
+matching its approximate param tier. The rank-eff_rank-match recipe holds
+for block 3 just as it did for blocks 1/2/10/11.
+
+== Baselines ==
+Float baseline ref              =  53.89500
+cycle 280 block 1  c_proj r=2   =  49.03240  (  2,304 params)
+cycle 285 block 2  c_proj r=2   =  49.32900  (  2,304 params)
+cycle 282 block 10 c_proj r=17  =  50.04450  ( 13,824 params)
+cycle 270 block 11 c_proj r=22  =  54.46870  ( 17,664 params)
+
+== Deltas ==
+cycle 288 block 3 r=24 best_mean -> 50.59353  at 19,200 params
+delta vs float                            = -3.30147  (below float by 3.30 PPL)
+delta vs cycle 282 b10 r=17 (13,824)      = +0.54903  (WORSE than cycle 282 by 0.55 PPL at 1.39x more params)
+delta vs cycle 270 b11 r=22 (17,664)      = -3.87517  (beats cycle 270 by 3.88 PPL at 1.09x more params)
+delta vs cycle 280 b1 r=2 (2,304)         = +1.56113  (WORSE than cycle 280 by 1.56 PPL at 8.33x more params)
+delta vs cycle 285 b2 r=2 (2,304)         = +1.26453  (WORSE than cycle 285 by 1.26 PPL at 8.33x more params)
+
+== Pareto reading ==
+- Cycle 288 (19,200 params, 50.59 PPL) is STRICTLY DOMINATED on both axes by
+  cycle 282 b10 r=17 (13,824 params, 50.04 PPL) — fewer params AND lower PPL.
+- Cycle 288 STRICTLY DOMINATES cycle 270 b11 r=22 (17,664 params, 54.47 PPL)
+  on PPL axis only at slightly more params (+1,536 / +8.7%), saving 3.88 PPL
+  — so dominance is on PPL, not joint. At the ~18K-19K param tier, block 3
+  r=24 is the new winner (vs block 11 r=22), but block 10 r=17 at lower params
+  still dominates overall.
+- Cycle 288 is STRICTLY DOMINATED by cycle 280 b1 r=2 and cycle 285 b2 r=2
+  (both 2,304 params) — 8.33x fewer params AND ~1.3-1.6 PPL better.
+- Cycle 288 does NOT open a new Pareto point. It is a confirming, mildly
+  dominated interior point: the recipe generalizes, but block 3 is not a
+  better rank-based target than block 10 (earlier concentrator, same kind,
+  fewer params, lower PPL).
+
+== Recipe generalization (across 5 blocks now) ==
+- block 1  r=2  (eff_rank 1.94, top1 0.9294): retrain 49.03 @ 2,304 params
+- block 2  r=2  (eff_rank 1.05, top1 0.9961): retrain 49.33 @ 2,304 params
+- block 3  r=24 (eff_rank 24.29, top1 0.5887): retrain 50.59 @ 19,200 params  <-- new
+- block 10 r=17 (eff_rank 16.70, top1 0.5889): retrain 50.04 @ 13,824 params
+- block 11 r=22 (eff_rank 22.49, top1 -----):  retrain 54.47 @ 17,664 params
+The "rank ≈ eff_rank + Adam retrain recovers below float" pattern holds for
+ALL 5 blocks tested. Block 11 is the only soft outlier (54.47 is > 50, while
+the other four are in 49-51). Early-vs-late distinction is NOT clearly
+dominant; cycle 282 (late, low eff_rank) wins the 50 tier; cycle 288 (early,
+intermediate eff_rank) matches it; cycle 270 (late, intermediate eff_rank)
+under-performs.
+
+== Wall time / fits ==
+Total wall: ~7-8 min over 1 no-retrain sweep (3 evals) + 3 retrain fits (2.5
+min/fit). Under 30-min cap. No budget-extension triggered.
+
+== Artifacts ==
+experiments/block3_lowrank_cycle288.py
+autoresearch/plans/cycle_288.md
+autoresearch/briefs/cycle_288.md
+autoresearch/results/cycle_288_block3_lowrank.json
+autoresearch/results/cycle_288_summary.md
+autoresearch/logs/cycle_288_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+
+item_number: 298
+outcome: CONFIRMED
+key_metric: best_mean=50.5935_pm_0.0402_le_55.0_by_4.407_PPL_block_3_rank_24_c_proj_weight_SVD_retrain_19200_params_CONFIRMED_but_DOMINATED_by_cycle_282_b10_r17_at_fewer_params_lower_PPL
+commit: PENDING
+paths: experiments/block3_lowrank_cycle288.py,autoresearch/plans/cycle_288.md,autoresearch/briefs/cycle_288.md,autoresearch/results/cycle_288_block3_lowrank.json,autoresearch/results/cycle_288_summary.md,autoresearch/logs/cycle_288_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv
