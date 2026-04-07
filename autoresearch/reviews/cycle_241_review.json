@@ -1,0 +1,39 @@
+{
+  "cycle": 241,
+  "item": 251,
+  "decision": "APPROVED",
+  "summary": "Revised plan correctly constrains trainable surface to W_out + b_out + c_fc BIAS only with W_fc explicitly frozen. Param count 2,382,336 matches agenda formula via interpretation (B). Reuses cycle 221 scaffolding (BLOCKS=[1,2,4,5,7,8], K=512, N_CALIB=200, N_EVAL=100, SEQ_LEN=128, LR=1e-4, 4000 steps, seeds {42,137,2024}).",
+  "strengths": [
+    "W_fc freeze explicit and load-bearing; plan flags cycle 213 script as gotcha and mandates requires_grad_(False) assert",
+    "Startup param-count assertion (2,382,336) catches interpretation drift before compute is spent",
+    "Interpretation (B) faithful to agenda arithmetic (397056*6=2382336); acknowledges 2560 dead entries honestly",
+    "Baselines specified concretely: cycle 221 W_out-only 6-block 59.515+-0.094 and cycle 213 3-block 46.424",
+    "Verdict thresholds (<=58.0 CONFIRMED / [59.0,60.5] REFUTED) tight enough given cycle 221 std 0.094",
+    "Best-state restore with |restored-best|<1e-3 assert reused from cycle 221",
+    "Init PPL sanity check against cycle 221 init as implementation trip-wire"
+  ],
+  "concerns": [
+    "Interpretation (B) counts 2560/3072 b_fc entries with no gradient path (dead); effective trainable surface is ~2.37M, not 2.38M. Cosmetic but worth noting in write-up.",
+    "Suggest a one-backward-step gradient check on b_fc (selected vs non-selected entries) to confirm topk indexing preserves gradient flow as intended. Cheap and reassuring.",
+    "Runtime estimate <=1.05x cycle 221 is reasonable given +18K effective params."
+  ],
+  "risks": [
+    "REFUTED closes c_fc-bias direction at both 3 and 6 blocks; 59.5 floor survives another attack",
+    "CONFIRMED would contrast cleanly with cycle 213 3-block noop and isolate 6-block residual curvature"
+  ],
+  "baselines_referenced": {
+    "cycle_221_wout_only_6block": "59.515 +- 0.094",
+    "cycle_213_wout_cfc_bias_3block": "46.424"
+  },
+  "verdict_criteria": {
+    "CONFIRMED": "best_ppl_mean <= 58.0",
+    "REFUTED": "best_ppl_mean in [59.0, 60.5]",
+    "INCONCLUSIVE": "otherwise"
+  },
+  "files_new": [
+    "experiments/adam_wout_wfc_6block_cycle241.py",
+    "autoresearch/results/cycle_241_wout_wfc_6block.json",
+    "autoresearch/results/cycle_241_summary.md"
+  ],
+  "approved": true
+}

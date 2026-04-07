@@ -15,15 +15,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 - All Δ̃_l computed as `GELU_FFN_l(x) − ReLU_FFN_l(x) − E_calib[GELU_FFN_l − ReLU_FFN_l]` where the centring mean is computed on the calibration corpus only and applied to held-out evaluation.
 - All artifacts must be loadable by `notebooks/bump_features_explore.py` without modification — the loader expects exact filenames listed under each item's `Artifacts:` block.
 
-251. **W_out + W_fc trainable joint Adam at 6 blocks — does W_fc help at cascade depth?**
-   - Cycle 213 added the `c_fc` bias as a joint Adam parameter at 3 blocks BLOCKS=[1,4,7] K=512 and reached best_mean 46.424 vs cycle 206 W_out-only 46.556 (essentially identical, -0.13 PPL). Repeat the same recipe at 6 blocks BLOCKS=[1,2,4,5,7,8] K=512 to test whether W_fc training is a noop at 3 blocks because the 3-block surface is already flat, or because W_fc is always a noop. Use cycle 221 scaffolding: calib_ids = all_ids[:200], eval_ids = all_ids[200:300], SEQ_LEN=128, seed 42, joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100, best-state restore. Trainable params per block: W_out + b_out + c_fc_bias = 512×768 + 768 + 3072 = 396,288 (W_out-only was 393,216; W_fc adds 3072); 6 blocks × 396,288 ≈ 2.38M. 3 seeds {42, 137, 2024}. Compare against cycle 221 W_out-only 6-block 59.515 ± 0.094. If W_fc helps at 6 blocks where it didn't at 3 blocks, the 59.5 floor is NOT fully structural and adding more trainable surface still buys PPL. If W_fc is still a noop, the 59.5 floor is rigid and the 6-block cascade barrier does not respond to this trainable-parameter direction.
-   - Type: empirical / joint trainable surface
-   - Confirmed if: best_ppl_mean ≤ 58.0 (W_fc trainable breaks the 59.5 floor; trainable surface matters at 6 blocks).
-   - Refuted if: best_ppl_mean ∈ [59.0, 60.5] (W_fc trainable is a noop at 6 blocks just like at 3 blocks → 59.5 floor is rigid to this direction).
-   - Inconclusive if: outside both bands.
-   - Artifacts: `experiments/wout_wfc_6block_cycle<N>.py`, `autoresearch/results/cycle_<N>_wout_wfc_6block.json`, `autoresearch/results/cycle_<N>_summary.md`
-   - Depends on: none
-
 ### P1
 
 252. **Early-only vs late-only 3-block compression — disentangle cascade depth from block count**
@@ -71,6 +62,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 241
+
+251. **W_out + W_fc trainable joint Adam at 6 blocks — does W_fc help at cascade depth?** *(REFUTED — cycle 241)*
+   - **Outcome: REFUTED** — BLOCKS=[1,2,4,5,7,8] K=512, trainable={W_out, b_out, full c_fc bias (3072,)}, 2,382,336 params (exact match to agenda 2.38M budget), joint Adam LR=1e-4 4000 steps EVAL_EVERY=100 best-state restore disjoint calib=all_ids[:200] eval=all_ids[200:300] SEQ_LEN=128, 3 seeds 42/137/2024. Init PPL=86.686 (zero seed variance, identical to cycle 221). Per-seed best: 59.385 / 59.611 / 59.602 at steps 1300 / 1200 / 1600 — **best_mean=59.533 ± 0.104**. REFUTED at threshold ∈[59.0, 60.5] — lands essentially exactly on cycle 221 W_out-only 59.515 ± 0.094 (Δ=+0.018). Best steps match cycle 221 seed-for-seed (1300/1200/1600 both runs). Final@4000 mean=71.948 vs best 59.533 → strong overfit phase past step 1500, same trajectory shape as cycle 221. Adding the full pre-topk c_fc bias as trainable at 6 blocks is a perfect noop on top of W_out-only joint Adam: the 59.5 floor does NOT move when the trainable surface is enlarged in this direction. Consistent with cycle 213 (3-block W_fc bias: 46.424 vs W_out-only 46.556, -0.13 PPL) — the c_fc bias is a noop at both 3 and 6 blocks. Combined with cycle 240 (K=1 6-block: 96.886, REFUTED) the 6-block 59.5 floor is rigid to {parameter count, shallow surface enlargement via c_fc bias} but collapses under channel capacity reduction — the binding constraint at 6 blocks is K (mid-regime channel capacity) not trainable parameter count. W_fc matrix itself remains untested; the agenda's 2.38M budget explicitly forbids unfreezing the matrix. Best-state restore round-trip clean for all 3 seeds (|restored − best| < 1e-3). Trajectory shape: rapid descent init 86.69 → ~60 by step 500, plateau 59.4-60 through step 1200-1600 (best), then linear climb to 71-73 by step 4000.
+   - Artifacts: `experiments/adam_wout_wfc_6block_cycle241.py`, `autoresearch/results/cycle_241_wout_wfc_6block.json`, `autoresearch/results/cycle_241_summary.md`
 
 ### Cycle 240
 
