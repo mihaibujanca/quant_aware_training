@@ -1,0 +1,30 @@
+{
+  "cycle": 255,
+  "item": 265,
+  "verdict": "APPROVE",
+  "reviewer": "design-review",
+  "summary": "3-subset 4-block K=512 sweep ([1,2,4,7], [1,4,7,8], [1,2,7,8]) adapted from cycle 245 template with two-phase protocol: phase 1 single-seed sweep, phase 2 3-seed rerun if any subset best_ppl < 50.0.",
+  "strengths": [
+    "Three subsets cover early/mid/late drop space (drop 8, drop 2, drop 4)",
+    "Direct test of cycle 250 count-driven story; clean discriminator vs the asymptotic alternative",
+    "Same disjoint calib/eval split as cycle 245 for direct comparability",
+    "Two-phase protocol respects 30-min cap; phase 2 trigger (50.0) sits below CONFIRMED threshold (51.0) so any plausible CONFIRMED candidate is promoted to 3-seed mean",
+    "Helpers (CompressedMLP, fit_block_lstsq, eval_ppl, run_seed) reused verbatim from cycle 245"
+  ],
+  "concerns": [
+    "Phase 2 worst case (all 3 subsets trigger) reaches ~27 min, at the cap",
+    "Phase-1-only subsets have no seed std; phase-1 best ~52 (between thresholds) yields INCONCLUSIVE on a single observation"
+  ],
+  "threshold_check": {
+    "confirmed": "min subset best_mean <= 51.0",
+    "refuted": "all subsets best_mean >= 53.0",
+    "inconclusive": "(51.0, 53.0)",
+    "assessment": "matches item 265 verbatim; 2-PPL band appropriate for cycle 245 noise scale"
+  },
+  "bookkeeping": {
+    "new_output_paths": true,
+    "no_collision_with_cycle_245": true,
+    "cycle_item_stamped": true
+  },
+  "decision": "APPROVE — proceed to execution"
+}
