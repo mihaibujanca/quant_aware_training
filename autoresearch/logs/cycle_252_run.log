@@ -1,0 +1,87 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Device: mps
+Loading GPT-2...
+
+Loading calibration data...
+Calibration: 200 seqs × 128 tokens = 25600 tokens
+Running forward passes...
+  forward done in 3.0s
+Captured post_gelu shape: torch.Size([25600, 3072])
+
+=== Block 1 ===
+  std mean=0.1399 std=0.0593
+  kurtosis mean=51.6650
+  effective rank=293.20  (SVD 2.0s)
+  topk-128 coverage=0.7293
+  topk-512 coverage=0.7954
+  c_proj row cos mean=0.0004 max=0.9872
+
+=== Block 2 ===
+  std mean=0.1388 std=0.1461
+  kurtosis mean=63.1648
+  effective rank=45.38  (SVD 2.1s)
+  topk-128 coverage=0.9772
+  topk-512 coverage=0.9834
+  c_proj row cos mean=0.0027 max=0.9914
+
+=== Block 3 ===
+  std mean=0.1343 std=0.0509
+  kurtosis mean=62.3821
+  effective rank=293.45  (SVD 2.0s)
+  topk-128 coverage=0.4018
+  topk-512 coverage=0.5727
+  c_proj row cos mean=0.0033 max=0.9732
+
+=== Block 4 ===
+  std mean=0.1422 std=0.0473
+  kurtosis mean=48.6743
+  effective rank=309.79  (SVD 2.0s)
+  topk-128 coverage=0.1880
+  topk-512 coverage=0.4057
+  c_proj row cos mean=0.0030 max=0.8774
+
+=== Block 5 ===
+  std mean=0.1527 std=0.0506
+  kurtosis mean=56.8410
+  effective rank=358.21  (SVD 2.0s)
+  topk-128 coverage=0.1576
+  topk-512 coverage=0.3814
+  c_proj row cos mean=0.0023 max=0.7981
+
+=== Block 6 ===
+  std mean=0.1611 std=0.0578
+  kurtosis mean=51.6737
+  effective rank=378.81  (SVD 2.2s)
+  topk-128 coverage=0.1657
+  topk-512 coverage=0.3938
+  c_proj row cos mean=0.0012 max=0.8556
+
+=== Block 7 ===
+  std mean=0.1691 std=0.0597
+  kurtosis mean=52.3166
+  effective rank=375.59  (SVD 2.1s)
+  topk-128 coverage=0.1668
+  topk-512 coverage=0.3975
+  c_proj row cos mean=0.0008 max=0.7399
+
+=== Block 8 ===
+  std mean=0.1744 std=0.0656
+  kurtosis mean=54.5736
+  effective rank=348.72  (SVD 2.0s)
+  topk-128 coverage=0.1911
+  topk-512 coverage=0.4167
+  c_proj row cos mean=0.0004 max=0.8161
+
+=== Z-scores (block 5 vs cohort {1,2,4,7,8}) ===
+  std_mean    : target=0.1527 cohort=0.1529±0.0174  z=-0.012
+  kurt_mean   : target=56.8410 cohort=54.0789±5.4987  z=+0.502
+  eff_rank    : target=358.2149 cohort=274.5344±132.1167  z=+0.633
+  cov128      : target=0.1576 cohort=0.4505±0.3781  z=-0.775
+  cov512      : target=0.3814 cohort=0.5998±0.2727  z=-0.801
+  mean_cos    : target=0.0023 cohort=0.0015±0.0013  z=+0.625
+
+=== VERDICT: REFUTED ===
+  |z|≥1.5 metrics: []
+  |z|≥1.0 metrics: []
+
+Wrote autoresearch/results/cycle_252_block5_geometric.json
