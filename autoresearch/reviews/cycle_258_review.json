@@ -1,0 +1,21 @@
+{
+  "cycle": 258,
+  "item": 269,
+  "decision": "APPROVE",
+  "checks": {
+    "brief_alignment": "PASS",
+    "patch_reuse_cycle181_cycle228": "PASS",
+    "calib_slice_200x128_seed42": "PASS",
+    "geometry_api_collect_compute_salience_curvature": "PASS",
+    "pearson_rho_layer_index_alignment": "S[1:12]_vs_kappa[0:11]_PASS",
+    "verdict_thresholds_match_agenda_item_269": "PASS",
+    "output_namespacing_cycle258": "PASS",
+    "run_cap_under_5_min": "PASS"
+  },
+  "risks": [
+    "b_leak sign: must verify elementwise <=0 (mean(gelu(z) - relu(z)))",
+    "mu polarity (variant C) <=0 by construction (cycle 228 invariant)",
+    "instantiate one module per block (cycle 228 distinctness discipline)"
+  ],
+  "trainable_params": 0
+}
