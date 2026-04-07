@@ -1,6 +1,11 @@
-# Research Status — 258 Cycles (001–258)
+# Research Status — 259 Cycles (001–259)
 
-## Latest: Cycle 258
+## Latest: Cycle 259
+
+270. **Per-token trajectory divergence under depth** — CONFIRMED (interesting=true)
+   - d_l(x) = ‖x_GELU^l − x_(ReLU+b_leak)^l‖_G per token, 200×128 calib. **Log-linear best fit** (SSR 3.85e7 vs linear 4.68e7, saturating 2.67e8 — saturating 7× worse). **Growth constant on l∈[1,6]: b_early=+0.2135/layer** (≥ 0.20 confirmed clause 1). **Per-token cos(d_l, d_{l+1}) on early pairs**: [0.37, 0.57, 0.70, 0.77, 0.78, 0.82] — **4/6 ≥ 0.6** (clause 2 passes, threshold). **Saturation half of hypothesis REFUTED**: d_l grows FASTER after layer 8, not slower. Final layer jumps 10× (d_11=2686 → d_12=10163), driven by unembedding-read amplification. cos monotone-increasing 0.37→0.91. Cycle 189's aggregate cos=0.72 is recovered at mid-profile but undercounts late-layer coherence.
+
+## Cycle 258
 
 269. **Pullback κ/S — GELU vs ReLU+b_leak vs gelu_noneg+μ** — CONFIRMED (interesting=true)
    - Pullback geometry on 3 variants (200×128 wikitext-2 calib, seed 42). Calib PPL: GELU=45.064, ReLU+b_leak=60.082, gelu_noneg+μ=61.664. **ρ(S_l, κ_l) over layers 1-11: GELU=-0.380, ReLU=-0.380, noneg=-0.388** (identical to 4 decimals — the S↔κ coupling is unchanged by activation patches). **Early-band max |Δκ|/κ_GELU for ReLU = 0.4772 at layer 4** (clears 0.30 threshold). **ReLU INCREASES κ in layers 2-6 by 14-48%** — kinks the trajectory rather than flattening it. The +33% PPL hit of ReLU+b_leak is geometrically visible as a κ spike in the layers cycle 173 flagged as most damaging. Stale agenda reference: cycle 252 was block-5 deep-dive, NOT a pullback κ baseline. Cycle 258 supplies the actual GELU baseline ρ=-0.380 (NOT the agenda's claimed -0.745). Restore round-trip clean.
