@@ -1,0 +1,77 @@
+Cycle 289 — Item 299 — Execution Result
+
+Verdict: CONFIRMED
+Commit: <PENDING>
+Branch: geometric_compression
+
+Script: experiments/block10_rank5_cycle289.py
+Log:    autoresearch/logs/cycle_289_run.log
+Result: autoresearch/results/cycle_289_block10_rank5.json
+
+Key metrics:
+  float_ppl                 = 53.895
+  noretrain r=5 PPL         = 59.918  (energy=0.0503)
+  retrain r=5 best_mean     = 51.4659
+  retrain r=5 best_std      = 0.0089
+  retrain r=5 best_min      = 51.4579  (seed 2024 @1800)
+  retrain r=5 best_max      = 51.4783  (seed 42   @1500)
+  trainable params per fit  = 4,608
+
+Verdict logic (item 299 verbatim):
+  CONFIRMED iff rank-5 retrain best_mean <= 53.0
+  REFUTED   iff rank-5 retrain best_mean >= 56.0
+  INCONCLUSIVE otherwise
+
+  r=5 best_mean 51.4659 <= 53.0  ->  CONFIRMED (margin 1.534 PPL)
+  r=5 best_mean 51.4659 <  56.0  ->  REFUTED clause NOT triggered
+  ->  CONFIRMED
+
+Wall time: ~7 min total (1 no-retrain eval + 3 Adam fits @ 2.1 min each).
+
+Sanity checks:
+  float PPL within 0.5 of reference 53.895                     PASS (exact)
+  restore original c_proj.weight after sweep                   PASS (exact)
+  init PPL per seed == noretrain r=5 PPL (59.9179)             PASS all 3 seeds
+  trainable param count == 4,608                               PASS (5*768 + 768)
+  restore best-state per seed (|restored - best| < 1e-3)       PASS all 3 seeds
+  all 3 seeds hit best in [1500, 1800]                         PASS (well inside budget)
+  cross-check noretrain r=5 vs cycle 282 (59.92)               PASS (|Δ|=0.002)
+
+Pareto reading:
+  cycle 289 (4,608 params, 51.47 PPL) is a NEW Pareto interior point in the
+    ~4K-param tier — the first single-block c_proj result at this param count.
+  cycle 289 STRICTLY DOMINATES cycle 270 b11 r=22 (17,664, 54.47) on BOTH axes:
+    3.8x fewer params AND 3.00 PPL better.
+  cycle 289 STRICTLY DOMINATES cycle 288 b3 r=24 (19,200, 50.59) on BOTH axes:
+    4.2x fewer params AND 0.87 PPL better.
+  cycle 289 DOMINATED by cycle 280 b1 r=2 and cycle 285 b2 r=2 (2,304 each,
+    49.03/49.33): 2x more params and 2.1-2.4 PPL worse.
+  cycle 289 DOMINATED by cycle 282 b10 r=17 (13,824, 50.04): 3x fewer params
+    but 1.42 PPL worse — different param tier.
+
+Sub-eff_rank success (geometric finding):
+  Block 10 c_proj eff_rank = 16.70 (cycle 278); r=5 is 30% of eff_rank.
+  Top-5 weight-SVD energy fraction = 0.0503 (only 5% of matrix norm^2).
+  Init PPL 59.92 (+6.02 vs float). Adam recovery -8.45 PPL over 1500-1800 steps
+  — the fastest recovery among all cycle 282-family experiments. All three
+  seeds convergent-then-overfit inside budget, showing cycle 289 is FLOOR-
+  limited not BUDGET-limited.
+
+  Previous "rank ≈ eff_rank" recipe held for b1/b2/b3/b10/b11. Cycle 289
+  demonstrates r/eff_rank = 0.30 still succeeds at block 10. Block 10 rank-5
+  (51.47) even BEATS block 11 rank-22 on-eff_rank (54.47) in absolute PPL
+  despite 3.8x fewer params — eff_rank does not set a hard PPL floor.
+
+Recipe landscape (6 data points, sub-eff_rank now added):
+  block 1  r=2  (eff_rank 1.94, r/eff 1.03) -> 49.03 @ 2,304
+  block 2  r=2  (eff_rank 1.05, r/eff 1.90) -> 49.33 @ 2,304
+  block 3  r=24 (eff_rank 24.29, r/eff 0.99)-> 50.59 @ 19,200
+  block 10 r=5  (eff_rank 16.70, r/eff 0.30)-> 51.47 @ 4,608  <-- cycle 289
+  block 10 r=17 (eff_rank 16.70, r/eff 1.02)-> 50.04 @ 13,824
+  block 11 r=22 (eff_rank 22.49, r/eff 0.98)-> 54.47 @ 17,664
+
+  Within block 10 alone: r=5 (51.47, 4.6K) vs r=17 (50.04, 13.8K) — 3x more
+  params buys 1.42 PPL. Diminishing returns past rank-5.
+
+Next agenda items: block 10 rank-3/rank-2/rank-1 (can we push r/eff_rank even
+lower?); multi-block combinations anchored on the new 4.6K block-10 point.

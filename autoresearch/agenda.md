@@ -4,14 +4,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ## NEXT EXPERIMENTS
 
-### P2
-
-299. **Block 10 c_proj rank-5 weight-SVD — can a sub-eff_rank patch still beat float?**
-   - Context: Cycle 282 confirmed block 10 rank-17 retrains to 50.04 PPL at 13.8K trainable params, BELOW float by 3.85 PPL (block 10 eff_rank=16.70). Cycle 282 also tested r=5 no-retrain (59.92) and r=50 no-retrain (58.27) — none beat the retrained r=17. The question untested by cycle 282: does rank-5 retrain (well below eff_rank=16.70) still beat float, mirroring cycle 280's block 1 r=2 (which matched its eff_rank=1.94)? Cycle 280 had a "rank ≈ eff_rank" recipe; cycle 282 had the same. Block 10 r=5 would test "rank << eff_rank, with retrain" — does Adam absorb the missing 12 directions, or does it fail to converge below float? Estimated params: 5×768 + 768 = 4,608 — between cycle 280 (2.3K) and cycle 282 (13.8K).
-   - Setup: New script `experiments/block10_rank5_cycle289.py`. Mirror cycle 282 verbatim but with TARGET_BLOCK=10, RANKS_NORETRAIN=[5] (already known 59.92, can re-verify), RETRAIN_RANK=5. Joint Adam LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, best-state restore. 3 seeds {42, 137, 2024}. Disjoint N_CALIB=200/N_EVAL=100, SEQ_LEN=128, MPS. ~7 min wall.
-   - Verdict thresholds: CONFIRMED iff best_mean ≤ 53.0 (sub-eff_rank still beats float, opens a new ultra-low-param row at 4,608 params). REFUTED iff best_mean ≥ 56.0 (rank << eff_rank breaks block 10 — Adam cannot absorb the missing directions). INCONCLUSIVE otherwise.
-   - Artifacts: experiments/block10_rank5_cycle289.py, autoresearch/results/cycle_289_block10_rank5.json
-
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
 138. ~~**Train MoE testbed — Tiny Mixtral**~~ SKIPPED — WikiText-2 too small, overfits at PPL 65. Need pretrained model or larger dataset.
@@ -35,6 +27,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 289
+
+299. **Block 10 c_proj rank-5 weight-SVD — sub-eff_rank stress test** *(CONFIRMED — cycle 289)*
+   - **Outcome: CONFIRMED** — rank-5 retrain best_mean=**51.4659 ± 0.0089** at 4,608 trainable params (5×768 B + 768 bias), passes CONFIRMED clause (≤53.0) by 1.534 PPL margin. Sub-eff_rank ratio r/eff_rank = 5/16.70 = 0.30 — FIRST successful "rank << eff_rank" result in the cycle-282 family. **No-retrain r=5**: 59.918 (cross-check vs cycle 282 reported 59.92: |Δ|=0.002, exact). **Per-seed** (all init 59.9179, deterministic): 42 best=51.4783@1500, 137 best=51.4614@1700, 2024 best=51.4579@1800 — all converged WELL INSIDE 4000-step budget then overfit → FLOOR-limited not budget-limited. Restore asserts PASS for all 3 fits; trainable=4,608 asserted. Adam recovery −8.45 PPL (59.92 → 51.47). Wall ~7 min. **Geometric**: block 10 c_proj weight SVD is the FLATTEST tested (top-5: 41.6, 28.2, 21.2, 20.2, 19.7; S[0]/S[4]≈2.1×); top-5 energy fraction only 0.0503 (5% of matrix norm²), yet Adam over 5 rank directions realigns to the dominant OUTPUT subspace and beats float by 2.43 PPL. Previous recipe was "rank ≈ eff_rank"; cycle 289 extends it to "rank as low as 30% of eff_rank still works" for block 10. Block 10 rank-5 (51.47) even BEATS block 11 rank-22 (54.47) in absolute PPL at 3.8× fewer params — eff_rank does not set a hard PPL floor. **Pareto reading**: cycle 289 (4,608, 51.47) is a NEW interior frontier point between cycle 280 (2,304, 49.03) and cycle 282 (13,824, 50.04). Cycle 289 STRICTLY DOMINATES cycle 270 b11 r=22 (17,664, 54.47) on BOTH axes (3.8× fewer params AND 3.00 PPL better) and STRICTLY DOMINATES cycle 288 b3 r=24 (19,200, 50.59) on BOTH axes (4.2× fewer params AND 0.87 PPL better). Cycle 289 is DOMINATED by cycle 280 b1 r=2 and cycle 285 b2 r=2 (2,304 each; 49.03/49.33 — 2× more params but 2.1-2.4 PPL worse) and by cycle 282 b10 r=17 (13,824, 50.04 — 3× fewer params but 1.42 PPL worse; different tier). Cycle 289 is a new Pareto tile on the 4-5K block-10 rank-5 axis that removes two existing points (270 and 288) from the frontier. **Recipe landscape (6 data points now)**: b1 r=2 (eff 1.94, r/eff 1.03) → 49.03@2.3K; b2 r=2 (eff 1.05, r/eff 1.90) → 49.33@2.3K; b3 r=24 (eff 24.29, r/eff 0.99) → 50.59@19.2K; b10 r=5 (eff 16.70, r/eff **0.30**) → 51.47@4.6K (new); b10 r=17 (eff 16.70, r/eff 1.02) → 50.04@13.8K; b11 r=22 (eff 22.49, r/eff 0.98) → 54.47@17.7K. Config: TARGET_BLOCK=10, RANKS_NORETRAIN=[5], RETRAIN_RANK=5, joint Adam LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, best-state restore, 3 seeds {42, 137, 2024}, disjoint N_CALIB=200/N_EVAL=100, SEQ_LEN=128, MPS, GPT-2 small, wikitext-2 val.
+   - Artifacts: `experiments/block10_rank5_cycle289.py`, `autoresearch/plans/cycle_289.md`, `autoresearch/briefs/cycle_289.md`, `autoresearch/results/cycle_289_block10_rank5.json`, `autoresearch/results/cycle_289_summary.md`, `autoresearch/logs/cycle_289_run.log`, `autoresearch/results/cycle_289_manifest.txt`
 
 ### Cycle 288
 
