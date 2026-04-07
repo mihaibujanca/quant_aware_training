@@ -1,0 +1,107 @@
+Cycle 281 — Item 291: 2-block [1, 2] K=512
+Verdict: INCONCLUSIVE (best_mean 44.339 in dead zone (43.9, 44.5))
+Commit: a738a92
+
+Artifacts:
+  experiments/two_block_1_2_cycle281.py
+  autoresearch/plans/cycle_281.md
+  autoresearch/briefs/cycle_281.md
+  autoresearch/logs/cycle_281_run.log
+  autoresearch/results/cycle_281_two_block_1_2.json
+  autoresearch/results/cycle_281_summary.md
+  autoresearch/results/cycle_281_manifest.txt
+  autoresearch/agenda.md
+  autoresearch/logs/experiments.tsv
+
+Float PPL: 53.895 (matches reference exactly)
+
+Config:
+  BLOCKS=[1, 2]
+  K=512
+  W_out + b_out trainable per block (cycle 266 form — NOT cycle 279 W_fc variant)
+  Topk+lstsq init (score = act.std * W_proj.norm)
+  Joint Adam LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, best-state restore
+  Seeds: {42, 137, 2024}
+  Disjoint N_CALIB=200 / N_EVAL=100, SEQ_LEN=128, MPS, GPT-2 small, wikitext-2 val
+  Trainable per fit: 787,968 = 2 × (512*768 + 768) — asserted
+
+Per-seed results:
+  seed   42: init=57.2068 best=44.3473@step3700 final@4000=44.4932 restored=44.3473
+  seed  137: init=57.2068 best=44.3302@step2800 final@4000=44.4258 restored=44.3302
+  seed 2024: init=57.2068 best=44.3392@step3400 final@4000=44.4718 restored=44.3392
+
+Aggregate:
+  init_mean         = 57.2068 (deterministic across seeds — lstsq init seed-independent)
+  best_mean         = 44.3389 ± 0.0070  (min=44.3302, max=44.3473, n=3)
+  best_step_mean    = 3300 ± 374
+  final@4000_mean   = 44.4636 ± 0.0278  (overshoot +0.125 PPL above best — mild, nothing like cycle 279's +2.75)
+
+Verdict logic (item 291 verbatim):
+  CONFIRMED iff best_mean <= 43.9 → FAIL (44.3389 > 43.9 by 0.439 PPL)
+  REFUTED   iff best_mean >= 44.5 → FAIL (44.3389 < 44.5 by 0.161 PPL)
+  → INCONCLUSIVE (dead zone, neither criterion triggered)
+
+Cross-cycle deltas:
+  Δ vs cycle 266 [1,4] K=512 W_out-only (43.8525):  +0.4864 PPL (cycle 281 WORSE)
+  Δ vs cycle 271 [1]   K=512 W_out-only (43.8205):  +0.5184 PPL (cycle 281 WORSE)
+  Δ vs cycle 280 block 1 rank-2 c_proj (49.0324):   -4.6935 PPL (cycle 281 better, 342× more params)
+  Δ vs float (53.895):                              -9.5561 PPL (cycle 281 beats float)
+
+Pareto status: NOT on the frontier. Cycle 271 [1]-alone (43.821 PPL, 393,984 trainable)
+strictly dominates cycle 281 [1,2] (44.339 PPL, 787,968 trainable) on BOTH axes:
+cycle 271 has 50% fewer trainable params AND 0.52 PPL better. Adding block 2 to the
+[1]-only recipe is actively harmful.
+
+Reading:
+
+(i) The "add low-eff_rank block for free" hypothesis is WRONG. Item 291 bet that
+block 2 (cycle 278: eff_rank=1.05, top-1 energy 99.61%, the most rank-concentrated
+block in the model) would be a cheap add to cycle 271's [1]-only recipe — either
+matching cycle 266 [1,4] (confirming) or beating it (confirming block 2 is
+load-bearing). Actual: [1,2] is 0.52 PPL WORSE than [1]-alone. Block 2's extreme
+rank concentration means it contributes almost nothing additive — AND joint Adam
+gets slightly *worse* optimization with 2 coupled blocks than 1. Low eff_rank
+does not equal "cheap cascade add".
+
+(ii) Third independent refutation of activation eff_rank as prescriptive signal
+for cascade compression. Prior: cycle 273 REFUTED eff_rank-guided heterogeneous K;
+cycle 280 showed activation eff_rank ≠ weight-SVD rank at single-block level;
+cycle 281 now shows activation eff_rank does not predict which 2-block subset is
+cheapest — block 2 has eff_rank 25× lower than block 4 but [1,2] is 0.49 PPL WORSE
+than [1,4]. Activation eff_rank is descriptive of per-block energy concentration
+but has no prescriptive power for cascade compression at joint Adam retrain.
+
+(iii) The [1,2] recipe has the TIGHTEST best_std of any 2-block K=512 recipe tested.
+Cycle 281 [1,2]: 0.0070. Cycle 266 [1,4]: 0.0273 (4× looser). Cycle 266 [1,7]: 0.0508
+(7× looser). Cycle 266 [4,7]: 0.0164 (2× looser). The [1,2] surface is remarkably
+flat in the seed-shuffle noise sense. Geometric reading: block 2 (eff_rank 1.05,
+near rank-1 operator) contributes almost no gradient variance — the near-rank-1
+shape of block 2's projection means it adds essentially ONE direction of freedom
+to the joint optimization, which is both stable (tight std) and cheap (doesn't
+help). This is a direct numerical confirmation of cycle 278's eff_rank measurement.
+
+(iv) What is load-bearing in cycle 266 [1,4]: the 2-block K=512 ceiling (~43.85)
+sits at block {1}. Cycle 271 [1] alone = 43.821 captures it to within noise of
+[1,4]=43.852 (Δ=+0.032). Adding block 4 gives tiny marginal gain; adding block 7
+(cycle 266 [1,7]=43.905) costs +0.053; adding block 2 (cycle 281 [1,2]=44.339)
+costs +0.518. The cascade picks its "extra" block by joint Adam absorption capacity,
+NOT by activation eff_rank. In rank order: block 4 ≈ block 7 >> block 2.
+
+(v) Block 2 is not on the load-bearing path that cycle 271 [1] / cycle 266 [1,4]
+exploit. This suggests the early-block "information bottleneck" (cycles 267/278:
+blocks 1, 2 both have very low eff_rank) is dominated entirely by block 1 — block 2
+adds no new directions that cycle 271's [1]-only recipe hasn't already captured.
+
+(vi) Open: item 293 ([2] K-sweep K∈{16,32,64}) tests block 2 in isolation.
+Cycle 281's prior is now negative — if block 2 contributes nothing new to [1] in
+a 2-block cascade, [2]-alone is probably worse than [1]-alone at every K. But
+the single-block test is still informative (it's the first measurement of block 2
+as a compression target), so item 293 remains worth running.
+
+(vii) Closing item 291 INCONCLUSIVE: best_mean 44.339 sits in the dead zone
+(43.9, 44.5) — too high for CONFIRMED but too low for REFUTED. The formal verdict
+is INCONCLUSIVE but the descriptive reading is clear: **block 2 should not be
+included in multi-block cascades**. Cycle 271 [1] alone remains the 1/2-block K=512
+Pareto anchor at 43.821 PPL / 393,984 trainable params.
+
+Wall: 7.6 min (3 seeds × ~2.5 min each, no SVD, no block-swap overhead).

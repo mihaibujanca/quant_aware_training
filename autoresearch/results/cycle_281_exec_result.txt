@@ -1,0 +1,13 @@
+Cycle 281 — Item 291: 2-block [1, 2] K=512
+Verdict: INCONCLUSIVE (best_mean 44.339 ± 0.007, dead zone (43.9, 44.5))
+Main commit: a738a92
+Bookkeeping commit: (written after manifest commit)
+
+best_mean = 44.3389 ± 0.0070 (per-seed 42→44.3473, 137→44.3302, 2024→44.3392)
+Δ vs cycle 266 [1,4]=43.852: +0.486 PPL (WORSE)
+Δ vs cycle 271 [1]=43.821:   +0.518 PPL (WORSE, strictly dominated)
+Δ vs float 53.895:           -9.556 PPL (beats float in absolute terms)
+
+Block 2 (cycle 278 eff_rank=1.05) is NOT a cheap cascade add.
+Third independent refutation of activation eff_rank as prescriptive
+for cascade compression (after cycle 273, cycle 280).
