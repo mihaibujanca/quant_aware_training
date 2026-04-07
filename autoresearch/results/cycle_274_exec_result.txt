@@ -1,0 +1,34 @@
+cycle=274
+item=284
+verdict=INCONCLUSIVE
+commit=bcb8803
+status=SUCCESS
+
+best_mean=61.37696
+best_std=0.04625
+threshold_C_low=61.5
+threshold_C_high=62.5
+threshold_R_le=60.7
+margin_to_C_low=-0.123
+margin_over_R=+0.677
+
+per_seed_best=[61.4234@6200, 61.3139@6200, 61.3936@7400]
+per_seed_final_at_8000=[61.6516, 61.3733, 61.6263]
+init_PPL=95.6204 (deterministic, identical to cycle 257)
+best_step_mean=6600 +/- 566 (all seeds best in second 4k)
+final_at_8000_mean=61.55038 (+0.173 vs best, mild overshoot)
+
+trainable_params=249600 (5 x (64x768 + 768))
+fits=3_of_3
+no_seed_drop=true
+
+float_ppl=53.895
+delta_vs_c257_k64_5b_4k=-0.804 (8k buys 0.804 PPL improvement)
+delta_vs_c254_k128_5b_8k=+2.359 (K=64 5b 8k still 2.36 above K=128 5b 8k floor)
+delta_vs_c245_k512_5b=+7.551
+delta_vs_float=+7.482
+
+verdict_logic=best_mean_61.377_in_60.7_to_61.5_INCONCLUSIVE_gap_NOT_>=1.5_PPL_drop_for_REFUTED_NOT_in_61.5_to_62.5_band_for_CONFIRMED
+interpretation=K64_5block_8k_extension_buys_0.804_PPL_improvement_8x_larger_than_cycle_254_K128_5b_8k_extension_(0.101)_meaningful_descent_but_not_enough_for_REFUTED_threshold_K64_5b_neither_plateaus_like_K128_5b_(cycle_254_noop)_nor_is_clearly_budget_bounded_(cycle_269_K1_16k)_intermediate_slow_descent_regime
+
+artifacts=experiments/five_block_k64_8k_cycle274.py,autoresearch/plans/cycle_274.md,autoresearch/briefs/cycle_274.md,autoresearch/logs/cycle_274_run.log,autoresearch/results/cycle_274_five_block_k64_8k.json,autoresearch/results/cycle_274_summary.md,autoresearch/results/cycle_274_manifest.txt

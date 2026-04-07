@@ -1,0 +1,34 @@
+cycle=274
+item=284
+audit_status=PASS
+verdict_confirmed=INCONCLUSIVE
+commit=bcb8803
+
+best_mean=61.37696
+best_std=0.04625
+threshold_C_low=61.5
+threshold_C_high=62.5
+threshold_R_le=60.7
+margin_to_C_low=-0.123
+margin_over_R=+0.677
+
+verification_checks:
+  plan_adherence=PASS
+  numerical_consistency_best_mean=PASS
+  numerical_consistency_best_std=PASS
+  numerical_consistency_best_step=PASS
+  best_state_restore=PASS
+  trainable_count=PASS
+  baseline_cross_checks=PASS
+  verdict_logic=PASS
+  plateau_vs_descent_analysis=PASS
+  pareto_check=PASS
+  overshoot_check=PASS
+  bookkeeping=PASS
+
+issues_found=none
+key_finding=K=64_5-block_8k_extension_buys_0.804_PPL_8x_larger_than_K=128_5b_8k_(0.101)_but_not_enough_for_REFUTED_threshold_(>=1.5)_K=64_5b_surface_in_slow_descent_regime_distinct_from_K=128_5b_plateau_and_K=1_6b_extended_descent_INCONCLUSIVE_by_0.123_on_low_side_of_CONFIRMED_band
+
+note_on_tsv=initial_append_had_malformed_heredoc_attempt_that_zsh_truncated_at_pct_underscore_resulting_in_partial_duplicated_row_rebuilt_programmatically_with_8_columns_no_other_rows_affected_final_cycle_274_row_clean
+
+status=PASS

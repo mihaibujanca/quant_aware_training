@@ -1,0 +1,79 @@
+cycle=274
+item=284
+verdict=INCONCLUSIVE
+commit=bcb8803
+float_ppl=53.895
+BLOCKS=[1,2,4,7,8]
+K=64
+N_STEPS=8000
+EVAL_EVERY=200
+seeds=[42,137,2024]
+n_seeds=3
+trainable_params=249600
+
+# Aggregate (best_ppl_mean +/- best_ppl_std)
+init_mean=95.6204
+init_std=0.0000
+best_mean=61.37696
+best_std=0.04625
+best_step_mean=6600
+best_step_std=566
+final_at_8000_mean=61.55038
+final_at_8000_std=0.12564
+
+# Per-seed (seed, init, best, best_step, final@8000)
+seed_42_init=95.6204
+seed_42_best=61.4234
+seed_42_best_step=6200
+seed_42_final_at_8000=61.6516
+
+seed_137_init=95.6204
+seed_137_best=61.3139
+seed_137_best_step=6200
+seed_137_final_at_8000=61.3733
+
+seed_2024_init=95.6204
+seed_2024_best=61.3936
+seed_2024_best_step=7400
+seed_2024_final_at_8000=61.6263
+
+# Baselines
+baseline_c257_k64_5block_4k=62.181
+baseline_c254_k128_5block_8k=59.018
+baseline_c254_minus_c251_4k_delta=-0.101
+baseline_c251_k128_5block_4k=59.119
+baseline_c245_k512_5block=53.826
+baseline_c269_k1_6block_16k=91.6126
+float_baseline_ref=53.895
+delta_vs_c257_k64_4k=-0.8040
+delta_vs_c254_k128_8k=+2.3590
+delta_vs_c245_k512=+7.5510
+delta_vs_float=+7.4820
+
+# Verdict logic per item 284 verbatim
+threshold_C_low=61.5
+threshold_C_high=62.5
+threshold_R_le=60.7
+verdict_logic=best_mean_61.377_below_CONFIRMED_band_low_61.5_by_0.123_above_REFUTED_threshold_60.7_by_0.677_in_INCONCLUSIVE_gap
+
+# Note: cycle 254 K=128 5-block 8k extension was a noop (delta vs cycle 251 4k = -0.101)
+# Cycle 274 K=64 5-block 8k extension: best_mean drops 0.804 PPL vs cycle 257 4k
+# This is an 8x larger 8k-vs-4k delta than cycle 254 K=128 (0.804 vs 0.101)
+# but still 0.123 PPL short of the REFUTED threshold (≥1.5 PPL drop)
+# All 3 seeds best_step in [6200, 7400] — well into the second 4k of training
+# Final@8000 (61.55) climbs +0.17 PPL above best (61.38) — mild overshoot, not the
+# +1.5 PPL plateau-then-climb pattern of cycle 254 K=128
+# K=64 5-block surface is in a slow-descent regime distinct from K=128 5-block plateau
+
+interpretation=K64_5block_extended_budget_INCONCLUSIVE_best_mean_61.377_falls_in_60.7_to_61.5_gap_8k_vs_4k_delta_-0.804_PPL_meaningful_descent_but_NOT_>=1.5_PPL_required_for_REFUTED_AND_NOT_in_61.5_to_62.5_plateau_band_required_for_CONFIRMED_K64_5block_distinct_from_K128_5block_plateau_cycle_254_at_K128_5b_8k_delta_only_-0.101_PPL_cycle_274_K64_5b_8k_delta_-0.804_PPL_8x_larger_descent_per_4k_extension_at_K64_vs_K128_all_3_seeds_best_step_in_6200_to_7400_well_into_second_4k_final_at_8000_climbs_+0.17_above_best_mild_overshoot_not_the_+1.5_PPL_plateau_then_climb_pattern_of_cycle_254_K128_K64_5block_surface_is_in_slow_descent_regime_distinct_from_K128_5block_plateau_AND_distinct_from_K1_6block_16k_91.61_91.6_descent_K64_5block_at_61.4_neither_plateaued_at_4k_nor_budget_bounded_in_a_clean_way_practical_takeaway_K64_5block_recipe_can_be_extended_to_8k_for_~0.8_PPL_improvement_but_does_not_close_2.4_PPL_gap_to_K128_5b_8k_floor_59.018_NOR_close_7.5_PPL_gap_to_K512_5b_53.826_extending_further_to_16k_could_yield_another_~0.5_PPL_at_diminishing_returns_pareto_check_K64_5b_at_249K_params_61.38_PPL_dominated_by_cycle_271_K512_1block_1_at_394K_params_43.82_PPL_NOT_pareto_winner
+
+# File hashes (sha256)
+sha256_experiments_five_block_k64_8k_cycle274_py=12dd9f777c58c6107f213087b23c50b1c2f4f6d3c08d204e344a7cb5217dbbdb
+sha256_plans_cycle_274_md=e213a0322e125469f642703e408cea386221b01e14a43dac1c3d2a5c23bfbac5
+sha256_briefs_cycle_274_md=d548c4b4911322bb91a67ba7d114b229299a899f0530b09d2697faf41bc115a8
+sha256_logs_cycle_274_run_log=044843b95ab1b8500cb96a11d00dc36a3ee919c21be3618511207e0deba1a981
+sha256_results_cycle_274_five_block_k64_8k_json=d05f001558074efe85a56d4b2cf550f564392410ac9e8c601a102bb245ba6eff
+sha256_results_cycle_274_summary_md=fc6cdac22ab3d239705eec97933dcb634ac0a2f780816904de3a21362af28e64
+
+paths=experiments/five_block_k64_8k_cycle274.py,autoresearch/plans/cycle_274.md,autoresearch/briefs/cycle_274.md,autoresearch/logs/cycle_274_run.log,autoresearch/results/cycle_274_five_block_k64_8k.json,autoresearch/results/cycle_274_summary.md,autoresearch/results/cycle_274_manifest.txt
+key_metric=best_mean=61.377_+/-_0.046_PPL_5block_K64_8000steps_INCONCLUSIVE_8k_vs_4k_delta_-0.804_PPL
