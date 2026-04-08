@@ -1,6 +1,6 @@
 Cycle 305 / Item 315 -- Multi-block LASER stacking [1, 2, 3, 10, 11]
 Verdict: REFUTED
-Commit: <pending>
+Commit: 98c7978
 
 == Item 315 verbatim verdict thresholds ==
 CONFIRMED   iff best_mean <= 51.0
