@@ -1,6 +1,6 @@
 Cycle 301 / Item 311 -- Curvature residual decomposition vs cycle 280 col(A)
 Verdict: REFUTED
-Commit: pending
+Commit: 04a7a58
 
 == Item 311 verbatim verdict thresholds ==
 CONFIRMED   iff E_kept(block 1) <= 0.05

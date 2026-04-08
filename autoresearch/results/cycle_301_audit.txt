@@ -81,7 +81,7 @@ Artifact existence: ✓ all 14 listed paths exist on disk:
   autoresearch/results/cycle_301_audit.txt (this file)
   autoresearch/logs/cycle_301_run.log (cleaned of progress bars, ~50 lines, 2.6 KB)
   autoresearch/agenda.md (item 311 deleted from NEXT P2; Cycle 301 in PAST)
-  autoresearch/logs/experiments.tsv (row 301 appended, 8 columns, commit=pending)
+  autoresearch/logs/experiments.tsv (row 301 appended, 8 columns, commit=04a7a58)
   autoresearch/STATUS.md (title 301 Cycles, Latest: Cycle 301, Cycle 300 demoted)
 
 Corrections: NONE on the verdict. REFUTED is the literal verbatim threshold
