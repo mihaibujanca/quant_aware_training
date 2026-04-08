@@ -10,14 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-313. **Apply the unified curvature framework to (ReLU², ReLU) and (LeakyReLU², ReLU²) on parameter-golf** *(cross-project pointer)*
-   - **Motivation**: once item 312's framework exists, the cleanest test of whether the cycle 258/278/280 findings generalize beyond GELU is to run it on parameter-golf checkpoints with activation pair (ReLU², ReLU). The parameter-golf project at `/Users/mihai/Projects/parameter-golf` uses ReLU² as its standard MLP activation; LeakyReLU² is a leaderboard variant that beats ReLU² with no published explanation. The (LeakyReLU², ReLU²) δ_σ is `0.25 z² for z<0, else 0` — a quadratic on the previously-dead side, structurally analogous to the GELU bump but on a clean polynomial activation. If the unified framework explains why LeakyReLU² wins, that's a real geometric finding with leaderboard provenance.
-   - **Setup**: cross-project — runs against parameter-golf checkpoints, not GPT-2. Implementation: copy `experiments/curvature_residual_geometric.py` from item 312 into `parameter-golf/local_scripts/curvature_residual_geometric.py`, adapt the model loader to parameter-golf's `MLP` block (no bias on fc/proj, `relu(z).square()` activation). Run on (a) `(ReLU², ReLU, 13L_640d_3x_polished_artifact, all blocks)` and (b) `(LeakyReLU², ReLU², 13L_640d_3x_polished_artifact, all blocks)` if a LeakyReLU² checkpoint is available — otherwise just (a). Save JSONs and plots to `parameter-golf/local_scripts/curvature_residual_results/`.
-   - **Hypothesis**: (a) (ReLU², ReLU) Δy will have rank ≪ d_model in some blocks, with the specific rank profile being different from GPT-2's because the curvature region is now z > 0 not z ∈ (-3, 3). (b) If (b) runs, the LeakyReLU² δ_σ has support on z < 0 and the κ shift will localize to specific layers — those are the layers where the leaderboard win comes from.
-   - **Outcomes**: open. This is exploratory — the parameter-golf project doesn't have an autoresearch loop, so the experiment is run manually and the results are reported back as a doc in `parameter-golf/docs/`.
-   - **Run cap**: ~30 minutes (depends on parameter-golf checkpoint loading).
-   - Depends on: 312 implementation, parameter-golf checkpoint at `/Users/mihai/Projects/parameter-golf/13L_640d_3x_polished_artifact.br`.
-
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
 138. ~~**Train MoE testbed — Tiny Mixtral**~~ SKIPPED — WikiText-2 too small, overfits at PPL 65. Need pretrained model or larger dataset.
@@ -41,6 +33,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 303
+
+313. **Apply unified curvature framework to parameter-golf (cross-project pointer)** *(INCONCLUSIVE — PLAN INVALID, cycle 303)*
+   - **Outcome: INCONCLUSIVE (PLAN INVALID)** — item 313 is explicitly labeled "(cross-project pointer)" and its own Setup states "cross-project — runs against parameter-golf checkpoints, not GPT-2" and "the parameter-golf project doesn't have an autoresearch loop, so the experiment is run manually". Incompatible with (a) the hard "PyTorch only" rule (parameter-golf uses MLX), (b) the "visible queue rooted at autoresearch/" policy. The unified framework from cycle 302 (`experiments/curvature_residual_geometric.py`) can be manually ported to `parameter-golf/local_scripts/` as a separate task. No experiment run.
+   - Artifacts: `autoresearch/plans/cycle_303.md`, `autoresearch/briefs/cycle_303.md`
 
 ### Cycle 302
 
