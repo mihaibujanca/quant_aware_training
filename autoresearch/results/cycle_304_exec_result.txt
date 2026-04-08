@@ -1,6 +1,6 @@
 Cycle 304 / Item 314 -- E_kept_top_k curve per block
 Verdict: REFUTED
-Commit: PENDING
+Commit: cb819f2
 
 == Item 314 verbatim verdict thresholds ==
 CONFIRMED   iff k_95 <= 10 at >= 8 of 12 blocks AND k_95 <= 5 at ALL 4
