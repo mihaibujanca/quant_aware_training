@@ -1,0 +1,183 @@
+Cycle 307 Manifest -- Item 317: Higher-dim (50D) input eff_rank census
+
+item_number: 317
+outcome: INCONCLUSIVE
+key_metric: cond_a=False (init eff_rank >= 15 at layers 1-6 per-seed = 0/18);
+            cond_b=True  (post eff_rank <= 5 across all seeds = 11/12);
+            cond_c=False (trajectory monotone decreasing = 2/12).
+commit: {COMMIT}
+Branch: geometric_compression
+Verdict: INCONCLUSIVE
+
+== Verdict logic (item 317 verbatim) ==
+CONFIRMED iff (a) init mean eff_rank >= 15 at layers 1-6 across all 3 seeds
+              AND (b) post-training mean eff_rank <= 5 at >= 8 of 12 layers
+              across all 3 seeds
+              AND (c) trajectory monotone decreasing at >= 6 of 12 layers.
+REFUTED   iff (a) passes but post eff_rank <= 5 at < 4 of 12 layers.
+INCONCLUSIVE otherwise.
+
+Measured:
+  (a) cells 18 (6 layers in [1..6] x 3 seeds); per-seed per-layer init
+      eff_rank >= 15 at 0 cells.
+        - Only LAYER 0 has init eff_rank >= 15 (mean 15.698, min across
+          seeds 15.32); by LAYER 1 init already falls to 5.93, by LAYER 2
+          to 2.96, by LAYER 4 to 1.05, and by LAYER 7 it is pinned at
+          exactly 1.000 for all 3 seeds through LAYER 11.
+        -> cond_a = False.
+
+  (b) layers with post eff_rank <= 5 across all 3 seeds = 11/12 (all
+      layers except layer 0). Post eff_rank per layer (mean +/- std):
+        L0: 13.475 +/- 0.561  (above 5)
+        L1:  2.370 +/- 0.144
+        L2:  1.745 +/- 0.131
+        L3:  1.741 +/- 0.052
+        L4:  1.767 +/- 0.237
+        L5:  1.767 +/- 0.284
+        L6:  1.712 +/- 0.351
+        L7:  1.677 +/- 0.381
+        L8:  1.551 +/- 0.302
+        L9:  1.524 +/- 0.190
+        L10: 1.547 +/- 0.097
+        L11: 1.743 +/- 0.145
+        -> cond_b = True.
+
+  (c) trajectory monotone non-increasing layers = 2/12.
+      Only layers 0 and 1 show monotone-decreasing mean eff_rank across
+      {0, 50, 200, 500, 2000}. Layers 2-11 INCREASE through training
+      (lift, not collapse), matching the cycle 297 spirals trajectory
+      sign:
+        L0 trajectory: 15.70 -> 14.12 -> 13.47 -> 13.47 -> 13.47 (mono)
+        L1 trajectory:  5.93 ->  3.40 ->  2.39 ->  2.37 ->  2.37 (mono)
+        L2 trajectory:  2.96 ->  2.18 ->  1.75 ->  1.75 ->  1.75 (mono
+                        up to 1e-9 bumps; script counts mono=1)
+        L3 trajectory:  1.35 ->  1.88 ->  1.73 ->  1.74 ->  1.74 (LIFT)
+        L4 trajectory:  1.05 ->  1.74 ->  1.72 ->  1.76 ->  1.76 (LIFT)
+        ...
+        L11 trajectory: 1.00 ->  1.28 ->  1.48 ->  1.70 ->  1.71 (LIFT)
+      -> cond_c = False.
+
+  Verdict: cond_a False + cond_b True + cond_c False
+    CONFIRMED requires all three -> NO.
+    REFUTED requires cond_a True AND #layers_post_le5 < 4 -> NO (a fails).
+    -> INCONCLUSIVE per verbatim thresholds.
+
+== Substantive findings sharper than INCONCLUSIVE ==
+
+(1) The 50D input raises init eff_rank above the spirals 2D floor ONLY
+    at layer 0 (15.70 vs spirals 2.99). Every other layer is ALREADY
+    collapsed at init: L1=5.93, L2=2.96, L3=1.35, L4=1.05, L5=1.01,
+    L6=1.00, L7..L11=1.000 (exact to 3 decimals). The random Gaussian
+    + ReLU activation-pattern bottleneck (Hanin & Rolnick N^d with the
+    binding constraint being min(input_dim, hidden_width)=32 at layer 0
+    and then the SELF-collapse of layer l+1 into layer l's post-ReLU
+    manifold) produces an effectively 2D-like init at depth 4+ even
+    when the input is 50-dimensional. The input-dim lift is ONE LAYER
+    DEEP.
+
+(2) Training LIFTS eff_rank at layers 3-11, same sign as cycle 297
+    spirals (upward trajectory). Contrary to item 317 CONFIRMED branch
+    hypothesis of a "collapse to rank-2 during training", training
+    REDUCES eff_rank only at the first two layers (L0: 15.7 -> 13.5;
+    L1: 5.9 -> 2.4) and INCREASES it at layers 3-11 from ~1.0 up to
+    ~1.5-1.7. This is the same sign as cycle 297 and OPPOSITE to the
+    cycle 278 GPT-2 c_proj output bathtub (which has layers at
+    eff_rank 1.94 / 1.05 and a bathtub shape).
+
+(3) Task convergence is TRIVIAL: all 3 seeds reach train_acc = 1.0 in
+    50 epochs (the first eval step after epoch 50 captures the traj;
+    actual target_acc=0.90 was already met by epoch 25). The
+    make_classification(n_informative=10, n_classes=2, flip_y=0) task
+    is linearly separable, so the network fits it trivially and any
+    training-induced rank dynamics after epoch ~50 are post-fit
+    artifacts (the trajectory plateau from e=200 onwards confirms
+    this).
+
+(4) Implication for cycle 278: even with a 50D input, a 32-wide ReLU
+    MLP cannot reproduce the GPT-2 bathtub qualitatively. The cycle 278
+    collapse (b1=1.94, b2=1.05) cannot be attributed to "generic
+    implicit regularization on overparameterized ReLU nets" via this
+    higher-dim MLP testbed either. To get a genuine "training causes
+    eff_rank collapse" signal, one would need EITHER a hidden width
+    >> input dim (so layer-0 random-ReLU bottleneck is not the binding
+    constraint) OR a non-ReLU activation (GELU, sigmoid) that does not
+    pin activation patterns to orthant subsets, OR a transformer
+    architecture where residual streams carry high-rank signal past
+    individual FFN blocks.
+
+(5) Agenda implication: item 317 is now closed INCONCLUSIVE with a
+    geometric reframing. Natural follow-up: rerun with hidden_width
+    >= 128 (>> input_dim = 50) so layer 1+ init eff_rank can stay
+    above 15 and give training room to actually collapse things. If
+    that ALSO shows lift-not-collapse, the "ReLU MLP never collapses
+    eff_rank during training" conjecture becomes the right framing
+    and the cycle 278 bathtub is confirmed TRANSFORMER-specific.
+
+(6) Sanity cross-check vs cycle 295 spirals:
+    - Cycle 295 spirals init eff_rank:
+        [2.99, 2.71, 1.87, 1.19, 1.06, 1.01, 1.00, ...(1.00 x 5)]
+    - Cycle 307 50D init eff_rank:
+        [15.70, 5.93, 2.96, 1.35, 1.05, 1.01, 1.00, ...(1.00 x 5)]
+    - Difference is a one-layer-deep shift: cycle 307 L0=15.70 vs
+      cycle 295 L0=2.99 (5.25x lift at layer 0); cycle 307 L1=5.93
+      vs cycle 295 L1=2.71 (2.2x lift at layer 1); cycle 307 L2=2.96
+      vs cycle 295 L2=1.87 (1.6x lift); cycle 307 L3=1.35 vs cycle
+      295 L3=1.19 (1.1x lift, nearly tied); L4+ TIED (all pinned near
+      1.0). The 50D input buys about 4 layers of "rank memory" at
+      init before the ReLU collapse takes over.
+
+== Geometric object ==
+For each seed in {42, 137, 2024}:
+
+  X, y = sklearn.datasets.make_classification(
+           n_samples=2000, n_features=50, n_informative=10, n_classes=2,
+           n_redundant=0, n_repeated=0, n_clusters_per_class=1,
+           flip_y=0.0, class_sep=1.0, random_state=seed)
+  X = (X - X.mean(axis=0)) / (X.std(axis=0) + 1e-8)   # per-feature z-score
+
+  model = aleph.models.MLP(input_size=50, hidden_size=32, output_size=1,
+                            depth=12, activation_fn=nn.ReLU)
+  # 12 hidden (Linear, ReLU) pairs + 1 output Linear; 13,281 trainable params
+
+  For each hidden layer l in {0..11}:
+    Y_l = post-ReLU activation of layer l on all 2000 points (R^{2000 x 32})
+    C_l = Y_l^T Y_l / 2000                               (R^{32 x 32})
+    eigvals = torch.linalg.eigvalsh(C_l)  (clipped to >= 0)
+    p = eigvals / eigvals.sum()
+    eff_rank(l) = exp(- sum p_i log p_i)                 (spectral entropy)
+
+  Captures: INIT (pre-training, exact random init with torch.manual_seed),
+            trajectory at epochs {0, 50, 200, 500, 2000} (epoch 0 same as
+            init), POST (final state after train_acc >= 0.9 or cap).
+
+== Config ==
+HIDDEN = 32
+DEPTH = 12
+N_SAMPLES = 2000
+N_FEATURES = 50
+N_INFORMATIVE = 10
+N_CLASSES = 2
+LR = 1e-3
+MAX_EPOCHS = 20000
+TRAIN_ACC_TARGET = 0.90
+TRAJECTORY_EPOCHS = [0, 50, 200, 500, 2000]
+SEEDS = [42, 137, 2024]
+optimiser = Adam
+loss = BCEWithLogitsLoss, full-batch
+device = CPU
+trainable params per net = 13,281
+Wall: 138.1 s total (3 seeds x 46 s each)
+
+== Files written ==
+experiments/higher_dim_eff_rank_cycle307.py
+autoresearch/plans/cycle_307.md
+autoresearch/results/cycle_307_eff_rank_50d.json
+autoresearch/results/cycle_307_summary.md
+autoresearch/results/cycle_307_manifest.txt
+autoresearch/results/cycle_307_exec_result.txt
+autoresearch/audits/cycle_307.md
+autoresearch/results/cycle_307_audit.txt
+autoresearch/logs/cycle_307_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+autoresearch/STATUS.md

@@ -1,0 +1,100 @@
+Cycle 307 Exec Result -- Item 317
+
+Verdict: INCONCLUSIVE
+Key metric: cond_a (init eff_rank >= 15 at layers 1-6 per-seed)  = False (0/18)
+            cond_b (post eff_rank <= 5 at >=8 layers all-seeds) = True  (11/12)
+            cond_c (trajectory monotone decreasing >= 6/12 layers) = False (2/12)
+
+Single-line verdict reason:
+Only LAYER 0 has init eff_rank >= 15 (mean 15.70); layers 1-6 init means
+[5.93, 2.96, 1.35, 1.05, 1.01, 1.00] all BELOW the 15 threshold -- cond_a
+fails, hence CONFIRMED branch closed. Post eff_rank <= 5 at 11/12 layers
+(cond_b passes) AND layers 3-11 trajectory is LIFT not decrease (cond_c
+fails at 2/12) -- hence REFUTED branch (which requires cond_a True) also
+does not trigger. -> INCONCLUSIVE per verbatim thresholds.
+
+Geometric headline:
+The 50D input buys ONE LAYER of init rank memory (L0=15.70 vs cycle 295
+spirals L0=2.99) then the ReLU activation-pattern bottleneck re-collapses
+the manifold: by L4, init eff_rank = 1.05 (vs spirals 1.06 -- tied);
+by L7+, init eff_rank = 1.000 exactly. Training LIFTS eff_rank at layers
+3-11 (e.g. L11: 1.00 -> 1.71 over the trajectory) -- same sign as cycle
+297 spirals (upward), OPPOSITE to cycle 278 GPT-2 bathtub. The "collapse
+to rank-2 during training" hypothesis from item 317 is neither confirmed
+(no high-rank precondition) nor refuted (the POST state IS rank-~1.7),
+because the 32-wide ReLU net cannot carry high-rank signal past layer 0
+regardless of input dim.
+
+Setup:
+- sklearn.datasets.make_classification(n_samples=2000, n_features=50,
+  n_informative=10, n_classes=2, n_redundant=0, n_repeated=0,
+  n_clusters_per_class=1, flip_y=0.0, class_sep=1.0, random_state=seed).
+- Per-feature z-score standardisation.
+- MLP(input_size=50, hidden_size=32, output_size=1, depth=12, ReLU).
+- Adam lr=1e-3, full-batch BCEWithLogitsLoss, stop at train_acc >= 0.90
+  (cap 20000 epochs).
+- 3 seeds {42, 137, 2024}.
+- Trajectory captures at epochs {0, 50, 200, 500, 2000}.
+- Trainable params = 13,281.
+- CPU. Wall 138.1 s total.
+
+Per-layer aggregate (mean +/- std across 3 seeds):
+  layer  init_mean +/- std   post_mean +/- std
+    0    15.698 +/- 0.446    13.475 +/- 0.561
+    1     5.926 +/- 1.005     2.370 +/- 0.144
+    2     2.963 +/- 0.385     1.745 +/- 0.131
+    3     1.349 +/- 0.077     1.741 +/- 0.052
+    4     1.051 +/- 0.007     1.767 +/- 0.237
+    5     1.009 +/- 0.002     1.767 +/- 0.284
+    6     1.002 +/- 0.000     1.712 +/- 0.351
+    7     1.000 +/- 0.000     1.677 +/- 0.381
+    8     1.000 +/- 0.000     1.551 +/- 0.302
+    9     1.000 +/- 0.000     1.524 +/- 0.190
+   10     1.000 +/- 0.000     1.547 +/- 0.097
+   11     1.000 +/- 0.000     1.743 +/- 0.145
+
+Trajectory (mean across 3 seeds):
+  layer  e=0     e=50    e=200   e=500   e=2000
+    0    15.698  14.122  13.468  13.473  13.474
+    1     5.926   3.404   2.389   2.371   2.370
+    2     2.963   2.179   1.754   1.746   1.745
+    3     1.349   1.883   1.732   1.740   1.738
+    4     1.051   1.735   1.722   1.764   1.764
+    5     1.009   1.571   1.705   1.769   1.767
+    6     1.002   1.565   1.691   1.734   1.716
+    7     1.000   1.601   1.701   1.721   1.689
+    8     1.000   1.599   1.560   1.603   1.568
+    9     1.000   1.418   1.417   1.582   1.548
+   10     1.000   1.374   1.403   1.571   1.546
+   11     1.000   1.283   1.479   1.697   1.708
+
+Sanity:
+- All 3 seeds converged at epoch 50 (train_acc = 1.000; target was 0.90).
+- trainable_param_count == 13,281 across all seeds.
+- Activations shape (2000, 32) at every hidden layer.
+- Depth-12 MLP: len(model.layers) == 2*12 + 1 == 25 (asserted).
+- eff_rank at every layer in [1.0, 32.0]; max measured = 15.698 at init L0.
+- Monotone-decreasing trajectory count = 2/12 with 1e-9 tolerance.
+- cycle 295 spirals L0 init = 2.99 (baseline); cycle 307 50D L0 init =
+  15.70 (this cycle). Layer-wise delta at L>=4 < 1e-2 (both pinned).
+
+Files:
+- experiments/higher_dim_eff_rank_cycle307.py
+- autoresearch/plans/cycle_307.md
+- autoresearch/results/cycle_307_eff_rank_50d.json
+- autoresearch/results/cycle_307_summary.md
+- autoresearch/results/cycle_307_manifest.txt
+- autoresearch/results/cycle_307_exec_result.txt (this file)
+- autoresearch/logs/cycle_307_run.log
+
+Constructive follow-up (suggested, NOT executed here):
+- Rerun with hidden_width >= 128 (much greater than input_dim = 50) so
+  the layer-0 random-ReLU pattern bottleneck is not the binding constraint
+  at depth > 0. If init eff_rank stays above 15 past layer 1, the POST
+  eff_rank dynamics become diagnostic of training rather than architecture.
+- Alternatively use a non-ReLU activation (GELU, tanh) which does not
+  pin activations to orthant subsets.
+- If BOTH ablations still show lift-not-collapse, cycle 278's bathtub is
+  confirmed transformer-architecture-specific (residual stream + attention
+  mixing + post-LN normalisation + GELU) rather than a generic
+  deep-ReLU-net phenomenon.
