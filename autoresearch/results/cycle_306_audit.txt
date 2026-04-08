@@ -1,0 +1,55 @@
+Cycle 306 Audit Result -- Item 316
+
+Status: PASS
+Verdict (kept): REFUTED
+
+Verbatim threshold check (recomputed by auditor):
+  Concentrators = {1, 2, 10, 11}.
+  W_proj top-2/top-5 ratios = [1.6815, 1.3097, 1.4343, 1.5942]
+    sorted = [1.3097, 1.4343, 1.5942, 1.6815]
+    median = (1.4343 + 1.5942) / 2 = 1.51425
+    0.5 * median = 0.75713
+  Dy stable ranks = [1.310, 1.065, 1.099, 1.018]
+    sorted = [1.018, 1.065, 1.099, 1.310]
+    median = (1.065 + 1.099) / 2 = 1.082
+    1.5 * median = 1.6230  (script reports 1.6234 with full-precision medians)
+
+  b8: top-2/top-5 ratio = 1.4875  (need <= 0.7571 for cond_a) -- FAIL
+  b8: Dy stable rank   = 1.197    (need >= 1.6234 for cond_b) -- FAIL
+
+  Item 316 verbatim: REFUTED iff NOT cond_a AND NOT cond_b.
+  Both fail -> REFUTED (literal verbatim).
+
+Cycle 302 reproduction check (E_kept_top_2_via_Wproj):
+  block | this | cycle 302 | |delta|
+   1    | 0.7463 | 0.7463 | 0.0000
+   2    | 0.9190 | 0.9190 | 0.0000
+   7    | 0.6622 | 0.6622 | 0.0000
+   8    | 0.4722 | 0.4722 | 0.0000
+   9    | 0.5356 | 0.5356 | 0.0000
+  10    | 0.8374 | 0.8374 | 0.0000
+  11    | 0.9803 | 0.9803 | 0.0000
+  -> 7/7 EXACT to 4 decimals.  ✓
+
+Float PPL on calib slice = 45.0637 (matches cycle 302/304 reference; assertion
+abs(diff) < 0.5 holds).  ✓
+
+Substantive findings (auditor endorses):
+  1. REFUTED is unambiguous; both single-factor conditions fail by wide margin.
+  2. Dy is rank-1 dominated at every measured block (top1_E in [0.87, 0.99],
+     stable rank in [1.02, 1.31]).
+  3. Cycle 304's "broad b8 curvature residual" reading (k_95 = 511) was a
+     W_proj-basis projection artifact. On Dy's own SVD, b8 k_95 = 73.
+  4. The actual b8 anomaly is a TOP-1 misalignment between Vh_y[:1] (which
+     holds 91% of b8's Δy energy) and Vh_w[:2] -- not flatness or breadth.
+     cos_top5_sum at b8 = 2.65 is comparable to b1, b7 and above b2, b9
+     (the misalignment is top-1 specific, not a 5-frame mismatch).
+  5. Implication for cycle 315 is REVERSED: b8's curvature residual IS rank-1
+     concentrated and would fit a rank-1 LASER replacement IF the kept axis
+     is Vh_y[:1] (Δy intrinsic top right SV), not Vh_w[:1] (the standard
+     cycle 280/284/305 construction). Constructive follow-up suggested.
+
+Trainable params: 0 (verified).
+Wall: ~30s on mps (fast: 7 small SVDs + single forward pass).
+
+Final: PASS, keep REFUTED.

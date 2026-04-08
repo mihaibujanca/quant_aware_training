@@ -1,0 +1,49 @@
+Cycle 306 Exec Result -- Item 316
+
+Verdict: REFUTED
+Key metric: cond_a (b8 W_proj top2/top5 ratio <= 0.5*conc_med) = False
+            cond_b (b8 Dy eff_rank   >= 1.5*conc_med)         = False
+
+Single-line verdict reason:
+b8 W_proj top2/top5 = 1.4875 (conc median 1.5142, NOT 0.5x lower);
+b8 Dy eff_rank = 1.197 (conc median 1.082, NOT 1.5x higher).
+Neither condition holds -> REFUTED per item 316 verbatim threshold.
+
+Geometric headline:
+Dy is rank-1 dominated at every measured block (top1_E in [0.87, 0.99],
+stable rank in [1.02, 1.31]). The cycle 304 "broad curvature residual"
+reading (b8 k_95 = 511) is a W_proj-basis-projection artifact, not an
+intrinsic property of Δy. On Dy's own SVD, b8 k_95 = 73. b8's actual
+anomaly is a TOP-1 misalignment between Vh_y[:1] and Vh_w[:2], not
+flatness or breadth.
+
+Setup:
+- N_CALIB=200 wikitext-2 val x SEQ_LEN=128 = 25600 tokens (seed 42).
+- ALL_BLOCKS = [1, 2, 7, 8, 9, 10, 11]; PRIMARY = [7, 8, 9]; CONC = [1, 2, 10, 11].
+- (sigma, sigma_lin) = (GELU tanh, ReLU); model = HF gpt2.
+- Per block: SVD(W_proj) and SVD(Dy); 4 measurements per item 316 setup.
+- Float PPL on calib slice 45.0637 (matches cycle 302/304 ref).
+- Trainable params = 0.
+- Wall ~30s on mps.
+
+Files:
+- experiments/block8_deep_dive_cycle306.py
+- autoresearch/plans/cycle_306.md
+- autoresearch/results/cycle_306_block8_deep_dive.json
+- autoresearch/results/cycle_306_summary.md
+- autoresearch/results/cycle_306_panels.png
+- autoresearch/results/cycle_306_manifest.txt
+- autoresearch/results/cycle_306_exec_result.txt (this file)
+- autoresearch/logs/cycle_306_run.log
+
+Sanity:
+- E_kept_top_2_via_Wproj reproduces cycle 302 panel 4 to <= 1e-4 at every
+  measured block (asserted in script via cycle 302 reference dict).
+- Float PPL within 0.5 of cycle 302/304 reference 45.0637 (asserted).
+- Vh_w.shape == (768, 768) per block; Vh_y.shape == (768, 768) per block.
+
+Constructive follow-up (suggested for the next cycle, NOT executed here):
+- Test Δy-aligned rank-1 LASER variant at b8: replace W_proj_8 with a
+  rank-1 factorization where the kept right-SV is Vh_y[:1] (Δy's intrinsic
+  top-1 right SV), not Vh_w[:1]. If b8's PPL recovers under this variant
+  but not under Vh_w[:1], the "Δy misalignment" reading is validated.

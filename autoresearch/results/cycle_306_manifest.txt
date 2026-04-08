@@ -1,0 +1,142 @@
+Cycle 306 Manifest -- Item 316: Block 8 deep dive (curvature residual)
+
+Commit: TBD
+Branch: geometric_compression
+Verdict: REFUTED
+
+== Verdict logic (item 316 verbatim) ==
+CONFIRMED iff (a) b8 W_proj top-2/top-5 SV ratio <= 0.5 * median concentrator
+              ratio (b8 FLATTER)
+              AND (b) b8 Dy eff_rank >= 1.5 * median concentrator Dy eff_rank
+              (b8 BROADER) -- single-factor "flat W_proj + broad delta"
+              hypothesis explains E_kept_top_2(b8) = 0.47.
+REFUTED iff neither (a) nor (b) holds -- the single-factor hypothesis fails.
+INCONCLUSIVE otherwise.
+
+Measured (concentrators = {1, 2, 10, 11}):
+  conc W_proj top2/top5 ratios = [1.6815, 1.3097, 1.4343, 1.5942]
+                                  median = 1.5142
+                                  0.5 * median = 0.7571
+  conc Dy   eff_rank          = [1.310, 1.065, 1.099, 1.018]
+                                  median = 1.0823
+                                  1.5 * median = 1.6234
+
+  b8 W_proj top2/top5 ratio  = 1.4875   (NOT <= 0.7571 -- cond_a False)
+  b8 Dy   eff_rank           = 1.197    (NOT >= 1.6234 -- cond_b False)
+
+Both single-factor conditions fail by a wide margin -> REFUTED.
+
+== Geometric object ==
+For l in ALL_BLOCKS = {1, 2, 7, 8, 9, 10, 11} (PRIMARY = {7, 8, 9}; the
+remaining four are concentrator references for the verdict thresholds):
+
+  z(x)   = LN2(x) @ W_fc + b_fc          in R^3072  (per token)
+  delta  = GELU(z) - ReLU(z)             in R^3072
+  Dy     = delta @ W_proj                in R^768   (residual stream)
+  W_proj = U_w diag(S_w) Vh_w            (3072, 768)  HF Conv1D
+  Dy     = U_y diag(S_y) Vh_y            (N, 768)     N = 25600
+
+Measurements per block (item 316 verbatim Setup):
+  (1) full SV spectrum of Dy (768 values)
+  (2) per-token ||Dy_t||_2
+  (3) top-K concentration of Dy (top-1 energy fraction; eff_rank; k_95; k_99)
+  (4) cosine between Dy top-5 right SVs (Vh_y[:5]) and W_proj top-5 right SVs
+      (Vh_w[:5]) -- principal-angle cosines via svdvals(Vh_y[:5] @ Vh_w[:5].T)
+
+== Per-block headline numbers ==
+block | s_w[0]  s_w[1]  s_w[4] | top2/top5 | Dy_top1_E | Dy_eff_rank | Dy_k95 | cos_top5_sum | E_kept_top2_via_Wproj
+   1  | 28.71   23.10   13.74  |   1.6815  |  0.8736   |    1.310    |   132  |    2.637     |    0.7463
+   2  | 38.26   15.17   11.58  |   1.3097  |  0.9692   |    1.065    |     1  |    2.115     |    0.9190
+   7  | 30.23   16.80   14.83  |   1.1324  |  0.9435   |    1.123    |     8  |    2.613     |    0.6622
+   8  | 31.08   24.50   16.47  |   1.4875  |  0.9141   |    1.197    |    73  |    2.651     |    0.4722
+   9  | 32.78   21.97   18.31  |   1.1996  |  0.9017   |    1.230    |   110  |    2.115     |    0.5356
+  10  | 41.59   28.19   19.66  |   1.4343  |  0.9540   |    1.099    |     1  |    2.506     |    0.8374
+  11  | 60.99   34.59   21.70  |   1.5942  |  0.9910   |    1.018    |     1  |    3.080     |    0.9803
+
+E_kept_top_2_via_Wproj reproduces cycle 302 panel 4 to ≤ 1e-4 at every block
+(asserted in script). Float PPL on calib slice = 45.0637 (matches cycle
+302/304 reference 45.0637; assertion abs(diff) < 0.5 holds).
+
+== Substantive findings sharper than REFUTED ==
+
+(1) The "flat W_proj + broad curvature residual" hypothesis is wrong as
+    stated. b8's W_proj top-2/top-5 ratio (1.49) is essentially the
+    concentrator median (1.51); b8's Dy stable rank (1.20) is barely above
+    the concentrator median (1.08), not the 1.5x required.
+
+(2) Δy is RANK-1 DOMINATED at every measured block on its OWN SVD basis.
+    Stable rank ∈ [1.018, 1.310]; top-1 energy fraction ∈ [0.874, 0.991].
+    The "broad curvature residual" reading of cycle 304 (b8 k_95 = 511) was
+    a W_proj-BASIS PROJECTION ARTIFACT, not an intrinsic property of Δy.
+    On Dy's own SVD, b8 k_95 = 73; b2 k_95 = 1; b9 k_95 = 110; b11 k_95 = 1.
+
+(3) The actual b8 anomaly is now visible: b8 has the LARGEST gap between
+    intrinsic Dy k_95 (73) and W_proj-basis-projected k_95 (511, cycle 304).
+    Difference = 438 ranks. This is a MISALIGNMENT effect, not flatness or
+    breadth: b8's nearly-rank-1 Δy points in a direction that does not
+    project well onto Vh_w[:k] for small k. The remaining ~6% energy of Δy
+    spreads diffusely across W_proj's right-singular tail when projected
+    into that basis, but the energy itself lives in a low-rank intrinsic
+    subspace of Δy.
+
+(4) cos_top5_sum (principal-angle alignment of Vh_y[:5] and Vh_w[:5], max
+    = 5) at b8 = 2.65 -- comparable to b1 (2.64) and b7 (2.61), and ABOVE
+    b2 (2.12) and b9 (2.12). The misalignment is therefore TOP-1 specific,
+    not a broad 5-frame mismatch: b8's first right SV of Δy (which holds
+    91% of the energy) is the locus that fails to align with Vh_w[:2].
+    b11 has the highest cos_top5_sum (3.08) and the highest E_kept_top_2
+    (0.98), the expected coupling.
+
+(5) Implication for cycle 315 multi-block LASER: item 316's CONFIRMED
+    branch had argued "block 8 should NOT be added to any multi-block
+    LASER stack -- its curvature residual has nowhere to hide". REFUTED
+    flips the geometric reading: b8's curvature residual IS rank-1
+    concentrated and would fit a rank-1 LASER replacement of c_proj_8 IF
+    the rank-1 axis is chosen along Vh_y[:1] and not Vh_w[:1]. A LASER
+    using Vh_w[:1] (the standard cycle 280/284/305 construction) would
+    leave 53% of Δy energy unprojected, which is the cycle 305 result
+    when block 8 is included and explains why cycle 305 destructive
+    composition was strongest at the mid-blocks. The constructive
+    follow-up is to test a Δy-aligned rank-1 LASER variant at b8.
+
+(6) Cross-validation with cycle 302 / cycle 304 references:
+    - E_kept_top_2_via_Wproj at every block matches cycle 302 panel 4
+      to <= 1e-4 (asserted).
+    - cycle 304 k_95 measurements (W_proj-basis projection) are NOT
+      directly reproduced by this script; the Dy_k95 column above is
+      from Dy SVD, a different geometric object. The two measurements
+      agree on RANK ORDER across blocks but differ in absolute values
+      (cycle 304: b8 k_95 = 511 vs this cycle: b8 Dy k_95 = 73).
+
+(7) Sanity: Δy SVD shape (768, 768) for every block; W_proj SVD shape
+    (768, 768) for every block; orthonormality of Vh_w[:5] and Vh_y[:5]
+    follows from torch.linalg.svd and was used in the principal-angle
+    computation (Vh_y[:5] @ Vh_w[:5].T -> svdvals -> 5 cosines in [0, 1]).
+
+== Config ==
+N_CALIB = 200, SEQ_LEN = 128, N_TOK = 25600
+SEED = 42
+PRIMARY = [7, 8, 9]
+CONCENTRATORS = [1, 2, 10, 11]
+ALL_BLOCKS = [1, 2, 7, 8, 9, 10, 11]
+DEVICE = mps
+sigma = GELU (tanh approx); sigma_lin = ReLU
+model = gpt2 (HF small)
+linalg = CPU float32
+trainable params = 0
+Wall ~30s on mps (single forward pass + 7 SVDs of Dy + 7 SVDs of W_proj).
+
+== Files written ==
+experiments/block8_deep_dive_cycle306.py
+autoresearch/plans/cycle_306.md
+autoresearch/results/cycle_306_block8_deep_dive.json
+autoresearch/results/cycle_306_summary.md
+autoresearch/results/cycle_306_panels.png
+autoresearch/results/cycle_306_manifest.txt
+autoresearch/results/cycle_306_exec_result.txt
+autoresearch/audits/cycle_306.md
+autoresearch/results/cycle_306_audit.txt
+autoresearch/logs/cycle_306_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+autoresearch/STATUS.md

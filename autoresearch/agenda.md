@@ -6,11 +6,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-316. **Block 8 deep dive — why is E_kept_top_2(b8) = 0.47, the lowest across all 12 blocks?**
-   - Context: Cycle 302 panel 4 extended cycle 301's E_kept_top_2 measurement to all 12 blocks and surfaced one clean outlier: block 8 at 0.4722, meaningfully below its neighbors (b7 0.6622, b9 0.5356) and ~2× below the concentrator blocks. Block 8 is also one of the cycle 278 bathtub's "non-concentrators" (eff_rank in the middle of the bathtub, not at floor). Block 8 is the unique block where the rank-2 kept subspace captures less than half of Dy's energy. What's special? Four possibilities: (a) W_proj at block 8 is unusually FLAT in its top-2 right-singular directions (top-2 singular values close to top-k tail) — measurable via per-block spectrum slope; (b) the curvature residual δ at block 8 is spread over a genuinely broad direction set in R^3072 — measurable via eff_rank of δ itself; (c) W_proj at block 8 has anomalously large null-space energy for Dy — measurable via ||Dy @ Vh[2:, :].T||²; (d) block 8 mixes two different functional roles (e.g., embedding-tail + upper-layer cleanup) — measurable via per-token E_kept variance. Hypothesis: block 8's flat W_proj spectrum is the dominant factor — top-2/top-5 ratio is ≤0.3× the concentrator blocks' ratios. If confirmed, block 8 should NOT be added to any multi-block LASER stack (cycle 315) — its curvature residual has nowhere to hide.
-   - Setup: New script `experiments/block8_curvature_deep_dive_cycle316.py`. Reuse cycle 302 framework. For block 8 vs baseline blocks {1, 2, 11}, measure: (1) W_proj spectrum (all 768 singular values, plot slope comparison); (2) eff_rank of δ at block 8 vs the 3 baselines (compute SVD of δ_flat ∈ R^{N_tokens × 3072}); (3) E_kept_top_k for k ∈ {1, 2, 5, 10, 20, 50, 100} at block 8 vs baselines (from cycle 314); (4) per-token E_kept_top_2(token_i) histogram at block 8 vs baselines — is there a sub-population of tokens whose δ escapes the kept subspace? Identify top-20 tokens with lowest E_kept_top_2 at block 8 and decode via GPT-2 tokenizer. Trainable params: 0. ~6 min wall on mps.
-   - Verdict thresholds: CONFIRMED iff (a) block 8 top-2/top-5 W_proj singular-value ratio is ≤0.5× the median concentrator block's ratio AND (b) block 8 δ eff_rank is ≥1.5× the median concentrator block's δ eff_rank — "block 8 has both a flatter W_proj AND a broader curvature residual, multiplicatively explaining E_kept_top_2 = 0.47". REFUTED iff neither (a) nor (b) holds — "block 8 is low for a different reason; the single-factor hypothesis fails, open a new sub-item for per-token investigation". INCONCLUSIVE otherwise.
-   - Artifacts: experiments/block8_curvature_deep_dive_cycle316.py, autoresearch/results/cycle_316_block8_deep_dive.json
+(no P0 items pending)
 
 ### P1
 
@@ -51,6 +47,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 306
+
+316. **Block 8 deep dive — why is E_kept_top_2(b8) = 0.47, the lowest across all 12 blocks?** *(REFUTED — cycle 306)*
+   - **Outcome: REFUTED** — neither single-factor condition holds. b8 W_proj top-2/top-5 ratio = 1.4875 vs concentrator {1,2,10,11} median 1.5142 — b8 is NOT flatter (cond_a False). b8 Δy stable rank = 1.197 vs concentrator median 1.082 — b8 is NOT broader (cond_b False, only 1.11× not the required 1.5×). Geometric reframing sharper than REFUTED: Δy is rank-1 dominated at every measured block (top1_E ∈ [0.87, 0.99], stable rank ∈ [1.02, 1.31]); cycle 304's "broad b8 curvature residual" reading (k_95=511) was a W_proj-basis projection artifact, not an intrinsic Δy property — on Dy's own SVD, b8 k_95 = 73 (b2 = 1, b9 = 110, b11 = 1). The actual b8 anomaly is a TOP-1 misalignment between Vh_y[:1] and Vh_w[:2], not flatness or breadth. cos_top5_sum at b8 = 2.65 (similar to b1, b7) is a 5-frame metric and matches concentrators, but the rank-1 axis carrying 91% of b8's Δy energy fails to project well into Vh_w[:2], leaving 53% of energy unprojected — that is the entire E_kept_top_2(b8) = 0.47 story. Cycles 302/304 reproduce: E_kept_top_2_via_Wproj at every block matches cycle 302 panel 4 to ≤1e-4 (asserted). Cycle 315 (multi-block LASER) implication is now reversed: b8's curvature IS rank-1 concentrated and would fit a rank-1 LASER replacement IF the kept axis is Vh_y[:1], not Vh_w[:1]. Constructive follow-up: test a Δy-aligned rank-1 LASER variant at b8.
+   - Cycle: 306
+   - Artifacts: `experiments/block8_deep_dive_cycle306.py`, `autoresearch/plans/cycle_306.md`, `autoresearch/briefs/cycle_306.md`, `autoresearch/results/cycle_306_block8_deep_dive.json`, `autoresearch/results/cycle_306_summary.md`, `autoresearch/results/cycle_306_panels.png`, `autoresearch/results/cycle_306_manifest.txt`, `autoresearch/results/cycle_306_exec_result.txt`, `autoresearch/audits/cycle_306.md`, `autoresearch/results/cycle_306_audit.txt`, `autoresearch/logs/cycle_306_run.log`
 
 ### Cycle 305
 
