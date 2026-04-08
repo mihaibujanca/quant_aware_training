@@ -1,0 +1,147 @@
+Cycle 309 Manifest -- Item 319: Δy-aligned rank-r LASER at block 8
+
+Commit: PENDING
+Branch: geometric_compression
+Verdict: CONFIRMED (verbatim) but COMPARATIVE HYPOTHESIS REFUTED
+
+== Verdict logic (item 319 verbatim) ==
+CONFIRMED iff dy_r1 retrain best_mean <= 60.0
+            ("Δy basis is the right basis at b8, W_proj basis is the wrong one")
+REFUTED   iff dy_r1 retrain best_mean >= 110.0
+            ("the b8 53% unprojected energy is not recoverable from any rank-1
+              cytoplasm; b8 needs higher rank regardless of basis")
+INCONCLUSIVE otherwise.
+
+Measured: dy_r1 retrain best_mean = 54.3185 (<= 60.0 -> CONFIRMED).
+
+== Caveat: paired baseline beats Δy basis ==
+The verbatim CONFIRMED criterion gates only the dy_r1 absolute PPL. The
+paired W_proj-basis baseline (cycle 280-style) achieves a LOWER PPL at the
+same rank in this cycle, so the *comparative* claim that "Δy basis is the
+right basis at b8" is rejected:
+
+  cell      no-retrain    retrain best_mean ± std    Δfloat
+  dy_r1       61.6614       54.3185 ± 0.0044         +0.424
+  dy_r2       61.1611       53.6040 ± 0.0042         -0.291
+  wproj_r1    60.8573       53.3034 ± 0.0071         -0.591
+  wproj_r2    60.4958       52.8538 ± 0.0126         -1.041
+
+  wproj > dy at both r=1 (+1.02 PPL) and r=2 (+0.75 PPL).
+
+Float PPL = 53.8949 (cycle 270/280/305 ref 53.895; |delta| < 0.001).
+
+== Geometric construction ==
+For r ∈ {1, 2}:
+
+  dy basis:
+    A_y    = W_proj_8 @ Vh_y[:r].T   ∈ R^(3072, r)   (frozen)
+    B_init = Vh_y[:r]                 ∈ R^(r, 768)    (trainable)
+    bias   = c_proj_8.bias clone      ∈ R^(768,)      (trainable)
+    At init: A_y @ B = W_proj_8 @ (Vh_y[:r].T @ Vh_y[:r])
+           = orthogonal projection of W_proj_8's columns onto span(Vh_y[:r]).
+
+  wproj basis (cycle 280-style paired baseline):
+    A_w    = U_w[:, :r] * S_w[:r]    ∈ R^(3072, r)   (frozen)
+    B_w    = Vh_w[:r]                 ∈ R^(r, 768)    (trainable)
+    bias   = c_proj_8.bias clone      ∈ R^(768,)      (trainable)
+
+  Common: W_new = A @ B replaces c_proj_8.weight in place; all other model
+  parameters frozen. Adam LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, best-state
+  restore. SEEDS=[42, 137, 2024]. Trainable params/fit:
+    r=1 -> 1,536  (1*768 + 768)
+    r=2 -> 2,304  (2*768 + 768)
+
+== Geometric measurements at b8 ==
+  Δy = (GELU(z_8) - ReLU(z_8)) @ W_proj_8  ∈ R^(25600, 768)
+  Vh_y top1_energy   = 0.9141  (cycle 306 ref 0.9141)
+  Vh_y top2_energy   = 0.9176
+  Vh_y[:r] orthonorm off_diag: r=1: 2.4e-7; r=2: 6.0e-7   (both < 1e-4)
+
+  Cross-basis projection: ||W_proj @ Vhy[:r]^T Vhy[:r]||_F^2 / ||W_proj||_F^2
+    r=1: 0.0127  (1.27% of W_proj's energy is in span(Vhy[:1]))
+    r=2: 0.0220  (2.20%)
+  Δy's top right SV lives in W_proj's tail by Frobenius energy.
+
+  W_proj top-5 S = [31.08, 24.49, 18.53, 16.77, 16.47]
+  Δy   top-5 S = [5316.46, 327.31, 239.67, 226.79, 216.37]   (very rank-1)
+
+== Substantive findings sharper than CONFIRMED ==
+
+(1) The verbatim threshold passes by a wide margin (54.32 vs 60.0; gap = 5.7
+    PPL), but the CONFIRMED branch's interpretive claim ("Δy basis is the
+    right basis at b8") is rejected by the paired baseline.
+
+(2) wproj wins at both r=1 (+1.02 PPL) and r=2 (+0.75 PPL). std across seeds
+    is tiny (≤ 0.013), so the ordering is robust.
+
+(3) The cycle 306 "53% unprojected" framing measures Δy's energy fraction
+    captured by span(Vh_w[:2]) on the 768-dim *output* side. Constraining
+    c_proj's row space to span(Vh_y[:r]) on the *output* side is the correct
+    operational reading of "Δy basis", but it kills 98%+ of W_proj's
+    *input-side* energy (the cross-basis sanity above), and the trainable
+    factor B (r, 768) cannot recover what was thrown away on the input side.
+
+(4) Both bases recover from the same ~61 PPL no-retrain init to within
+    [52.85, 54.32] under Adam. The basis difference influences only the
+    direction the trainable parameters can search; A_w and A_y span different
+    r-dim subspaces of R^3072. wproj's A_w is a rank-r operator on W_proj's
+    highest-energy *input* directions, while dy's A_y is a rank-r operator
+    on Δy's specific *output* directions, which point into W_proj's
+    *low-energy input tail*.
+
+(5) Implication for cycle 305 destructive composition: the cycle 306
+    constructive follow-up was based on the assumption that the b8 anomaly
+    was a basis-choice problem. This cycle shows the assumption is wrong
+    at the comparative level. Cycle 305's destructive composition at b8
+    is NOT explained by "the LASER kept the wrong basis"; the LASER kept
+    the *better* basis. The b8 contribution to multi-block destruction
+    must be reframed.
+
+(6) Δy is rank-1 dominated INTRINSICALLY (top1_E=0.91, stable rank=1.20),
+    but this rank-1 axis is in W_proj's tail. Rank-1 dominance of Δy on
+    its own SVD does not transfer into rank-1 capacity for the c_proj
+    operator: the operator's input-side rank is determined by W_proj's
+    spectrum, not by Δy's.
+
+(7) Across all 12 (cell, seed) pairs, best_step = 4000 (training still
+    descending at the budget end). Absolute PPLs are *upper bounds* on
+    the trainable floor for each cell. The wproj > dy ordering is robust
+    to budget extension; both cells' descent slopes are essentially
+    parallel (the 0.5--1 PPL separation persists for the last ~1500
+    steps).
+
+(8) Cross-validation with prior cycles:
+    - Float PPL = 53.8949 matches cycle 270/280/305 reference 53.895 to <0.001.
+    - Δy top1_E at b8 = 0.9141 matches cycle 306 reference 0.9141 to 4 dp.
+    - W_proj top-5 S at b8 = [31.08, 24.49, 18.53, 16.77, 16.47] matches
+      cycle 306 reference exactly.
+    - LowRankCProj template is the cycle 270/280/292 template; bit-for-bit
+      identical to cycle 280's no-retrain init for the wproj branch (init
+      PPL == no-retrain PPL within 1e-2 asserted per seed).
+
+== Config ==
+TARGET_BLOCK = 8
+RANKS = [1, 2]
+BASES = ["dy", "wproj"]
+N_CALIB = 200, N_EVAL = 100, SEQ_LEN = 128, N_TOK = 25600
+N_STEPS = 4000, LR = 1e-4, EVAL_EVERY = 100
+SEEDS = [42, 137, 2024]
+DEVICE = mps
+SVD: CPU float32
+Trainable params per fit: 1,536 (r=1) / 2,304 (r=2)
+Wall ~50 min on mps
+Float PPL ref 53.8949 (cycle 270/280/305 ref 53.895)
+
+== Files written ==
+experiments/block8_dy_aligned_laser_cycle309.py
+autoresearch/plans/cycle_309.md
+autoresearch/reviews/cycle_309.md
+autoresearch/results/cycle_309_block8_dy_aligned_laser.json
+autoresearch/results/cycle_309_summary.md
+autoresearch/results/cycle_309_manifest.txt
+autoresearch/results/cycle_309_exec_result.txt
+autoresearch/audits/cycle_309.md
+autoresearch/results/cycle_309_audit.txt
+autoresearch/logs/cycle_309_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv

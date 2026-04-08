@@ -1,0 +1,98 @@
+Cycle 309 Exec Result -- Item 319
+
+Verdict: CONFIRMED (verbatim threshold)
+Key metric: dy_r1 retrain best_mean = 54.3185 PPL (CONFIRMED iff <= 60.0; REFUTED iff >= 110.0)
+
+Substantive finding (sharper than CONFIRMED):
+The verbatim CONFIRMED threshold is met (54.32 << 60), but the paired W_proj-basis
+baseline beats the Δy basis at both ranks. The "Δy basis is the right basis at b8"
+hypothesis is REJECTED at the comparative level: there is no basis-driven gap to close.
+
+Cell summary (no-retrain -> retrain best_mean +/- std):
+  dy_r1     :  61.6614 -> 54.3185 +/- 0.0044  (Δfloat=+0.424)
+  dy_r2     :  61.1611 -> 53.6040 +/- 0.0042  (Δfloat=-0.291)
+  wproj_r1  :  60.8573 -> 53.3034 +/- 0.0071  (Δfloat=-0.591)
+  wproj_r2  :  60.4958 -> 52.8538 +/- 0.0126  (Δfloat=-1.041)
+
+Float PPL ref: 53.8949 (cycle 270/280/305 reference 53.895; |delta| < 0.001).
+
+Geometric construction:
+  dy:    A_y = W_proj @ Vh_y[:r].T frozen (3072, r); B_init = Vh_y[:r] trainable
+         At init, A_y @ B = W_proj @ (Vh_y[:r].T @ Vh_y[:r]) = orthogonal projection
+         of W_proj's columns onto span(Vh_y[:r]).
+  wproj: A_w = U_w[:, :r] * S_w[:r] frozen; B_w = Vh_w[:r] trainable
+         (cycle 280 standard LASER template).
+  Both: trainable bias = c_proj.bias clone; c_proj_8.weight overwritten in place;
+        all other model params frozen.
+
+Cross-basis projection sanity (W_proj's energy in span(Vh_y[:r])):
+  r=1: ||W_proj @ Vhy[:1]^T Vhy[:1]||_F^2 / ||W_proj||_F^2 = 0.0127  (1.27%)
+  r=2: ||W_proj @ Vhy[:2]^T Vhy[:2]||_F^2 / ||W_proj||_F^2 = 0.0220  (2.20%)
+  Vh_y top directions live in W_proj's tail by Frobenius energy.
+
+Δy SVD measured here vs cycle 306 reference at b8:
+  top1_E       = 0.9141  (cycle 306 ref 0.9141)  asserted < 1e-3
+  top2_E       = 0.9176
+  top-5 Sy     = [5316.46, 327.31, 239.67, 226.79, 216.37]   (very rank-1)
+  Vhy[:r] orthonormal: r=1 off_diag=2.4e-7; r=2 off_diag=6.0e-7  asserted < 1e-4
+
+W_proj SVD top-5 S = [31.08, 24.49, 18.53, 16.77, 16.47]  (matches cycle 306).
+
+Geometric reading:
+1. Δy is rank-1 dominated (91% top1, stable rank 1.20). But the rank-1 axis Vh_y[:1]
+   captures only 1.27% of W_proj's Frobenius energy -- it lies in W_proj's *tail*.
+2. The cycle 306 "53% unprojected" framing measures how much of Δy lives in span(Vh_w[:2])
+   on the *output* side. Replacing c_proj's row space with span(Vh_y[:r]) on the
+   *output* side is geometrically equivalent to setting c_proj_8.row_i := P_y row_i,
+   where P_y projects R^768 columns onto the 1D or 2D Δy axis. This kills 98%+ of
+   the W_proj operator and keeps only its projection onto a tiny subspace -- which
+   happens to be where Δy lives by construction, but is *not* where the rest of
+   c_proj's input-output mapping (the GELU portion) lives.
+3. Both bases at this rank can be Adam-fit to the same neighborhood (~52.85--54.32),
+   because the trainable factor B (r, 768) has full row freedom in R^768 and the
+   bias (768,) absorbs translation. The frozen A_y vs A_w difference is what gates
+   the *direction* the trainable parameters can search. wproj wins because A_w is
+   a rank-r orthogonal-flavored projector (U_w[:, :r] * S_w[:r]) onto W_proj's
+   highest-energy *input* directions, whereas A_y = W_proj @ Vh_y[:r].T is a
+   rank-r projection onto Δy's specific output directions, which point into
+   W_proj's *low-energy tail* on the input side.
+4. Implication: cycle 306's "Δy alignment is the right reading at b8" is REFUTED
+   at the comparative level. The b8 PPL gap of any rank-r LASER is determined
+   by the *input-side* singular structure of W_proj, not by the *output-side*
+   alignment with Δy. The +1.04 PPL margin wproj_r2 vs dy_r2 is small but
+   robust across seeds (wproj_r2 std=0.013, dy_r2 std=0.004).
+
+Setup:
+- N_CALIB=200 wikitext-2 val × 128 = 25600 tokens (calibration; same set used for
+  Δy SVD AND for Adam retrain steps; deterministic cycle 270/280 pipeline).
+- N_EVAL=100 wikitext-2 val × 128 (held-out; same as cycle 270/280/305 anchors).
+- DEVICE=mps; SVD on CPU float32.
+- Adam LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, best-state restore.
+- SEEDS=[42, 137, 2024]; LowRankCProj template from cycle 270/280/292.
+- Trainable params per fit: r=1 -> 1,536  (1*768 + 768);
+                            r=2 -> 2,304  (2*768 + 768).
+- Wall ~50 min total on mps (4 cells × 3 seeds × ~2.2 min/seed + 4 no-retrain).
+
+Sanity:
+- Float PPL on eval slice = 53.8949; matches cycle 270/280/305 reference 53.895
+  to <0.001 (asserted < 0.5).
+- Δy top1_E measured at b8 = 0.9141 matches cycle 306 reference 0.9141 to 4 dp
+  (asserted < 1e-3).
+- Vh_y[:r] orthonormality: max off-diagonal of Vh_y[:r] @ Vh_y[:r].T was
+  2.4e-7 (r=1) and 6.0e-7 (r=2), both << 1e-4 (asserted).
+- Per-seed retrain init PPL == cell no-retrain PPL within 1e-2 (asserted).
+- Per-seed restore best_state: |restored_ppl - best_ppl| < 1e-3 (asserted).
+- For all 12 (cell, seed) pairs, best_step = 4000 (training still descending at
+  budget end; absolute PPLs are upper bounds on the trainable floor for each cell).
+
+Files:
+- experiments/block8_dy_aligned_laser_cycle309.py
+- autoresearch/plans/cycle_309.md
+- autoresearch/reviews/cycle_309.md
+- autoresearch/results/cycle_309_block8_dy_aligned_laser.json
+- autoresearch/results/cycle_309_summary.md
+- autoresearch/results/cycle_309_manifest.txt
+- autoresearch/results/cycle_309_exec_result.txt (this file)
+- autoresearch/audits/cycle_309.md
+- autoresearch/results/cycle_309_audit.txt
+- autoresearch/logs/cycle_309_run.log

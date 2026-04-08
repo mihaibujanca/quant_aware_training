@@ -1,0 +1,80 @@
+Cycle 309 Audit Result -- Item 319
+
+Status: PASS (with substantive correction)
+Verdict: CONFIRMED (verbatim threshold), comparative claim REFUTED
+
+Verbatim threshold: dy_r1 retrain best_mean = 54.3185 PPL <= 60.0 -> CONFIRMED.
+Margin: 5.68 PPL below the threshold. All 3 dy_r1 seeds in [54.3142, 54.3245],
+std=0.0044. The literal verdict is robust.
+
+Comparative refutation: the paired W_proj-basis baseline beats the Δy basis at
+both ranks. wproj_r1 = 53.3034 < dy_r1 = 54.3185 (by 1.02 PPL). wproj_r2 =
+52.8538 < dy_r2 = 53.6040 (by 0.75 PPL). All seed std <= 0.0126; the wproj > dy
+ordering is robust across seeds. The CONFIRMED branch's interpretive claim
+"Δy basis is the right basis at b8, W_proj basis is the wrong one" is
+rejected by the cycle's own paired baseline.
+
+Reproduction sanity:
+- Float PPL on eval slice = 53.8949 vs ref 53.895 (|delta|<0.001, asserted < 0.5)
+- Δy top1_E at b8 = 0.9141 vs cycle 306 ref 0.9141 (asserted < 1e-3)
+- W_proj_8 top-5 SVs match cycle 306 to 4 dp:
+  [31.0758, 24.4946, 18.5351, 16.7729, 16.4667]
+- Δy top-5 SVs match cycle 306 to 4 dp:
+  [5316.4561, 327.3077, 239.6714, 226.7930, 216.3731]
+- Vh_y[:r] orthonormality off-diag: r=1: 2.4e-7; r=2: 6.0e-7 (asserted < 1e-4)
+- Per-seed init PPL == cell no-retrain PPL within 1e-2 (asserted)
+- Per-seed restored_ppl == best_ppl within 1e-3 (asserted)
+- Trainable params per fit: r=1: 1,536; r=2: 2,304 (asserted)
+
+Best-state monotonicity:
+- All 12 (cell, seed) pairs have best_step = 4000 (training still descending
+  at budget end). Absolute PPLs are upper bounds.
+- Descent slopes at last 500 steps comparable across cells (~Δ -0.17 to -0.20
+  PPL per 500 steps); the wproj > dy ordering would not flip at any feasible
+  budget extension within the order-of-magnitude window.
+
+Geometric reading (the substantive correction):
+- Δy is rank-1 dominated on its own SVD (top1_E=0.914, stable rank=1.20),
+  consistent with cycle 306.
+- Vh_y[:1] (the dominant Δy direction) lives in W_proj's INPUT-SIDE TAIL by
+  Frobenius energy: ||W_proj @ Vhy[:1]^T Vhy[:1]||_F^2 / ||W_proj||_F^2 = 0.0127
+  at r=1; 0.0220 at r=2.
+- Replacing c_proj_8.weight with W_proj @ P_y (P_y projects R^768 onto
+  span(Vh_y[:r]) on the OUTPUT side) preserves the top-r Δy directions on the
+  output side but kills 98%+ of the W_proj operator on the input side. The
+  trainable factor B (r, 768) cannot recover what was thrown away on the input
+  side because A is frozen at a low-energy slice of W_proj's input space.
+- wproj's A_w preserves W_proj's HIGHEST-energy input directions exactly, which
+  is why wproj wins.
+- The cycle 306 "53% unprojected energy" framing measures Δy's energy fraction
+  captured by Vh_w[:2] on the OUTPUT side -- it is not a measurement of how to
+  construct an optimal rank-r LASER. The cycle 306 -> 309 inference path
+  ("optimize output-side alignment to fix the LASER") is wrong: the b8 LASER
+  gap is governed by W_proj's INPUT-SIDE spectrum, not by Δy's output-side
+  alignment.
+- Implication: cycle 305's destructive composition at b8 is NOT explained by
+  "the LASER kept the wrong basis" -- the LASER kept the BETTER basis. The b8
+  multi-block destruction must be reframed via a different geometric mechanism.
+
+Plan adherence:
+- 8 H2 headings, 36 lines (≤45). Item 319 verbatim Hypothesis preserved.
+- New script `experiments/block8_dy_aligned_laser_cycle309.py` (~520 lines).
+- Reuses UnifiedCurvatureFramework (cycle 302/306), LowRankCProj (cycle 270/280/292).
+- Paired W_proj baseline run on the SAME calib/eval/seeds as Δy variant.
+
+Trainable params: 1,536 (r=1) / 2,304 (r=2) per fit; 4 cells × 3 seeds = 12 fits.
+Wall ~50 min on mps (under 60 min cap).
+
+Corrections:
+- Verdict label upgraded from "CONFIRMED" to "CONFIRMED verbatim, comparative
+  claim REFUTED" in the agenda PAST entry, manifest header, exec_result, and
+  TSV outcome (`confirmed-comparative-refuted`). The literal-threshold verdict
+  is preserved; the comparative refutation is added as the substantive finding
+  per CLAUDE.md "intellectual honesty" rule.
+
+Recommendations:
+1. STATUS.md: lift "wproj > dy at b8" into the geometric thread; the
+   cycle 305 b8 destructive composition needs a different geometric reading.
+2. Next P0 item: 320 (pairwise LASER composition matrix at {b1,b2,b3,b10,b11}).
+3. No further follow-up to item 319: the b8 LASER gap is now characterised as
+   a W_proj-spectrum property, not a basis-choice problem.
