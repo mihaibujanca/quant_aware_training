@@ -1,6 +1,6 @@
 Cycle 306 Manifest -- Item 316: Block 8 deep dive (curvature residual)
 
-Commit: TBD
+Commit: 1635737
 Branch: geometric_compression
 Verdict: REFUTED
 
