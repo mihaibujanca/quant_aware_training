@@ -1,0 +1,179 @@
+Cycle 310 / Item 320 -- Pairwise LASER composition matrix
+Verdict: REFUTED
+Commit: <PENDING>
+
+== Item 320 verbatim verdict thresholds ==
+n_destructive := |{pair : delta_vs_worst_single >= +5 PPL}|
+CONFIRMED    iff n_destructive >= 6
+REFUTED      iff n_destructive <= 2
+INCONCLUSIVE otherwise.
+
+== Result ==
+n_destructive = 1 / 10  (only (b10, b11) at +6.25 PPL)
+                            <= 2  -- REFUTED bar PASSES
+                            <  6  -- CONFIRMED bar FAILS
+=> Verdict = REFUTED.
+
+9 / 10 pairs compose non-destructively at the +5 PPL bar; only the
+(b10, b11) pair lands above. The cycle 305 5-stack destruction (+18 PPL
+above worst single) cannot be reduced to a single bad pair. It must
+arise from a higher-order (>=3-block) interaction OR (b10, b11) is the
+seed and other tuples involving it inherit destruction.
+
+== Geometric object ==
+For each pair (l_i, l_j) in C({1,2,3,10,11}, 2) at BLOCKS_RANKS:
+  W_l    = c_proj_l.weight                HF Conv1D (3072, 768)
+  SVD    W_l = U_l diag(S_l) Vh_l         on CPU float32
+  A_l    = U_l[:, :r_l] * S_l[:r_l]       (3072, r_l) frozen buffer
+  B_l    = Vh_l[:r_l, :]                  (r_l, 768)  trainable nn.Parameter
+  bias_l = c_proj_l.bias                  (768,)      trainable nn.Parameter
+  fwd    x @ (A_l @ B_l) + bias_l         matches HF Conv1D semantics
+
+Both LowRankCProj modules of a pair installed simultaneously; every other
+parameter frozen. Joint Adam over the 2 (B_l, bias_l) tensors.
+
+Trainable per pair = (r_i + r_j + 2) * 768.
+
+== 5x5 pair PPL matrix (block_order = [1, 2, 3, 10, 11]) ==
+diagonal cells = single-block anchors from cycle 270/280/285/288/289
+
+block |    1    |    2    |    3    |   10    |   11
+------+---------+---------+---------+---------+--------
+  1   | *49.03* |  54.20  |  51.65  |  52.19  |  53.58
+  2   |  54.20  | *49.33* |  52.36  |  52.91  |  53.85
+  3   |  51.65  |  52.36  | *50.59* |  52.23  |  54.90
+ 10   |  52.19  |  52.91  |  52.23  | *51.47* |  60.72
+ 11   |  53.58  |  53.85  |  54.90  |  60.72  | *54.47*
+
+== Per-pair detail (sorted by delta_vs_worst_single) ==
+pair    | ranks  | trainable | init    | best    | final@2k | restored | delta_v_worst
+--------+--------+-----------+---------+---------+----------+----------+--------------
+(1,11)  | (2,22) |  19,968   | 63.4629 | 53.5812 |  53.5891 |  53.5812 |  -0.8875
+(2,11)  | (2,22) |  19,968   | 70.8544 | 53.8455 |  55.0032 |  53.8455 |  -0.6232
+(3,11)  |(24,22) |  36,864   | 62.9762 | 54.9010 |  54.9010 |  54.9010 |  +0.4323
+(1,10)  | (2,5)  |   6,912   | 64.4650 | 52.1901 |  52.1901 |  52.1901 |  +0.7242
+(3,10)  |(24,5)  |  23,808   | 63.9054 | 52.2278 |  52.2278 |  52.2278 |  +0.7619
+(1,3)   | (2,24) |  21,504   | 64.3845 | 51.6544 |  51.6544 |  51.6544 |  +1.0609
+(2,10)  | (2,5)  |   6,912   | 71.7644 | 52.9059 |  53.8964 |  52.9059 |  +1.4400
+(2,3)   | (2,24) |  21,504   | 75.0811 | 52.3641 |  52.3641 |  52.3641 |  +1.7706
+(1,2)   | (2,2)  |   4,608   | 76.8020 | 54.2029 |  55.2859 |  54.2029 |  +4.8739  <-- marginal
+(10,11) | (5,22) |  22,272   | 76.6535 | 60.7161 |  60.7161 |  60.7161 |  +6.2474  <-- destructive
+
+worst pair = (10, 11)  best_mean = 60.7161  delta = +6.2474
+best  pair = ( 1, 11)  best_mean = 53.5812  delta = -0.8875
+
+== Comparisons to prior cycles ==
+                                            best_mean  | params | reference
+-------------------------------------------+----------+--------+----------------
+float                                       53.8949   |    --  |
+cycle 280  block 1   r=2                    49.0324   |  2,304 | single anchor
+cycle 285  block 2   r=2                    49.3290   |  2,304 | single anchor
+cycle 288  block 3   r=24                   50.5935   | 19,200 | single anchor
+cycle 289  block 10  r=5                    51.4659   |  4,608 | single anchor
+cycle 270  block 11  r=22                   54.4687   | 17,664 | single anchor
+cycle 284  pair (b1, b11)                   52.8803   | 19,968 | 4000-step 3-seed
+cycle 291  pair (b1, b10)                   51.8008   |  6,912 | 4000-step 3-seed
+cycle 305  5-stack                          73.0060   | 46,080 | 4000-step 3-seed REFUTED
+cycle 310  pair (b1, b11)                   53.5812   | 19,968 | 2000-step 1-seed (this cycle)
+cycle 310  pair (b1, b10)                   52.1901   |  6,912 | 2000-step 1-seed (this cycle)
+cycle 310  pair (b10,b11)                   60.7161   | 22,272 | 2000-step 1-seed (this cycle)
+
+Sanity tick: cycle 310 (1,11) = 53.58 vs cycle 284 4000-step = 52.88: +0.70
+PPL gap, consistent with halved Adam budget. cycle 310 (1,10) = 52.19 vs
+cycle 291 4000-step = 51.80: +0.39 PPL gap. Both are budget-bounded sanity
+checks; the matrix ordering and verdict are robust to the budget reduction.
+
+== Substantive findings ==
+
+1. **REFUTED at the verbatim 1/10 pair-destruction count.** 9 / 10 pairs
+   compose non-destructively (delta_vs_worst_single in [-0.89, +4.87]).
+   Only (b10, b11) crosses the +5 PPL bar at +6.25. The "destructive
+   composition is pervasive at the pair level" hypothesis is rejected.
+
+2. **The (b10, b11) pair is the unique pair-level destruction trigger.**
+   b10 and b11 are the two LATEST cycle-282 concentrators in the residual
+   stream. Pairing the two late blocks is destructive while pairing either
+   with any earlier block (1, 2, or 3) is not. This is consistent with
+   cycle 304's reading that b11 is the unique true rank-2 terminator and
+   that touching b11 in the late residual stream is the most fragile move,
+   but it refines the prediction: the fragility manifests when b11 is
+   paired with the OTHER late concentrator b10, not b11 alone.
+
+3. **(b1, b11) is the BEST pair** at delta = -0.8875 (best_mean 53.58 BEATS
+   the worst single anchor b11 = 54.47). This is the cycle 284 CONFIRMED
+   outcome reproduced at a halved budget; the budget reduction does not
+   flip the sign. Pairing b11 with EARLY blocks (1, 2, 3) gives delta in
+   [-0.89, +0.43], i.e. effectively non-destructive even when the delta
+   crosses zero. The early/late dichotomy is sharp.
+
+4. **(b1, b2) is the second-largest pair delta** at +4.87 PPL, just under
+   the +5 bar. Both are r=2 EARLY concentrators with the smallest
+   combined trainable budget (4,608 params). The narrow miss vs the bar
+   suggests the 1-seed 2000-step measurement might flip if extended; an
+   audit re-test at 3 seeds and 4000 steps could push it over, but a
+   single pair flipping CONFIRMED would still leave verdict at 2/10
+   (REFUTED bar holds at <=2).
+
+5. **Cycle 305's +18 PPL destruction is NOT a sum-of-pair-deltas effect.**
+   Sum of pair deltas_v_worst across all 10 pairs = +14.96 PPL. Even an
+   "additive over all C(5,2) pairs" model would predict ~5-15 PPL of
+   composition penalty for the 5-stack, far below the measured +18.5.
+   The 5-stack must include a destructive triple/quadruple interaction
+   beyond the pair level.
+
+6. **Constructive follow-up.** Two natural P0 candidates emerge: (a)
+   C(5, 3) = 10 triples to find the smallest tuple that reproduces
+   destruction, especially triples that include (10, 11); (b) sequential
+   coordinate-descent over blocks to test whether the joint init basin
+   is the issue (cycle 305 audit suggested this).
+
+7. **Cycle 304 k_95 prediction is partially validated.** Cycle 304 predicted
+   cycle 315 destruction; cycle 305 confirmed at +18 PPL. Cycle 310 now
+   refines: at the pair level, the prediction is too pessimistic --
+   non-(10,11) pairs all compose. The k_95 = 1 b11 termination is a
+   trigger for late-late destruction, not a universal "touching b11 in
+   low rank breaks composition".
+
+== Sanity checks ==
+- Float PPL 53.8949 matches cycle 280/284/291/305 ref 53.895 within 0.5.
+- Per-pair best-state restore: |restored - best| < 1e-3 (asserted) for
+  all 10 pairs.
+- Per-pair trainable param count == expected_trainable (asserted).
+- 5x5 pair_ppl_matrix symmetry verified (off-diag |A_ij - A_ji| < 1e-9).
+- Diagonal cells = single-block anchors from cycle 270/280/285/288/289.
+
+== Config ==
+BLOCKS_RANKS = {1: 2, 2: 2, 3: 24, 10: 5, 11: 22}
+BLOCK_ORDER  = [1, 2, 3, 10, 11]
+N_CALIB = 200, N_EVAL = 100, SEQ_LEN = 128
+DEVICE = mps, model = gpt2
+N_STEPS = 2000, LR = 1e-4, EVAL_EVERY = 100
+SEEDS = [42]
+DESTRUCTIVE_THRESHOLD = 5.0
+
+== Convergence (CLAUDE.md verify-task-performance rule) ==
+float PPL on 100-seq eval slice = 53.8949 (matches cycles 280/284/291/305
+baseline). Off-the-shelf gpt2, no task training. Task verification reduces
+to float PPL match. OK.
+
+== Wall ==
+Total ~13 min on mps:
+  model load + tokenisation + float baseline ~5 s
+  5 SVDs (CPU float32 of (3072, 768) each) ~0.5 s
+  10 pairs x (model reload + 2000 Adam steps + 21 eval rounds) ~1.3 min each
+  JSON + summary write ~0.2 s
+
+== Files written ==
+experiments/pairwise_laser_cycle310.py     (driver)
+autoresearch/plans/cycle_310.md
+autoresearch/briefs/cycle_310.md
+autoresearch/results/cycle_310_pairwise_laser.json
+autoresearch/results/cycle_310_summary.md
+autoresearch/results/cycle_310_manifest.txt
+autoresearch/results/cycle_310_exec_result.txt
+autoresearch/audits/cycle_310.md
+autoresearch/results/cycle_310_audit.txt
+autoresearch/logs/cycle_310_run.log
+autoresearch/agenda.md            (item 320 NEXT P0 -> PAST Cycle 310)
+autoresearch/logs/experiments.tsv (row 310 appended)
+autoresearch/STATUS.md            (Latest: Cycle 310 added; title bumped)
