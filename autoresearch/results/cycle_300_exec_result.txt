@@ -1,6 +1,6 @@
 Cycle 300 / Item 310 — Semantic decomposition of cycle 280's frozen A factor
 Verdict: CONFIRMED_unigram
-Commit: pending
+Commit: 0405442
 
 == Item 310 verbatim verdict thresholds ==
 CONFIRMED structured  iff >=1 direction has top-20 boost top-20 >=10 alpha

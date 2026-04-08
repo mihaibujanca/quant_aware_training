@@ -1,0 +1,185 @@
+Cycle 300 Audit — Item 310
+Status: PASS
+Commit: 0405442
+Verdict verified: CONFIRMED_unigram
+
+== Verdict verification (verbatim item 310) ==
+CONFIRMED structured   iff >=1 direction has top-20 unembedding cos > 0.3
+                       AND a semantically coherent top-20 token cluster.
+CONFIRMED unigram      iff both directions' top-20 boost tokens are
+                       >=14/20 stopwords/punct/whitespace.
+REFUTED interpretable  iff neither cluster coherent AND all Q/K/V below
+                       null (no alignment above noise).
+
+Independently recomputed from cycle_300_semantic.json:
+  dir 0 n_stop/n_alpha boost = 17/3   -> unigram fires; structured fails
+  dir 1 n_stop/n_alpha boost = 19/1   -> unigram fires; structured fails
+  any_structured       = False (max 3 alpha, threshold 10)
+  both_unigram         = True  (17 and 19 both >= 14)
+  all_qkv_below_null   = False (K at +11.8 and +13.8 sigma above null)
+  VERDICT = CONFIRMED_unigram (matches JSON/manifest/exec/TSV/agenda)
+
+Note on the literal "max |cos(b, wte)| > 0.3" reading of CONFIRMED
+structured: dir 0 max |cos| = 0.3011 (barely above 0.3 by +0.001). This
+would technically trigger on a literal-threshold reading, but the top-20
+boost list is 17/20 stopwords, so the "semantically coherent token
+cluster" sub-requirement fails. The script uses the programmatic
+coherence proxy (>=10/20 alpha subwords) which is robust at the
+boundary and agrees with what manual token-list review would say.
+Auditor endorses the proxy.
+
+== Retrain reproducibility ==
+float PPL           53.895    ref 53.895    delta 0.000
+init  PPL (rank-2)  57.6581   cycle 280 ref 57.664  delta 0.006
+                              cycle 299 seed-42     delta 0.000 (machine precision)
+best  PPL @3900     49.0603   cycle 280 ref 49.032  delta 0.028
+                              cycle 299 seed-42     delta 0.000 (machine precision)
+adam recovery       8.5978 PPL
+final PPL @4000     49.2498
+
+== Trainable param count ==
+LowRankCProj: B (2, 768) = 1536 + bias (768,) = 768, total 2304. All
+other params requires_grad_(False); A is a buffer. Asserted at runtime.
+
+== sigma_c (block 1, N=25600 tokens) ==
+min=0.000 max=0.995 mean=0.264 median=0.272
+n_mostly_neg (sigma <= 0.1): 1188 / 3072 (38.7 pct)
+n_mostly_pos (sigma >= 0.9):   12 / 3072 ( 0.39 pct)   <- only 12 channels
+n_bump       (0.1 < s < 0.9):1872 / 3072 (60.9 pct)
+
+Expected top-20 mostly_pos count under uniform draw = 20 * 12/3072 = 0.08,
+so observing 0 per direction is not significant. Expected mostly_neg
+under uniform draw = 20 * 1188/3072 = 7.73; observed 15 (dir 0) and 11
+(dir 1) are +2.6 sigma and +1.2 sigma above uniform-null respectively --
+moderate evidence of concentration toward dead-side channels. Stronger
+evidence is the magnitude concentration: dir 1's top-5 channels all have
+sigma ~0.008 and |a| in [1.5, 12.7].
+
+== Direction 0 trained B_final ==
+||B_final[0]||_2 = 1.0575
+Top-5 input channels by |A[c, 0]|:
+  c=2401 a=+5.674 sigma=0.008 mostly_neg
+  c=1120 a=+5.403 sigma=0.008 mostly_neg
+  c=293  a=+4.691 sigma=0.813 bump
+  c=1467 a=+4.238 sigma=0.764 bump
+  c=242  a=+4.195 sigma=0.008 mostly_neg
+Sign groups: mostly_neg=15 bump=5 mostly_pos=0  (sums to 20 ✓)
+Top-20 boost: ' the' ',' ' and' ' "' '.' '\n' '-' ' a' ' in' ' (' ' The'
+              ' to' ' of' ' with' ' it' ' one' ':' ' for' '/' ' I'
+Top-5 suppress: ' guiActiveUn' '???' 'arnaev' ' Canaver'
+                'cloneembedreportprint' (all OOD/garbage BPE)
+max |cos(b, wte)| = 0.3011  (boundary of the CONFIRMED structured literal
+                             cos threshold; boost cluster is 17/20 stop)
+Block-2 Q/K/V top-5 |cos| sum vs null mean 0.286 +- 0.043:
+  Q = 0.4048 top1 0.1031   (+2.77 sigma)
+  K = 0.8445 top1 0.2376   (+11.79 sigma)   <<< dominant downstream
+  V = 0.4297 top1 0.1428   (+2.68 sigma)
+
+== Direction 1 trained B_final ==
+||B_final[1]||_2 = 0.9917
+Top-5 input channels:
+  c=1120 a=+12.679 sigma=0.008 mostly_neg
+  c=242  a=+12.432 sigma=0.008 mostly_neg
+  c=2401 a=+11.811 sigma=0.008 mostly_neg
+  c=706  a=+2.676  sigma=0.008 mostly_neg
+  c=8    a=+1.511  sigma=0.008 mostly_neg
+Sign groups: mostly_neg=11 bump=9 mostly_pos=0 balanced=1
+Top-20 boost: ' the' ',' '-' ' in' ' and' '.' ' a' ' "' ' (' ' with'
+              ' to' ' of' ' on' '\n' ' is' ':' ' that' ' for' ' The'
+              ' from'
+Top-5 suppress: ' blat' 'Ire' ' fortun' ' indo' ' misunder'
+max |cos(b, wte)| = 0.1976
+Block-2 Q/K/V top-5 |cos| sum:
+  Q = 0.4771 top1 0.1563   (+4.45 sigma)
+  K = 0.9387 top1 0.2047   (+13.77 sigma)  <<< even stronger than dir 0
+  V = 0.1902 top1 0.0586   (-1.72 sigma, below null mean)
+
+Direction 1 is essentially orthogonal to block-2 V reader; the
+unigram axis is read via K primarily.
+
+== Independent top-20 channel overlap (auditor) ==
+|dir0 INT dir1| = 10 / 20   shared:
+  {242, 293, 706, 713, 1120, 1307, 1467, 1859, 2401, 2598}
+only_dir0: {463, 605, 615, 780, 1159, 1638, 1910, 2120, 2194, 2765}
+only_dir1: {8, 38, 67, 74, 155, 1386, 1702, 1959, 2820, 2859}
+
+Three largest-magnitude channels of dir 1 (1120, 242, 2401) all appear
+in dir 0's top-5 at ~40% of their dir-1 magnitudes. The manifest phrase
+"dir 1 is essentially a rescaling of the same dead-channel basis" is
+mildly overstated (only 10/20 shared); the more precise phrasing is
+"dir 1 shares the top-3 dead channels at ~2.5x magnitude and overlaps
+10/20 with dir 0". Manifest not edited; qualitative direction correct.
+
+== Trained vs SVD-init overlap ==
+dir 0 intersection = 17/20
+  only_trained = {' one', ' with', '/'}
+  only_init    = {' an', ' is', "'s"}
+dir 1 intersection = 19/20
+  only_trained = {' from'}
+  only_init    = {"'s"}
+
+Adam moves <=3 tokens in each top-20 boost list over 4000 steps while
+rotating the B row space by ~11 pct cos (cycle 299). The token-level
+semantic structure is SET at SVD init; the Adam recovery is an in-plane
+rotation within the unigram cluster plus bias fine-tune, consistent
+with cycle 299's "SVD init is 83 pct of optimal basin by principal-
+angle energy" finding.
+
+== Random null (Q/K/V, 100 Gaussian unit R^768) ==
+Q: mean 0.2859 std 0.0429  (mean+1sigma = 0.3288)
+K: mean 0.2819 std 0.0477  (mean+1sigma = 0.3296)
+V: mean 0.2837 std 0.0545  (mean+1sigma = 0.3382)
+Loose sanity: for uniform unit vector in R^768, E[sum cos^2] over 20
+orthonormal dirs = 20/768 ~ 0.026, so |cos| sum ~0.3 is plausible. ✓
+
+Both directions emphatically above null+1sigma on K; dir 0 also on Q
+and V; dir 1 Q above, V below null mean. The REFUTED interpretable
+clause does NOT fire.
+
+== Plan adherence ==
+Script: experiments/cycle280_A_semantic_cycle300.py (committed 0405442)
+Plan:   autoresearch/plans/cycle_300.md (8 H2 headings, verbatim item 310
+        hypothesis, marked APPROVE, within 45-line budget)
+Config:
+  TARGET_BLOCK=1 RETRAIN_RANK=2 N_CALIB=200 N_EVAL=100 SEQ_LEN=128
+  DEVICE=mps N_STEPS=4000 LR=1e-4 EVAL_EVERY=100 SEED=42
+  TOPK=20 N_RANDOM_SEEDS=100
+  Trainable=2304 asserted
+All listed files present.
+
+== Convergence (CLAUDE.md verify-task-performance rule) ==
+float PPL 53.895 matches cycles 266/268/269/270/280/299 to 3 decimals ✓
+init rank-2 57.658 matches cycle 299 seed-42 to machine precision ✓
+best rank-2 49.060 @ step 3900 matches cycle 299 seed-42 exactly ✓
+best < init by 8.60 PPL -- task performance verified before analysis ✓
+
+== Corrections ==
+None on the verdict.
+Minor wording:
+(a) manifest "rescaling of the same dead-channel basis" is mildly
+    overstated -- shared channels 10/20, not 20/20. Qualitative
+    direction correct; manifest not edited.
+(b) item 310 literal "max cos > 0.3" reading: dir 0 crosses by +0.001.
+    Script uses programmatic ">=10/20 alpha subwords" proxy for
+    "semantically coherent cluster"; both fail on dir 0 (3 alpha only)
+    so CONFIRMED_structured does not fire either way.
+
+== Final status ==
+PASS. CONFIRMED_unigram is the literal verbatim threshold result.
+Substantive answer to item 310's question: "BOTH rank-2 directions
+are unigram-frequency axes; the 'direction 1 is structured' half of
+the hypothesis is REFUTED; the 'mostly-negative / GELU-bump dominance'
+half is cleanly CONFIRMED (zero mostly_pos in either top-20); block-2
+K-reader alignment at +12 to +14 sigma is the strongest downstream
+signal."
+
+Follow-up seeds (not staged as items):
+- If cycle 311 confirms curvature residual lives in col(A)^perp, a
+  natural follow-up is to ask what direction col(A)^perp encodes at
+  the unembedding -- if semantic, block 1 rank-2 LASER is specifically
+  throwing away a curvature-carrying semantic axis, a stronger
+  interpretive claim than cycle 280's current "rank-2 is enough for
+  PPL" finding.
+- A bias-frozen / B-frozen ablation would decompose the 8.60 PPL
+  recovery into (row-rotation, bias) contributions -- out of scope
+  for item 310, relevant to item 309 closure.
