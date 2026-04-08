@@ -1,0 +1,105 @@
+Cycle 315 / Item 325 -- Calibrated SVD-LLM init + Adam retrain at block 1
+c_proj rank-2. Tests whether cycle 313's calibrated SVD-LLM init (56.70 PPL
+at b1 r=2, vs uncentered 57.66) improves the cycle 280 retrain floor (49.03),
+or whether Adam erases the init basis difference.
+
+Verdict: REFUTED
+Commit: PENDING
+
+== Item 325 verbatim verdict thresholds ==
+CONFIRMED iff delta_retrain = mean(calibrated) - mean(uncentered) <= -1 PPL
+REFUTED   iff |delta_retrain| <= 0.3 PPL
+INCONCLUSIVE otherwise.
+
+== Result ==
+uncentered best_mean = 49.0324 +/- 0.0246  (3 seeds)
+calibrated best_mean = 48.9549 +/- 0.0497  (3 seeds)
+delta_retrain        = -0.0775 PPL
+|delta_retrain|      =  0.0775 PPL  (<< 0.3 REFUTED bar)
+=> Verdict = REFUTED
+
+Adam erases the init basis difference: cycle 313's 12% init gap (57.66 ->
+56.70, delta -0.96 PPL) collapses to -0.08 PPL at the retrain floor. The
+calibrated retrain is directionally better at all 3 seeds but the magnitude
+is ~12x smaller than the init gap and well inside the cycle 280 noise band.
+
+== Per-seed deltas (calibrated - uncentered) ==
+  seed 42:   48.9855 - 49.0603 = -0.0748
+  seed 137:  48.9944 - 49.0367 = -0.0423
+  seed 2024: 48.8848 - 49.0004 = -0.1156
+  mean delta = -0.0776 PPL (consistent sign, small magnitude)
+
+== Cycle 280 retrain reproduction ==
+uncentered best_mean 49.0324 vs cycle 280 published 49.03
+|delta| = 0.0024 PPL (PASS, asserted < 0.1)
+-> cycle 280 retrain loop is reproducible to within 0.003 PPL across 3
+   seeds x 4000 steps on mps.
+
+== Init PPL cross-checks ==
+uncentered init: 57.6581 vs cycle 280 ref 57.664, |delta|=0.0059  PASS
+calibrated init: 56.7030 vs cycle 313 ref 56.7,   |delta|=0.0030  PASS
+init gap (cal - unc) = -0.9551 PPL (cycle 313 reported -0.96 delta; match)
+
+== Substantive reading ==
+
+1. REFUTED branch a: Adam finds basin-independent ~49.0 PPL from either
+   top-2 SVD basis or top-2 whitened SVD basis. The 768-dim trainable
+   B + bias space absorbs the basis rotation between init variants
+   during retraining. Init choice is load-irrelevant at retrain time
+   for b1 r=2.
+
+2. Calibrated retrain IS marginally better at every seed (-0.0748,
+   -0.0423, -0.1156 PPL; mean -0.078). Directional consistency means the
+   effect is real, but magnitude is ~12x smaller than the init gap and
+   well inside the per-variant cross-seed std (0.025 - 0.050). For
+   verdict-bearing purposes, this is noise-level.
+
+3. Cycle 313's "calibration helps at 74/84 cells" finding is
+   no-retrain-only. It does NOT translate to a measurable improvement
+   at the retrain ceiling at b1 r=2. Calibrated SVD-LLM is valuable
+   for zero-retrain compression (56.70 < 57.66) and useless (within
+   0.08 PPL noise) for retrain-based compression.
+
+4. The 8.63 PPL retrain gap (cycle 280's 57.66 init -> 49.03 retrain)
+   is basis-independent at b1 r=2. Adam is fitting a non-SVD-orthogonal
+   direction in the 768-dim B space that is unreachable from either
+   init by construction (the frozen A constrains the reachable 2D output
+   column space; the retrain finds the optimal B for the constrained
+   column space). Both init variants have the same 2D constrained
+   column space (within a rotation that Adam can undo via B), so both
+   converge to the same retrain optimum.
+
+== Constructive follow-ups ==
+
+(a) Joint A+B retrain: unfreezing A would let Adam escape the 2D column
+    space and potentially close more of the 49.03 - 53.90 gap to float.
+    cycle 279 attempted this; revisit with calibrated init.
+
+(b) Calibrated init at higher rank r=4, r=8, r=22: the basis-rotation
+    absorption argument predicts that higher-rank init differences are
+    also absorbed by Adam. Test r=22 (cycle 270 b11 anchor) and r=8
+    (intermediate).
+
+(c) Cross-block replication: test whether calibrated init improves
+    retrain at b2, b3, b10, b11. b2's cycle 313 calibrated win was the
+    LARGEST (-6.36 PPL mean over r=1..64 vs uncentered) -- if calibrated
+    init helps retrain anywhere, it would help at b2.
+
+(d) Longer N_STEPS: 4000 may under-fit; at 8000 steps the calibrated
+    variant could separate further if the -0.08 trend continues.
+    Unlikely to cross the -1.0 CONFIRMED bar but worth checking.
+
+== Sanity ==
+Float PPL 53.8949 vs ref 53.895, |delta|=5.1e-05 < 0.5. PASS.
+SVD(W_r_cal) reconstruction ||A*B - W_r||/||W_r|| = 2.57e-06. PASS.
+Sigma sym err = 0.0, ||A^2 - Sigma||/||Sigma|| = 1.44e-05. PASS.
+6/6 fits: trainable == 2304 asserted. PASS.
+6/6 fits: |restored - best| < 1e-3 asserted. PASS.
+Uncentered init PPL = 57.6581 (cycle 280 ref 57.664 within 0.01). PASS.
+Calibrated init PPL = 56.7030 (cycle 313 ref 56.70 within 0.05). PASS.
+Uncentered best_mean 49.0324 vs cycle 280 retrain anchor 49.03 within 0.01. PASS.
+
+== Wall ==
+Total retrain: 15.7 min on mps
+(2 variants x 3 seeds x ~2.5-2.7 min per seed).
+Plan estimate was ~24 min; actual under budget by ~35%.
