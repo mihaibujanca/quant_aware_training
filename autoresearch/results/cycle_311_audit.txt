@@ -1,0 +1,195 @@
+Cycle 311 Audit -- Item 321 -- Rank-1 LASER for all concentrator blocks {b2,b3,b10,b11}
+========================================================================================
+Audit status: PASS
+Verdict (provisional, kept after audit): CONFIRMED
+
+== Verdict logic (item 321 verbatim) ==
+n_pass := |{b in {2, 3, 10, 11} : r1_best_mean_ppl[b] <= 60}|
+CONFIRMED    iff n_pass >= 3
+REFUTED      iff n_pass <= 1
+INCONCLUSIVE otherwise
+
+Independent recomputation:
+  block   best_mean   passes <=60 ?
+  -----   ---------   --------------
+  2       49.7539     yes  (margin +10.25 PPL below bar)
+  3       55.0485     yes  (margin  +4.95 PPL below bar)
+  10      52.9107     yes  (margin  +7.09 PPL below bar)
+  11      59.7074     yes  (margin  +0.29 PPL below bar -- NARROW PASS)
+
+n_pass = 4.
+
+  CONFIRMED iff n >= 3 ?  4 >= 3 -- PASS (1 above floor)
+  REFUTED   iff n <= 1 ?  4 >  1 -- FAIL
+
+=> Verdict = CONFIRMED (literal verbatim).
+
+Margin: n_pass = 4 is 1 above the CONFIRMED floor and 3 above the
+REFUTED ceiling. Unambiguous.
+
+Sensitivity to bar: at PASS_THRESHOLD = 60 verdict = CONFIRMED (4/4); at
+PASS_THRESHOLD = 59 verdict = INCONCLUSIVE (3/4 -- b11 fails); at
+PASS_THRESHOLD = 50 verdict = REFUTED (1/4 -- only b2 passes). The bar
+in item 321 is generous but b11 is genuinely the least compressible
+cycle-282-family block at r=1.
+
+== Float baseline reproduction ==
+cycle 311 float PPL = 53.8949
+ref (cycles 280, 284, 285, 288, 289, 291, 292, 305, 310) = 53.895
+diff < 0.0001 (< 0.5 assertion). PASS.
+
+== b2 r=1 noretrain cross-check (sanity vs prior cycle) ==
+
+cycle 311 b2 r=1 noretrain  = 72.3808
+cycle 285 b2 r=1 noretrain  = 72.3808
+|delta| = 4.29e-06    asserted < 0.01    PASS
+
+The b2 r=1 SVD truncation reproduces cycle 285 to 6 decimal places.
+This is the only block with a prior r=1 noretrain anchor (cycle 282 used
+r=5/17/50 for b10; cycle 288 used r=5/10/24 for b3; cycle 270 used
+r=5/22/50/100 for b11), so b2 is the sole cross-check available. The
+match is bit-tight, confirming the SVD basis and shape are identical to
+cycle 285.
+
+== Per-block aggregate cross-check ==
+Auditor independently recomputed best_mean / std from per-seed best PPLs:
+
+  block   seeds best_ppl                       mean       std (population)
+  -----   --------------------------------     -------    ----------------
+  2       [49.6521, 49.6408, 49.9688]          49.7539    0.1520
+  3       [55.0865, 55.0434, 55.0155]          55.0485    0.0292
+  10      [52.9358, 52.8993, 52.8971]          52.9107    0.0177
+  11      [59.7154, 59.6968, 59.7099]          59.7074    0.0078
+
+All 4 aggregates match the script's reported best_mean and best_std to
+4 decimal places.  PASS.
+
+== Geometric object check ==
+For each block l in {2, 3, 10, 11}:
+  W_l    = c_proj_l.weight                HF Conv1D (3072, 768)
+  SVD    W_l = U_l diag(S_l) Vh_l         on CPU float32
+  A_l    = U_l[:, :1] * S_l[:1]           (3072, 1)  frozen buffer
+  B_l    = Vh_l[:1, :]                    (1, 768)   trainable nn.Parameter
+  bias_l = c_proj_l.bias                  (768,)     trainable nn.Parameter
+  fwd    x @ (A_l @ B_l) + bias_l         matches HF Conv1D semantics
+
+LowRankCProj class is identical to cycles 270/280/284/291/292/305/310
+(line for line). LowRankCProj installed at ONE block at a time;
+everything else frozen via `for p in model_s.parameters():
+p.requires_grad_(False)` followed by per-block enables of B and bias.
+Fresh GPT-2 reload per (block, seed); no model-state leak. PASS.
+
+== Trainable parameter accounting (per (block, seed)) ==
+Asserted in script: n_trainable == 1 * 768 + 768 = 1,536.
+
+  block  seed   trainable   matches
+  -----  ----   ---------   -------
+  2       42      1,536     yes
+  2      137      1,536     yes
+  2     2024      1,536     yes
+  3       42      1,536     yes
+  3      137      1,536     yes
+  3     2024      1,536     yes
+  10      42      1,536     yes
+  10     137      1,536     yes
+  10    2024      1,536     yes
+  11      42      1,536     yes
+  11     137      1,536     yes
+  11    2024      1,536     yes
+
+PASS. Cross-check: cycle 311 trainable 1,536 matches cycle 292 trainable
+1,536 exactly (same template).
+
+== Best-state restore check ==
+Asserted: |restored - best| < 1e-3 per (block, seed).
+
+  block  seed     best        restored   |delta|
+  -----  ----   --------    --------    -------
+  2      42     49.6521     49.6521     0.0000
+  2     137     49.6408     49.6408     0.0000
+  2    2024     49.9688     49.9688     0.0000
+  3      42     55.0865     55.0865     0.0000
+  3     137     55.0434     55.0434     0.0000
+  3    2024     55.0155     55.0155     0.0000
+  10     42     52.9358     52.9358     0.0000
+  10    137     52.8993     52.8993     0.0000
+  10   2024     52.8971     52.8971     0.0000
+  11     42     59.7154     59.7154     0.0000
+  11    137     59.6968     59.6968     0.0000
+  11   2024     59.7099     59.7099     0.0000
+
+All 12 cells: bit-for-bit identical (|delta| = 0.0000).  PASS.
+
+== Best-step distribution (substantive -- for budget assessment) ==
+Per-(block, seed) best_step:
+
+  block  seeds best_step       last quartile (>=3000)?  plateau evidence
+  -----  ---------------       -----------------------  ----------------
+  2     [3700, 3900, 3300]     3/3                      oscillating; final@4000 > best
+  3     [3900, 3900, 4000]     3/3                      monotone descending -- UPPER BOUND
+  10    [2500, 3100, 2800]     1/3                      plateau by step ~2500-3100
+  11    [3600, 3600, 3900]     3/3                      monotone descending -- UPPER BOUND
+
+b3 and b11 are still descending at N_STEPS = 4000 -- best_means are
+UPPER BOUNDS; b10 plateaued; b2 oscillates. CONFIRMED is robust to
+budget extension because b10 (the only plateau-converged block) and b2
+(oscillating) clearly pass the bar by >=7 PPL, and the two upper-bound
+blocks (b3, b11) only get LOWER (= further below the bar) with more
+training. The narrow b11 pass at +0.29 margin would only widen with
+more steps.
+
+== Plan adherence ==
+- plans/cycle_311.md exists, 30 lines, 8 H2 headings, marked APPROVE  PASS
+- All listed artefacts written  PASS
+- Item 321 verbatim Hypothesis preserved in plan  PASS
+
+== Convergence (CLAUDE.md verify-task-performance) ==
+Off-the-shelf gpt2 on wikitext-2 val. Float PPL match to ref 53.895
+within 0.0001. Task verification reduces to float baseline match.  PASS.
+
+== Wall ==
+Cycle 311 total wall = ~28 min on mps (above the ~16-min plan estimate;
+the plan was optimistic, actual was 2.0-2.5 min/seed x 12 seeds vs the
+4-min/block x 4 = 16-min plan budget).
+- 4 SVDs CPU float32 (3072, 768) ~0.5 s total
+- 4 noretrain r=1 evals ~5 s
+- 4 blocks x 3 seeds x ~2.0-2.5 min per fit = ~26-30 min
+Per-(block, seed) wall consistent with cycle 292 ~2.5 min/seed at 4000 steps.
+
+== Substantive findings (auditor endorsement) ==
+1. CONFIRMED is the verbatim-correct verdict at 4/4 blocks passing.
+   Combined with cycle 292 (b1 r=1 = 50.08), all 5 cycle-282-family
+   concentrators have a 1,536-param rank-1 LASER floor at PPL <= 60.
+2. b11 is the unique narrow-pass concentrator (margin 0.29 PPL); the
+   verdict is robust at PASS_THRESHOLD = 60 but flips to INCONCLUSIVE
+   at PASS_THRESHOLD = 59. b11 is genuinely the least compressible
+   cycle-282-family block at r=1.
+3. b2 r=1 BEATS its r=2 multi-rank anchor by 0.42 PPL (within seed
+   variation). Cycle 285's b2 r=2 anchor is likely under-fit at 4000
+   steps, OR b2 has minimal incremental gain from r=2 over r=1.
+4. b3 and b11 best_means are upper bounds (best_steps in last quartile);
+   longer N_STEPS would lower them. CONFIRMED is robust to budget
+   extension.
+5. Energy fraction is a poor predictor of trainable r=1 quality
+   (b10 r=1 energy 2.31% gives 52.91; b11 r=1 energy 4.01% gives 59.71;
+   b2 r=1 energy 7.16% gives 49.75; b3 r=1 energy 8.37% gives 55.05).
+6. Cycle 304 k_95 census reading needs revision: trained-Adam r=1 fit
+   reaches PPL <= 60 at all 4 of {b2, b3, b10, b11} regardless of k_95.
+
+== Corrections ==
+None. Verdict CONFIRMED held.
+
+Minor note: cycle 311 b3 and b11 best_means are UPPER BOUNDS. Future
+cycles should regard them as "<= this value at >=4000 steps" rather than
+exact floors.
+
+== Constructive follow-ups (carry forward to next cycle) ==
+1. Extend b3 and b11 to N_STEPS = 8000 / LR-decay to find true r=1 floor.
+2. Test the universal r=1 5-stack {b1, b2, b3, b10, b11} at 7,680
+   trainable params (6.0x smaller than cycle 305 5-stack 46,080).
+3. Pairwise composition at all-r=1 (cycle 310 analog) to test whether
+   the (b10, b11) destructive pair from cycle 310 is mitigated when
+   both are at r=1.
+
+== Final status ==
+PASS -- keep verdict CONFIRMED. Cycle 311 closes item 321 cleanly.

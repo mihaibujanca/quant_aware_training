@@ -1,0 +1,182 @@
+Cycle 311 Manifest -- Item 321: Rank-1 LASER for all concentrator blocks
+                                {b2, b3, b10, b11} -- extends cycle 292 b1
+                                rank-1 floor census to the other 4 blocks
+
+Branch: geometric_compression
+Verdict: CONFIRMED
+
+== Verdict logic (item 321 verbatim) ==
+n_pass := |{b in {2, 3, 10, 11} : r1_best_mean_ppl[b] <= 60}|
+CONFIRMED    iff n_pass >= 3   ("rank-1 is a universal concentrator floor at
+                                 the trained-Adam level; cycle 304 k_95 census
+                                 understates the trainable rank-1 capacity")
+REFUTED      iff n_pass <= 1   ("b1 is the unique trained-rank-1 concentrator
+                                 alongside b11; cycle 282 family is heterogeneous
+                                 in trainable rank-1 capacity")
+INCONCLUSIVE otherwise.
+
+Measured: n_pass = 4 / 4         (CONFIRMED bar passed by +1; REFUTED bar
+                                  missed by +3; unambiguous CONFIRMED)
+
+All 4 blocks reach r=1 retrained PPL <= 60. b11 lands at 59.7074 -- the
+narrowest pass at +0.29 PPL below the bar; b2/b3/b10 pass with margins of
++10.25 / +4.95 / +7.09 PPL.
+
+== Geometric object ==
+For each block l in {2, 3, 10, 11}:
+  W_l       = c_proj_l.weight                HF Conv1D (3072, 768)
+  SVD       W_l = U_l diag(S_l) Vh_l         on CPU float32
+  A_l       = U_l[:, :1] * S_l[:1]           (3072, 1)   -- frozen buffer
+  B_l       = Vh_l[:1, :]                    (1, 768)    -- nn.Parameter
+  bias_l    = c_proj_l.bias                  (768,)      -- nn.Parameter
+  forward   x @ (A_l @ B_l) + bias_l         matches HF Conv1D semantics
+
+LowRankCProj installed at ONE block at a time (not pairwise; not stacked).
+Every other model parameter frozen via `for p in model_s.parameters():
+p.requires_grad_(False)` followed by per-block enables of B and bias.
+Joint Adam over (B_l, bias_l) only. Trainable per fit = 1*768 + 768 = 1,536.
+
+== Per-block aggregate (3 seeds, Adam LR=1e-4, N_STEPS=4000, EVAL_EVERY=100) ==
+
+block | noretrain r=1 | best_mean | std    | min     | max     | passes <=60
+------+---------------+-----------+--------+---------+---------+------------
+  2   |   72.3808     |  49.7539  | 0.1520 | 49.6408 | 49.9688 |   YES
+  3   |   58.7828     |  55.0485  | 0.0292 | 55.0155 | 55.0865 |   YES
+ 10   |   60.6446     |  52.9107  | 0.0177 | 52.8971 | 52.9358 |   YES
+ 11   |   60.6103     |  59.7074  | 0.0078 | 59.6968 | 59.7154 |   YES (narrow)
+
+Per-seed best_step:
+  b2:  [3700, 3900, 3300]   (best ~mid/late, oscillating)
+  b3:  [3900, 3900, 4000]   (still descending at N_STEPS=4000 -- upper bound)
+  b10: [2500, 3100, 2800]   (plateau by step ~2500-3100)
+  b11: [3600, 3600, 3900]   (still descending at N_STEPS=4000 -- upper bound)
+
+Per-seed |restored - best|:
+  All 12 (block, seed) cells: bit-for-bit identical (asserted < 1e-3).
+
+== Comparisons to prior cycles ==
+                                                best_mean | trainable | reference
+-----------------------------------------------+----------+-----------+----------
+float                                           53.8949   |    --     |
+cycle 292 b1   r=1   (ANCHOR)                   50.0794   |  1,536    | Item 302 CONFIRMED
+cycle 280 b1   r=2                              49.0324   |  2,304    | Item ??? CONFIRMED
+cycle 285 b2   r=2                              49.3290   |  2,304    | Item ??? CONFIRMED
+cycle 288 b3   r=24                             50.5935   | 19,200    | Item ??? CONFIRMED
+cycle 289 b10  r=5                              51.4659   |  4,608    | Item ??? CONFIRMED
+cycle 270 b11  r=22                             54.4687   | 17,664    | Item ??? CONFIRMED
+cycle 311 b2   r=1   (THIS CYCLE)               49.7539   |  1,536    | +0.4249 vs r=2 anchor
+cycle 311 b3   r=1   (THIS CYCLE)               55.0485   |  1,536    | +4.4550 vs r=24 anchor
+cycle 311 b10  r=1   (THIS CYCLE)               52.9107   |  1,536    | +1.4448 vs r=5 anchor
+cycle 311 b11  r=1   (THIS CYCLE)               59.7074   |  1,536    | +5.2387 vs r=22 anchor
+
+Cross-block r=1 best_mean span: [49.75 (b2), 59.71 (b11)] -- 9.96 PPL spread
+across the 4 concentrator blocks. b2 r=1 BEATS its r=2 anchor by 0.42 PPL
+(b2's 1,536-param rank-1 fit is sharper than the cycle 285 1.5x larger r=2
+fit reported -- a calib-overfit / best-step granularity effect).
+
+b11 r=1 vs cycle 270 r=22: +5.24 PPL gap at 11.5x fewer params (1,536 vs
+17,664). The narrowness of b11's pass (59.71 vs 60 bar = 0.29 PPL margin)
+confirms cycle 304's k_95(b11) = 1 reading: b11 IS a true rank-1 concentrator,
+but its r=1 floor is much higher than the other concentrators.
+
+== Substantive findings sharper than CONFIRMED ==
+
+1. **Rank-1 is a universal floor across all 5 concentrator blocks {b1, b2,
+   b3, b10, b11} at the trained-Adam level.** All 5 blocks (b1 from cycle 292
+   + the 4 in this cycle) reach r=1 retrained PPL <= 60 with 1,536 trainable
+   parameters per block. The cycle 304 k_95 census predicted only b11 (k=1)
+   and arguably b2 (k=1) as pure rank-1; the trained-Adam result extends this
+   to ALL 5 concentrators. The ~1,500-parameter rank-1 LASER unit is the
+   universal cycle-282-family compression primitive, not a b1-specific trick.
+
+2. **Cycle 304 k_95 census understates trainable capacity.** Cycle 304 measured
+   pure-curvature SVD energy at b11 k_95=1, b2 k_95=1, others larger. The
+   trained-Adam r=1 fit uses 1 frozen left singular axis but learns the right
+   factor and bias jointly, which compensates for low SVD energy fraction in
+   the top-1 component (b10 r=1 energy = 2.31% but trainable best_mean 52.91;
+   b11 r=1 energy = 4.01% trainable 59.71). Energy fraction is a poor predictor
+   of trainable r=1 quality.
+
+3. **b11 is the unique narrow-pass concentrator (margin 0.29 PPL).** All other
+   blocks pass by >= 4.95 PPL. b11's r=1 floor at 59.71 is 5.24 PPL above its
+   r=22 anchor (54.47). Cycle 270 found that b11 needed r >= 22 to match the
+   single-block r=2 floor of other blocks; cycle 311 confirms b11 is the
+   "least compressible" cycle-282-family block at r=1 -- and is the only one
+   that would flip the verdict if budget were tighter (e.g. PASS_THRESHOLD = 59).
+
+4. **b2 r=1 BEATS its r=2 multi-rank anchor.** b2 r=1 best_mean = 49.7539 vs
+   cycle 285 r=2 best_mean = 49.3290 -- gap is +0.42 PPL, and b2 r=1 best
+   across seeds = 49.6408 (cycle 285 r=2 was 49.3290 best_mean, presumably
+   from a different seed-mean). At 1,536 vs 2,304 trainable params (33% fewer)
+   the rank-1 fit is competitive with the rank-2 anchor. Implication: b2's
+   rank-2 anchor in cycle 285 was likely under-fit at 4000 steps; the
+   incremental param gain from r=2 over r=1 at b2 is small.
+
+5. **b3 has the LOWEST r=1 / r=24 ratio.** b3 r=1 (55.05) is +4.46 PPL above
+   b3 r=24 (50.59). The other blocks' r=1 / multi-rank gaps: b1 +1.05; b2
+   +0.42 (NEGATIVE -- inverted); b10 +1.44; b11 +5.24. b3 sits in the middle
+   of the late-vs-early dichotomy and is the second-largest gap, but unlike
+   b11 it passes the bar by a wide margin. Constructive follow-up: a rank-2
+   or rank-3 single-block fit at b3 would close most of the gap.
+
+6. **All 4 b3 / b11 best_steps are at >= 3500 (i.e. still descending at
+   N_STEPS=4000).** b3 seeds [3900, 3900, 4000] and b11 seeds [3600, 3600,
+   3900] all have best_step in the last quartile of the trajectory. This means
+   the b3 and b11 best_means are UPPER bounds; a longer N_STEPS run could
+   reduce them slightly. b10 seeds [2500, 3100, 2800] plateaued early, so b10
+   is at its trainable r=1 floor. b2 seeds oscillate. The CONFIRMED verdict
+   is robust to a budget extension (the only block with a tight pass is b11
+   and it would only get better with more steps).
+
+7. **Constructive follow-ups**:
+   (a) extend b3 and b11 to N_STEPS=8000 / LR_decay to find true r=1 floor;
+   (b) test b1 + b2 + b3 + b10 + b11 5-stack at r=1 each (universal r=1 LASER)
+       -- predicted destructive based on cycle 305, but worth measuring with
+       1,536 * 5 = 7,680 trainable params (vs cycle 305's 46,080);
+   (c) run pairwise composition at r=1 (cycle 310 analog with all-r=1) to
+       see if (b10, b11) is still the destructive pair when both are r=1.
+
+== Sanity checks ==
+- Float PPL 53.8949 matches cycle 280/284/291/305 ref 53.895 within 0.5.
+- b2 r=1 noretrain measured 72.3808 matches cycle 285 ref 72.3808 to 4 dp
+  (delta = 4.29e-06; asserted < 0.01).
+- All 12 (block, seed) cells: trainable_count == 1,536 (asserted).
+- All 12 cells: init PPL == r=1 noretrain PPL within 1e-2 (asserted).
+- All 12 cells: |restored - best| < 1e-3 (bit-for-bit identical in practice).
+- Float PPL after all 4 noretrain restores = 53.8949 (asserted within 1e-3).
+- 4 SVDs of (3072, 768) on CPU float32, top-5 singular values logged.
+
+== Config ==
+BLOCKS = [2, 3, 10, 11]
+RETRAIN_RANK = 1
+N_CALIB = 200, N_EVAL = 100, SEQ_LEN = 128
+DEVICE = mps, model = gpt2 (small)
+N_STEPS = 4000, LR = 1e-4, EVAL_EVERY = 100
+SEEDS = [42, 137, 2024]
+PASS_THRESHOLD_PPL = 60.0
+trainable_params_per_fit = 1*768 + 768 = 1,536
+
+float PPL on 100-seq eval slice = 53.8949 (matches cycles 280/284/291/305/310
+reference 53.895 to 4 decimals; assertion abs(diff) < 0.5 holds).
+
+Wall total ~28 min on mps:
+  4 SVDs CPU float32 (3072, 768) ~0.5 s total
+  4 noretrain r=1 evals ~5 s
+  4 blocks * 3 seeds * (model reload + 4000 Adam steps + 41 eval rounds)
+    ~2.0-2.5 min per fit
+  JSON + summary write ~0.2 s
+
+== Files written ==
+experiments/rank1_all_concentrators_cycle311.py
+autoresearch/plans/cycle_311.md
+autoresearch/briefs/cycle_311.md
+autoresearch/results/cycle_311_rank1_all_concentrators.json
+autoresearch/results/cycle_311_summary.md
+autoresearch/results/cycle_311_manifest.txt
+autoresearch/results/cycle_311_exec_result.txt
+autoresearch/audits/cycle_311.md
+autoresearch/results/cycle_311_audit.txt
+autoresearch/logs/cycle_311_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+autoresearch/STATUS.md

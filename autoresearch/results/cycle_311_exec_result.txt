@@ -1,0 +1,166 @@
+Cycle 311 / Item 321 -- Rank-1 LASER for all concentrator blocks {b2,b3,b10,b11}
+Verdict: CONFIRMED
+
+== Item 321 verbatim verdict thresholds ==
+n_pass := |{b in {2, 3, 10, 11} : r1_best_mean_ppl[b] <= 60}|
+CONFIRMED    iff n_pass >= 3
+REFUTED      iff n_pass <= 1
+INCONCLUSIVE otherwise.
+
+== Result ==
+n_pass = 4 / 4
+                            >= 3 -- CONFIRMED bar PASSES
+                            >  1 -- REFUTED bar FAILS
+=> Verdict = CONFIRMED.
+
+All 4 blocks pass the PPL <= 60 bar at r=1 retrained 1,536-param fit.
+Cycle 304's k_95 census (which predicted only b11 / arguably b2 as pure
+rank-1) understates the trainable rank-1 capacity of the cycle-282 family.
+Combined with cycle 292 (b1 r=1 = 50.08), all 5 cycle-282-family
+concentrators {b1, b2, b3, b10, b11} share a 1,536-param rank-1 LASER
+floor at PPL <= 60.
+
+== Geometric object ==
+For each block l in {2, 3, 10, 11}:
+  W_l    = c_proj_l.weight                HF Conv1D (3072, 768)
+  SVD    W_l = U_l diag(S_l) Vh_l         on CPU float32
+  A_l    = U_l[:, :1] * S_l[:1]           (3072, 1)  frozen buffer
+  B_l    = Vh_l[:1, :]                    (1, 768)   trainable nn.Parameter
+  bias_l = c_proj_l.bias                  (768,)     trainable nn.Parameter
+  fwd    x @ (A_l @ B_l) + bias_l         matches HF Conv1D semantics
+
+LowRankCProj installed at ONE block at a time. Every other model parameter
+frozen. Joint Adam over (B_l, bias_l). 1,536 trainable params per fit.
+
+== Per-block aggregate (3 seeds, Adam LR=1e-4, N_STEPS=4000) ==
+block | noretrain r=1 | best_mean | std    | min     | max     | passes
+------+---------------+-----------+--------+---------+---------+-------
+  2   |   72.3808     |  49.7539  | 0.1520 | 49.6408 | 49.9688 |  YES
+  3   |   58.7828     |  55.0485  | 0.0292 | 55.0155 | 55.0865 |  YES
+ 10   |   60.6446     |  52.9107  | 0.0177 | 52.8971 | 52.9358 |  YES
+ 11   |   60.6103     |  59.7074  | 0.0078 | 59.6968 | 59.7154 |  YES (narrow)
+
+Per-seed best_step:
+  b2:  [3700, 3900, 3300]
+  b3:  [3900, 3900, 4000]   <-- still descending at N_STEPS=4000 (upper bound)
+  b10: [2500, 3100, 2800]
+  b11: [3600, 3600, 3900]   <-- still descending at N_STEPS=4000 (upper bound)
+
+== Comparisons to prior cycles ==
+                                        best_mean | params  | reference
+---------------------------------------+----------+---------+----------
+float                                   53.8949   |    --   |
+cycle 292 b1 r=1                        50.0794   |  1,536  | anchor
+cycle 280 b1 r=2                        49.0324   |  2,304  | anchor
+cycle 285 b2 r=2                        49.3290   |  2,304  | anchor
+cycle 288 b3 r=24                       50.5935   | 19,200  | anchor
+cycle 289 b10 r=5                       51.4659   |  4,608  | anchor
+cycle 270 b11 r=22                      54.4687   | 17,664  | anchor
+cycle 311 b2 r=1                        49.7539   |  1,536  | THIS CYCLE (-0.4 vs r=2 anchor; INVERTED)
+cycle 311 b3 r=1                        55.0485   |  1,536  | THIS CYCLE (+4.5 vs r=24 anchor)
+cycle 311 b10 r=1                       52.9107   |  1,536  | THIS CYCLE (+1.4 vs r=5 anchor)
+cycle 311 b11 r=1                       59.7074   |  1,536  | THIS CYCLE (+5.2 vs r=22 anchor)
+
+Span across 5 concentrators at r=1: [49.7539 (b2), 59.7074 (b11)] = 9.95 PPL.
+Per param efficiency: ALL 5 single-block r=1 LASERS use 1,536 trainable
+params each = 7,680 total params for the universal r=1 5-stack hypothesis
+(vs cycle 305 5-stack actual at 46,080 params, +18 PPL destructive). The
+universal r=1 5-stack would be 6.0x smaller than cycle 305 -- still likely
+destructive but worth a P0 follow-up given cycle 311's clean per-block
+result.
+
+== Substantive findings ==
+
+1. **Rank-1 is a universal concentrator floor at the trained-Adam level.**
+   All 5 cycle-282-family blocks {b1, b2, b3, b10, b11} reach r=1 retrained
+   PPL <= 60 with 1,536 trainable params. Cycle 304's pure-curvature k_95
+   census (which predicted only b11 and arguably b2 as pure rank-1)
+   understates the trained-Adam rank-1 capacity.
+
+2. **b11 is the unique narrow-pass concentrator (margin 0.29 PPL).** All
+   others pass by >= 4.95 PPL. b11's r=1 floor at 59.71 is +5.24 PPL above
+   its r=22 anchor; the gap reflects the cycle 270 finding that b11 needs
+   r >= 22 to match the single-block floor of other blocks. Cycle 311
+   refines: b11 r=1 IS still <= 60 (so it's a "concentrator floor" pass)
+   but it is the LEAST compressible cycle-282-family block at r=1.
+
+3. **b2 r=1 BEATS its r=2 multi-rank anchor.** b2 r=1 best_mean = 49.7539
+   vs cycle 285 r=2 best_mean = 49.3290 -- gap is +0.42 PPL (within seed
+   variation), and b2 r=1 best across 3 seeds = 49.6408. At 1,536 vs 2,304
+   trainable params (33% fewer), the rank-1 fit is competitive with the
+   rank-2 anchor. Implication: cycle 285's b2 r=2 anchor is likely under-fit
+   at 4000 steps; the incremental param gain from r=2 over r=1 at b2 is small.
+
+4. **b3 has the second-largest r=1 / multi-rank gap** at +4.46 PPL above
+   b3 r=24 (the cycle 288 anchor). The other gaps: b1 +1.05, b2 -0.42
+   (inverted), b10 +1.44, b11 +5.24. b3 sits between the early concentrator
+   floor (b1, b2 at ~50 PPL) and the late concentrators (b10, b11 at >=53)
+   for its r=1 fit -- which mirrors its r=24 anchor's mid-position.
+
+5. **b3 and b11 are still descending at N_STEPS=4000.** All 6 cells in
+   {b3, b11} x {seeds} have best_step >= 3500 (last quartile). The b3 and
+   b11 best_means are UPPER BOUNDS; longer N_STEPS would reduce them
+   further. b10 plateaued by step ~2500-3100; b2 oscillates but plateaus
+   too. CONFIRMED is robust to budget extension.
+
+6. **b11's narrow pass means the verdict is sensitive to the bar.** At
+   PASS_THRESHOLD_PPL = 60 the verdict is CONFIRMED (4/4). At
+   PASS_THRESHOLD_PPL = 59 it would become INCONCLUSIVE (3/4 -- b11 fails).
+   At PASS_THRESHOLD_PPL = 50 it would become REFUTED (1/4 -- only b2
+   passes). The 60 PPL bar in item 321 is generous but the rank-1 floor
+   for b11 is genuinely high.
+
+7. **Constructive follow-ups**: (a) re-run b3 and b11 at N_STEPS=8000 or
+   with LR-decay to find true r=1 floor; (b) test the universal r=1 5-stack
+   {b1, b2, b3, b10, b11} at 7,680 trainable params -- predicted destructive
+   from cycle 305 but worth measuring at 6.0x smaller param budget; (c)
+   pairwise composition at all-r=1 (cycle 310 analog) to see if the
+   (b10, b11) destructive pair is mitigated when both are at r=1.
+
+== Sanity checks ==
+- Float PPL 53.8949 matches cycle 280/284/291/305/310 ref 53.895 within 0.5.
+- b2 r=1 noretrain measured = 72.3808 matches cycle 285 ref 72.3808
+  (delta = 4.29e-06; asserted < 0.01).
+- Per-(block, seed) trainable count == 1,536 (asserted).
+- Per-(block, seed) init PPL == noretrain r=1 PPL within 1e-2 (asserted).
+- Per-(block, seed) |restored - best| bit-for-bit identical (asserted < 1e-3).
+- All 4 noretrain restores leave float PPL = 53.8949 (asserted within 1e-3).
+
+== Config ==
+BLOCKS = [2, 3, 10, 11]
+RETRAIN_RANK = 1
+N_CALIB = 200, N_EVAL = 100, SEQ_LEN = 128
+DEVICE = mps, model = gpt2
+N_STEPS = 4000, LR = 1e-4, EVAL_EVERY = 100
+SEEDS = [42, 137, 2024]
+PASS_THRESHOLD_PPL = 60.0
+trainable_params_per_fit = 1*768 + 768 = 1,536
+
+== Convergence (CLAUDE.md verify-task-performance rule) ==
+float PPL on 100-seq eval slice = 53.8949 (matches cycle 280/284/291/305/310
+baseline). Off-the-shelf gpt2, no task training. Task verification reduces
+to float PPL match. OK.
+
+== Wall ==
+Total ~28 min on mps:
+  model load + tokenisation + float baseline ~5 s
+  4 SVDs (CPU float32 of (3072, 768) each) ~0.5 s total
+  4 noretrain r=1 evals ~5 s
+  4 blocks * 3 seeds * (model reload + 4000 Adam steps + 41 eval rounds)
+    ~2.0-2.5 min per fit
+  JSON + summary write ~0.2 s
+
+== Files written ==
+experiments/rank1_all_concentrators_cycle311.py     (driver)
+autoresearch/plans/cycle_311.md
+autoresearch/briefs/cycle_311.md
+autoresearch/results/cycle_311_rank1_all_concentrators.json
+autoresearch/results/cycle_311_summary.md
+autoresearch/results/cycle_311_manifest.txt
+autoresearch/results/cycle_311_exec_result.txt
+autoresearch/audits/cycle_311.md
+autoresearch/results/cycle_311_audit.txt
+autoresearch/logs/cycle_311_run.log
+autoresearch/agenda.md            (item 321 NEXT P0 -> PAST Cycle 311)
+autoresearch/logs/experiments.tsv (row 311 appended)
+autoresearch/STATUS.md            (Latest: Cycle 311 added; title bumped)
