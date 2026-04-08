@@ -2,7 +2,7 @@ Cycle 310 Manifest -- Item 320: Pairwise LASER composition matrix over
                                 blocks {1, 2, 3, 10, 11} at cycle-282-family
                                 single-block rank anchors
 
-Commit: <PENDING>
+Commit: 6198222
 Branch: geometric_compression
 Verdict: REFUTED
 

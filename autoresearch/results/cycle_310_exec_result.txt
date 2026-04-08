@@ -1,6 +1,6 @@
 Cycle 310 / Item 320 -- Pairwise LASER composition matrix
 Verdict: REFUTED
-Commit: <PENDING>
+Commit: 6198222
 
 == Item 320 verbatim verdict thresholds ==
 n_destructive := |{pair : delta_vs_worst_single >= +5 PPL}|
