@@ -1,6 +1,6 @@
 Cycle 312 / Item 322 -- Higher-width MLP (hidden=128) on 50D input eff_rank census
 Verdict: INCONCLUSIVE
-Commit: (pending)
+Commit: f3a1f2b
 
 == Item 322 verbatim verdict thresholds ==
 CONFIRMED iff

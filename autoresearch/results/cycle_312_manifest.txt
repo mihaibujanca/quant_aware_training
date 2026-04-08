@@ -3,7 +3,7 @@ Cycle 312 Manifest -- Item 322: Higher-width MLP (hidden=128) on 50D input
                                 (hidden=32) to test whether width unblocks
                                 the layer-0 ReLU activation-pattern bottleneck
 
-Commit: (pending)
+Commit: f3a1f2b
 Branch: geometric_compression
 Verdict: INCONCLUSIVE
 
