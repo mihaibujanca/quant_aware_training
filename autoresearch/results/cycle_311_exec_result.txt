@@ -1,5 +1,6 @@
 Cycle 311 / Item 321 -- Rank-1 LASER for all concentrator blocks {b2,b3,b10,b11}
 Verdict: CONFIRMED
+Commit: 3a15023
 
 == Item 321 verbatim verdict thresholds ==
 n_pass := |{b in {2, 3, 10, 11} : r1_best_mean_ppl[b] <= 60}|
