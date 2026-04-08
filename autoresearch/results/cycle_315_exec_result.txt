@@ -4,7 +4,7 @@ at b1 r=2, vs uncentered 57.66) improves the cycle 280 retrain floor (49.03),
 or whether Adam erases the init basis difference.
 
 Verdict: REFUTED
-Commit: PENDING
+Commit: a1a1724
 
 == Item 325 verbatim verdict thresholds ==
 CONFIRMED iff delta_retrain = mean(calibrated) - mean(uncentered) <= -1 PPL

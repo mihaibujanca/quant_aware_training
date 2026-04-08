@@ -6,7 +6,7 @@ Cycle 315 Manifest -- Item 325: Calibrated SVD-LLM init + Adam retrain at
                                 erases the init difference and converges to
                                 the same trained basin.
 
-Commit: PENDING
+Commit: a1a1724
 Branch: geometric_compression
 Verdict: REFUTED
 
