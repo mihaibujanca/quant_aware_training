@@ -1,0 +1,52 @@
+Device: mps
+Loading GPT-2 and wikitext-2 val...
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Calib: 200 seqs  Eval: 100 seqs
+Loading model...
+
+  loaded in 0.7s
+Float PPL on eval slice...
+`loss_type=None` was set in the config but it is unrecognized. Using the default loss: `ForCausalLMLoss`.
+  float PPL = 53.895  (1.3s)
+
+=== Block 0 ===
+  ln2 captured: (25600, 768)  (2.5s)
+  Dy computed: (25600, 768)  (0.2s)
+  SVD W_proj done in 0.1s; U (3072, 768) S (768,) Vh (768, 768) top5 S=[25.0330867767334, 21.053625106811523, 18.33722496032715, 17.38063621520996, 16.256284713745117]
+  ||Dy||_F^2 = 1.2123e+07  E_top1 = 0.521820  E_top2 = 0.590157
+  cos_t: mean=0.7653 std=0.0333 q05=0.7165 median=0.7689 q95=0.8069
+  null E (100 rand 2D): mean=0.002622 std=0.002573 min=0.000159 max=0.011940
+
+=== Block 1 ===
+  ln2 captured: (25600, 768)  (2.5s)
+  Dy computed: (25600, 768)  (0.1s)
+  SVD W_proj done in 0.1s; U (3072, 768) S (768,) Vh (768, 768) top5 S=[28.706462860107422, 23.103559494018555, 18.841386795043945, 13.83397102355957, 13.739469528198242]
+  ||Dy||_F^2 = 7.8897e+06  E_top1 = 0.690107  E_top2 = 0.746269
+  cos_t: mean=0.8626 std=0.0296 q05=0.8078 median=0.8673 q95=0.9027
+  null E (100 rand 2D): mean=0.003078 std=0.002875 min=0.000361 max=0.013284
+
+=== Block 2 ===
+  ln2 captured: (25600, 768)  (2.6s)
+  Dy computed: (25600, 768)  (0.1s)
+  SVD W_proj done in 0.1s; U (3072, 768) S (768,) Vh (768, 768) top5 S=[38.25450134277344, 15.164703369140625, 13.083902359008789, 12.10321044921875, 11.579122543334961]
+  ||Dy||_F^2 = 3.6883e+07  E_top1 = 0.891875  E_top2 = 0.919010
+  cos_t: mean=0.9582 std=0.0043 q05=0.9508 median=0.9585 q95=0.9644
+  null E (100 rand 2D): mean=0.002571 std=0.002399 min=0.000094 max=0.013323
+
+=== Block 11 ===
+  ln2 captured: (25600, 768)  (2.6s)
+  Dy computed: (25600, 768)  (0.1s)
+  SVD W_proj done in 0.1s; U (3072, 768) S (768,) Vh (768, 768) top5 S=[60.99306106567383, 34.59367370605469, 32.18410873413086, 21.966318130493164, 21.700233459472656]
+  ||Dy||_F^2 = 6.0306e+08  E_top1 = 0.909583  E_top2 = 0.980340
+  cos_t: mean=0.9900 std=0.0011 q05=0.9882 median=0.9901 q95=0.9916
+  null E (100 rand 2D): mean=0.002746 std=0.002596 min=0.000028 max=0.011207
+
+=== VERDICT ===
+REFUTED
+E_kept(block 1) = 0.7463 >= 0.30 -- curvature residual concentrates inside the rank-2 kept subspace; LASER preserves rather than denoises it.
+
+Wrote autoresearch/results/cycle_301_decomp.json
+Wrote autoresearch/results/cycle_301_cos_histograms.png
+Wrote autoresearch/results/cycle_301_summary.md
+
+Done.

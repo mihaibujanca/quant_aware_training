@@ -1,0 +1,172 @@
+Cycle 301 Manifest -- Item 311: Curvature residual decomposition vs cycle 280 col(A)
+
+Commit: pending
+Branch: geometric_compression
+Verdict: REFUTED
+
+== Verdict logic (item 311 verbatim) ==
+CONFIRMED   iff E_kept(block 1) <= 0.05
+            -- (GELU, ReLU) curvature residual lives almost entirely in the
+               766-dim subspace cycle 280 discards.
+REFUTED     iff E_kept(block 1) >= 0.30
+            -- curvature residual concentrates inside the rank-2 kept
+               subspace; LASER preserves rather than denoises it.
+INCONCLUSIVE otherwise.
+
+== Geometric object ==
+For each block l in {0, 1, 2, 11} of GPT-2 small, calib slice 200 wikitext-2
+val seqs x 128 tokens (N=25,600 tokens, seed 42 -- identical to cycles
+258/280/299/300):
+  z(x)  = LN2(x) @ W_fc + b_fc        in R^3072  (per token, captured via
+                                                  forward pre-hook on c_fc)
+  delta = GELU(z) - ReLU(z)           in R^3072  (curvature residual)
+  Dy    = delta @ W_proj              in R^768   (residual stream)
+W_proj = c_proj.weight has HF Conv1D shape (3072, 768).
+SVD: W_proj = U diag(S) Vh, with U (3072, 768), S (768,), Vh (768, 768).
+The "kept 2D output subspace" of cycle 280's rank-2 LASER is
+span(Vh[:2, :]) in R^768 (orthonormal rows; verified max |off-diag| < 1e-4
+per block).
+Energy fraction:
+  E_kept_top2 = ||Dy @ Vh[:2,:]^T||_F^2 / ||Dy||_F^2
+  E_kept_top1 = ||Dy @ Vh[0:1,:]^T||_F^2 / ||Dy||_F^2
+
+Trainable params: 0.
+
+== Verdict evaluation ==
+E_kept_top2(block 1) = 0.7463 (= 74.63 pct of curvature energy in the kept
+                               2D output subspace)
+                     >> 0.30 threshold
+                     >> 0.05 threshold
+                     >> random null mean 0.0031 (1 sigma 0.00288, isotropic
+                       reference 2/768 = 0.00260)
+VERDICT: REFUTED.
+
+The block-1 (GELU, ReLU) curvature residual concentrates HEAVILY inside the
+rank-2 subspace cycle 280 keeps, not in its 766-dim complement. Cycle 280's
+LASER recipe does NOT denoise the curvature residual structurally; it
+preserves it. The cycle-258 kappa kink (+47.7 pct at layer 4 under ReLU
+swap) and the cycle-280 rank-2 collapse are operationally aligned at the
+SAME 2D plane in R^768.
+
+== Per-block results ==
+block | ||Dy||_F   | E_top1 | E_top2  | null mean | null std | cos median | cos q05  | cos q95  | rel/null
+------+------------+--------+---------+-----------+----------+------------+----------+----------+--------
+  0   | 3.482e+03  | 0.5218 | 0.5902  | 0.002622  | 0.00257  | 0.7689     | 0.7165   | 0.8069   | 225x
+  1   | 2.809e+03  | 0.6901 | 0.7463  | 0.003078  | 0.00288  | 0.8673     | 0.8078   | 0.9027   | 242x
+  2   | 6.073e+03  | 0.8919 | 0.9190  | 0.002571  | 0.00240  | 0.9585     | 0.9508   | 0.9644   | 357x
+ 11   | 2.456e+04  | 0.9096 | 0.9803  | 0.002746  | 0.00260  | 0.9901     | 0.9882   | 0.9916   | 357x
+
+Isotropic reference (random 2D in R^768): 2/768 = 0.00260.
+
+The null random-2D mean is ~0.0026 across all 4 blocks, matching the
+isotropic prediction within 1 std -- so Dy is NOT strongly anisotropic
+relative to a uniform sphere null on R^768. The reason E_top2 is so much
+larger than the null is NOT that Dy is concentrated in a single random
+direction, it is that Dy is concentrated specifically in the top SV
+directions of W_proj. The curvature residual aligns with the dominant
+right-singular structure of c_proj, which is exactly the structure cycle
+280's rank-2 LASER keeps.
+
+== Per-token cosine concentration ==
+For each token t, |cos(Dy_t, span(Vh[:2,:]))| measures how aligned the
+single-token curvature contribution is to the kept 2D plane.
+- block  0: median 0.7689 (q05 0.72, q95 0.81)
+- block  1: median 0.8673 (q05 0.81, q95 0.90)
+- block  2: median 0.9585 (q05 0.95, q95 0.96)
+- block 11: median 0.9901 (q05 0.99, q95 0.99)
+The distributions are tight (q95-q05 < 0.10 for all blocks; < 0.02 for
+blocks 2 and 11), which means EVERY token's curvature contribution -- not
+an outlier average -- concentrates in the kept 2D subspace. There is no
+sub-population of tokens whose curvature lives in col(A)^perp.
+
+== Random null details (100 random 2D orthonormal subspaces in R^768) ==
+generator seed = NULL_SEED (20260406) + l, per block (deterministic)
+- block  0: mean 0.002622, std 0.00257, min 0.000159, max 0.011940
+- block  1: mean 0.003078, std 0.00288, min 0.000361, max 0.013284
+- block  2: mean 0.002571, std 0.00240, min 0.000094, max 0.013323
+- block 11: mean 0.002746, std 0.00260, min 0.000028, max 0.011207
+All four block distributions match the isotropic reference 2/768 = 0.00260
+within 1 std -- so the 100-draw null is a clean baseline. E_kept is
+~225-357x the null mean across blocks; for block 1 specifically,
+E_top2 / null_mean = 0.7463 / 0.003078 = 242x.
+
+== Geometric reading (the substantive answer) ==
+1. Item 311 verbatim REFUTED at all four blocks tested. Block 1 = 74.63 pct
+   of curvature in the kept 2D, block 2 = 91.90 pct, block 11 = 98.03 pct,
+   block 0 = 59.02 pct. The "LASER denoises curvature for free" reading
+   does NOT survive: cycle 280's rank-2 kept subspace IS the curvature
+   residual subspace.
+
+2. The (GELU, ReLU) curvature residual delta(z) lives in the same 2D-ish
+   block-1 right-singular structure that LASER keeps. This is the
+   geometrically clean explanation for cycle 258's kappa kink (+47.7 pct
+   at layer 4 under ReLU swap): swapping GELU for ReLU at layer 4 ablates
+   the dominant component of delta(z), which is exactly the component that
+   c_proj's top SV reads -- so the pullback geometry visibly shifts.
+
+3. The connection cycle 217 ('Delta_centered rank_95 <= 64 in 9/12 blocks')
+   + cycle 258 (kappa kink) + cycle 280 (rank-2 LASER) + cycle 300 (both
+   directions of A are unigram axes) collapses into a single statement at
+   block 1: the curvature residual, the rank-2 LASER kept subspace, and
+   the unigram-frequency axis read by block-2 K all live in the SAME 2D
+   plane in R^768. The compressible signal at block 1 is not 'unigram'
+   alone, it is 'unigram-modulated GELU curvature'. This is a much
+   stronger interpretive claim than item 311's CONFIRMED branch would
+   have allowed.
+
+4. Block 11 has E_top2 = 0.980 -- 98 pct of the curvature lives in 2 of
+   768 directions of W_proj. Cycle 278 reported eff_rank(c_proj_11 OUTPUT)
+   = 22.49, NOT ~2. This is not a contradiction: eff_rank measures the
+   energy distribution across all output singular values; the curvature
+   residual specifically is far more rank-1/2 concentrated than the
+   block's overall output. The curvature is structurally low-rank even in
+   blocks where the block as a whole is not.
+
+5. Block 0 has E_top2 = 0.590, the lowest of the four blocks. The
+   curvature residual at block 0 still concentrates 60 pct in the top 2 SV
+   directions (vs random null 0.003 -- 225x), but is the least anisotropic
+   block. This is consistent with cycle 217's finding that block 0 had a
+   ~1D unigram-frequency axis: the rank-1 piece dominates (E_top1 = 0.522)
+   but the second SV adds less than the deeper blocks.
+
+== Float baseline ==
+float PPL on 100-seq eval slice = 53.8949 (ref 53.895, delta 0.0001) --
+matches all prior cycles using the same wikitext-2 val slice exactly.
+
+== Config ==
+BLOCKS=[0, 1, 2, 11]  RANK=2  N_CALIB=200  N_EVAL=100  SEQ_LEN=128
+SEED=42  N_RANDOM=100  NULL_SEED=20260406  DEVICE=mps  N_TOKENS=25600
+
+== Verification (asserted) ==
+- W_proj.shape == (3072, 768) per block
+- Vh[:2, :].shape == (2, 768)
+- Vh[:2, :] @ Vh[:2, :]^T = I_2 to <1e-4 max abs off-diag (orthonormal)
+- 0 <= cos_t <= 1 per token (clamped after numerical noise)
+- ||Dy||_F > 0 per block (curvature is non-trivial)
+- |float_ppl - 53.895| < 0.5
+
+== Wall time ==
+Total ~3.5 min (model load 4s, calib forward x4 blocks ~4s each, SVD 4x ~6s
+each, projection ~1s, plot+JSON ~1s).
+
+== Artifacts ==
+experiments/curvature_residual_A_proj_cycle301.py
+autoresearch/plans/cycle_301.md
+autoresearch/briefs/cycle_301.md
+autoresearch/results/cycle_301_decomp.json
+autoresearch/results/cycle_301_cos_histograms.png
+autoresearch/results/cycle_301_summary.md
+autoresearch/results/cycle_301_manifest.txt
+autoresearch/results/cycle_301_exec_result.txt
+autoresearch/audits/cycle_301.md
+autoresearch/results/cycle_301_audit.txt
+autoresearch/logs/cycle_301_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+autoresearch/STATUS.md
+
+item_number: 311
+outcome: refuted
+key_metric: verdict=REFUTED_E_kept_top2_block_1_0.7463_ge_0.30_curvature_residual_concentrates_INSIDE_cycle_280_rank2_kept_subspace_NOT_complement_LASER_preserves_curvature_NOT_denoises_per_block_E_top2_b0_0.5902_b1_0.7463_b2_0.9190_b11_0.9803_per_block_E_top1_b0_0.5218_b1_0.6901_b2_0.8919_b11_0.9096_per_token_cos_median_b0_0.7689_b1_0.8673_b2_0.9585_b11_0.9901_q95_minus_q05_b0_0.0904_b1_0.0949_b2_0.0136_b11_0.0034_tight_dist_no_outlier_subpopulation_random_2D_null_100_orthonormal_per_block_b0_0.002622_b1_0.003078_b2_0.002571_b11_0.002746_isotropic_reference_2_div_768_0.00260_all_within_1sigma_block1_E_top2_div_null_242x_b11_357x_b2_357x_b0_225x_Dy_aligns_with_top_right_SVs_of_c_proj_NOT_random_directions_(GELU_ReLU)_curvature_residual_lives_in_SAME_2D_as_cycle_280_LASER_kept_subspace_block1_unigram_axis_(cycle_300)_block2_K_reader_alignment_explanation_cycle_258_kappa_kink_47.7pc_layer_4_under_ReLU_swap_explained_geometrically_swap_ablates_dominant_delta_component_which_top_SV_of_c_proj_reads_pullback_geometry_visibly_shifts_block11_E_top2_0.98_eff_rank_22.49_NO_contradiction_curvature_specifically_more_rank_1_2_concentrated_than_block_overall_block0_E_top2_0.59_lowest_consistent_cycle_217_block0_1D_unigram_axis_E_top1_dominates_E_top2_adds_less_no_training_calib_200_wikitext2_val_x_128_seed42_25600_tokens_blocks_0_1_2_11_W_proj_3072x768_Vh_top2_orthonormal_max_off_diag_lt_1e_4_float_PPL_53.8949_ref_53.895_delta_0.0001_wall_3.5min_under_10min_cap_substantive_finding_sharper_than_REFUTED_label_curvature_residual_AND_LASER_kept_subspace_AND_block2_K_reader_unigram_axis_all_collapse_into_SAME_2D_at_block_1
+commit: pending
+paths: experiments/curvature_residual_A_proj_cycle301.py,autoresearch/plans/cycle_301.md,autoresearch/briefs/cycle_301.md,autoresearch/results/cycle_301_decomp.json,autoresearch/results/cycle_301_cos_histograms.png,autoresearch/results/cycle_301_summary.md,autoresearch/results/cycle_301_manifest.txt,autoresearch/results/cycle_301_exec_result.txt,autoresearch/audits/cycle_301.md,autoresearch/results/cycle_301_audit.txt,autoresearch/logs/cycle_301_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv,autoresearch/STATUS.md

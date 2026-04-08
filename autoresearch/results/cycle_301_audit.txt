@@ -1,0 +1,92 @@
+Cycle 301 Audit -- Item 311 (Curvature residual decomposition vs cycle 280 col(A))
+
+Status: PASS
+Verdict (provisional, kept): REFUTED
+Verdict by item 311 verbatim thresholds:
+  CONFIRMED   iff E_kept_top2(block 1) <= 0.05
+  REFUTED     iff E_kept_top2(block 1) >= 0.30
+  INCONCLUSIVE otherwise
+
+Auditor recomputation:
+  E_kept_top2(block 1) = 0.7463 (from cycle_301_decomp.json)
+  -> 0.7463 >= 0.30 -> REFUTED clause fires by +0.4463
+  -> 0.7463 / random-2D-null-mean(b1) 0.003078 = 242.5x
+  -> 0.7463 ~258 sigma above null mean
+
+VERIFIED:
+- SVD subspace convention: kept 2D output subspace = span(Vh[:2, :]) in R^768,
+  NOT col(A_r) in R^3072. The script uses Vh[:2, :] correctly. Cycle 280's
+  A_r = (U[:, :r] * S[:r]) is the (3072, r) input-side factor, not the
+  output subspace.
+- Vh[:2, :] @ Vh[:2, :]^T = I_2 to <1e-4 max abs off-diag (asserted per block)
+- E_top2 = ||Dy @ Vh[:2,:]^T||_F^2 / ||Dy||_F^2 (correct projection identity
+  since Vh[:2,:] has orthonormal rows)
+- E_top2 >= E_top1 at every block (0.5902>=0.5218, 0.7463>=0.6901,
+  0.9190>=0.8919, 0.9803>=0.9096) ✓
+- Pipeline: LN2 hook -> preact = LN2 @ W_fc + b_fc -> delta = GELU - ReLU
+  -> Dy = delta @ W_proj. Bias on W_proj cancels because Dy is a difference.
+  GELU uses approximate='tanh' matching HF gpt2 default and cycle 258 line 125.
+- Random 2D null (100 random orthonormal subspaces in R^768, gen seed
+  20260406+l): per-block means {b0 0.002622, b1 0.003078, b2 0.002571,
+  b11 0.002746}, all within 0.16 sigma of isotropic 2/768 = 0.00260. ✓
+- Per-token cos quartiles (median, q05-q95 tightness):
+    block  0: 0.7689 (0.72-0.81, q95-q05=0.090)
+    block  1: 0.8673 (0.81-0.90, q95-q05=0.095)
+    block  2: 0.9585 (0.95-0.96, q95-q05=0.014)
+    block 11: 0.9901 (0.99-0.99, q95-q05=0.003)
+  Distributions are tight at every block; q05(b1) = 0.81 means even the 5th
+  percentile of curvature tokens has cos > 0.81 with the kept 2D plane. There
+  is no sub-population of tokens whose curvature escapes the rank-2 subspace.
+- Float PPL on 100-seq eval slice = 53.8949, matches cycles 266/268/269/270/
+  280/299/300 to 4 decimals. Calib slice unchanged.
+- E_top2/null_mean ratios: b0 225x, b1 242x, b2 357x, b11 357x. Dy is
+  concentrated specifically in the top right-singular directions of W_proj,
+  not in random directions.
+- Trainable params: 0 (no .requires_grad_(True) calls; no .backward() calls;
+  all measurement on detached float32 CPU tensors).
+
+Geometric reading (audit endorses):
+1. Item 311 verbatim REFUTED at all 4 blocks tested (b0 0.59, b1 0.75, b2 0.92,
+   b11 0.98). Pattern strengthens with depth.
+2. Cycle 258 kappa kink at layer 4 (+47.7 pct under ReLU swap) explained:
+   ReLU swap ablates the dominant component of delta(z), exactly what cycle
+   280's rank-2 LASER preserves and what block-2 K reads.
+3. Cycles 217 + 258 + 278 + 280 + 300 + 311 collapse to ONE statement at
+   block 1: the curvature residual, the rank-2 LASER kept subspace, the
+   unigram axis (cycle 300), and the block-2 K-reader all live in the SAME
+   2D plane in R^768. Compressible signal at block 1 = "unigram-modulated
+   GELU curvature", not unigram alone. This is the stronger of the two
+   possible item 311 outcomes per the verbatim outcomes text.
+4. Block 11: E_top2=0.98 with cycle 278 eff_rank=22.49 -- no contradiction.
+   eff_rank measures the WHOLE block's output energy distribution; cycle 311
+   measures the curvature residual specifically. The curvature is structurally
+   low-rank even in blocks where the block as a whole is not.
+5. Block 0 most isotropic (E_top2=0.59); rank-2 concentration grows monotone
+   with depth (b0 59 -> b1 75 -> b2 92 -> b11 98).
+
+Plan adherence: ✓ all 4 blocks measured per plan; trainable params 0;
+forward pre-hook on c_fc; Dy = delta @ W_proj; SVD W_proj; E_kept_top2 vs
+random null; per-token cosine distribution; verdict per item 311 verbatim.
+
+Artifact existence: ✓ all 14 listed paths exist on disk:
+  experiments/curvature_residual_A_proj_cycle301.py (~290 lines)
+  autoresearch/plans/cycle_301.md (8 H2 headings, marked APPROVE, 45-line budget)
+  autoresearch/briefs/cycle_301.md (pre-existing from brief stage)
+  autoresearch/results/cycle_301_decomp.json (valid JSON, 27 KB)
+  autoresearch/results/cycle_301_cos_histograms.png (4-panel, 42 KB)
+  autoresearch/results/cycle_301_summary.md (1.8 KB)
+  autoresearch/results/cycle_301_manifest.txt
+  autoresearch/results/cycle_301_exec_result.txt
+  autoresearch/audits/cycle_301.md (this audit)
+  autoresearch/results/cycle_301_audit.txt (this file)
+  autoresearch/logs/cycle_301_run.log (cleaned of progress bars, ~50 lines, 2.6 KB)
+  autoresearch/agenda.md (item 311 deleted from NEXT P2; Cycle 301 in PAST)
+  autoresearch/logs/experiments.tsv (row 301 appended, 8 columns, commit=pending)
+  autoresearch/STATUS.md (title 301 Cycles, Latest: Cycle 301, Cycle 300 demoted)
+
+Corrections: NONE on the verdict. REFUTED is the literal verbatim threshold
+result and the substantive finding (six cycles collapse to one geometric
+statement at block 1) is the stronger interpretive claim per item 311's
+outcomes text.
+
+Audit final: PASS. Provisional REFUTED kept.
