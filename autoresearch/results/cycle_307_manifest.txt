@@ -5,7 +5,7 @@ outcome: INCONCLUSIVE
 key_metric: cond_a=False (init eff_rank >= 15 at layers 1-6 per-seed = 0/18);
             cond_b=True  (post eff_rank <= 5 across all seeds = 11/12);
             cond_c=False (trajectory monotone decreasing = 2/12).
-commit: {COMMIT}
+commit: 738aaae
 Branch: geometric_compression
 Verdict: INCONCLUSIVE
 

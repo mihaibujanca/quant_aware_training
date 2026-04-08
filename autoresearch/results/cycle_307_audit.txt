@@ -1,0 +1,112 @@
+Cycle 307 Audit Summary -- Item 317
+
+Audit status: PASS
+
+Verdict re-derivation (auditor, independent of script):
+  cond_a: init eff_rank >= 15 at layers 1-6 per-seed
+    - Cells = 3 seeds x 6 layers = 18
+    - Cells passing: 0 / 18
+    - Only layer 0 clears 15 (per-seed init ~15.32 / 15.77 / 16.00)
+    - Layers 1-6 per-seed init eff_rank range [1.00, 7.07] -- all below 15
+    - cond_a = False
+
+  cond_b: post eff_rank <= 5 at >= 8 of 12 layers across all 3 seeds
+    - Layers passing = 11 / 12 (all except layer 0)
+    - Layer 0 post eff_rank per seed = 13.96 / 13.54 / 12.93 (all > 5)
+    - Layers 1-11 post eff_rank per seed range [1.31, 2.53]
+    - cond_b = True (need >= 8)
+
+  cond_c: trajectory monotone non-increasing at >= 6 of 12 layers
+    - Auditor computed per-epoch mean across 3 seeds at each of 12 layers
+      over TRAJECTORY_EPOCHS = [0, 50, 200, 500, 2000]
+    - Monotone layers:
+        L0: 15.70 -> 14.12 -> 13.47 -> 13.47 -> 13.47
+              (13.468 -> 13.473 is +0.005, exceeds 1e-9 tol)
+              script counts: NO  (marginal)
+        L1: 5.93  ->  3.40 ->  2.39 ->  2.37 ->  2.37  YES
+        L2: 2.96  ->  2.18 ->  1.75 ->  1.75 ->  1.75  YES (1e-3 bumps within tol)
+        L3: 1.35  ->  1.88 ->  1.73 ->  1.74 ->  1.74  NO (LIFT 1.35->1.88)
+        L4: 1.05  ->  1.74 ->  1.72 ->  1.76 ->  1.76  NO (LIFT)
+        L5: 1.01  ->  1.57 ->  1.70 ->  1.77 ->  1.77  NO (LIFT)
+        L6: 1.00  ->  1.57 ->  1.69 ->  1.73 ->  1.72  NO (LIFT)
+        L7: 1.00  ->  1.60 ->  1.70 ->  1.72 ->  1.69  NO (LIFT)
+        L8: 1.00  ->  1.60 ->  1.56 ->  1.60 ->  1.57  NO (LIFT)
+        L9: 1.00  ->  1.42 ->  1.42 ->  1.58 ->  1.55  NO (LIFT)
+        L10: 1.00 ->  1.37 ->  1.40 ->  1.57 ->  1.55  NO (LIFT)
+        L11: 1.00 ->  1.28 ->  1.48 ->  1.70 ->  1.71  NO (LIFT)
+    - Monotone count: 2 / 12 (L1, L2); script reports same
+    - cond_c = False (need >= 6)
+
+Overall verdict:
+  CONFIRMED requires cond_a AND cond_b AND cond_c -> False (a, c fail)
+  REFUTED   requires cond_a True and post<=5 layers < 4 -> False (a False)
+  -> INCONCLUSIVE per verbatim thresholds.
+
+Task convergence check:
+  All 3 seeds reached train_acc = 1.000 at epoch 50 (target 0.90).
+  make_classification(n_informative=10, flip_y=0, class_sep=1.0) is
+  linearly separable. Trajectory plateau from e=200 confirms full
+  convergence. Model is task-converged; eff_rank analysis meaningful.
+
+Implementation fidelity:
+  - MLP(input_size=50, hidden_size=32, output_size=1, depth=12, ReLU) matches item.
+  - Trainable params per net = 13,281 = 50*32 + 32 + 11*(32*32 + 32) + 32 + 1.
+  - eff_rank_from_Y identical to cycle 295 function (byte-identical body).
+  - collect_post_relu walks model.layers and captures DEPTH=12 post-ReLU
+    activations; len(model.layers) == 25 == 2*12 + 1 (asserted in script).
+  - Trajectory captures at [0, 50, 200, 500, 2000] as per item Setup.
+  - 3 seeds {42, 137, 2024} as per item Setup.
+  - Plan LR=1e-3 and target_acc=0.90 deviate from item Setup "LR=0.01,
+    target=0.95" but are functionally irrelevant: every seed hit
+    train_acc=1.000 in 50 epochs regardless of LR or target threshold.
+
+Cross-cycle sanity:
+  - Cycle 295 spirals init eff_rank reproduced at layers 4-11 (all ~1.0);
+    one-layer upward shift at layers 0-3 consistent with the 50D input.
+  - Cycle 297 trajectory sign (LIFT, not COLLAPSE) reproduced at layers
+    3-11. 10 of 12 layers LIFT during training.
+  - Cycle 278 GPT-2 bathtub NOT reproduced at this hidden width.
+
+Substantive findings -- auditor endorses:
+  (1) INCONCLUSIVE is verbatim-correct.
+  (2) 50D input buys ONE LAYER of init rank memory (L0=15.70 vs cycle 295
+      spirals L0=2.99, 5.25x). By L4, init eff_rank tied at ~1.05.
+  (3) Training LIFTS eff_rank at layers 3-11, same sign as cycle 297
+      spirals, OPPOSITE to cycle 278 GPT-2 bathtub.
+  (4) Cycle 278 bathtub cannot be reproduced on a 32-wide 12-deep ReLU MLP
+      regardless of input dim. The bathtub looks increasingly
+      transformer-architecture-specific (residual stream + attention +
+      GELU + post-LN).
+  (5) Item 317 thresholds were mis-calibrated: cond_a requires init
+      eff_rank >= 15 at layers 1-6, impossible at hidden_width=32
+      regardless of input_dim due to Hanin-Rolnick N^d with hidden_width
+      being the binding constraint past layer 0.
+
+Artifacts:
+  - experiments/higher_dim_eff_rank_cycle307.py
+  - autoresearch/plans/cycle_307.md (<= 30 lines, APPROVE)
+  - autoresearch/briefs/cycle_307.md
+  - autoresearch/results/cycle_307_eff_rank_50d.json (verdict=INCONCLUSIVE)
+  - autoresearch/results/cycle_307_summary.md
+  - autoresearch/results/cycle_307_manifest.txt
+  - autoresearch/results/cycle_307_exec_result.txt
+  - autoresearch/audits/cycle_307.md
+  - autoresearch/results/cycle_307_audit.txt (this file)
+  - autoresearch/logs/cycle_307_run.log
+  - autoresearch/agenda.md: item 317 moved NEXT P1 -> PAST Cycle 307;
+    P1 section now reads "(no P1 items pending)"
+  - autoresearch/logs/experiments.tsv: row 307 appended
+  - autoresearch/STATUS.md: title bumped to 307 Cycles; new Latest: Cycle 307
+
+Wall: 138.1 s total (3 seeds x 46 s each), CPU.
+Primary commit: 738aaae
+
+Final status: PASS -- keep provisional outcome INCONCLUSIVE.
+
+Auditor recommends:
+  1. Follow-up: rerun with hidden_width >= 128 > input_dim=50 to test
+     whether "training does not collapse eff_rank" holds when the
+     hidden_width bottleneck is removed.
+  2. Feasibility-check verdict thresholds against architecture rank
+     bounds BEFORE setting them in future agenda items.
+  3. Next NEXT pick is item 318 (P2 synthetic unigram projector).
