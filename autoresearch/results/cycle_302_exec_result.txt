@@ -1,6 +1,6 @@
 Cycle 302 / Item 312 -- Unified geometric curvature residual framework
 Verdict: CONFIRMED
-Commit: PENDING
+Commit: 95e1568
 
 == Item 312 verbatim verdict thresholds ==
 CONFIRMED   iff (a) AND (b) AND (c)
