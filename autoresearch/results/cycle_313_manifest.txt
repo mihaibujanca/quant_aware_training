@@ -3,7 +3,7 @@ Cycle 313 Manifest -- Item 323: Pure no-retrain LASER baseline reproduction
                                 SVD-LLM weighted). Verify cycle 280's 57.66
                                 init was the optimal SVD truncation.
 
-Commit: PENDING
+Commit: afe6910
 Branch: geometric_compression
 Verdict: INCONCLUSIVE
 

@@ -4,7 +4,7 @@ variants = 168 PPL evals. Verify cycle 280's 57.66 init was the optimal
 SVD truncation.
 
 Verdict: INCONCLUSIVE
-Commit: PENDING
+Commit: afe6910
 
 == Item 323 verbatim verdict thresholds ==
 CONFIRMED iff |{l : (calibrated, r=2) PPL_l <= retrain_anchor[l] - 2}| >= 3
