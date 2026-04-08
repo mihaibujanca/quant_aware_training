@@ -1,0 +1,8 @@
+item_number=327
+outcome=inconclusive
+key_metric=n_destructive=5of10_best_triple=1_3_11@54.482_worst=2_10_11@61.687_b10b11_all_destruct=True
+commit=f65304f52ceea1446b509704df13900bed910eec
+paths=experiments/triples_laser_cycle317.py,autoresearch/results/cycle_317_triples.json,autoresearch/results/cycle_317_summary.md
+learned=3-block LASER composition: 5/10 triples destructive at +5 PPL bar. All 3 (b10,b11)-containing triples destruct (3/3). 2/7 non-(b10,b11) triples ALSO destruct ((1,2,3) +6.49, (1,2,10) +6.07). Best triple (1,3,11) at 54.48 (+0.013 noise). Cycle 310 pair-level "(b10,b11) is unique destructive cell" picture does NOT extend to triples — destruction at k=3 includes (b1, b2, *) tuples. The destructive set is broader than localizable to a single pair.
+next=Test 4-tuples or examine the (b1, b2) interaction directly — what's special about block 1 + block 2 together that breaks composition?
+tsv_path=autoresearch/logs/experiments.tsv
