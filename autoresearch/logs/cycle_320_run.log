@@ -1,0 +1,32 @@
+Cycle 320 / item 329 — ReLU² spirals/moons eff_rank census + LASER
+config: HIDDEN=32 DEPTH=12 N=2000 LR_TRAIN=0.0001 target_acc=0.95 seeds=[42, 137, 2024] ranks=[1, 2, 3, 5] retrain_steps=500
+    spirals seed=42 layer_seq_idx=20 W=(32, 32) top5_sv=[1.4056, 1.1126, 1.0501, 0.9747, 0.9156]
+      float held-out acc = 0.5110
+  spirals seed=42: n_params=11745 epochs=40000 train_acc=0.0000 loss=nan converged=False l_min=10 float_held=0.5110 wall=2.3s
+    init_eff_rank=[2.961, 3.388, 3.203, 1.023, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    post_eff_rank=[2.812, 1.531, 1.076, 1.059, 1.041, 1.023, 1.002, 1.0, 1.0, 1.0, 1.0, 1.0]
+    spirals seed=137 layer_seq_idx=20 W=(32, 32) top5_sv=[1.1108, 1.0681, 0.9864, 0.9724, 0.9427]
+      float held-out acc = 0.4880
+  spirals seed=137: n_params=11745 epochs=40000 train_acc=0.5120 loss=0.6929 converged=False l_min=10 float_held=0.4880 wall=45.5s
+    init_eff_rank=[3.729, 3.156, 3.477, 1.198, 1.002, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    post_eff_rank=[3.729, 3.194, 3.486, 1.193, 1.002, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    spirals seed=2024 layer_seq_idx=22 W=(32, 32) top5_sv=[1.6297, 1.0456, 0.9768, 0.9354, 0.8583]
+      float held-out acc = 0.5660
+  spirals seed=2024: n_params=11745 epochs=40000 train_acc=0.0000 loss=nan converged=False l_min=11 float_held=0.5660 wall=17.7s
+    init_eff_rank=[3.694, 3.509, 3.197, 1.017, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    post_eff_rank=[3.614, 2.284, 1.822, 1.644, 1.497, 1.197, 1.015, 1.001, 1.0, 1.0, 1.0, 1.0]
+    moons seed=42 layer_seq_idx=20 W=(32, 32) top5_sv=[1.4202, 1.1244, 1.0259, 0.9688, 0.9196]
+      float held-out acc = 0.8120
+  moons seed=42: n_params=11745 epochs=40000 train_acc=0.0000 loss=nan converged=False l_min=10 float_held=0.8120 wall=1.8s
+    init_eff_rank=[1.569, 1.534, 1.699, 1.021, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    post_eff_rank=[1.562, 1.236, 1.07, 1.009, 1.003, 1.05, 1.004, 1.0, 1.0, 1.0, 1.0, 1.0]
+    moons seed=137 layer_seq_idx=18 W=(32, 32) top5_sv=[1.6474, 1.0507, 1.0188, 0.9711, 0.9067]
+      float held-out acc = 0.4930
+  moons seed=137: n_params=11745 epochs=40000 train_acc=0.0000 loss=nan converged=False l_min=9 float_held=0.4930 wall=1.8s
+    init_eff_rank=[2.394, 2.065, 1.876, 1.019, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    post_eff_rank=[2.294, 1.291, 1.075, 1.043, 1.138, 1.089, 1.015, 1.0, 1.0, 1.0, 1.0, 1.0]
+    moons seed=2024 layer_seq_idx=20 W=(32, 32) top5_sv=[1.3758, 1.0743, 0.9564, 0.9555, 0.9077]
+      float held-out acc = 0.5160
+  moons seed=2024: n_params=11745 epochs=40000 train_acc=0.0000 loss=nan converged=False l_min=10 float_held=0.5160 wall=1.7s
+    init_eff_rank=[2.176, 1.89, 2.103, 1.013, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    post_eff_rank=[2.07, 1.312, 1.046, 1.055, 1.048, 1.094, 1.018, 1.0, 1.0, 1.0, 1.0, 1.0]
