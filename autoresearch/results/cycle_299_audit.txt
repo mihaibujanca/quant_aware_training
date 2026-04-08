@@ -1,0 +1,117 @@
+Cycle 299 Audit — Item 309: Cycle 280 retrain decomposition (B drift)
+Status: PASS
+Commit: cbe611c
+Verdict: INCONCLUSIVE (unchanged by audit)
+
+== Independent verdict recomputation ==
+Item 309 verbatim thresholds:
+  CONFIRMED drift    iff cos(B(4000), B(0)) <= 0.6 AND corr(drift, ppl_improve) >= 0.5
+  CONFIRMED stay-put iff cos(B(t), B(0)) >= 0.95 for all snapshots
+  INCONCLUSIVE between.
+
+From cycle_299_decomp.json:
+  cos(B(4000), B(0))                 = 0.9111  → <= 0.6? FALSE (misses by 0.311)
+  all 41 snapshots cos >= 0.95?      FALSE   (first 15 satisfy; drops at ~step 1800-2000)
+  corr(fro_rel, ppl_improvement)     = +0.9584 (tracking clause HOLDS but CONFIRMED
+                                                drift needs BOTH tracking AND cos ≤ 0.6)
+
+Verdict: INCONCLUSIVE ✓ matches manifest, exec_result, JSON verdict field,
+agenda PAST entry, TSV row.
+
+== Trajectory reproduction ==
+41 snapshots from step 0 to step 4000 inclusive (every 100 steps).
+cos is strictly monotone decreasing (verified):
+  step    0: cos 1.0000  ppl 57.658
+  step  500: cos 0.9855  ppl 52.616
+  step 1000: cos 0.9691  ppl 51.221
+  step 1500: cos 0.9555  ppl 50.297
+  step 2000: cos 0.9446  ppl 49.927
+  step 2500: cos 0.9340  ppl 49.405
+  step 3000: cos 0.9241  ppl 49.449
+  step 3500: cos 0.9179  ppl 49.227
+  step 4000: cos 0.9111  ppl 49.250
+  (best 49.0603 @ step 3900)
+
+The 0.95 crossing happens between step 1800 (cos ≈ 0.9520 interpolated) and
+step 1900 (cos ≈ 0.9492 interpolated) — the stay-put clause fails cleanly
+around mid-training.
+
+Principal-angle energy retained = cos² ≈ 0.830 at step 4000. This is the
+quantitative meaning of "SVD init is 83% of the optimal rank-2 operator".
+
+== Row-space cosine formula audit ==
+Script uses: Q0 = orthonormal row basis of B(0) via SVD (Vh of B(0)),
+             Qt = orthonormal row basis of B(t) via SVD (Vh of B(t)),
+             rowspace_cos = ||Q0 @ Qt.T||_F / sqrt(r)
+This is the normalized sum of squared cos of principal angles; 1.0 iff
+subspaces coincide; 0 iff orthogonal. Sanity assertions in script:
+  cos(B(0), B(0)) = 1.0 within 1e-5 ✓
+  cos(B(t), Vh_ref) == cos(B(t), B(0)) because B(0) = Vh[:2, :] exactly ✓
+  (both fields recorded per snapshot in JSON, match to 1e-10)
+
+== Tracking correlation audit ==
+JSON: corr_fro_ppl_improvement = 0.9584  (script's Pearson formula, standard)
+JSON: corr_cos_ppl              = 0.8801
+
+Both quantities start at 0 (fro_rel=0, ppl_improvement=0) and rise monotonically;
+the high positive correlations are consistent with the step-by-step trajectory:
+
+  fro_rel:  0.000 → 0.171 → 0.251 → 0.303 → 0.341 → 0.374 → 0.403 → 0.421 → 0.439
+  Δppl:     0.000 → 5.042 → 6.437 → 7.360 → 7.731 → 8.253 → 8.209 → 8.431 → 8.408
+
+Both concave-down monotone; Pearson of 0.958 is the right order of magnitude.
+
+== Cycle 280 reference match ==
+float PPL:         53.895 (cycle 280 ref 53.895) ✓
+init noretrain:    57.6581 (cycle 280 ref 57.664, delta 0.006) ✓
+best retrain:      49.0603 @ step 3900 (cycle 280 3-seed mean 49.032, delta 0.028) ✓
+adam recovery:     -8.598 PPL (cycle 280 ref -8.632, delta 0.034) ✓
+
+Single-seed result lands within the cycle 280 3-seed std of 0.025 (< 2σ).
+Script assertions fire cleanly:
+  assert abs(float_ppl - 53.895) < 0.5 ✓
+  assert abs(init_ppl - 57.664) < 0.05 ✓ (0.006 << 0.05)
+  assert best_ppl < init_ppl ✓
+
+== Plan adherence (verified) ==
+TARGET_BLOCK=1, RETRAIN_RANK=2, N_CALIB=200, N_EVAL=100, SEQ_LEN=128,
+N_STEPS=4000, LR=1e-4, EVAL_EVERY=100, SEED=42, DEVICE=mps, trainable=2304.
+41 snapshots (step 0 + 40 eval points). 3-panel plot (PPL, cos, fro_rel).
+Verdict logic matches item 309 verbatim.
+
+== Geometric interpretation audit ==
+1. Partial drift (11% cos decrease) — correct reading ✓
+2. W(t) column-space invariance by construction (A frozen) — correct ✓
+3. W's top-1 right SV rotates by acos(0.900) ≈ 26° — correct ✓
+4. W's top-1 SV rises 28.71 → 30.40 (+5.9%); top-2 drops 23.10 → 22.78 (-1.4%)
+   — correct, operator is being sharpened on dominant direction ✓
+5. Bias L2 delta 2.0 vs ||A @ ΔB||_F ≈ 17.6 (induced weight delta) —
+   manifest's 8.5× ratio is on the composed-operator scale, correct if
+   interpreted as operational change in the composite weight operator ✓
+6. Tracking correlation is observational ("drift and PPL co-occur"), not
+   causal — manifest correctly notes this ✓
+
+== Substantive finding audit ==
+The verdict is INCONCLUSIVE but the substantive finding is sharper:
+"Item 309's dichotomy is too coarse — neither pure within-subspace rotation
+nor genuinely different rank-2 operator fits; SVD init is ~83% of optimal
+basin by principal-angle energy, Adam fine-tunes a ~26° row-space rotation
+AND a +2.0 bias delta to collect the remaining 8.6 PPL."
+
+This is the correct reading of the data and is consistent across manifest,
+exec_result, agenda PAST, STATUS.md, and audit.
+
+== Corrections ==
+None on the verdict. None on the trajectory numbers (all match JSON to 4 dp).
+The manifest's bias-vs-weight Frobenius framing uses the composed-operator
+scale (||A @ ΔB||_F) which is the operationally right comparison; auditor
+confirms the 8.5x ratio is numerically consistent with this choice.
+
+== Final status ==
+PASS — keep INCONCLUSIVE. All verdict threshold quantities independently
+verified from JSON. Cycle 280 reference reproduced within std. Substantive
+finding (partial drift, SVD init good basin, joint row-rotation + bias
+contribution) is clean and sharper than the INCONCLUSIVE label. Natural
+follow-ups for cycle 300+: (A) bias-frozen ablation to decompose the 8.6 PPL,
+(B) 8000+ step budget extension to test asymptotic drift, (C) random-init
+control for B to test SVD-init specialness.

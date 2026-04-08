@@ -1,6 +1,6 @@
 Cycle 299 / Item 309 — Cycle 280 retrain decomposition (B drift)
 Verdict: INCONCLUSIVE
-Commit: pending
+Commit: cbe611c
 
 == Item 309 verbatim verdict thresholds ==
 CONFIRMED drift    iff rowspace_cos(B(4000), B(0)) <= 0.6 AND corr(drift, ppl_improve) >= 0.5
