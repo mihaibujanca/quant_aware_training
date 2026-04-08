@@ -5,7 +5,7 @@ outcome: REFUTED
 key_metric: best_synth_ppl = 127.4956 at (s1*=0.5, s2*=0.5)
             REFUTED iff >= 100  (PASS, +27.50 above bar)
             CONFIRMED iff <= 60 (FAIL, +67.50 above bar)
-commit: <pending>
+commit: cf12c5b
 Branch: geometric_compression
 Verdict: REFUTED
 
