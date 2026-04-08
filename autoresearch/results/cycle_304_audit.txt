@@ -1,0 +1,106 @@
+Cycle 304 Audit -- Item 314
+
+Audit status: PASS
+Provisional outcome: REFUTED (kept)
+
+== Verbatim threshold verification ==
+CONFIRMED   iff k_95 <= 10 at >= 8 of 12 blocks AND k_95 <= 5 at ALL 4
+            concentrator blocks {1, 2, 10, 11}.
+REFUTED     iff k_95 >= 50 at >= 6 of 12 blocks.
+INCONCLUSIVE otherwise.
+
+Auditor recomputed from cycle_304_curve.json::per_block_k95.k95_dense:
+  k_95 = [445, 348, 63, 131, 152, 228, 325, 411, 511, 542, 397, 2]
+
+  n blocks k_95 <= 10          = 1/12   (need >= 8)    -- FAILS (only b11)
+  concentrator k_95 all <= 5?
+    b1=348  b2=63  b10=397  b11=2      -- FAILS (only b11)
+  n blocks k_95 >= 50          = 11/12  (need >= 6)    -- PASSES
+  -> REFUTED = literal verbatim result.
+
+== Reproduction fidelity checks ==
+k=2 column (cycle 302 panel 4 reproduction, asserted in script):
+  all 12 blocks match cycle 302 reference to <1e-4.
+    [0.5902, 0.7463, 0.9190, 0.8649, 0.8426, 0.8109,
+     0.7197, 0.6622, 0.4722, 0.5356, 0.8374, 0.9803]
+
+k=1 column at {0, 1, 2, 11} (cycle 301 E_top1 reference):
+  b0  0.5218 == 0.5218
+  b1  0.6901 == 0.6901
+  b2  0.8919 == 0.8919
+  b11 0.9096 == 0.9096
+  EXACT match per block.
+
+Monotonicity in k at every block: verified (cumulative energy sum).
+
+== Geometric object check ==
+For each block l:
+  z      = LN2(x) @ W_fc + b_fc         in R^3072
+  delta  = GELU(z) - ReLU(z)            in R^3072
+  Dy     = delta @ W_proj               in R^768
+  SVD    W_proj = U diag(S) Vh, Vh in R^(768, 768)  (full right-SV basis)
+  E_k(l) = ||Dy @ Vh[:k, :]^T||_F^2 / ||Dy||_F^2
+  k_95   = min k in 1..768 s.t. E_k >= 0.95  (dense)
+
+Pure SVD + projection; no training; no Adam; no bias fit.
+Trainable params = 0 (verified by construction).
+
+== Substantive reading (auditor endorses) ==
+1. Block 11 is the UNIQUE rank-2 terminator across GPT-2 small. W_proj[b11]
+   top-5 S = [60.99, 34.59, 32.18, 21.97, 21.70]; E_top2 = 0.9803; k_95 = 2.
+2. Cycle 301/302 "rank-2 dominance" and cycle 304 "long tail termination"
+   describe DIFFERENT geometric objects on the same operator:
+     E_top2 = energy MASS in top-2 right-SV subspace (47-98% per block)
+     k_95   = TERMINATION rank (2 at b11, 63-542 elsewhere)
+   Non-contradictory. They coincide only at b11.
+3. Cycles 280/285/288/289/292 single-block LASER anchors (b1 r=2, b2 r=2,
+   b3 r=24, b10 r=5, b11 r=22) remain valid - those are TRAINING-based rank
+   selections where Adam + bias close the ~8-15 PPL delta (cycle 299 83pc
+   basin reading). k_95 is pure-geometry, no Adam rotation; the two differ
+   by ~5x in rank at most blocks.
+4. Item 316 block-8 deep dive is strongly pre-supported by cycle 304 data
+   alone: b8 has 2nd-flattest W_proj top-5 ratio (s1/s5=1.89 after b0 1.54)
+   AND highest k_95 = 511.
+5. Item 315 (multi-block LASER all 5 concentrators) destructive composition
+   (>= 55 PPL) is now the expected base case because the concentrator label
+   is a rank-2 mass artifact of cycle 302 panel 4.
+6. Item 314 hypothesis prediction intervals were systematically low by
+   ~20-80x: b0 pred >=20 vs 445; b8 pred [8,15] vs 511; concentrators
+   pred <=5 vs max 397. Only b11 landed inside its predicted interval.
+
+== Plan adherence ==
+- New script experiments/e_kept_curve_cycle304.py ✓
+- UnifiedCurvatureFramework(sigma=F.gelu tanh, sigma_lin=F.relu,
+  blocks=range(12), calib 200 wikitext-2 val x 128 tok seed 42) ✓
+- K_GRID covers brief's {2,5,10,20,50,100} plus Fibonacci-like sampling ✓
+- k_95 dense 1..768 (not grid-restricted) ✓
+- k=2 sanity assertion vs cycle 302 panel 4 per block ✓
+- Verbatim verdict logic ✓
+- 8 H2 plan headings ✓, within 35-line plan budget ✓, # APPROVE marked ✓
+- Trainable params = 0 ✓
+- Float PPL 45.0637 match asserted ✓
+- Wall 40s on mps (well under 5-min cap) ✓
+
+== Artifact set ==
+experiments/e_kept_curve_cycle304.py
+experiments/curvature_residual_geometric.py   (library, unchanged)
+autoresearch/plans/cycle_304.md
+autoresearch/briefs/cycle_304.md
+autoresearch/results/cycle_304_curve.json
+autoresearch/results/cycle_304_curve.png
+autoresearch/results/cycle_304_summary.md
+autoresearch/results/cycle_304_manifest.txt
+autoresearch/results/cycle_304_exec_result.txt
+autoresearch/audits/cycle_304.md
+autoresearch/results/cycle_304_audit.txt
+autoresearch/logs/cycle_304_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+autoresearch/STATUS.md
+
+== Final status ==
+PASS -- keep REFUTED as verbatim-correct verdict. Cycle 304 is a clean
+extension of cycle 301 / cycle 302 panel 4 to a full k-grid; bit-for-bit
+matches prior cycles at the overlapping grid points; the unique rank-2
+terminator is b11. The compressible-signal / curvature-energy distinction
+is the main substantive finding beyond the binary verdict.

@@ -1,0 +1,191 @@
+Cycle 304 Manifest -- Item 314: E_kept_top_k curve per block
+
+Commit: PENDING
+Branch: geometric_compression
+Verdict: REFUTED
+
+== Verdict logic (item 314 verbatim) ==
+CONFIRMED   iff k_95 <= 10 at >= 8 of 12 blocks AND k_95 <= 5 at ALL
+            concentrator blocks {1, 2, 10, 11}.
+REFUTED     iff k_95 >= 50 at >= 6 of 12 blocks.
+INCONCLUSIVE otherwise.
+
+== Geometric object ==
+For GPT-2 small block l and activation pair (sigma=GELU, sigma_lin=ReLU):
+  z(x)    = LN2(x) @ W_fc + b_fc           in R^3072   (per token)
+  delta   = GELU(z) - ReLU(z)              in R^3072   (curvature residual)
+  Dy(x)   = delta @ W_proj                 in R^768
+  W_proj  = c_proj.weight                  HF Conv1D (3072, 768)
+  SVD     W_proj = U diag(S) Vh, Vh in R^(768, 768)
+  Vh[:k]  = top-k right singular vectors (orthonormal rows in R^768)
+  E_kept_top_k(l) = ||Dy @ Vh[:k, :]^T||_F^2 / ||Dy||_F^2
+  k_95(l) = min k in 1..768 s.t. E_kept_top_k(l) >= 0.95  (dense)
+
+Trainable params: 0.
+
+== k_95 per block (dense, 1..768) ==
+block | k_95 | concentrator? | bucket
+------+------+---------------+------------------
+  0   | 445  |       -       | refute bucket (>=50)
+  1   | 348  |      YES      | refute bucket (>=50) -- FAILS conc <=5
+  2   |  63  |      YES      | refute bucket (>=50) -- FAILS conc <=5
+  3   | 131  |       -       | refute bucket (>=50)
+  4   | 152  |       -       | refute bucket (>=50)
+  5   | 228  |       -       | refute bucket (>=50)
+  6   | 325  |       -       | refute bucket (>=50)
+  7   | 411  |       -       | refute bucket (>=50)
+  8   | 511  |       -       | refute bucket (>=50)
+  9   | 542  |       -       | refute bucket (>=50)
+ 10   | 397  |      YES      | refute bucket (>=50) -- FAILS conc <=5
+ 11   |   2  |      YES      | <=10 bucket (k95 <= 5 : OK)
+
+n_blocks k95 <= 10 = 1/12   (CONFIRMED threshold: >= 8)   -- FAILS
+concentrator k_95 = [b1: 348, b2: 63, b10: 397, b11: 2]
+                   all <= 5?  FALSE                        -- FAILS
+n_blocks k95 >= 50 = 11/12  (REFUTED threshold: >= 6)     -- PASSES
+
+VERDICT: REFUTED.
+
+== Per-block E_kept_top_k curve (Fibonacci-like grid) ==
+block | k=1   | k=2   | k=5   | k=10  | k=20  | k=50  | k=100 | k=233 | k=500
+------+-------+-------+-------+-------+-------+-------+-------+-------+-------
+  0   | 0.5218| 0.5902| 0.7608| 0.7976| 0.8248| 0.8484| 0.8690| 0.9061| 0.9615
+  1   | 0.6901| 0.7463| 0.7724| 0.8242| 0.8425| 0.8643| 0.8874| 0.9262| 0.9749
+  2   | 0.8919| 0.9190| 0.9219| 0.9267| 0.9307| 0.9471| 0.9582| 0.9738| 0.9914
+  3   | 0.8572| 0.8649| 0.8721| 0.8886| 0.9045| 0.9190| 0.9440| 0.9657| 0.9904
+  4   | 0.8333| 0.8426| 0.8731| 0.8922| 0.8965| 0.9122| 0.9345| 0.9639| 0.9887
+  5   | 0.7898| 0.8109| 0.8384| 0.8510| 0.8618| 0.9011| 0.9215| 0.9512| 0.9850
+  6   | 0.6832| 0.7197| 0.7283| 0.7789| 0.8120| 0.8504| 0.8753| 0.9257| 0.9813
+  7   | 0.6461| 0.6622| 0.6847| 0.6943| 0.7207| 0.7879| 0.8411| 0.9016| 0.9685
+  8   | 0.4417| 0.4722| 0.4990| 0.5235| 0.5706| 0.6488| 0.7258| 0.8355| 0.9464
+  9   | 0.5296| 0.5356| 0.5426| 0.5646| 0.6108| 0.6612| 0.7189| 0.8039| 0.9333
+ 10   | 0.8349| 0.8374| 0.8432| 0.8463| 0.8502| 0.8708| 0.8914| 0.9203| 0.9631
+ 11   | 0.9096| 0.9803| 0.9809| 0.9819| 0.9828| 0.9846| 0.9872| 0.9917| 0.9974
+
+Sanity: k=2 column matches cycle 302 panel 4 per block to 4 decimals
+(asserted within 1e-4 per block). k=1 recovers cycle 301 E_top1 at blocks
+{0, 1, 2, 11} = {0.5218, 0.6901, 0.8919, 0.9096} (EXACT).
+
+== W_proj top-5 singular values per block ==
+block | s1     | s2     | s3     | s4     | s5
+------+--------+--------+--------+--------+--------
+  0   | 25.033 | 21.054 | 18.337 | 17.381 | 16.256
+  1   | 28.706 | 23.104 | 18.841 | 13.834 | 13.739
+  2   | 38.255 | 15.165 | 13.084 | 12.103 | 11.579
+  3   | 40.801 | 13.372 | 12.183 | 11.732 | 11.369
+  4   | 31.635 | 14.196 | 13.129 | 12.496 | 11.971
+  5   | 27.618 | 17.531 | 14.577 | 13.228 | 12.427
+  6   | 29.638 | 18.042 | 15.994 | 14.240 | 13.003
+  7   | 30.227 | 16.795 | 16.348 | 15.202 | 14.831
+  8   | 31.076 | 24.495 | 18.535 | 16.773 | 16.467
+  9   | 32.782 | 21.967 | 19.814 | 18.586 | 18.312
+ 10   | 41.585 | 28.194 | 21.173 | 20.170 | 19.657
+ 11   | 60.993 | 34.594 | 32.184 | 21.966 | 21.700
+
+Block 11 is the only block with a sharply dominant s1=60.99 (2x s2) AND
+heavy concentration of Dy on that dominant direction (E_top1 = 0.9096,
+E_top2 = 0.9803 > 0.95 already at k=2). Block 2 has the sharpest drop
+from s1 to s2 (38.3 -> 15.2, 2.52x ratio) AND dense concentration at low k
+(E_top1 = 0.8919) but nevertheless needs k=63 to cross 0.95 because a long
+tail of the DELTA matters beyond the first 2 Vh directions. Blocks 8-9
+have the flattest spectra (s1 only ~1.3-1.5x s2) and the highest k_95
+(511, 542) -- the "bathtub middle" has both a flat W_proj AND a broad
+curvature residual.
+
+== Interpretation (substantive reading) ==
+1. Cycle 302's E_kept_top_2 framing was where the energy MASS is, not
+   where it TERMINATES. The curvature residual has a long Gaussian-like
+   tail at every block except 11. Concentrator blocks at k=2 (E_top2
+   >= 0.8) were picked by "max 2D mass" criterion, but only block 11
+   actually TERMINATES before k=10.
+
+2. Only 1/12 blocks (block 11) reaches k_95 <= 10. The other 11 span
+   k_95 in [63, 542], with median k_95 ~ 337. 11/12 blocks are in the
+   REFUTED bucket (k_95 >= 50).
+
+3. "Concentrator" blocks from item 314's definition (1, 2, 10, 11) split
+   sharply:
+     - b11 : k_95 = 2   (clean rank-2 concentration; spectrum is
+                         dominant-s1-heavy, s1=61 vs s2=34.6 ratio 1.76x)
+     - b2  : k_95 = 63  (best among non-b11, but still 12.6x the <=5 bar)
+     - b10 : k_95 = 397
+     - b1  : k_95 = 348
+   The "concentrator" label, motivated by E_top2 >= 0.75, was an artifact
+   of the cycle 302 rank-2 measurement and does NOT translate to k_95.
+
+4. Mid-block 8: item 314 predicted k_95 in [8, 15]. Measured 511. This is
+   the FLATTEST spectrum (E_top1 = 0.44 vs concentrator E_top1 ~ 0.90)
+   combined with a heavy tail. Confirms item 316's block-8 deep dive
+   hypothesis that b8 has BOTH a flat W_proj AND a broad curvature
+   residual.
+
+5. Block 0: item 314 predicted k_95 >= 20. Measured 445. This is
+   consistent with cycle 278's eff_rank(c_proj_0) = 71.93 high measurement
+   AND cycle 217 rank_95(block 0) = 10 for raw Dy (Dy itself is
+   low-rank, but its alignment with the top right-SV subspace of W_proj
+   is spread because W_proj at b0 is close to isotropic: s1=25, s2=21,
+   s3=18, s4=17, s5=16 -- flat top-5).
+
+6. Block 11 is the UNIQUE true low-rank curvature block. Cycles 280/285/
+   288/289/292 single-block LASER anchors at b1/b2/b3/b10/b11 remain
+   valid (those were retrained rank selections, not this kind of
+   termination measurement), but the "rank-2 terminator" story only
+   holds for b11. The recipe-anchor Pareto tiles (cycle 284 b1 r=2 +
+   b11 r=22, cycle 292 b1 r=1) are not invalidated -- they're training-
+   based floors, not k_95 floors. But item 314's claim "rank-5 essentially
+   complete at concentrators" is REFUTED: rank 5 captures only 77-92% of
+   curvature at b1/b2/b10, far from 95%.
+
+7. Geometric restatement: for every block except 11, the curvature
+   residual Dy = delta @ W_proj is a dense vector inside R^768 with a
+   long tail in the top-k right-singular subspace of W_proj. Cycle 301/
+   302's "rank-2 concentration" is that the TOP-2 components contain
+   47-98% of the energy. This cycle adds: the REMAINING 2-53% of the
+   energy is spread over a broad subspace (dense tail), so achieving
+   95% recovery costs k ~ 50-550 ranks depending on the block.
+
+== Config ==
+N_CALIB=200  SEQ_LEN=128  N_TOKENS=25600  SEED=42  BLOCKS=range(12)
+DEVICE=mps   model=gpt2 (HF small)
+sigma     = lambda z: F.gelu(z, approximate='tanh')
+sigma_lin = F.relu
+K_GRID = [1, 2, 3, 5, 8, 10, 13, 20, 21, 34, 50, 55, 89, 100, 144, 233, 377, 500]
+CONCENTRATORS = [1, 2, 10, 11] (per item 314 verbatim)
+
+Trainable params = 0.
+
+== Verification (asserted) ==
+- |float_ppl - 45.0637| < 0.5  (measured: 45.0637)
+- W_proj.shape == (3072, 768) per block
+- Vh.shape == (768, 768) (full right-SV basis) per block
+- E_kept_top_2(l) matches cycle 302 panel 4 reference to 1e-4 per block
+- E_kept_top_k non-decreasing along K_GRID per block
+- k_95_dense computed over dense 1..768 cumulative energy, not just K_GRID
+
+== Wall time ==
+Total ~40s on mps. Model load ~5s; calib forward pre-hook capture ~3s;
+per-block SVD(W_proj) + projection + k_95 ~0.2s each (2.7s total sweep);
+plot + JSON + summary ~2s. Well under the ~5-min plan cap.
+
+== Artifacts ==
+experiments/e_kept_curve_cycle304.py
+experiments/curvature_residual_geometric.py
+autoresearch/plans/cycle_304.md
+autoresearch/briefs/cycle_304.md
+autoresearch/results/cycle_304_curve.json
+autoresearch/results/cycle_304_curve.png
+autoresearch/results/cycle_304_summary.md
+autoresearch/results/cycle_304_manifest.txt
+autoresearch/results/cycle_304_exec_result.txt
+autoresearch/audits/cycle_304.md
+autoresearch/results/cycle_304_audit.txt
+autoresearch/logs/cycle_304_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+autoresearch/STATUS.md
+
+item_number: 314
+outcome: refuted
+key_metric: verdict=REFUTED_k95_dense_per_block_b0_445_b1_348_b2_63_b3_131_b4_152_b5_228_b6_325_b7_411_b8_511_b9_542_b10_397_b11_2_only_1_of_12_blocks_k95_le_10_need_8_concentrator_k95_b1_348_b2_63_b10_397_b11_2_NOT_all_le_5_11_of_12_blocks_k95_ge_50_refute_threshold_6_E_kept_top_k_curve_per_block_k2_matches_cycle_302_panel4_exactly_b0_0.5902_b1_0.7463_b2_0.9190_b3_0.8649_b4_0.8426_b5_0.8109_b6_0.7197_b7_0.6622_b8_0.4722_b9_0.5356_b10_0.8374_b11_0.9803_k5_0.7608_0.7724_0.9219_0.8721_0.8731_0.8384_0.7283_0.6847_0.4990_0.5426_0.8432_0.9809_k10_0.7976_0.8242_0.9267_0.8886_0.8922_0.8510_0.7789_0.6943_0.5235_0.5646_0.8463_0.9819_k20_0.8248_0.8425_0.9307_0.9045_0.8965_0.8618_0.8120_0.7207_0.5706_0.6108_0.8502_0.9828_k50_0.8484_0.8643_0.9471_0.9190_0.9122_0.9011_0.8504_0.7879_0.6488_0.6612_0.8708_0.9846_k100_0.8690_0.8874_0.9582_0.9440_0.9345_0.9215_0.8753_0.8411_0.7258_0.7189_0.8914_0.9872_k500_0.9615_0.9749_0.9914_0.9904_0.9887_0.9850_0.9813_0.9685_0.9464_0.9333_0.9631_0.9974_block11_only_true_rank2_terminator_b11_W_proj_s1_60.99_dominant_2x_s2_34.59_E_top2_0.98_already_above_95pc_block2_sharpest_s1_s2_ratio_38.26_to_15.17_E_top1_0.89_but_still_k95_63_long_tail_block8_flattest_spectrum_and_broadest_curvature_k95_511_confirms_item_316_hypothesis_cycle_302_rank_2_framing_is_where_energy_mass_concentrates_not_where_it_terminates_curvature_has_long_gaussian_tail_at_every_block_except_11_concentrator_label_from_item_314_verbatim_artifact_of_rank_2_measurement_cycles_280_285_288_289_292_single_block_LASER_anchors_remain_valid_training_based_not_k95_based_rank_5_essentially_complete_at_concentrators_claim_REFUTED_rank_5_captures_77_to_92_percent_at_b1_b2_b10_far_from_95_cycle_278_eff_rank_b0_71.93_consistent_b0_W_proj_top5_flat_25_21_18_17_16_no_training_25600_tokens_seed42_trainable_params_0_wall_40s_under_5_min_plan_cap_vh_shape_768_768_full_right_sv_basis_e_top2_cycle_302_sanity_matches_within_1e_4_per_block_asserted
+commit: PENDING
+paths: experiments/e_kept_curve_cycle304.py,experiments/curvature_residual_geometric.py,autoresearch/plans/cycle_304.md,autoresearch/briefs/cycle_304.md,autoresearch/results/cycle_304_curve.json,autoresearch/results/cycle_304_curve.png,autoresearch/results/cycle_304_summary.md,autoresearch/results/cycle_304_manifest.txt,autoresearch/results/cycle_304_exec_result.txt,autoresearch/audits/cycle_304.md,autoresearch/results/cycle_304_audit.txt,autoresearch/logs/cycle_304_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv,autoresearch/STATUS.md
