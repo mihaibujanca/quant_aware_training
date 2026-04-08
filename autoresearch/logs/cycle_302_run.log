@@ -1,0 +1,59 @@
+Device: mps
+Loading GPT-2 + wikitext-2 val...
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Calib: 200 seqs × 128 tokens = 25600 tokens
+`loss_type=None` was set in the config but it is unrecognized. Using the default loss: `ForCausalLMLoss`.
+Float PPL on calib slice = 45.0637
+
+── Building UnifiedCurvatureFramework(sigma=GELU, sigma_lin=ReLU) ──
+Capturing c_fc inputs (single forward pass)...
+  captured in 3.2s
+
+── Running panels 1–4 per block ──
+  block 0... rank_95_raw=10  E_kept_top2=0.5902
+  block 1... rank_95_raw=132  E_kept_top2=0.7463
+  block 2... rank_95_raw=1  E_kept_top2=0.9190
+  block 3... rank_95_raw=1  E_kept_top2=0.8649
+  block 4... rank_95_raw=1  E_kept_top2=0.8426
+  block 5... rank_95_raw=1  E_kept_top2=0.8109
+  block 6... rank_95_raw=1  E_kept_top2=0.7197
+  block 7... rank_95_raw=8  E_kept_top2=0.6622
+  block 8... rank_95_raw=73  E_kept_top2=0.4722
+  block 9... rank_95_raw=110  E_kept_top2=0.5356
+  block 10... rank_95_raw=1  E_kept_top2=0.8374
+  block 11... rank_95_raw=1  E_kept_top2=0.9803
+  panels 1–4 done in 17.0s
+
+── Panel 5: κ shift under LinearisedAct(sigma_lin + b_leak) ──
+  re-capturing Dy to compute b_leak...
+  b_leak ready in 1.9s
+  collecting baseline trajectory + kappa (unpatched)...
+    κ_A mean per layer = [0.0001, 0.0022, 0.0022, 0.0019, 0.0011, 0.0007, 0.0003, 0.0002, 0.0001, 0.0, 0.0]
+    done in 30.5s
+  installing LinearisedAct (sigma_lin + b_leak) on all 12 blocks...
+  patched PPL = 60.0816
+  collecting patched trajectory + kappa...
+    κ_B mean per layer = [0.0001, 0.0026, 0.003, 0.0027, 0.0015, 0.0008, 0.0004, 0.0002, 0.0001, 0.0, 0.0]
+    done in 22.3s
+  rel_kappa_shift per layer (κ idx 0..10 -> layers 1..11): [0.118, 0.144, 0.357, 0.477, 0.408, 0.261, 0.133, 0.037, 0.028, 0.118, 0.314]
+  max rel κ shift in layers 3–5 = 0.4772 at layer 4
+  cycle 258 reference rel κ shift: [0.0, 0.182, 0.364, 0.421, 0.364, 0.143, 0.333, 0.0, 0.0, 0.0, 0.0]
+
+── Validation metrics ──
+  (a) n_blocks rank_95 ≤ 64: 9/12 (ref 9/12)
+      per-block rank_95 (this cycle): [10, 132, 1, 1, 1, 1, 1, 8, 73, 110, 1, 1]
+      per-block rank_95 (c217 ref):   [10, 132, 1, 1, 1, 1, 1, 8, 73, 110, 1, 1]
+      per-block |diff|/ref: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      n within ±5%: 12/12
+  (b) n_pairs c_fc_top5_cos_sum ≥ 2.0: 11/11 (ref 11/11)
+      per-pair: [2.782, 2.705, 2.586, 2.701, 3.318, 3.233, 3.327, 3.356, 3.393, 2.762, 2.493]
+  (c) max κ shift in layers 3–5 = 0.4772 (ref 0.477 at layer 4)
+
+== VERDICT: CONFIRMED ==
+(a) n_blocks rank_95 ≤ 64 = 9/12 (pass ≥9: True), n within ±5% = 12/12; (b) n_pairs c_fc_top5 ≥ 2.0 = 11/11 (pass ≥6: True); (c) max κ shift (layers 3–5) = 0.4772 (pass ≥0.35: True).
+
+Wrote autoresearch/results/cycle_302_unified.json
+Wrote autoresearch/results/cycle_302_panels.png
+Wrote autoresearch/results/cycle_302_summary.md
+
+Done.
