@@ -1,7 +1,7 @@
 Cycle 316 Manifest -- Item 326: (b10, b11) destructive pair deep dive
                                 mechanistic attribution
 
-Commit: PENDING
+Commit: 0081ced
 Branch: geometric_compression
 Verdict: INCONCLUSIVE
 

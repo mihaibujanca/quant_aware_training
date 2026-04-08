@@ -1,0 +1,68 @@
+Cycle 316 Audit -- Item 326
+
+Status: PASS
+
+Provisional outcome: INCONCLUSIVE per item 326's strict three-way verdict tree.
+                     M3 (joint Adam saddle) outright REFUTED.
+                     M1 (residual stream redundancy) PARTIAL.
+                     M2 (LN coupling) indirectly REFUTED by M3 ablation A.
+
+Verdict logic re-check (item 326 verbatim):
+  sequential_best_ppl = 61.2059  (>= 60: TRUE; <= 55: FALSE)
+  min_mean_angle_deg  = 39.63    (<30: FALSE; >60: FALSE; in middle band)
+
+  Branch 1 (M3 pathology, requires <=55)        FAIL
+  Branch 2 (M1 redundancy, requires >=60 + <30) FAIL
+  Branch 3 (REFUTE unknown, requires >=60 + >60) FAIL
+  Branch 4 (else)                                TRUE
+  --> INCONCLUSIVE per the strict tree. Execute layer verdict label correct.
+
+Cross-checks (all PASS):
+  - float PPL 53.8949 vs ref 53.895 (|delta| = 5e-5)
+  - install init 76.6535 matches cycle 310 init 76.6535 exactly
+  - ablation A init 59.6834 matches cycle 270 b11 r=22 noretrain ~59.683
+  - ablation A best  54.7724 vs cycle 270 b11 r=22 retrained 54.4687 (+0.30; within budget tolerance)
+  - ablation B best  51.4783 vs cycle 282 b10 r=5 diag       51.4659 (+0.01; essentially exact)
+  - per-phase |restored - best| < 1e-3 asserted by adam_fit
+  - per-block Vh orthonormality off-diag < 1e-4 asserted in M1 test
+  - trainable counts: phase A 4,608; phase B 17,664; M3A 17,664; M3B 4,608 (all asserted)
+
+Numerical checks re-run:
+  - JSON verdict logic block reproduces INCONCLUSIVE
+  - cosine -> degree conversion verified for the raw 5x22 top-5 (mean 39.63 degrees)
+  - phase B init 64.6726 = phase A best -> phase boundary correctly handled
+  - phase B used a fresh Adam optimizer per the plan instruction
+
+Substantive interpretation accepted:
+  1. M3 refuted unambiguously (6 PPL margin from the <=55 bar)
+  2. M1 partial: top-1 angle 14.77 degrees (cos 0.967), top-2 angle 30.09 degrees
+     (cos 0.865); both leading directions strongly aligned, rank-r tail diverges
+  3. M2 indirectly refuted by ablation A: b11 retrains to its single-block anchor
+     (54.77 vs 54.47) when b10 is float, so LN coupling alone is not the culprit
+  4. Destruction is purely interactive: each block alone fits its single-block
+     anchor (b10 r=5 = 51.48; b11 r=22 = 54.77), but jointly they degrade to 60.72
+     (cycle 310) / 61.21 (sequential cycle 316)
+
+Auditor recommendation: PASS the INCONCLUSIVE verdict unchanged. The execute and
+manifest layers accurately distinguish (a) the strict-tree verdict from (b) the
+substantive sharper findings. Item 326 is closed.
+
+Suggested follow-up agenda items (NOT retroactive to cycle 316):
+  - widen M1 to "top-k angle" rule (top-1 or top-2 below 30 degrees)
+  - higher-rank b10 single-fit to test whether destruction shifts with b10 capacity
+  - 2D rank grid (b10 in {5,10,22} x b11 in {22,44,88}) to find the destruction
+    rank threshold
+
+Files audited:
+  experiments/b10_b11_deep_dive_cycle316.py
+  autoresearch/results/cycle_316_b10_b11_deep_dive.json
+  autoresearch/results/cycle_316_summary.md
+  autoresearch/results/cycle_316_manifest.txt
+  autoresearch/results/cycle_316_exec_result.txt
+  autoresearch/logs/cycle_316_run.log
+  autoresearch/plans/cycle_316.md
+  autoresearch/reviews/cycle_316.md
+  autoresearch/briefs/cycle_316.md
+  autoresearch/agenda.md (PAST cycle 316 entry)
+
+PASS.
