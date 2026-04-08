@@ -1,0 +1,6 @@
+[cycle 319] running: /Users/mihai/Projects/parameter-golf/.venv/bin/python /Users/mihai/Projects/parameter-golf/local_scripts/pgolf_curvature_residual.py --checkpoint /Users/mihai/Projects/parameter-golf/logs/13L_640d_322_7k_wd70_batch20k_best.npz --sigma relu2 --sigma-lin relu --n-tokens 25600 --seq-len 1024
+[cycle 319] running: /Users/mihai/Projects/parameter-golf/.venv/bin/python /Users/mihai/Projects/parameter-golf/local_scripts/pgolf_curvature_residual.py --checkpoint /Users/mihai/Projects/parameter-golf/logs/13L_640d_322_7k_wd70_batch20k_best.npz --sigma lrelu2 --sigma-lin relu2 --n-tokens 25600 --seq-len 1024
+[cycle 319] running: /Users/mihai/Projects/parameter-golf/.venv/bin/python /Users/mihai/Projects/parameter-golf/local_scripts/pgolf_curvature_residual.py --checkpoint /Users/mihai/Projects/parameter-golf/logs/13L_640d_322_7k_wd70_batch20k_best.npz --sigma gelu --sigma-lin relu --n-tokens 25600 --seq-len 1024
+[cycle 319] wrote autoresearch/results/cycle_319_pgolf_curvature_residual.json
+[cycle 319] wrote autoresearch/results/cycle_319_summary.md
+[cycle 319] VERDICT: INCONCLUSIVE
