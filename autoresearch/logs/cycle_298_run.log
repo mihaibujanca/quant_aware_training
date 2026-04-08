@@ -1,0 +1,22 @@
+Cycle 298 / item 308 — SDF rank census + LASER replication on 3D mesh fitting
+config: HIDDEN=256 DEPTH=4 INPUT_DIM=3 N=30000 surface_ratio=0.5 mesh=torus LR_TRAIN=0.001 LR_RETRAIN=0.001 max_epochs=5000 retrain_steps=500 eval_every=25 ranks=[2, 3, 5, 10] seed=42
+  data: train (24000, 3) y (24000, 1) | held (6000, 3) y (6000, 1)
+  sdf train abs mean=0.2488 held abs mean=0.2472
+  MLP params: 198657
+  plateau at epoch 3175: best_held=3.309283e-06@2925 (no improve >= 0.0001 for 250 epochs)
+  trained: train_mse=2.370525e-06 held_mse=3.309283e-06 best_epoch=2925 wall=54.3s
+  hidden eff_rank per layer: [3.902, 5.066, 3.043, 1.862]
+  jacobian_rank_profile: eff_rank=2.6226 rank_90=3 rank_95=3 rank_99=3 sv=[117.3413, 70.0661, 69.1223]
+  l* = 3 (eff_rank[l*] = 1.8617); layer_seq_idx=6
+    layer_seq_idx=6 W shape=(256, 256)
+      SVD top-10: [3.2942, 2.3829, 1.5206, 1.3984, 1.2225, 1.1788, 1.1614, 1.1435, 1.1352, 1.1115]
+      float held-out MSE = 3.309283e-06
+      r=2: noretrain held=6.121082e-03  retrain best=6.839405e-06@500  ratio_vs_float=2.0667
+      r=3: noretrain held=7.583317e-03  retrain best=6.679289e-06@500  ratio_vs_float=2.0183
+      r=5: noretrain held=2.789493e-03  retrain best=5.574008e-06@500  ratio_vs_float=1.6844
+      r=10: noretrain held=1.569573e-03  retrain best=4.317571e-06@500  ratio_vs_float=1.3047
+verdict: REFUTED
+  hidden_mean_eff_rank=3.3235 (target [2.5,3.5]) in_range=True
+  grad_eff_rank=2.6226 (target [1.8,2.5]) in_range=False
+  rank3_retrain_ratio_vs_float=2.0183 (CONFIRMED <=1.1, REFUTED >=2.0)
+total wall: 71.6s

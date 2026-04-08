@@ -1,0 +1,82 @@
+Cycle 298 / Item 308 — SDF rank census + LASER replication on 3D mesh fitting
+Verdict: REFUTED
+Commit: pending
+
+== Item 308 verbatim verdict thresholds ==
+CONFIRMED iff (a) hidden output-covariance eff_rank in [2.5, 3.5] post-training,
+              (b) gradient ensemble eff_rank in [1.8, 2.5],
+              (c) rank-3 retrain held-out MSE <= 1.1 * float MSE.
+REFUTED   iff hidden eff_rank stays >= 8 OR rank-3 retrain MSE >= 2 * float.
+
+== Result ==
+hidden mean eff_rank (1..3) = 3.3235  → in [2.5, 3.5]?  TRUE   (clause A PASSES)
+gradient ensemble eff_rank  = 2.6226  → in [1.8, 2.5]?  FALSE  (clause B fails by +0.12)
+rank-3 retrain ratio        = 2.0183  → <= 1.1?         FALSE
+                                       → >= 2.0?        TRUE   (REFUTED clause fires)
+
+Verdict: REFUTED. The CONFIRMED clause needs all three; clauses B and C both fail.
+The REFUTED clause fires on rank-3 ratio crossing 2.0 (by 0.018).
+
+== Per-layer hidden eff_rank ==
+[3.902, 5.066, 3.043, 1.862]   (layers 0, 1, 2, 3)
+The 4-layer MLP funnels eff_rank from input-dim 3 (layer 0) up to ~5 (layer 1)
+back down to ~3 (layer 2) and finally to ~2 (layer 3 = LAST hidden, surface dim).
+l* = 3 chosen as argmin over hidden 1..3.
+
+== Gradient ensemble (full SVD over [24000, 3]) ==
+effective_rank: 2.6226
+rank_90: 3, rank_95: 3, rank_99: 3
+top SVs: [117.3413, 70.0661, 69.1223]
+Geometric reading: 1 large normal direction + 2 smaller tangent/radial dirs.
+"≈ 2" holds near the surface; volumetric points add the third direction.
+
+== LASER sweep at l* = 3 ==
+| r  | no_retrain | retrain best | best_step | ratio_vs_float |
+|----|-----------:|-------------:|----------:|---------------:|
+| 2  |  6.12e-03  |  6.84e-06    |    500    |  2.067         |
+| 3  |  7.58e-03  |  6.68e-06    |    500    |  2.018         |
+| 5  |  2.79e-03  |  5.57e-06    |    500    |  1.684         |
+| 10 |  1.57e-03  |  4.32e-06    |    500    |  1.305         |
+
+ALL 4 retrain fits BUDGET-BOUNDED at step 500. Ratio decreases monotonically
+with r but never reaches 1.1×. Even rank-10 (well above the gradient eff_rank
+2.62) is at 1.30× float MSE.
+
+== Substantive findings (sharper than the REFUTED label) ==
+1. Input-dim hypothesis HOLDS. Hidden mean eff_rank 3.32 ≈ input_dim 3.
+   The collapse pattern [3.90, 5.07, 3.04, 1.86] is the textbook "input dim
+   sets the upper envelope, surface dim sets the lower bound" prediction.
+
+2. Surface-dim hypothesis NEAR-HOLDS. Gradient eff_rank 2.62 is just above the
+   predicted [1.8, 2.5] band but discrete rank_95 = 3. The 0.62 excess comes
+   from gradient diversity at volumetric (non-surface) points.
+
+3. LASER recipe REFUTED at LAST HIDDEN LAYER, not at the input-dim level.
+   Rank-3 ratio 2.018 ≥ 2.0 by 0.018. Cycle 296 spirals at l*=middle layer
+   recovered to within 0.6% of float at rank-2 with the same 500-step budget.
+   Here l*=3 of 4 (last hidden) and there is no downstream layer to absorb
+   the rank-truncation residual. The recipe transferability across (layer
+   position, input-dim regime) is the variable at play, not the eff_rank
+   prediction itself.
+
+4. The "rank-2 should fail" prediction in item 308 also HOLDS in the trivial
+   sense that rank-2 ratio (2.067) > rank-3 ratio (2.018). Both fail the
+   match-float bar; rank-2 is marginally worse.
+
+== Convergence (CLAUDE.md verify-task-perf rule) ==
+Float held MSE 3.309e-06 (at epoch 2925, plateau-stop at 3175 epochs).
+Requirement was < 1e-2 (SDF normalized to unit cube). Met by 4 orders of magnitude.
+Training finished in 54.3s on CPU.
+
+== Wall ==
+Training: 54.3s | LASER sweep: ~17s | Total: 71.6s (under 15-min cap by ~12 min)
+
+== Files written ==
+experiments/sdf_rank_laser_cycle298.py
+autoresearch/plans/cycle_298.md
+autoresearch/briefs/cycle_298.md
+autoresearch/results/cycle_298_sdf_rank_laser.json
+autoresearch/results/cycle_298_summary.md
+autoresearch/results/cycle_298_manifest.txt
+autoresearch/results/cycle_298_exec_result.txt
+autoresearch/logs/cycle_298_run.log

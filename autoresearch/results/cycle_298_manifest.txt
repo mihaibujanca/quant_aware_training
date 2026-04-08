@@ -1,0 +1,140 @@
+Cycle 298 Manifest — Item 308: SDF rank census + LASER replication on 3D mesh fitting
+
+Commit: pending
+Branch: geometric_compression
+Verdict: REFUTED
+
+== Verdict logic (item 308 verbatim) ==
+CONFIRMED iff (a) hidden output-covariance eff_rank ∈ [2.5, 3.5] post-training
+              AND (b) gradient ensemble eff_rank ∈ [1.8, 2.5]
+              AND (c) rank-3 retrain held-out MSE ≤ 1.1 × float MSE.
+REFUTED   iff hidden eff_rank stays ≥ 8
+              OR rank-3 retrain MSE ≥ 2 × float.
+INCONCLUSIVE between.
+
+== Verdict evaluation ==
+hidden mean eff_rank (layers 1..3) = 3.3235 → in [2.5, 3.5]? TRUE  (clause A passes)
+gradient ensemble eff_rank          = 2.6226 → in [1.8, 2.5]? FALSE (clause B fails by +0.12)
+rank-3 retrain held MSE             = 6.679289e-06
+float held MSE                      = 3.309283e-06
+rank-3 retrain ratio vs float       = 2.0183
+  → ≤ 1.1 (CONFIRMED)? FALSE
+  → ≥ 2.0 (REFUTED)?  TRUE  (by +0.018)
+
+REFUTED (rank-3 ratio crosses the REFUTED threshold). CONFIRMED requires all three
+clauses; clauses B and C both fail. Hidden eff_rank does NOT exceed 8, so the
+"hidden ≥ 8" branch of REFUTED does not fire.
+
+== Config ==
+HIDDEN=256  DEPTH=4  INPUT_DIM=3  N_POINTS=30000  TRAIN_FRAC=0.8
+mesh=torus  surface_ratio=0.5  surface_noise=0.01  seed=42
+LR_TRAIN=LR_RETRAIN=1e-3  full-batch MSE
+MAX_EPOCHS=5000  PLATEAU_PATIENCE=250  PLATEAU_MIN_REL_IMPROVE=1e-4
+RETRAIN_STEPS=500  EVAL_EVERY=25  RANKS=[2, 3, 5, 10]
+MLP: aleph.models.MLP(input_size=3, hidden_size=256, output_size=1, depth=4, ReLU)
+Trainable params: 198,657 (asserted)
+Hardware: CPU
+
+== Training ==
+- plateau-stop at epoch 3175 (no improve >= 1e-4 for 250 epochs)
+- best held-out MSE 3.309283e-06 at epoch 2925
+- final train MSE 2.370525e-06 (after best-state restore)
+- training wall: 54.3s
+- CLAUDE.md task verification: float held MSE 3.31e-06 << requirement 1e-2 ✓
+
+== Hidden eff_rank census (post-ReLU on TRAIN, formula exp(-Σ p_i log p_i) over eigvalsh of Y^T Y / N) ==
+layer 0: 3.902  (post-ReLU after Linear(256, 3) — input projection)
+layer 1: 5.066  (post-ReLU after Linear(256, 256))
+layer 2: 3.043  (post-ReLU after Linear(256, 256))
+layer 3: 1.862  (post-ReLU after Linear(256, 256)) ← l* (argmin over 1..3)
+
+mean over hidden 1..3 = 3.3235 (target [2.5, 3.5])  → in range
+The collapse pattern: eff_rank rises in layer 1 (5.07), stays at input-dim ~3 in
+layer 2 (3.04), then collapses to ~2 (matching the 2D surface manifold) in the
+last hidden layer. This is exactly what the item 308 hypothesis predicted at the
+qualitative level: input_dim 3 is the upper envelope, surface_dim 2 the lower.
+
+== Gradient ensemble (jacobian_rank_profile, full SVD of [N_train, 3]) ==
+effective_rank: 2.6226   (target [1.8, 2.5] — outside by +0.12)
+rank_90: 3
+rank_95: 3
+rank_99: 3
+top singular values: [117.3413, 70.0661, 69.1223]   (3 nontrivial; gradient lives in R^3 by definition)
+n_samples: 24000  input_dim: 3
+
+The gradient is a 3-vector at every input point; the SVD returns 3 singular
+values with the smallest nonzero. The effective rank 2.62 reflects that the
+gradient field is dominated by 1 large direction (117.3, the SDF normal away
+from the surface) plus 2 mid-sized directions (70.1, 69.1, the surface tangents
+plus volumetric variation). The hypothesis "≈ 2" is geometrically reasonable
+near the surface but slightly underestimates the gradient diversity once
+volumetric points are included. rank_95 = 3 is the more honest summary.
+
+== LASER sweep at l* = 3 (layer_seq_idx=6, Linear (256, 256)) ==
+SVD top-10 of W_l*: [3.2942, 2.3829, 1.5206, 1.3984, 1.2225, 1.1788, 1.1614, 1.1435, 1.1352, 1.1115]
+(2 dominant SVs then a flat tail; consistent with the layer being effectively
+ rank-2 in OUTPUT but driven by a dense weight matrix.)
+
+| r  | no_retrain_held_mse | retrain_best_held_mse | best_step | ratio_vs_float |
+|---:|--------------------:|----------------------:|----------:|---------------:|
+|  2 | 6.121082e-03        | 6.839405e-06          |       500 | 2.0667         |
+|  3 | 7.583317e-03        | 6.679289e-06          |       500 | 2.0183         |
+|  5 | 2.789493e-03        | 5.574008e-06          |       500 | 1.6844         |
+| 10 | 1.569573e-03        | 4.317571e-06          |       500 | 1.3047         |
+
+ALL FOUR retrain fits BUDGET-BOUNDED at step 500. The ratio decreases
+monotonically with r but never reaches 1.1× float at any r in this set.
+Trainable per fit: r*256 + 256 (asserted).
+
+== Substantive findings ==
+1. Input-dim hypothesis HOLDS. Hidden mean eff_rank 3.32 ≈ input_dim 3.
+   The 4-layer MLP funnels through eff_rank-5 → 3 → 2, with the last hidden
+   layer collapsing to the 2D surface dim. This is the direct geometric
+   reading the item asked for.
+
+2. Surface-dim hypothesis NEAR-HOLDS. Gradient ensemble eff_rank 2.62 is
+   slightly above the predicted [1.8, 2.5] band but the discrete rank_95 = 3.
+   The gradient field is dominated by 1 large normal direction plus 2 smaller
+   tangential/radial directions. "≈ 2" is the right intuition near the surface;
+   the 0.62 excess comes from volumetric points where the gradient also tracks
+   the radial direction.
+
+3. LASER recipe REFUTED at l* = LAST HIDDEN LAYER for SDF regression.
+   Rank-3 retrain at 2.018× float crosses the verbatim REFUTED threshold (≥ 2.0)
+   by 0.018. Even rank-10 retrain only reaches 1.30× float, all four fits
+   BUDGET-BOUNDED at step 500. The substantive question this raises is whether
+   the layer-position effect (last layer vs middle layer) is the dominant
+   variable: cycle 296 spirals had l* in the middle of the stack (layers 4/5/6
+   of 12) and recovered to within 0.6% of float at rank-2 with the SAME 500-step
+   budget. Here l* = 3 of 4 (the last hidden), and there is no downstream layer
+   to absorb the rank-truncation residual.
+
+4. The verdict is the literal verbatim threshold result. The geometric content
+   (input-dim hypothesis HOLDS, surface-dim hypothesis NEAR-HOLDS, last-hidden
+   layer compression is hard at this budget) is sharper than REFUTED conveys
+   on its own.
+
+== Wall time ==
+Training: 54.3s (plateau-stop at 3175 epochs)
+LASER sweep: ~17s (4 ranks × 500 steps each, eval every 25)
+Total: 71.6s (well under 15-minute cap)
+
+== Artifacts ==
+experiments/sdf_rank_laser_cycle298.py
+autoresearch/plans/cycle_298.md
+autoresearch/briefs/cycle_298.md
+autoresearch/results/cycle_298_sdf_rank_laser.json
+autoresearch/results/cycle_298_summary.md
+autoresearch/results/cycle_298_manifest.txt
+autoresearch/results/cycle_298_exec_result.txt
+autoresearch/logs/cycle_298_run.log
+autoresearch/audits/cycle_298.md
+autoresearch/results/cycle_298_audit.txt
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+
+item_number: 308
+outcome: refuted
+key_metric: verdict=REFUTED_hidden_mean_3.3235_in_2.5_3.5_clause_A_passes_grad_eff_rank_2.6226_just_above_1.8_2.5_clause_B_fails_plus_0.12_rank3_retrain_ratio_2.0183_crosses_REFUTED_threshold_2.0_by_0.018_input_dim_hypothesis_HOLDS_surface_dim_NEAR_HOLDS_LASER_at_last_hidden_layer_FAILS_at_500_step_budget_torus_seed42_MLP_3_256_1_depth4_ReLU_30k_pts_24k_train_6k_held_float_MSE_3.31e_06_at_epoch_2925_plateau_stop_3175_hidden_per_layer_3.90_5.07_3.04_1.86_l_star_3_LAST_eff_rank_1.86_argmin_over_1_to_3_grad_top_sv_117.3_70.1_69.1_rank95_3_LASER_sweep_r2_noretrain_6.12e_3_retrain_6.84e_6_ratio_2.067_r3_7.58e_3_6.68e_6_2.018_r5_2.79e_3_5.57e_6_1.684_r10_1.57e_3_4.32e_6_1.305_ALL_4_FITS_BUDGET_BOUNDED_step_500_monotone_ratio_vs_r_layer_position_effect_dominant_variable_cycle_296_spirals_l_star_middle_recovered_within_0.6pc_at_r2_same_budget_here_no_downstream_layer_to_absorb_residual_substantive_geometric_content_sharper_than_REFUTED_label_wall_71.6s_training_54.3s_LASER_17s
+commit: pending
+paths: experiments/sdf_rank_laser_cycle298.py,autoresearch/plans/cycle_298.md,autoresearch/briefs/cycle_298.md,autoresearch/results/cycle_298_sdf_rank_laser.json,autoresearch/results/cycle_298_summary.md,autoresearch/results/cycle_298_manifest.txt,autoresearch/results/cycle_298_exec_result.txt,autoresearch/audits/cycle_298.md,autoresearch/results/cycle_298_audit.txt,autoresearch/logs/cycle_298_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv

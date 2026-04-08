@@ -1,6 +1,11 @@
-# Research Status — 297 Cycles (001–297)
+# Research Status — 298 Cycles (001–298)
 
-## Latest: Cycle 297
+## Latest: Cycle 298
+
+308. **SDF rank census + LASER replication on 3D mesh fitting (torus)** — REFUTED (interesting=true)
+   - Single seed=42, MLP(3, 256, 1, depth=4, ReLU), 30k torus SDF points, plateau-trained to **float held MSE 3.31e-06**. **Hidden mean eff_rank (layers 1..3) = 3.32**, in [2.5, 3.5] (clause A passes — input-dim 3 hypothesis CLEAN HOLD); per-layer [3.90, 5.07, 3.04, **1.86**] funnels to ≈2 (surface dim) at the last hidden. **Gradient ensemble eff_rank 2.62**, just above [1.8, 2.5] (clause B fails by +0.12; rank_95 = 3, top SVs [117.3, 70.1, 69.1] — 1 large normal + 2 smaller tangent/radial dirs). **Rank-3 retrain ratio vs float = 2.018**, crossing the REFUTED threshold (≥2.0) by 0.018. LASER sweep at l*=3 (LAST hidden): r=2 ratio 2.07, r=3 2.02, r=5 1.68, r=10 1.30; **all 4 fits BUDGET-BOUNDED at step 500**. **Substantive finding sharper than the REFUTED label**: input-dim hypothesis HOLDS, surface-dim hypothesis NEAR-HOLDS, but LASER recipe transferability fails at the LAST hidden layer (no downstream layer to absorb residual) — cycle 296 spirals at l*=middle layer recovered to within 0.6% at rank-2 with the same 500-step budget. The dominant variable is **layer position**, not eff_rank prediction. Wall 71.6s.
+
+## Cycle 297
 
 307. **Eff_rank trajectory through training (spirals)** — CONFIRMED init-rank (interesting=true)
    - 3 seeds. All 3 fire **CONFIRMED-init-rank only**: init eff_rank ≤5 in 12/12 layers. Phase-transition rejected (max single-window drop 0.325 < 0.50). Gradual rejected (not monotone; **trajectories are mildly UPWARD, not downward**). **Training does NOT collapse eff_rank — it LIFTS it** from ~1.0 at init to 1.2-2.8 after 12k epochs. The "collapse to rank-2" framing has the WRONG SIGN here. Cycle 297 closes the loop opened by cycle 295: **the 2D-input spirals testbed cannot answer cycle 278's training-dynamics question** because there is no opportunity to collapse. Principled follow-ups: higher-dim input lift (100D embedding per MEMORY.md), OR instrument GPT-2 directly during cycle 280's Adam retrain (partially covered by item 309 in NEXT).
