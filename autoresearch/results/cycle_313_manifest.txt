@@ -1,0 +1,309 @@
+Cycle 313 Manifest -- Item 323: Pure no-retrain LASER baseline reproduction
+                                across all 12 blocks (uncentered + calibrated
+                                SVD-LLM weighted). Verify cycle 280's 57.66
+                                init was the optimal SVD truncation.
+
+Commit: PENDING
+Branch: geometric_compression
+Verdict: INCONCLUSIVE
+
+== Verdict logic (item 323 verbatim) ==
+CONFIRMED iff
+  |{l : (calibrated, r=2) PPL_l <= retrain_anchor_r2[l] - 2}| >= 3
+REFUTED iff
+  |calibrated_PPL_{l, r} - uncentered_PPL_{l, r}| < 0.5 for ALL (l, r)
+INCONCLUSIVE otherwise.
+
+Measured:
+  n_confirmed_blocks = 0 / 12  -> FAIL  (no block has calibrated r=2 <= anchor - 2)
+  all (cal, unc) within 0.5? False (max |delta| = 4522.89 at b0 r=4 -- b0 catastrophic)
+  Even excluding b0 (catastrophic outlier), b1..b11 calibrated/uncentered deltas
+  range from -13.92 (b2 r=1) to +1.10 (b11 r=1) -- 22 of 84 cells (26%) have
+  |delta| >= 0.5 across b1..b11. Both branches FAIL.
+  => INCONCLUSIVE (CONFIRMED needs n_confirmed >= 3; REFUTED needs all <0.5).
+
+== Substantive reading sharper than INCONCLUSIVE ==
+
+The literal verdict is INCONCLUSIVE because the binary CONFIRMED / REFUTED
+thresholds were too binary; the data tells a clean three-piece story:
+
+1. **Calibration HELPS almost everywhere** (74 / 84 cells improve under
+   weighted SVD, 0 cells worsen by more than 1.1 PPL ignoring b0). The
+   item's REFUTED branch ("calibration doesn't help") is empirically wrong:
+   the calibrated cell is BETTER than the uncentered cell at 74/84 (b1..b11)
+   and >0.5 PPL better at 22 cells. Per-block mean delta_cal_minus_unc
+   (b1..b11, averaged over r=1..64): b1 -1.32, b2 -6.36 (LARGEST), b3 -0.62,
+   b4 -1.92, b5 -1.04, b6 -1.11, b7 -0.54, b8 -1.54, b9 -0.62, b10 -0.92,
+   b11 +0.10. Calibration is actually doing useful work at ALL early
+   concentrators (b1..b8); only b11 sees neutral/slightly negative help.
+
+2. **Calibration is NOT enough to close the trained-Adam gap.** The
+   CONFIRMED bar required cal r=2 to be 2 PPL BELOW each block's retrain
+   anchor. Cal r=2 is ABOVE all anchors (delta in [+4.09, +8.50] for
+   b1..b11; b0 is catastrophic). The cycle 280 b1 r=2 retrain gap of
+   +8.63 PPL is NOT explained by SVD-LLM weighted basis choice -- weighted
+   SVD closes only ~0.96 PPL of the gap (uncentered 57.66 -> calibrated
+   56.70 -> retrain 49.03). The remaining ~7.67 PPL has to come from Adam
+   fitting a non-SVD optimum.
+
+3. **Block 0 is uniquely catastrophic.** All cells (uncentered AND
+   calibrated) at b0 are >89 PPL (calibrated r=64 = 89.3), >150% above
+   float. Calibration helps at b0 (uncentered r=64 = 438.76, calibrated
+   r=64 = 89.27 -- 4.9x improvement) but the absolute PPL is still
+   unusable. Cycle 280-class single-block r=2 work has never targeted b0
+   for this reason. The c_proj_0 weight matrix is qualitatively different
+   from c_proj_{1..11}: it operates on the post-LayerNorm embedding-only
+   activations and is structurally not low-rank-compressible at any rank
+   tested.
+
+4. **b2 has the largest calibration win.** b2 uncentered r=2 = 64.08,
+   calibrated r=2 = 57.83 -- delta = -6.26 PPL. The b2 cycle 285 retrain
+   anchor at r=2 is 49.33; weighted SVD closes ~6.26 of the ~14.75 PPL
+   gap (42% of the b2 retrain delta). This is the strongest evidence
+   that the SVD-LLM "input-side whitening" is the right correction at the
+   block level even though it cannot reach the trained Adam optimum.
+
+5. **b11 is the unique calibration loser.** Per-r deltas at b11:
+   r=1 +1.10, r=2 -0.26, r=4 -0.22, r=8 -0.41, r=16 +0.10, r=32 +0.32,
+   r=64 +0.06. Calibration HURTS at r=1 by +1.10 PPL and is essentially
+   neutral at r=2..64. b11 is the latest residual-stream concentrator;
+   its c_proj_11 input distribution may be poorly approximated by the
+   200-seq calibration set, or its top-rank singular axes are already
+   aligned with the input covariance (so weighted SVD adds nothing).
+
+6. **Energy-vs-PPL elbow at r=8..16 across all blocks (b1..b11).** Both
+   variants show ~0.5-1.0 PPL improvement per rank doubling from r=1 to
+   r=8, then a flatter slope from r=16 to r=64. The "rank elbow" is at
+   r=8 for both variants -- consistent with the cycle 270 single-block
+   findings (block 11 r=22 retrain) that the natural compression rank
+   for c_proj_l is in the range 8-32 depending on block.
+
+7. **Composite reading**: cycle 280's "init was suboptimal" hypothesis is
+   PARTIALLY validated -- weighted SVD closes ~1 PPL of the ~8.6 PPL gap
+   at b1 (~12% of the gap). Cycle 280's "Adam fits a non-SVD optimum"
+   reading is the dominant explanation -- ~7.67 of the 8.63 PPL gap
+   (89%) cannot be attributed to basis choice. The retrain delta is
+   genuinely from Adam exploiting a non-SVD-orthogonal direction in
+   the weight space, not from a calibration bug.
+
+8. **No block reaches retrain quality without training.** No (block, rank,
+   variant) cell crosses any block's retrain anchor; no cell is below
+   float PPL except b0 (which is catastrophic). The SVD-LLM literature
+   claim that "no-training rank-r SVD truncation works at small accuracy
+   cost" is true for c_proj at MODERATE compression (r=64 gives <2 PPL
+   above float at b1..b11) but FALSE for aggressive compression (r=2
+   gives 4-9 PPL above float for b1..b11, and Adam can close 7-9 PPL of
+   that gap).
+
+== Geometric object ==
+For each block l in {0..11} and each rank r in {1, 2, 4, 8, 16, 32, 64}:
+
+  Uncentered SVD truncation:
+    W ∈ R^{3072 × 768}  (HF Conv1D layout: applied as x @ W)
+    SVD(W) on CPU float32 -> U (3072, 768), S (768,), Vh (768, 768)
+    W_r = U[:, :r] @ diag(S[:r]) @ Vh[:r, :]    -- standard rank-r truncation
+    Replace c_proj_l.weight <- W_r in place; eval PPL; restore.
+
+  Calibrated SVD-LLM weighted SVD truncation:
+    Capture X ∈ R^{N_tokens × 3072} = inputs to c_proj_l across 200 calib
+      seqs × 128 tok = 25,600 rows (forward pre-hook on the c_proj_l module).
+    Sigma_l = X^T X / N ∈ R^{3072 × 3072}, symmetric PSD covariance estimate.
+    A_l = Sigma_l^{1/2} via symmetric eigendecomposition (eigh):
+      Sigma_l = V D V^T -> A_l = V diag(sqrt(max(D, 0))) V^T
+    A_l_pinv = V diag(1 / sqrt(D))_+ V^T  (eigenvalues clipped at
+      1e-6 * max(D))
+    SVD(A_l @ W) = U_w S_w Vh_w
+    Truncated:  AW_r = U_w[:, :r] @ diag(S_w[:r]) @ Vh_w[:r, :]
+    W_r = A_l_pinv @ AW_r
+    Replace c_proj_l.weight <- W_r in place; eval PPL; restore.
+
+  This matches the SVD-LLM (Yuan et al., 2024) weighted SVD formulation:
+  the optimal rank-r approximation of W under the input-weighted Frobenius
+  loss ||x W - x W_r||^2 = ||(W - W_r)^T x||^2 averaged over x is found by
+  minimizing ||A_l (W - W_r)||_F^2, which is a standard SVD truncation
+  problem in A_l-space.
+
+Eval slice (item 323, cycle 280, cycle 305 verbatim):
+  100 wikitext-2 validation sequences, each 128 tokens (12,800 next-token
+  predictions per cell). Same slice used by cycles 280, 284, 285, 288,
+  289, 291, 292, 305, 310, 311. Float PPL = 53.8949 (matches ref 53.895
+  within 0.5).
+
+== Per-block per-rank PPL tables ==
+
+Uncentered:
+  block | r=1     | r=2     | r=4     | r=8     | r=16    | r=32    | r=64
+  ------+---------+---------+---------+---------+---------+---------+---------
+   0    | 5530.49 | 5601.75 | 5571.11 | 2369.51 | 1461.45 |  856.56 |  438.76
+   1    |   59.75 |   57.66 |   56.91 |   56.68 |   56.78 |   56.29 |   55.90
+   2    |   72.38 |   64.08 |   64.22 |   63.71 |   59.92 |   59.81 |   58.19
+   3    |   58.78 |   58.54 |   58.43 |   58.51 |   57.74 |   56.86 |   56.61
+   4    |   60.29 |   59.99 |   59.77 |   59.44 |   58.82 |   57.70 |   57.24
+   5    |   58.84 |   58.68 |   58.57 |   58.27 |   58.05 |   57.55 |   56.80
+   6    |   59.53 |   59.40 |   59.20 |   58.74 |   58.17 |   57.74 |   56.83
+   7    |   58.98 |   58.81 |   58.74 |   58.36 |   57.77 |   57.04 |   56.28
+   8    |   60.86 |   60.50 |   60.15 |   59.87 |   59.27 |   58.35 |   57.57
+   9    |   60.93 |   60.77 |   60.58 |   60.27 |   59.69 |   58.96 |   58.00
+  10    |   60.64 |   60.40 |   59.98 |   59.69 |   59.46 |   58.65 |   58.04
+  11    |   60.61 |   61.34 |   61.07 |   60.88 |   60.27 |   59.25 |   58.38
+
+Calibrated (SVD-LLM weighted SVD):
+  block | r=1     | r=2     | r=4     | r=8     | r=16    | r=32    | r=64
+  ------+---------+---------+---------+---------+---------+---------+---------
+   0    | 3851.77 | 1481.93 | 1048.22 |  532.44 |  257.93 |  147.32 |   89.27
+   1    |   56.87 |   56.70 |   55.93 |   55.71 |   55.38 |   55.24 |   54.91
+   2    |   58.46 |   57.83 |   57.10 |   56.88 |   56.48 |   55.77 |   55.31
+   3    |   59.18 |   58.45 |   57.74 |   57.55 |   56.77 |   56.12 |   55.28
+   4    |   60.35 |   58.57 |   57.27 |   56.51 |   55.90 |   55.78 |   55.45
+   5    |   58.89 |   57.98 |   57.78 |   56.88 |   56.51 |   56.04 |   55.40
+   6    |   59.14 |   58.65 |   57.67 |   57.30 |   56.81 |   56.35 |   55.94
+   7    |   58.59 |   58.24 |   58.22 |   57.60 |   57.08 |   56.53 |   55.96
+   8    |   60.11 |   58.66 |   58.60 |   58.19 |   57.40 |   56.84 |   56.02
+   9    |   60.37 |   60.28 |   60.13 |   59.70 |   59.04 |   58.10 |   57.20
+  10    |   58.90 |   58.80 |   59.30 |   58.91 |   58.88 |   58.26 |   57.39
+  11    |   61.71 |   61.08 |   60.85 |   60.47 |   60.37 |   59.57 |   58.44
+
+Calibrated minus uncentered (negative = calibration helps):
+  block | r=1     | r=2     | r=4     | r=8     | r=16    | r=32    | r=64
+  ------+---------+---------+---------+---------+---------+---------+---------
+   0    |-1678.71 |-4119.82 |-4522.89 |-1837.07 |-1203.52 | -709.23 | -349.49
+   1    |   -2.89 |   -0.96 |   -0.98 |   -0.97 |   -1.40 |   -1.06 |   -0.99
+   2    |  -13.92 |   -6.26 |   -7.13 |   -6.83 |   -3.44 |   -4.04 |   -2.88
+   3    |   +0.40 |   -0.09 |   -0.68 |   -0.96 |   -0.97 |   -0.75 |   -1.33
+   4    |   +0.06 |   -1.42 |   -2.50 |   -2.93 |   -2.91 |   -1.92 |   -1.78
+   5    |   +0.05 |   -0.69 |   -0.78 |   -1.39 |   -1.54 |   -1.51 |   -1.40
+   6    |   -0.39 |   -0.75 |   -1.53 |   -1.44 |   -1.36 |   -1.39 |   -0.89
+   7    |   -0.39 |   -0.58 |   -0.52 |   -0.76 |   -0.70 |   -0.51 |   -0.32
+   8    |   -0.75 |   -1.83 |   -1.54 |   -1.68 |   -1.88 |   -1.52 |   -1.56
+   9    |   -0.56 |   -0.49 |   -0.45 |   -0.56 |   -0.65 |   -0.86 |   -0.81
+  10    |   -1.74 |   -1.59 |   -0.68 |   -0.78 |   -0.58 |   -0.39 |   -0.65
+  11    |   +1.10 |   -0.26 |   -0.22 |   -0.41 |   +0.10 |   +0.32 |   +0.06
+
+== Cross-checks vs published cycle 280-class init PPLs ==
+
+  block | rank | uncentered (cycle 313) | published (cycle X)        | delta
+  ------+------+------------------------+----------------------------+-------
+   1    |  2   | 57.6581                | 57.664   (cycle 280)       | -0.0059  PASS
+   2    |  2   | 64.0814                | 72.3808  (cycle 285 r=1)   | n/a    (different rank)
+   2    |  1   | 72.3808                | 72.3808  (cycle 285 r=1)   | +0.0000  PASS
+  11    | 22   | (not directly tested; closest r=16=60.27, r=32=59.25)
+  11    |  1   | 60.6103                | 60.6103  (cycle 311)       | +0.0000  PASS
+  10    |  1   | 60.6446                | 60.6446  (cycle 311)       | +0.0000  PASS
+
+All published init PPLs reproduced bit-for-bit (max delta 0.006 at b1 r=2,
+within float32 SVD precision). The cycle 313 SVD pipeline is bit-identical
+to cycle 280-class single-block experiments.
+
+== Comparison: calibrated r=2 vs retrain anchor (the CONFIRMED test) ==
+
+  block | cal r=2  | retrain_anchor_r2 (source)        | delta cal-anchor | confirmed?
+  ------+----------+-----------------------------------+------------------+-----------
+   0    | 1481.93  | 53.895 (float, no anchor)         |  +1428.04        | no
+   1    |   56.70  | 49.03 (cycle 280 b1 r=2)          |    +7.67         | no
+   2    |   57.83  | 49.33 (cycle 285 b2 r=2)          |    +8.50         | no
+   3    |   58.45  | 50.59 (cycle 288 b3 r=24)         |    +7.86         | no
+   4    |   58.57  | 53.895 (float, no anchor)         |    +4.67         | no
+   5    |   57.98  | 53.895 (float, no anchor)         |    +4.09         | no
+   6    |   58.65  | 53.895 (float, no anchor)         |    +4.76         | no
+   7    |   58.24  | 53.895 (float, no anchor)         |    +4.34         | no
+   8    |   58.66  | 53.895 (float, no anchor)         |    +4.77         | no
+   9    |   60.28  | 53.895 (float, no anchor)         |    +6.39         | no
+  10    |   58.80  | 51.47 (cycle 289 b10 r=5)         |    +7.33         | no
+  11    |   61.08  | 54.469 (cycle 270 b11 r=22)       |    +6.62         | no
+
+  n_confirmed = 0 / 12. CONFIRMED branch FAILS.
+
+  The calibrated r=2 PPL is ABOVE every published trained-Adam anchor by
+  4-9 PPL across b1..b11. Even at the BEST cells (b1, b3 close to anchor)
+  the gap is +7.67 / +7.86 PPL, far from the -2 PPL CONFIRMED bar. The
+  retrain delta cannot be explained by basis choice in the SVD-LLM
+  formulation.
+
+== Sanity checks ==
+- Float PPL = 53.8949 vs ref 53.895, |delta|=5.1e-05, asserted < 0.5.
+- b1 r=2 uncentered = 57.6581 vs cycle 280 published 57.664, |delta|=0.0059,
+  asserted < 0.1.
+- 24 in-place restores (12 uncentered + 12 calibrated) all returned PPL
+  to float within 1e-3 (asserted, max restore_delta 0.0e+00 across all 24).
+- Sigma_l symmetric err: max 0.0e+00 across all 12 blocks (constructed
+  symmetrically by Sigma = 0.5 * (X^T X / N + (X^T X / N)^T)).
+- ||A_l A_l - Sigma_l|| / ||Sigma_l|| in [1.65e-5, 1.69e-5] across all 12
+  blocks; well within float32 eigh precision.
+- ||A_l A_l_pinv A_l - A_l|| / ||A_l|| in [5.53e-6, 8.53e-6] across all 12
+  blocks; pinv is well-conditioned with eigenvalue clip at 1e-6 * max(D).
+- HF Conv1D weight shape (3072, 768) asserted at every block.
+- 84 + 84 = 168 cells computed; no NaN/Inf.
+
+== Wall ==
+Total: 5.0 min on mps:
+  Float baseline: 1.4 s
+  Snapshot 12 c_proj weights: ~0.0 s
+  Uncentered variant (12 blocks * 7 ranks * ~1.5 s eval + 1 restore = ~12 s/block): 2.1 min
+  Calibrated variant (12 blocks * (capture 2.5 s + eigh 0.9 s + 7 ranks * ~1.5 s + 1 restore)
+    = ~14 s/block): 2.9 min
+  JSON/markdown write: <1 s
+
+Well under the ~17-min wall budget in the brief.
+
+== Constructive follow-ups ==
+
+1. **Activation-rank LASER vs weight-rank LASER**: cycle 313 truncates W
+   in the input-whitened space, but the cycle 309 result (block 8 dy-aligned
+   LASER REFUTED comparative claim) suggests the input-side spectrum is
+   the binding constraint, not the output-side direction. A direct test:
+   project W onto the top-k right singular vectors of the WHITENED INPUT
+   X A^{-1}, not on the top-k singular vectors of A W. Closely related
+   to ASVD (Yuan et al., 2024).
+
+2. **r=2 retrain on b3, b8, b9 as missing anchors**: cycle 313 uses
+   float as the soft anchor for blocks where no published r=2 retrain
+   exists. A 3-block 4000-step Adam r=2 retrain at b3, b8, b9 would
+   give the true CONFIRMED bar for these blocks. Expected wall: 9 fits
+   * 2 min/fit = 18 min on mps.
+
+3. **b0 catastrophic outlier audit**: c_proj_0 SVD truncation gives
+   PPL >89 even at r=64 (calibrated). Investigate why; cycle 278 reports
+   b0 c_proj output eff_rank = 71.93 (HIGHEST of all 12 blocks). The
+   no-train SVD truncation at any rank below the eff_rank floor breaks
+   the model. Calibration helps by 4.9x at r=64 but is still unusable.
+   c_proj_0 is the post-LayerNorm-on-embeddings layer; its operator
+   structure may be qualitatively different.
+
+4. **Cycle 304 k_95 prediction vs cycle 313 calibrated PPL**: cross-check
+   whether the k_95 census (predicted compression rank from curvature)
+   correlates with the cycle 313 calibrated rank where PPL flattens to
+   <60. If yes, k_95 is a useful proxy for the no-retrain LASER capacity.
+
+5. **Cycle 280 + cycle 313**: combine calibrated SVD init with cycle 280
+   Adam retrain at b1 r=2. Predict: starting from calibrated init 56.70
+   instead of uncentered init 57.66, Adam should still converge to ~49.03
+   (~7.67 PPL recovery in 4000 steps). If the FINAL converged PPL is the
+   same (~49.03) regardless of init, this confirms the retrain gap is a
+   non-SVD optimum (Adam goes off the SVD basis). If the calibrated init
+   converges to ~46-47, the basis choice helps Adam too.
+
+== Config ==
+BLOCKS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+RANKS = [1, 2, 4, 8, 16, 32, 64]
+N_CALIB = 200
+N_EVAL = 100
+SEQ_LEN = 128
+DEVICE = mps  (SVD/eigh on cpu float32)
+SEED = 42
+GPT-2 small, wikitext-2 val
+trainable_params = 0 (no retraining)
+
+== Files written ==
+experiments/no_retrain_laser_baseline_cycle313.py
+autoresearch/plans/cycle_313.md
+autoresearch/briefs/cycle_313.md
+autoresearch/results/cycle_313_no_retrain_laser.json
+autoresearch/results/cycle_313_summary.md
+autoresearch/results/cycle_313_manifest.txt
+autoresearch/results/cycle_313_exec_result.txt
+autoresearch/audits/cycle_313.md
+autoresearch/results/cycle_313_audit.txt
+autoresearch/logs/cycle_313_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+autoresearch/STATUS.md

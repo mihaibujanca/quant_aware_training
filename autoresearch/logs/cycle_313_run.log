@@ -1,0 +1,279 @@
+Device: mps
+Loading GPT-2 and data...
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Calibration: 200 seqs, Eval: 100 seqs
+Float baseline PPL...
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights:   1%|          | 1/148 [00:00<00:00, 14926.35it/s, Materializing param=transformer.h.0.attn.c_attn.bias]Loading weights:   1%|          | 1/148 [00:00<00:00, 3184.74it/s, Materializing param=transformer.h.0.attn.c_attn.bias] Loading weights:   1%|▏         | 2/148 [00:00<00:00, 3092.00it/s, Materializing param=transformer.h.0.attn.c_attn.weight]Loading weights:   1%|▏         | 2/148 [00:00<00:00, 2430.07it/s, Materializing param=transformer.h.0.attn.c_attn.weight]Loading weights:   2%|▏         | 3/148 [00:00<00:00, 2592.81it/s, Materializing param=transformer.h.0.attn.c_proj.bias]  Loading weights:   2%|▏         | 3/148 [00:00<00:00, 2059.06it/s, Materializing param=transformer.h.0.attn.c_proj.bias]Loading weights:   3%|▎         | 4/148 [00:00<00:00, 2017.22it/s, Materializing param=transformer.h.0.attn.c_proj.weight]Loading weights:   3%|▎         | 4/148 [00:00<00:00, 1672.20it/s, Materializing param=transformer.h.0.attn.c_proj.weight]Loading weights:   3%|▎         | 5/148 [00:00<00:00, 1947.04it/s, Materializing param=transformer.h.0.ln_1.bias]         Loading weights:   3%|▎         | 5/148 [00:00<00:00, 1871.12it/s, Materializing param=transformer.h.0.ln_1.bias]Loading weights:   4%|▍         | 6/148 [00:00<00:00, 2187.38it/s, Materializing param=transformer.h.0.ln_1.weight]Loading weights:   4%|▍         | 6/148 [00:00<00:00, 1991.28it/s, Materializing param=transformer.h.0.ln_1.weight]Loading weights:   5%|▍         | 7/148 [00:00<00:00, 1794.41it/s, Materializing param=transformer.h.0.ln_2.bias]  Loading weights:   5%|▍         | 7/148 [00:00<00:00, 1742.23it/s, Materializing param=transformer.h.0.ln_2.bias]Loading weights:   5%|▌         | 8/148 [00:00<00:00, 1959.38it/s, Materializing param=transformer.h.0.ln_2.weight]Loading weights:   5%|▌         | 8/148 [00:00<00:00, 1924.54it/s, Materializing param=transformer.h.0.ln_2.weight]Loading weights:   6%|▌         | 9/148 [00:00<00:00, 2018.86it/s, Materializing param=transformer.h.0.mlp.c_fc.bias]Loading weights:   6%|▌         | 9/148 [00:00<00:00, 2003.54it/s, Materializing param=transformer.h.0.mlp.c_fc.bias]Loading weights:   7%|▋         | 10/148 [00:00<00:00, 2196.43it/s, Materializing param=transformer.h.0.mlp.c_fc.weight]Loading weights:   7%|▋         | 10/148 [00:00<00:00, 2182.03it/s, Materializing param=transformer.h.0.mlp.c_fc.weight]Loading weights:   7%|▋         | 11/148 [00:00<00:00, 2372.83it/s, Materializing param=transformer.h.0.mlp.c_proj.bias]Loading weights:   7%|▋         | 11/148 [00:00<00:00, 2358.52it/s, Materializing param=transformer.h.0.mlp.c_proj.bias]Loading weights:   8%|▊         | 12/148 [00:00<00:00, 2545.09it/s, Materializing param=transformer.h.0.mlp.c_proj.weight]Loading weights:   8%|▊         | 12/148 [00:00<00:00, 2508.81it/s, Materializing param=transformer.h.0.mlp.c_proj.weight]Loading weights:   9%|▉         | 13/148 [00:00<00:00, 2692.64it/s, Materializing param=transformer.h.1.attn.c_attn.bias] Loading weights:   9%|▉         | 13/148 [00:00<00:00, 2679.93it/s, Materializing param=transformer.h.1.attn.c_attn.bias]Loading weights:   9%|▉         | 14/148 [00:00<00:00, 2849.67it/s, Materializing param=transformer.h.1.attn.c_attn.weight]Loading weights:   9%|▉         | 14/148 [00:00<00:00, 2829.48it/s, Materializing param=transformer.h.1.attn.c_attn.weight]Loading weights:  10%|█         | 15/148 [00:00<00:00, 3003.51it/s, Materializing param=transformer.h.1.attn.c_proj.bias]  Loading weights:  10%|█         | 15/148 [00:00<00:00, 2989.24it/s, Materializing param=transformer.h.1.attn.c_proj.bias]Loading weights:  11%|█         | 16/148 [00:00<00:00, 3163.87it/s, Materializing param=transformer.h.1.attn.c_proj.weight]Loading weights:  11%|█         | 16/148 [00:00<00:00, 3148.88it/s, Materializing param=transformer.h.1.attn.c_proj.weight]Loading weights:  11%|█▏        | 17/148 [00:00<00:00, 3309.19it/s, Materializing param=transformer.h.1.ln_1.bias]         Loading weights:  11%|█▏        | 17/148 [00:00<00:00, 3293.30it/s, Materializing param=transformer.h.1.ln_1.bias]Loading weights:  12%|█▏        | 18/148 [00:00<00:00, 3461.44it/s, Materializing param=transformer.h.1.ln_1.weight]Loading weights:  12%|█▏        | 18/148 [00:00<00:00, 3447.53it/s, Materializing param=transformer.h.1.ln_1.weight]Loading weights:  13%|█▎        | 19/148 [00:00<00:00, 3614.30it/s, Materializing param=transformer.h.1.ln_2.bias]  Loading weights:  13%|█▎        | 19/148 [00:00<00:00, 3599.12it/s, Materializing param=transformer.h.1.ln_2.bias]Loading weights:  14%|█▎        | 20/148 [00:00<00:00, 3762.21it/s, Materializing param=transformer.h.1.ln_2.weight]Loading weights:  14%|█▎        | 20/148 [00:00<00:00, 3745.42it/s, Materializing param=transformer.h.1.ln_2.weight]Loading weights:  14%|█▍        | 21/148 [00:00<00:00, 3907.74it/s, Materializing param=transformer.h.1.mlp.c_fc.bias]Loading weights:  14%|█▍        | 21/148 [00:00<00:00, 3892.54it/s, Materializing param=transformer.h.1.mlp.c_fc.bias]Loading weights:  15%|█▍        | 22/148 [00:00<00:00, 4049.98it/s, Materializing param=transformer.h.1.mlp.c_fc.weight]Loading weights:  15%|█▍        | 22/148 [00:00<00:00, 4035.28it/s, Materializing param=transformer.h.1.mlp.c_fc.weight]Loading weights:  16%|█▌        | 23/148 [00:00<00:00, 4189.57it/s, Materializing param=transformer.h.1.mlp.c_proj.bias]Loading weights:  16%|█▌        | 23/148 [00:00<00:00, 4174.16it/s, Materializing param=transformer.h.1.mlp.c_proj.bias]Loading weights:  16%|█▌        | 24/148 [00:00<00:00, 4329.05it/s, Materializing param=transformer.h.1.mlp.c_proj.weight]Loading weights:  16%|█▌        | 24/148 [00:00<00:00, 4313.46it/s, Materializing param=transformer.h.1.mlp.c_proj.weight]Loading weights:  17%|█▋        | 25/148 [00:00<00:00, 4464.31it/s, Materializing param=transformer.h.2.attn.c_attn.bias] Loading weights:  17%|█▋        | 25/148 [00:00<00:00, 4447.64it/s, Materializing param=transformer.h.2.attn.c_attn.bias]Loading weights:  18%|█▊        | 26/148 [00:00<00:00, 4598.44it/s, Materializing param=transformer.h.2.attn.c_attn.weight]Loading weights:  18%|█▊        | 26/148 [00:00<00:00, 4581.44it/s, Materializing param=transformer.h.2.attn.c_attn.weight]Loading weights:  18%|█▊        | 27/148 [00:00<00:00, 4726.86it/s, Materializing param=transformer.h.2.attn.c_proj.bias]  Loading weights:  18%|█▊        | 27/148 [00:00<00:00, 4710.35it/s, Materializing param=transformer.h.2.attn.c_proj.bias]Loading weights:  19%|█▉        | 28/148 [00:00<00:00, 4855.92it/s, Materializing param=transformer.h.2.attn.c_proj.weight]Loading weights:  19%|█▉        | 28/148 [00:00<00:00, 4839.12it/s, Materializing param=transformer.h.2.attn.c_proj.weight]Loading weights:  20%|█▉        | 29/148 [00:00<00:00, 4981.15it/s, Materializing param=transformer.h.2.ln_1.bias]         Loading weights:  20%|█▉        | 29/148 [00:00<00:00, 4962.46it/s, Materializing param=transformer.h.2.ln_1.bias]Loading weights:  20%|██        | 30/148 [00:00<00:00, 5101.94it/s, Materializing param=transformer.h.2.ln_1.weight]Loading weights:  20%|██        | 30/148 [00:00<00:00, 5083.80it/s, Materializing param=transformer.h.2.ln_1.weight]Loading weights:  21%|██        | 31/148 [00:00<00:00, 5221.61it/s, Materializing param=transformer.h.2.ln_2.bias]  Loading weights:  21%|██        | 31/148 [00:00<00:00, 5203.85it/s, Materializing param=transformer.h.2.ln_2.bias]Loading weights:  22%|██▏       | 32/148 [00:00<00:00, 5343.06it/s, Materializing param=transformer.h.2.ln_2.weight]Loading weights:  22%|██▏       | 32/148 [00:00<00:00, 5325.26it/s, Materializing param=transformer.h.2.ln_2.weight]Loading weights:  22%|██▏       | 33/148 [00:00<00:00, 5460.04it/s, Materializing param=transformer.h.2.mlp.c_fc.bias]Loading weights:  22%|██▏       | 33/148 [00:00<00:00, 5438.37it/s, Materializing param=transformer.h.2.mlp.c_fc.bias]Loading weights:  23%|██▎       | 34/148 [00:00<00:00, 5571.00it/s, Materializing param=transformer.h.2.mlp.c_fc.weight]Loading weights:  23%|██▎       | 34/148 [00:00<00:00, 5552.77it/s, Materializing param=transformer.h.2.mlp.c_fc.weight]Loading weights:  24%|██▎       | 35/148 [00:00<00:00, 5685.54it/s, Materializing param=transformer.h.2.mlp.c_proj.bias]Loading weights:  24%|██▎       | 35/148 [00:00<00:00, 5667.98it/s, Materializing param=transformer.h.2.mlp.c_proj.bias]Loading weights:  24%|██▍       | 36/148 [00:00<00:00, 5794.13it/s, Materializing param=transformer.h.2.mlp.c_proj.weight]Loading weights:  24%|██▍       | 36/148 [00:00<00:00, 5775.73it/s, Materializing param=transformer.h.2.mlp.c_proj.weight]Loading weights:  25%|██▌       | 37/148 [00:00<00:00, 5902.08it/s, Materializing param=transformer.h.3.attn.c_attn.bias] Loading weights:  25%|██▌       | 37/148 [00:00<00:00, 5883.06it/s, Materializing param=transformer.h.3.attn.c_attn.bias]Loading weights:  26%|██▌       | 38/148 [00:00<00:00, 6007.90it/s, Materializing param=transformer.h.3.attn.c_attn.weight]Loading weights:  26%|██▌       | 38/148 [00:00<00:00, 5988.04it/s, Materializing param=transformer.h.3.attn.c_attn.weight]Loading weights:  26%|██▋       | 39/148 [00:00<00:00, 6109.81it/s, Materializing param=transformer.h.3.attn.c_proj.bias]  Loading weights:  26%|██▋       | 39/148 [00:00<00:00, 6090.92it/s, Materializing param=transformer.h.3.attn.c_proj.bias]Loading weights:  27%|██▋       | 40/148 [00:00<00:00, 6212.86it/s, Materializing param=transformer.h.3.attn.c_proj.weight]Loading weights:  27%|██▋       | 40/148 [00:00<00:00, 6194.74it/s, Materializing param=transformer.h.3.attn.c_proj.weight]Loading weights:  28%|██▊       | 41/148 [00:00<00:00, 6318.35it/s, Materializing param=transformer.h.3.ln_1.bias]         Loading weights:  28%|██▊       | 41/148 [00:00<00:00, 6298.91it/s, Materializing param=transformer.h.3.ln_1.bias]Loading weights:  28%|██▊       | 42/148 [00:00<00:00, 6418.92it/s, Materializing param=transformer.h.3.ln_1.weight]Loading weights:  28%|██▊       | 42/148 [00:00<00:00, 6399.33it/s, Materializing param=transformer.h.3.ln_1.weight]Loading weights:  29%|██▉       | 43/148 [00:00<00:00, 6519.96it/s, Materializing param=transformer.h.3.ln_2.bias]  Loading weights:  29%|██▉       | 43/148 [00:00<00:00, 6500.45it/s, Materializing param=transformer.h.3.ln_2.bias]Loading weights:  30%|██▉       | 44/148 [00:00<00:00, 6615.38it/s, Materializing param=transformer.h.3.ln_2.weight]Loading weights:  30%|██▉       | 44/148 [00:00<00:00, 6596.70it/s, Materializing param=transformer.h.3.ln_2.weight]Loading weights:  30%|███       | 45/148 [00:00<00:00, 6710.41it/s, Materializing param=transformer.h.3.mlp.c_fc.bias]Loading weights:  30%|███       | 45/148 [00:00<00:00, 6690.43it/s, Materializing param=transformer.h.3.mlp.c_fc.bias]Loading weights:  31%|███       | 46/148 [00:00<00:00, 6803.65it/s, Materializing param=transformer.h.3.mlp.c_fc.weight]Loading weights:  31%|███       | 46/148 [00:00<00:00, 6782.61it/s, Materializing param=transformer.h.3.mlp.c_fc.weight]Loading weights:  32%|███▏      | 47/148 [00:00<00:00, 6894.42it/s, Materializing param=transformer.h.3.mlp.c_proj.bias]Loading weights:  32%|███▏      | 47/148 [00:00<00:00, 6873.27it/s, Materializing param=transformer.h.3.mlp.c_proj.bias]Loading weights:  32%|███▏      | 48/148 [00:00<00:00, 6984.69it/s, Materializing param=transformer.h.3.mlp.c_proj.weight]Loading weights:  32%|███▏      | 48/148 [00:00<00:00, 6962.46it/s, Materializing param=transformer.h.3.mlp.c_proj.weight]Loading weights:  33%|███▎      | 49/148 [00:00<00:00, 7072.54it/s, Materializing param=transformer.h.4.attn.c_attn.bias] Loading weights:  33%|███▎      | 49/148 [00:00<00:00, 7048.28it/s, Materializing param=transformer.h.4.attn.c_attn.bias]Loading weights:  34%|███▍      | 50/148 [00:00<00:00, 7158.25it/s, Materializing param=transformer.h.4.attn.c_attn.weight]Loading weights:  34%|███▍      | 50/148 [00:00<00:00, 7137.78it/s, Materializing param=transformer.h.4.attn.c_attn.weight]Loading weights:  34%|███▍      | 51/148 [00:00<00:00, 7247.48it/s, Materializing param=transformer.h.4.attn.c_proj.bias]  Loading weights:  34%|███▍      | 51/148 [00:00<00:00, 7227.65it/s, Materializing param=transformer.h.4.attn.c_proj.bias]Loading weights:  35%|███▌      | 52/148 [00:00<00:00, 7335.41it/s, Materializing param=transformer.h.4.attn.c_proj.weight]Loading weights:  35%|███▌      | 52/148 [00:00<00:00, 7314.50it/s, Materializing param=transformer.h.4.attn.c_proj.weight]Loading weights:  36%|███▌      | 53/148 [00:00<00:00, 7421.81it/s, Materializing param=transformer.h.4.ln_1.bias]         Loading weights:  36%|███▌      | 53/148 [00:00<00:00, 7400.07it/s, Materializing param=transformer.h.4.ln_1.bias]Loading weights:  36%|███▋      | 54/148 [00:00<00:00, 7506.21it/s, Materializing param=transformer.h.4.ln_1.weight]Loading weights:  36%|███▋      | 54/148 [00:00<00:00, 7485.37it/s, Materializing param=transformer.h.4.ln_1.weight]Loading weights:  37%|███▋      | 55/148 [00:00<00:00, 7586.38it/s, Materializing param=transformer.h.4.ln_2.bias]  Loading weights:  37%|███▋      | 55/148 [00:00<00:00, 7564.49it/s, Materializing param=transformer.h.4.ln_2.bias]Loading weights:  38%|███▊      | 56/148 [00:00<00:00, 7664.83it/s, Materializing param=transformer.h.4.ln_2.weight]Loading weights:  38%|███▊      | 56/148 [00:00<00:00, 7645.12it/s, Materializing param=transformer.h.4.ln_2.weight]Loading weights:  39%|███▊      | 57/148 [00:00<00:00, 7748.85it/s, Materializing param=transformer.h.4.mlp.c_fc.bias]Loading weights:  39%|███▊      | 57/148 [00:00<00:00, 7728.81it/s, Materializing param=transformer.h.4.mlp.c_fc.bias]Loading weights:  39%|███▉      | 58/148 [00:00<00:00, 7824.19it/s, Materializing param=transformer.h.4.mlp.c_fc.weight]Loading weights:  39%|███▉      | 58/148 [00:00<00:00, 7803.11it/s, Materializing param=transformer.h.4.mlp.c_fc.weight]Loading weights:  40%|███▉      | 59/148 [00:00<00:00, 7902.41it/s, Materializing param=transformer.h.4.mlp.c_proj.bias]Loading weights:  40%|███▉      | 59/148 [00:00<00:00, 7881.52it/s, Materializing param=transformer.h.4.mlp.c_proj.bias]Loading weights:  41%|████      | 60/148 [00:00<00:00, 7977.75it/s, Materializing param=transformer.h.4.mlp.c_proj.weight]Loading weights:  41%|████      | 60/148 [00:00<00:00, 7955.56it/s, Materializing param=transformer.h.4.mlp.c_proj.weight]Loading weights:  41%|████      | 61/148 [00:00<00:00, 8052.77it/s, Materializing param=transformer.h.5.attn.c_attn.bias] Loading weights:  41%|████      | 61/148 [00:00<00:00, 8030.53it/s, Materializing param=transformer.h.5.attn.c_attn.bias]Loading weights:  42%|████▏     | 62/148 [00:00<00:00, 8123.67it/s, Materializing param=transformer.h.5.attn.c_attn.weight]Loading weights:  42%|████▏     | 62/148 [00:00<00:00, 8102.41it/s, Materializing param=transformer.h.5.attn.c_attn.weight]Loading weights:  43%|████▎     | 63/148 [00:00<00:00, 8198.86it/s, Materializing param=transformer.h.5.attn.c_proj.bias]  Loading weights:  43%|████▎     | 63/148 [00:00<00:00, 8178.56it/s, Materializing param=transformer.h.5.attn.c_proj.bias]Loading weights:  43%|████▎     | 64/148 [00:00<00:00, 8274.06it/s, Materializing param=transformer.h.5.attn.c_proj.weight]Loading weights:  43%|████▎     | 64/148 [00:00<00:00, 8252.70it/s, Materializing param=transformer.h.5.attn.c_proj.weight]Loading weights:  44%|████▍     | 65/148 [00:00<00:00, 8339.85it/s, Materializing param=transformer.h.5.ln_1.bias]         Loading weights:  44%|████▍     | 65/148 [00:00<00:00, 8316.45it/s, Materializing param=transformer.h.5.ln_1.bias]Loading weights:  45%|████▍     | 66/148 [00:00<00:00, 8411.80it/s, Materializing param=transformer.h.5.ln_1.weight]Loading weights:  45%|████▍     | 66/148 [00:00<00:00, 8390.39it/s, Materializing param=transformer.h.5.ln_1.weight]Loading weights:  45%|████▌     | 67/148 [00:00<00:00, 8482.04it/s, Materializing param=transformer.h.5.ln_2.bias]  Loading weights:  45%|████▌     | 67/148 [00:00<00:00, 8460.59it/s, Materializing param=transformer.h.5.ln_2.bias]Loading weights:  46%|████▌     | 68/148 [00:00<00:00, 8549.28it/s, Materializing param=transformer.h.5.ln_2.weight]Loading weights:  46%|████▌     | 68/148 [00:00<00:00, 8528.58it/s, Materializing param=transformer.h.5.ln_2.weight]Loading weights:  47%|████▋     | 69/148 [00:00<00:00, 8618.43it/s, Materializing param=transformer.h.5.mlp.c_fc.bias]Loading weights:  47%|████▋     | 69/148 [00:00<00:00, 8595.14it/s, Materializing param=transformer.h.5.mlp.c_fc.bias]Loading weights:  47%|████▋     | 70/148 [00:00<00:00, 8684.89it/s, Materializing param=transformer.h.5.mlp.c_fc.weight]Loading weights:  47%|████▋     | 70/148 [00:00<00:00, 8664.38it/s, Materializing param=transformer.h.5.mlp.c_fc.weight]Loading weights:  48%|████▊     | 71/148 [00:00<00:00, 8750.46it/s, Materializing param=transformer.h.5.mlp.c_proj.bias]Loading weights:  48%|████▊     | 71/148 [00:00<00:00, 8728.66it/s, Materializing param=transformer.h.5.mlp.c_proj.bias]Loading weights:  49%|████▊     | 72/148 [00:00<00:00, 8814.91it/s, Materializing param=transformer.h.5.mlp.c_proj.weight]Loading weights:  49%|████▊     | 72/148 [00:00<00:00, 8793.35it/s, Materializing param=transformer.h.5.mlp.c_proj.weight]Loading weights:  49%|████▉     | 73/148 [00:00<00:00, 8880.82it/s, Materializing param=transformer.h.6.attn.c_attn.bias] Loading weights:  49%|████▉     | 73/148 [00:00<00:00, 8858.98it/s, Materializing param=transformer.h.6.attn.c_attn.bias]Loading weights:  50%|█████     | 74/148 [00:00<00:00, 8941.53it/s, Materializing param=transformer.h.6.attn.c_attn.weight]Loading weights:  50%|█████     | 74/148 [00:00<00:00, 8919.95it/s, Materializing param=transformer.h.6.attn.c_attn.weight]Loading weights:  51%|█████     | 75/148 [00:00<00:00, 9004.77it/s, Materializing param=transformer.h.6.attn.c_proj.bias]  Loading weights:  51%|█████     | 75/148 [00:00<00:00, 8983.17it/s, Materializing param=transformer.h.6.attn.c_proj.bias]Loading weights:  51%|█████▏    | 76/148 [00:00<00:00, 9064.90it/s, Materializing param=transformer.h.6.attn.c_proj.weight]Loading weights:  51%|█████▏    | 76/148 [00:00<00:00, 9044.58it/s, Materializing param=transformer.h.6.attn.c_proj.weight]Loading weights:  52%|█████▏    | 77/148 [00:00<00:00, 9125.27it/s, Materializing param=transformer.h.6.ln_1.bias]         Loading weights:  52%|█████▏    | 77/148 [00:00<00:00, 9103.92it/s, Materializing param=transformer.h.6.ln_1.bias]Loading weights:  53%|█████▎    | 78/148 [00:00<00:00, 9189.51it/s, Materializing param=transformer.h.6.ln_1.weight]Loading weights:  53%|█████▎    | 78/148 [00:00<00:00, 9168.65it/s, Materializing param=transformer.h.6.ln_1.weight]Loading weights:  53%|█████▎    | 79/148 [00:00<00:00, 9251.45it/s, Materializing param=transformer.h.6.ln_2.bias]  Loading weights:  53%|█████▎    | 79/148 [00:00<00:00, 9231.09it/s, Materializing param=transformer.h.6.ln_2.bias]Loading weights:  54%|█████▍    | 80/148 [00:00<00:00, 9309.04it/s, Materializing param=transformer.h.6.ln_2.weight]Loading weights:  54%|█████▍    | 80/148 [00:00<00:00, 9287.14it/s, Materializing param=transformer.h.6.ln_2.weight]Loading weights:  55%|█████▍    | 81/148 [00:00<00:00, 9366.42it/s, Materializing param=transformer.h.6.mlp.c_fc.bias]Loading weights:  55%|█████▍    | 81/148 [00:00<00:00, 9345.55it/s, Materializing param=transformer.h.6.mlp.c_fc.bias]Loading weights:  55%|█████▌    | 82/148 [00:00<00:00, 9424.37it/s, Materializing param=transformer.h.6.mlp.c_fc.weight]Loading weights:  55%|█████▌    | 82/148 [00:00<00:00, 9402.47it/s, Materializing param=transformer.h.6.mlp.c_fc.weight]Loading weights:  56%|█████▌    | 83/148 [00:00<00:00, 9480.33it/s, Materializing param=transformer.h.6.mlp.c_proj.bias]Loading weights:  56%|█████▌    | 83/148 [00:00<00:00, 9458.69it/s, Materializing param=transformer.h.6.mlp.c_proj.bias]Loading weights:  57%|█████▋    | 84/148 [00:00<00:00, 9538.70it/s, Materializing param=transformer.h.6.mlp.c_proj.weight]Loading weights:  57%|█████▋    | 84/148 [00:00<00:00, 9517.32it/s, Materializing param=transformer.h.6.mlp.c_proj.weight]Loading weights:  57%|█████▋    | 85/148 [00:00<00:00, 9594.59it/s, Materializing param=transformer.h.7.attn.c_attn.bias] Loading weights:  57%|█████▋    | 85/148 [00:00<00:00, 9572.95it/s, Materializing param=transformer.h.7.attn.c_attn.bias]Loading weights:  58%|█████▊    | 86/148 [00:00<00:00, 9651.88it/s, Materializing param=transformer.h.7.attn.c_attn.weight]Loading weights:  58%|█████▊    | 86/148 [00:00<00:00, 9630.49it/s, Materializing param=transformer.h.7.attn.c_attn.weight]Loading weights:  59%|█████▉    | 87/148 [00:00<00:00, 9709.81it/s, Materializing param=transformer.h.7.attn.c_proj.bias]  Loading weights:  59%|█████▉    | 87/148 [00:00<00:00, 9688.16it/s, Materializing param=transformer.h.7.attn.c_proj.bias]Loading weights:  59%|█████▉    | 88/148 [00:00<00:00, 9765.81it/s, Materializing param=transformer.h.7.attn.c_proj.weight]Loading weights:  59%|█████▉    | 88/148 [00:00<00:00, 9744.41it/s, Materializing param=transformer.h.7.attn.c_proj.weight]Loading weights:  60%|██████    | 89/148 [00:00<00:00, 9817.04it/s, Materializing param=transformer.h.7.ln_1.bias]         Loading weights:  60%|██████    | 89/148 [00:00<00:00, 9797.46it/s, Materializing param=transformer.h.7.ln_1.bias]Loading weights:  61%|██████    | 90/148 [00:00<00:00, 9868.43it/s, Materializing param=transformer.h.7.ln_1.weight]Loading weights:  61%|██████    | 90/148 [00:00<00:00, 9845.78it/s, Materializing param=transformer.h.7.ln_1.weight]Loading weights:  61%|██████▏   | 91/148 [00:00<00:00, 9923.86it/s, Materializing param=transformer.h.7.ln_2.bias]  Loading weights:  61%|██████▏   | 91/148 [00:00<00:00, 9903.01it/s, Materializing param=transformer.h.7.ln_2.bias]Loading weights:  62%|██████▏   | 92/148 [00:00<00:00, 9978.17it/s, Materializing param=transformer.h.7.ln_2.weight]Loading weights:  62%|██████▏   | 92/148 [00:00<00:00, 9958.86it/s, Materializing param=transformer.h.7.ln_2.weight]Loading weights:  63%|██████▎   | 93/148 [00:00<00:00, 10033.45it/s, Materializing param=transformer.h.7.mlp.c_fc.bias]Loading weights:  63%|██████▎   | 93/148 [00:00<00:00, 10013.10it/s, Materializing param=transformer.h.7.mlp.c_fc.bias]Loading weights:  64%|██████▎   | 94/148 [00:00<00:00, 10083.75it/s, Materializing param=transformer.h.7.mlp.c_fc.weight]Loading weights:  64%|██████▎   | 94/148 [00:00<00:00, 10063.16it/s, Materializing param=transformer.h.7.mlp.c_fc.weight]Loading weights:  64%|██████▍   | 95/148 [00:00<00:00, 10135.55it/s, Materializing param=transformer.h.7.mlp.c_proj.bias]Loading weights:  64%|██████▍   | 95/148 [00:00<00:00, 10114.97it/s, Materializing param=transformer.h.7.mlp.c_proj.bias]Loading weights:  65%|██████▍   | 96/148 [00:00<00:00, 10188.85it/s, Materializing param=transformer.h.7.mlp.c_proj.weight]Loading weights:  65%|██████▍   | 96/148 [00:00<00:00, 10165.19it/s, Materializing param=transformer.h.7.mlp.c_proj.weight]Loading weights:  66%|██████▌   | 97/148 [00:00<00:00, 10237.47it/s, Materializing param=transformer.h.8.attn.c_attn.bias] Loading weights:  66%|██████▌   | 97/148 [00:00<00:00, 10215.88it/s, Materializing param=transformer.h.8.attn.c_attn.bias]Loading weights:  66%|██████▌   | 98/148 [00:00<00:00, 10287.62it/s, Materializing param=transformer.h.8.attn.c_attn.weight]Loading weights:  66%|██████▌   | 98/148 [00:00<00:00, 10268.34it/s, Materializing param=transformer.h.8.attn.c_attn.weight]Loading weights:  67%|██████▋   | 99/148 [00:00<00:00, 10336.20it/s, Materializing param=transformer.h.8.attn.c_proj.bias]  Loading weights:  67%|██████▋   | 99/148 [00:00<00:00, 10316.94it/s, Materializing param=transformer.h.8.attn.c_proj.bias]Loading weights:  68%|██████▊   | 100/148 [00:00<00:00, 10385.28it/s, Materializing param=transformer.h.8.attn.c_proj.weight]Loading weights:  68%|██████▊   | 100/148 [00:00<00:00, 10364.75it/s, Materializing param=transformer.h.8.attn.c_proj.weight]Loading weights:  68%|██████▊   | 101/148 [00:00<00:00, 10434.88it/s, Materializing param=transformer.h.8.ln_1.bias]         Loading weights:  68%|██████▊   | 101/148 [00:00<00:00, 10414.35it/s, Materializing param=transformer.h.8.ln_1.bias]Loading weights:  69%|██████▉   | 102/148 [00:00<00:00, 10482.93it/s, Materializing param=transformer.h.8.ln_1.weight]Loading weights:  69%|██████▉   | 102/148 [00:00<00:00, 10463.70it/s, Materializing param=transformer.h.8.ln_1.weight]Loading weights:  70%|██████▉   | 103/148 [00:00<00:00, 10535.88it/s, Materializing param=transformer.h.8.ln_2.bias]  Loading weights:  70%|██████▉   | 103/148 [00:00<00:00, 10515.62it/s, Materializing param=transformer.h.8.ln_2.bias]Loading weights:  70%|███████   | 104/148 [00:00<00:00, 10584.22it/s, Materializing param=transformer.h.8.ln_2.weight]Loading weights:  70%|███████   | 104/148 [00:00<00:00, 10564.74it/s, Materializing param=transformer.h.8.ln_2.weight]Loading weights:  71%|███████   | 105/148 [00:00<00:00, 10632.85it/s, Materializing param=transformer.h.8.mlp.c_fc.bias]Loading weights:  71%|███████   | 105/148 [00:00<00:00, 10612.35it/s, Materializing param=transformer.h.8.mlp.c_fc.bias]Loading weights:  72%|███████▏  | 106/148 [00:00<00:00, 10678.17it/s, Materializing param=transformer.h.8.mlp.c_fc.weight]Loading weights:  72%|███████▏  | 106/148 [00:00<00:00, 10657.44it/s, Materializing param=transformer.h.8.mlp.c_fc.weight]Loading weights:  72%|███████▏  | 107/148 [00:00<00:00, 10722.25it/s, Materializing param=transformer.h.8.mlp.c_proj.bias]Loading weights:  72%|███████▏  | 107/148 [00:00<00:00, 10703.07it/s, Materializing param=transformer.h.8.mlp.c_proj.bias]Loading weights:  73%|███████▎  | 108/148 [00:00<00:00, 10767.66it/s, Materializing param=transformer.h.8.mlp.c_proj.weight]Loading weights:  73%|███████▎  | 108/148 [00:00<00:00, 10747.23it/s, Materializing param=transformer.h.8.mlp.c_proj.weight]Loading weights:  74%|███████▎  | 109/148 [00:00<00:00, 10812.36it/s, Materializing param=transformer.h.9.attn.c_attn.bias] Loading weights:  74%|███████▎  | 109/148 [00:00<00:00, 10792.20it/s, Materializing param=transformer.h.9.attn.c_attn.bias]Loading weights:  74%|███████▍  | 110/148 [00:00<00:00, 10856.61it/s, Materializing param=transformer.h.9.attn.c_attn.weight]Loading weights:  74%|███████▍  | 110/148 [00:00<00:00, 10837.23it/s, Materializing param=transformer.h.9.attn.c_attn.weight]Loading weights:  75%|███████▌  | 111/148 [00:00<00:00, 10900.67it/s, Materializing param=transformer.h.9.attn.c_proj.bias]  Loading weights:  75%|███████▌  | 111/148 [00:00<00:00, 10881.31it/s, Materializing param=transformer.h.9.attn.c_proj.bias]Loading weights:  76%|███████▌  | 112/148 [00:00<00:00, 10943.79it/s, Materializing param=transformer.h.9.attn.c_proj.weight]Loading weights:  76%|███████▌  | 112/148 [00:00<00:00, 10923.68it/s, Materializing param=transformer.h.9.attn.c_proj.weight]Loading weights:  76%|███████▋  | 113/148 [00:00<00:00, 10988.00it/s, Materializing param=transformer.h.9.ln_1.bias]         Loading weights:  76%|███████▋  | 113/148 [00:00<00:00, 10968.67it/s, Materializing param=transformer.h.9.ln_1.bias]Loading weights:  77%|███████▋  | 114/148 [00:00<00:00, 11031.53it/s, Materializing param=transformer.h.9.ln_1.weight]Loading weights:  77%|███████▋  | 114/148 [00:00<00:00, 11011.46it/s, Materializing param=transformer.h.9.ln_1.weight]Loading weights:  78%|███████▊  | 115/148 [00:00<00:00, 11075.66it/s, Materializing param=transformer.h.9.ln_2.bias]  Loading weights:  78%|███████▊  | 115/148 [00:00<00:00, 11056.62it/s, Materializing param=transformer.h.9.ln_2.bias]Loading weights:  78%|███████▊  | 116/148 [00:00<00:00, 11119.63it/s, Materializing param=transformer.h.9.ln_2.weight]Loading weights:  78%|███████▊  | 116/148 [00:00<00:00, 11099.59it/s, Materializing param=transformer.h.9.ln_2.weight]Loading weights:  79%|███████▉  | 117/148 [00:00<00:00, 11163.95it/s, Materializing param=transformer.h.9.mlp.c_fc.bias]Loading weights:  79%|███████▉  | 117/148 [00:00<00:00, 11144.93it/s, Materializing param=transformer.h.9.mlp.c_fc.bias]Loading weights:  80%|███████▉  | 118/148 [00:00<00:00, 11206.08it/s, Materializing param=transformer.h.9.mlp.c_fc.weight]Loading weights:  80%|███████▉  | 118/148 [00:00<00:00, 11185.82it/s, Materializing param=transformer.h.9.mlp.c_fc.weight]Loading weights:  80%|████████  | 119/148 [00:00<00:00, 11249.85it/s, Materializing param=transformer.h.9.mlp.c_proj.bias]Loading weights:  80%|████████  | 119/148 [00:00<00:00, 11229.35it/s, Materializing param=transformer.h.9.mlp.c_proj.bias]Loading weights:  81%|████████  | 120/148 [00:00<00:00, 11289.68it/s, Materializing param=transformer.h.9.mlp.c_proj.weight]Loading weights:  81%|████████  | 120/148 [00:00<00:00, 11270.72it/s, Materializing param=transformer.h.9.mlp.c_proj.weight]Loading weights:  82%|████████▏ | 121/148 [00:00<00:00, 11329.63it/s, Materializing param=transformer.h.10.attn.c_attn.bias]Loading weights:  82%|████████▏ | 121/148 [00:00<00:00, 11309.43it/s, Materializing param=transformer.h.10.attn.c_attn.bias]Loading weights:  82%|████████▏ | 122/148 [00:00<00:00, 11361.63it/s, Materializing param=transformer.h.10.attn.c_attn.weight]Loading weights:  82%|████████▏ | 122/148 [00:00<00:00, 11341.23it/s, Materializing param=transformer.h.10.attn.c_attn.weight]Loading weights:  83%|████████▎ | 123/148 [00:00<00:00, 11402.60it/s, Materializing param=transformer.h.10.attn.c_proj.bias]  Loading weights:  83%|████████▎ | 123/148 [00:00<00:00, 11383.73it/s, Materializing param=transformer.h.10.attn.c_proj.bias]Loading weights:  84%|████████▍ | 124/148 [00:00<00:00, 11441.19it/s, Materializing param=transformer.h.10.attn.c_proj.weight]Loading weights:  84%|████████▍ | 124/148 [00:00<00:00, 11420.09it/s, Materializing param=transformer.h.10.attn.c_proj.weight]Loading weights:  84%|████████▍ | 125/148 [00:00<00:00, 11474.14it/s, Materializing param=transformer.h.10.ln_1.bias]         Loading weights:  84%|████████▍ | 125/148 [00:00<00:00, 11454.09it/s, Materializing param=transformer.h.10.ln_1.bias]Loading weights:  85%|████████▌ | 126/148 [00:00<00:00, 11507.76it/s, Materializing param=transformer.h.10.ln_1.weight]Loading weights:  85%|████████▌ | 126/148 [00:00<00:00, 11488.00it/s, Materializing param=transformer.h.10.ln_1.weight]Loading weights:  86%|████████▌ | 127/148 [00:00<00:00, 11545.29it/s, Materializing param=transformer.h.10.ln_2.bias]  Loading weights:  86%|████████▌ | 127/148 [00:00<00:00, 11525.56it/s, Materializing param=transformer.h.10.ln_2.bias]Loading weights:  86%|████████▋ | 128/148 [00:00<00:00, 11582.73it/s, Materializing param=transformer.h.10.ln_2.weight]Loading weights:  86%|████████▋ | 128/148 [00:00<00:00, 11564.01it/s, Materializing param=transformer.h.10.ln_2.weight]Loading weights:  87%|████████▋ | 129/148 [00:00<00:00, 11624.56it/s, Materializing param=transformer.h.10.mlp.c_fc.bias]Loading weights:  87%|████████▋ | 129/148 [00:00<00:00, 11604.86it/s, Materializing param=transformer.h.10.mlp.c_fc.bias]Loading weights:  88%|████████▊ | 130/148 [00:00<00:00, 11661.31it/s, Materializing param=transformer.h.10.mlp.c_fc.weight]Loading weights:  88%|████████▊ | 130/148 [00:00<00:00, 11641.39it/s, Materializing param=transformer.h.10.mlp.c_fc.weight]Loading weights:  89%|████████▊ | 131/148 [00:00<00:00, 11697.48it/s, Materializing param=transformer.h.10.mlp.c_proj.bias]Loading weights:  89%|████████▊ | 131/148 [00:00<00:00, 11677.84it/s, Materializing param=transformer.h.10.mlp.c_proj.bias]Loading weights:  89%|████████▉ | 132/148 [00:00<00:00, 11734.56it/s, Materializing param=transformer.h.10.mlp.c_proj.weight]Loading weights:  89%|████████▉ | 132/148 [00:00<00:00, 11715.44it/s, Materializing param=transformer.h.10.mlp.c_proj.weight]Loading weights:  90%|████████▉ | 133/148 [00:00<00:00, 11770.81it/s, Materializing param=transformer.h.11.attn.c_attn.bias] Loading weights:  90%|████████▉ | 133/148 [00:00<00:00, 11751.23it/s, Materializing param=transformer.h.11.attn.c_attn.bias]Loading weights:  91%|█████████ | 134/148 [00:00<00:00, 11806.25it/s, Materializing param=transformer.h.11.attn.c_attn.weight]Loading weights:  91%|█████████ | 134/148 [00:00<00:00, 11784.47it/s, Materializing param=transformer.h.11.attn.c_attn.weight]Loading weights:  91%|█████████ | 135/148 [00:00<00:00, 11838.90it/s, Materializing param=transformer.h.11.attn.c_proj.bias]  Loading weights:  91%|█████████ | 135/148 [00:00<00:00, 11820.37it/s, Materializing param=transformer.h.11.attn.c_proj.bias]Loading weights:  92%|█████████▏| 136/148 [00:00<00:00, 11874.71it/s, Materializing param=transformer.h.11.attn.c_proj.weight]Loading weights:  92%|█████████▏| 136/148 [00:00<00:00, 11854.72it/s, Materializing param=transformer.h.11.attn.c_proj.weight]Loading weights:  93%|█████████▎| 137/148 [00:00<00:00, 11908.72it/s, Materializing param=transformer.h.11.ln_1.bias]         Loading weights:  93%|█████████▎| 137/148 [00:00<00:00, 11890.24it/s, Materializing param=transformer.h.11.ln_1.bias]Loading weights:  93%|█████████▎| 138/148 [00:00<00:00, 11944.90it/s, Materializing param=transformer.h.11.ln_1.weight]Loading weights:  93%|█████████▎| 138/148 [00:00<00:00, 11926.44it/s, Materializing param=transformer.h.11.ln_1.weight]Loading weights:  94%|█████████▍| 139/148 [00:00<00:00, 11980.77it/s, Materializing param=transformer.h.11.ln_2.bias]  Loading weights:  94%|█████████▍| 139/148 [00:00<00:00, 11962.09it/s, Materializing param=transformer.h.11.ln_2.bias]Loading weights:  95%|█████████▍| 140/148 [00:00<00:00, 12016.10it/s, Materializing param=transformer.h.11.ln_2.weight]Loading weights:  95%|█████████▍| 140/148 [00:00<00:00, 11994.50it/s, Materializing param=transformer.h.11.ln_2.weight]Loading weights:  95%|█████████▌| 141/148 [00:00<00:00, 12051.37it/s, Materializing param=transformer.h.11.mlp.c_fc.bias]Loading weights:  95%|█████████▌| 141/148 [00:00<00:00, 12031.76it/s, Materializing param=transformer.h.11.mlp.c_fc.bias]Loading weights:  96%|█████████▌| 142/148 [00:00<00:00, 12083.16it/s, Materializing param=transformer.h.11.mlp.c_fc.weight]Loading weights:  96%|█████████▌| 142/148 [00:00<00:00, 12062.61it/s, Materializing param=transformer.h.11.mlp.c_fc.weight]Loading weights:  97%|█████████▋| 143/148 [00:00<00:00, 12113.70it/s, Materializing param=transformer.h.11.mlp.c_proj.bias]Loading weights:  97%|█████████▋| 143/148 [00:00<00:00, 12093.91it/s, Materializing param=transformer.h.11.mlp.c_proj.bias]Loading weights:  97%|█████████▋| 144/148 [00:00<00:00, 12144.69it/s, Materializing param=transformer.h.11.mlp.c_proj.weight]Loading weights:  97%|█████████▋| 144/148 [00:00<00:00, 12125.19it/s, Materializing param=transformer.h.11.mlp.c_proj.weight]Loading weights:  98%|█████████▊| 145/148 [00:00<00:00, 12175.66it/s, Materializing param=transformer.ln_f.bias]             Loading weights:  98%|█████████▊| 145/148 [00:00<00:00, 12157.16it/s, Materializing param=transformer.ln_f.bias]Loading weights:  99%|█████████▊| 146/148 [00:00<00:00, 12212.44it/s, Materializing param=transformer.ln_f.weight]Loading weights:  99%|█████████▊| 146/148 [00:00<00:00, 12192.99it/s, Materializing param=transformer.ln_f.weight]Loading weights:  99%|█████████▉| 147/148 [00:00<00:00, 12244.81it/s, Materializing param=transformer.wpe.weight] Loading weights:  99%|█████████▉| 147/148 [00:00<00:00, 12226.59it/s, Materializing param=transformer.wpe.weight]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 12280.06it/s, Materializing param=transformer.wte.weight]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 12261.62it/s, Materializing param=transformer.wte.weight]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 12219.14it/s, Materializing param=transformer.wte.weight]
+`loss_type=None` was set in the config but it is unrecognized. Using the default loss: `ForCausalLMLoss`.
+Float PPL: 53.895  (1.4s)
+Snapshotted c_proj weights for 12 blocks. dtype=torch.float32
+
+=== Uncentered SVD variant ===
+
+-- block 0 --
+  SVD done (0.1s); top-3 sv = [25.0331, 21.0536, 18.3372]
+    r=  1: PPL=5530.4882
+    r=  2: PPL=5601.7500
+    r=  4: PPL=5571.1100
+    r=  8: PPL=2369.5058
+    r= 16: PPL=1461.4485
+    r= 32: PPL=856.5570
+    r= 64: PPL=438.7574
+
+-- block 1 --
+  SVD done (0.1s); top-3 sv = [28.7065, 23.1036, 18.8414]
+    r=  1: PPL=59.7513
+    r=  2: PPL=57.6581
+    r=  4: PPL=56.9073
+    r=  8: PPL=56.6805
+    r= 16: PPL=56.7777
+    r= 32: PPL=56.2925
+    r= 64: PPL=55.9016
+
+-- block 2 --
+  SVD done (0.1s); top-3 sv = [38.2545, 15.1647, 13.0839]
+    r=  1: PPL=72.3808
+    r=  2: PPL=64.0814
+    r=  4: PPL=64.2233
+    r=  8: PPL=63.7115
+    r= 16: PPL=59.9191
+    r= 32: PPL=59.8139
+    r= 64: PPL=58.1902
+
+-- block 3 --
+  SVD done (0.1s); top-3 sv = [40.8009, 13.3719, 12.1834]
+    r=  1: PPL=58.7828
+    r=  2: PPL=58.5408
+    r=  4: PPL=58.4269
+    r=  8: PPL=58.5092
+    r= 16: PPL=57.7362
+    r= 32: PPL=56.8643
+    r= 64: PPL=56.6061
+
+-- block 4 --
+  SVD done (0.1s); top-3 sv = [31.6352, 14.1956, 13.1287]
+    r=  1: PPL=60.2942
+    r=  2: PPL=59.9887
+    r=  4: PPL=59.7679
+    r=  8: PPL=59.4391
+    r= 16: PPL=58.8169
+    r= 32: PPL=57.6997
+    r= 64: PPL=57.2350
+
+-- block 5 --
+  SVD done (0.1s); top-3 sv = [27.6176, 17.5305, 14.5773]
+    r=  1: PPL=58.8399
+    r=  2: PPL=58.6776
+    r=  4: PPL=58.5669
+    r=  8: PPL=58.2666
+    r= 16: PPL=58.0538
+    r= 32: PPL=57.5468
+    r= 64: PPL=56.7992
+
+-- block 6 --
+  SVD done (0.1s); top-3 sv = [29.6382, 18.0417, 15.9944]
+    r=  1: PPL=59.5264
+    r=  2: PPL=59.4031
+    r=  4: PPL=59.2006
+    r=  8: PPL=58.7353
+    r= 16: PPL=58.1648
+    r= 32: PPL=57.7385
+    r= 64: PPL=56.8273
+
+-- block 7 --
+  SVD done (0.1s); top-3 sv = [30.2270, 16.7953, 16.3481]
+    r=  1: PPL=58.9764
+    r=  2: PPL=58.8101
+    r=  4: PPL=58.7408
+    r=  8: PPL=58.3639
+    r= 16: PPL=57.7730
+    r= 32: PPL=57.0374
+    r= 64: PPL=56.2821
+
+-- block 8 --
+  SVD done (0.1s); top-3 sv = [31.0758, 24.4946, 18.5351]
+    r=  1: PPL=60.8573
+    r=  2: PPL=60.4958
+    r=  4: PPL=60.1464
+    r=  8: PPL=59.8743
+    r= 16: PPL=59.2744
+    r= 32: PPL=58.3550
+    r= 64: PPL=57.5717
+
+-- block 9 --
+  SVD done (0.1s); top-3 sv = [32.7817, 21.9674, 19.8141]
+    r=  1: PPL=60.9255
+    r=  2: PPL=60.7691
+    r=  4: PPL=60.5827
+    r=  8: PPL=60.2679
+    r= 16: PPL=59.6873
+    r= 32: PPL=58.9554
+    r= 64: PPL=58.0023
+
+-- block 10 --
+  SVD done (0.1s); top-3 sv = [41.5850, 28.1941, 21.1735]
+    r=  1: PPL=60.6446
+    r=  2: PPL=60.3951
+    r=  4: PPL=59.9756
+    r=  8: PPL=59.6942
+    r= 16: PPL=59.4584
+    r= 32: PPL=58.6493
+    r= 64: PPL=58.0385
+
+-- block 11 --
+  SVD done (0.1s); top-3 sv = [60.9931, 34.5937, 32.1841]
+    r=  1: PPL=60.6103
+    r=  2: PPL=61.3384
+    r=  4: PPL=61.0690
+    r=  8: PPL=60.8824
+    r= 16: PPL=60.2659
+    r= 32: PPL=59.2464
+    r= 64: PPL=58.3745
+
+Uncentered variant done in 2.1 min
+
+Sanity check: b1 r=2 uncentered = 57.6581, cycle 280 published init = 57.664, |delta|=0.0059
+
+=== Calibrated (SVD-LLM weighted SVD) variant ===
+
+-- block 0 (calibrated) --
+  captured X shape=(25600, 3072) (2.5s)
+  Σ symmetric err=0.00e+00, ||A^2 - Σ||/||Σ||=1.71e-05, ||A A^+ A - A||/||A||=1.48e-03 (0.9s)
+    r=  1: PPL=3851.7738
+    r=  2: PPL=1481.9337
+    r=  4: PPL=1048.2229
+    r=  8: PPL=532.4379
+    r= 16: PPL=257.9321
+    r= 32: PPL=147.3252
+    r= 64: PPL=89.2665
+
+-- block 1 (calibrated) --
+  captured X shape=(25600, 3072) (2.5s)
+  Σ symmetric err=0.00e+00, ||A^2 - Σ||/||Σ||=1.44e-05, ||A A^+ A - A||/||A||=1.38e-03 (0.8s)
+    r=  1: PPL=56.8657
+    r=  2: PPL=56.7030
+    r=  4: PPL=55.9245
+    r=  8: PPL=55.7069
+    r= 16: PPL=55.3767
+    r= 32: PPL=55.2349
+    r= 64: PPL=54.9112
+
+-- block 2 (calibrated) --
+  captured X shape=(25600, 3072) (2.5s)
+  Σ symmetric err=0.00e+00, ||A^2 - Σ||/||Σ||=1.87e-05, ||A A^+ A - A||/||A||=1.50e-03 (0.8s)
+    r=  1: PPL=58.4589
+    r=  2: PPL=57.8260
+    r=  4: PPL=57.0967
+    r=  8: PPL=56.8834
+    r= 16: PPL=56.4802
+    r= 32: PPL=55.7733
+    r= 64: PPL=55.3136
+
+-- block 3 (calibrated) --
+  captured X shape=(25600, 3072) (2.5s)
+  Σ symmetric err=0.00e+00, ||A^2 - Σ||/||Σ||=1.74e-05, ||A A^+ A - A||/||A||=9.66e-06 (0.8s)
+    r=  1: PPL=59.1850
+    r=  2: PPL=58.4500
+    r=  4: PPL=57.7446
+    r=  8: PPL=57.5480
+    r= 16: PPL=56.7712
+    r= 32: PPL=56.1175
+    r= 64: PPL=55.2795
+
+-- block 4 (calibrated) --
+  captured X shape=(25600, 3072) (2.5s)
+  Σ symmetric err=0.00e+00, ||A^2 - Σ||/||Σ||=1.74e-05, ||A A^+ A - A||/||A||=4.16e-04 (0.8s)
+    r=  1: PPL=60.3538
+    r=  2: PPL=58.5659
+    r=  4: PPL=57.2731
+    r=  8: PPL=56.5141
+    r= 16: PPL=55.9035
+    r= 32: PPL=55.7806
+    r= 64: PPL=55.4526
+
+-- block 5 (calibrated) --
+  captured X shape=(25600, 3072) (2.5s)
+  Σ symmetric err=0.00e+00, ||A^2 - Σ||/||Σ||=1.65e-05, ||A A^+ A - A||/||A||=8.53e-06 (0.8s)
+    r=  1: PPL=58.8893
+    r=  2: PPL=57.9837
+    r=  4: PPL=57.7834
+    r=  8: PPL=56.8819
+    r= 16: PPL=56.5124
+    r= 32: PPL=56.0410
+    r= 64: PPL=55.3975
+
+-- block 6 (calibrated) --
+  captured X shape=(25600, 3072) (2.5s)
+  Σ symmetric err=0.00e+00, ||A^2 - Σ||/||Σ||=1.65e-05, ||A A^+ A - A||/||A||=7.60e-06 (0.9s)
+    r=  1: PPL=59.1350
+    r=  2: PPL=58.6527
+    r=  4: PPL=57.6721
+    r=  8: PPL=57.3003
+    r= 16: PPL=56.8092
+    r= 32: PPL=56.3501
+    r= 64: PPL=55.9419
+
+-- block 7 (calibrated) --
+  captured X shape=(25600, 3072) (2.5s)
+  Σ symmetric err=0.00e+00, ||A^2 - Σ||/||Σ||=1.68e-05, ||A A^+ A - A||/||A||=6.52e-06 (0.8s)
+    r=  1: PPL=58.5856
+    r=  2: PPL=58.2354
+    r=  4: PPL=58.2196
+    r=  8: PPL=57.6017
+    r= 16: PPL=57.0763
+    r= 32: PPL=56.5327
+    r= 64: PPL=55.9643
+
+-- block 8 (calibrated) --
+  captured X shape=(25600, 3072) (2.5s)
+  Σ symmetric err=0.00e+00, ||A^2 - Σ||/||Σ||=1.65e-05, ||A A^+ A - A||/||A||=7.24e-06 (0.9s)
+    r=  1: PPL=60.1077
+    r=  2: PPL=58.6640
+    r=  4: PPL=58.6028
+    r=  8: PPL=58.1900
+    r= 16: PPL=57.3961
+    r= 32: PPL=56.8378
+    r= 64: PPL=56.0171
+
+-- block 9 (calibrated) --
+  captured X shape=(25600, 3072) (2.5s)
+  Σ symmetric err=0.00e+00, ||A^2 - Σ||/||Σ||=1.64e-05, ||A A^+ A - A||/||A||=6.99e-06 (0.8s)
+    r=  1: PPL=60.3672
+    r=  2: PPL=60.2840
+    r=  4: PPL=60.1279
+    r=  8: PPL=59.7038
+    r= 16: PPL=59.0368
+    r= 32: PPL=58.1005
+    r= 64: PPL=57.1954
+
+-- block 10 (calibrated) --
+  captured X shape=(25600, 3072) (2.5s)
+  Σ symmetric err=0.00e+00, ||A^2 - Σ||/||Σ||=1.65e-05, ||A A^+ A - A||/||A||=6.28e-06 (0.9s)
+    r=  1: PPL=58.9024
+    r=  2: PPL=58.8042
+    r=  4: PPL=59.2953
+    r=  8: PPL=58.9114
+    r= 16: PPL=58.8806
+    r= 32: PPL=58.2553
+    r= 64: PPL=57.3933
+
+-- block 11 (calibrated) --
+  captured X shape=(25600, 3072) (2.5s)
+  Σ symmetric err=0.00e+00, ||A^2 - Σ||/||Σ||=1.69e-05, ||A A^+ A - A||/||A||=5.53e-06 (0.9s)
+    r=  1: PPL=61.7139
+    r=  2: PPL=61.0837
+    r=  4: PPL=60.8530
+    r=  8: PPL=60.4739
+    r= 16: PPL=60.3698
+    r= 32: PPL=59.5662
+    r= 64: PPL=58.4384
+
+Calibrated variant done in 2.9 min
+
+=== Verdict ===
+  CONFIRMED count (calibrated r=2 ≤ retrain_anchor - 2): 0 / 12  -> []
+  REFUTED check (all |cal - unc| < 0.5): False; max |delta| = 4522.8871 at (block=0, r=4)
+  VERDICT: INCONCLUSIVE
+
+Wrote autoresearch/results/cycle_313_no_retrain_laser.json
+Wrote autoresearch/results/cycle_313_summary.md
