@@ -1,0 +1,96 @@
+Device: mps
+Loading GPT-2 and data...
+Calibration: 200 seqs, Eval: 100 seqs
+Float baseline PPL...
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+`loss_type=None` was set in the config but it is unrecognized. Using the default loss: `ForCausalLMLoss`.
+Float PPL: 53.895  (1.4s)
+
+SVD of block 1 c_proj.weight...
+  SVD done in 0.1s; S[:5]=[28.706462860107422, 23.103559494018555, 18.841386795043945, 13.83397102355957, 13.739469528198242]
+
+Collecting block-1 pre-activation z = ln_2(x) @ W_fc + b_fc over calib...
+  ln2_out: (25600, 768)
+  σ_c stats: min=0.000 max=0.995 mean=0.264
+
+=== Retrain at r=2 (seed 42, 4000 steps) ===
+
+  init PPL (rank-2 no retrain): 57.6581 (cycle 280 ref 57.664)
+  Trainable params: 2,304 (expect 2,304)
+    step  500: eval_ppl=52.6163  best=52.6163@500
+    step 1000: eval_ppl=51.2206  best=51.2206@1000
+    step 1500: eval_ppl=50.2972  best=50.2972@1500
+    step 2000: eval_ppl=49.9269  best=49.7568@1900
+    step 2500: eval_ppl=49.4051  best=49.4051@2500
+    step 3000: eval_ppl=49.4491  best=49.3571@2900
+    step 3500: eval_ppl=49.2268  best=49.2268@3500
+    step 4000: eval_ppl=49.2498  best=49.0603@3900
+
+Final: init=57.6581  best=49.0603@3900  final@4000=49.2498  restored=49.0603  [2.5 min]
+
+Building block-2 Q/K/V left SV bases...
+  U_q (768, 20), U_k (768, 20), U_v (768, 20)
+Random null (N=100)...
+  Q: top-5 sum 0.2859±0.0429  top-1 0.0771±0.0158
+  K: top-5 sum 0.2819±0.0477  top-1 0.0788±0.0176
+  V: top-5 sum 0.2837±0.0545  top-1 0.0782±0.0199
+
+wte: (50257, 768)
+
+=== Directional analysis on TRAINED B_final ===
+
+-- Direction 0 (trained) --
+  ||b|| = 1.0575
+  sign groups (top-20 channels): neg≤0.1=15, bump(0.1,0.9)=5, pos≥0.9=0
+  top-5 channels: c=2401(a=+5.674,σ=0.01), c=1120(a=+5.403,σ=0.01), c=293(a=+4.691,σ=0.81), c=1467(a=+4.238,σ=0.76), c=242(a=+4.195,σ=0.01)
+  max |cos(b, wte)| = 0.3011
+  boost top-5: [' the', ',', ' and', ' "', '.']
+  supp  top-5: [' guiActiveUn', '���', 'arnaev', ' Canaver', 'cloneembedreportprint']
+  n_stop/n_alpha in boost top-20: 17/3
+  Q top5_sum=0.4048 top1=0.1031
+  K top5_sum=0.8445 top1=0.2376
+  V top5_sum=0.4297 top1=0.1428
+
+-- Direction 1 (trained) --
+  ||b|| = 0.9917
+  sign groups (top-20 channels): neg≤0.1=11, bump(0.1,0.9)=9, pos≥0.9=0
+  top-5 channels: c=1120(a=+12.679,σ=0.01), c=242(a=+12.432,σ=0.01), c=2401(a=+11.811,σ=0.01), c=706(a=+2.676,σ=0.01), c=8(a=+1.511,σ=0.01)
+  max |cos(b, wte)| = 0.1976
+  boost top-5: [' the', ',', '-', ' in', ' and']
+  supp  top-5: [' blat', 'Ire', ' fortun', ' indo', ' misunder']
+  n_stop/n_alpha in boost top-20: 19/1
+  Q top5_sum=0.4771 top1=0.1563
+  K top5_sum=0.9387 top1=0.2047
+  V top5_sum=0.1902 top1=0.0586
+
+=== Directional analysis on SVD INIT B_init=Vh[:2] ===
+
+-- Direction 0 (SVD init) --
+  ||b|| = 1.0000  (Vh rows are unit → expect 1.0)
+  max |cos(b, wte)| = 0.3449
+  boost top-5: [' the', ',', ' a', ' and', '.']
+  supp  top-5: [' guiActiveUn', '���', 'cloneembedreportprint', '=~=~', 'ÍÍ']
+  n_stop/n_alpha in boost top-20: 18/2
+
+-- Direction 1 (SVD init) --
+  ||b|| = 1.0000  (Vh rows are unit → expect 1.0)
+  max |cos(b, wte)| = 0.2283
+  boost top-5: [',', ' the', '-', ' and', '.']
+  supp  top-5: [' indo', ' acknow', ' misunder', 'iscons', ' Azerb']
+  n_stop/n_alpha in boost top-20: 19/1
+
+Direction 0: trained∩init = 17/20, only_trained=3, only_init=3
+
+Direction 1: trained∩init = 19/20, only_trained=1, only_init=1
+
+=== Verdict ===
+  any direction structured (≥10/20 alpha)?  False
+  both directions unigram (≥14/20 stop)?    True
+  all Q/K/V below null mean+1σ?             False
+  VERDICT: CONFIRMED_unigram
+
+Wrote autoresearch/results/cycle_300_semantic.json
+Wrote autoresearch/results/cycle_300_summary.md
+
+Total wall: 159.9s

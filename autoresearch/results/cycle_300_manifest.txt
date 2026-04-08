@@ -1,0 +1,199 @@
+Cycle 300 Manifest — Item 310: semantic decomposition of cycle 280's A factor
+
+Commit: pending
+Branch: geometric_compression
+Verdict: CONFIRMED_unigram
+
+== Verdict logic (item 310 verbatim) ==
+CONFIRMED structured   iff >=1 direction has top-20 boost top-20 with
+                       >=10/20 alpha subword tokens (semantic coherence).
+CONFIRMED unigram      iff both directions' top-20 boost tokens are
+                       >=14/20 stopwords/punct/whitespace (programmatic
+                       unigram-cluster test).
+REFUTED interpretable  iff neither cluster is coherent AND all Q/K/V top-5
+                       cos sums are below random null mean + 1 sigma.
+INCONCLUSIVE otherwise.
+
+== Verdict evaluation ==
+dir 0 n_stop/n_alpha in boost top-20 = 17/3   -> unigram clause fires
+dir 1 n_stop/n_alpha in boost top-20 = 19/1   -> unigram clause fires
+any_structured      = False  (max 3 alpha subwords, threshold 10)
+both_unigram        = True   (both 17/20 and 19/20 >= 14/20)
+neither_coherent    = True   (but CONFIRMED_unigram takes precedence)
+all_qkv_below_null  = False  (K alignments 0.84 and 0.94 hugely above null 0.28)
+VERDICT: CONFIRMED_unigram.
+
+Item 310 hypothesis re-analysis:
+- HYPOTHESIS A (dir 0 = unigram axis): CONFIRMED -- 17/20 stopwords; boost
+  tokens are ' the', ',', ' and', ' "', '.', '\n', '-', ' a', ' in', ' (',
+  ' The', ' to', ' of', ' with', ' it', ' one', ':', ' for', '/', ' I'.
+- HYPOTHESIS B (dir 1 = more semantically structured): REFUTED -- 19/20
+  stopwords, MORE unigram-concentrated than dir 0. Boost tokens are
+  ' the', ',', '-', ' in', ' and', '.', ' a', ' "', ' (', ' with', ' to',
+  ' of', ' on', '\n', ' is', ':', ' that', ' for', ' The', ' from'.
+- HYPOTHESIS C (both dominated by mostly-negative / GELU bump channels):
+  CONFIRMED -- zero mostly_pos channels in either top-20. Dir 0 top-20
+  sigma_c distribution: 15 mostly_neg (<=0.1), 5 bump, 0 mostly_pos.
+  Dir 1 top-20: 11 mostly_neg, 9 bump (1 near-balanced), 0 mostly_pos.
+
+== Retrain reproducibility ==
+float PPL          = 53.895  (ref 53.895, delta 0.000)
+init  PPL (rank-2) = 57.6581 (cycle 280 ref 57.664, delta 0.006)
+best  PPL @step3900= 49.0603 (cycle 280 3-seed mean 49.032, delta 0.028;
+                              cycle 299 seed-42 49.0603 exact)
+final PPL @4000    = 49.2498
+Adam recovery      = 8.598 PPL
+
+== Config ==
+TARGET_BLOCK=1 RETRAIN_RANK=2 N_CALIB=200 N_EVAL=100 SEQ_LEN=128 DEVICE=mps
+N_STEPS=4000 LR=1e-4 EVAL_EVERY=100 SEED=42 TOPK=20 N_RANDOM_SEEDS=100
+Trainable: 2*768 + 768 = 2,304 (asserted at runtime)
+
+== SVD of block 1 c_proj.weight (3072, 768) ==
+Top-5 singular values: [28.7065, 23.1036, 18.8414, 13.8340, 13.7395]
+A2 = U[:, :2] * S[:2] (3072, 2) frozen buffer
+B2_init = Vh[:2, :] (2, 768) trainable (SVD init)
+
+== sigma_c (block 1, N_TOKENS=25600) ==
+min=0.000 max=0.995 mean=0.264 median=0.272
+n_mostly_neg (sigma <= 0.1): 1188 / 3072 (38.7 pct)
+n_mostly_pos (sigma >= 0.9):   12 / 3072 ( 0.39 pct)
+n_bump       (0.1 < s < 0.9):1872 / 3072 (60.9 pct)
+
+Only 12 channels out of 3072 are "mostly_pos" at block 1 -- the mass of
+block 1 FFN channels is GELU-bump / dead-side. The top-20 channels of
+BOTH rank-2 directions avoid the 12 mostly_pos channels entirely.
+
+== Direction 0 (trained B_final) ==
+||B_final[0]||_2 = 1.0575  (drifted from SVD init Vh row norm 1.000)
+Top-20 input channels by |A[c, 0]|:
+  c=2401 a=+5.674 sigma=0.008 mostly_neg
+  c=1120 a=+5.403 sigma=0.008 mostly_neg
+  c=293  a=+4.691 sigma=0.813 bump
+  c=1467 a=+4.238 sigma=0.764 bump
+  c=242  a=+4.195 sigma=0.008 mostly_neg
+  (... 15 more; full list in cycle_300_summary.md input-side table)
+Sign-group counts: mostly_neg=15 bump=5 mostly_pos=0
+Top-20 boost tokens: ' the' ',' ' and' ' "' '.' '\n' '-' ' a' ' in' ' ('
+  ' The' ' to' ' of' ' with' ' it' ' one' ':' ' for' '/' ' I'
+Top-5 suppress tokens: ' guiActiveUn' '???' 'arnaev' ' Canaver'
+  'cloneembedreportprint'   (all OOD / garbage BPE)
+max |cos(b, wte)| = 0.3011
+Block-2 Q/K/V top-5 |cos| sum (null 0.286 +- 0.043):
+  Q=0.4048 top1=0.1031 (+2.7 sigma)
+  K=0.8445 top1=0.2376 (+11.8 sigma)  <<< very strong
+  V=0.4297 top1=0.1428 (+2.7 sigma)
+
+== Direction 1 (trained B_final) ==
+||B_final[1]||_2 = 0.9917
+Top-20 input channels by |A[c, 1]|:
+  c=1120 a=+12.679 sigma=0.008 mostly_neg
+  c=242  a=+12.432 sigma=0.008 mostly_neg
+  c=2401 a=+11.811 sigma=0.008 mostly_neg
+  c=706  a=+2.676  sigma=0.008 mostly_neg
+  c=8    a=+1.511  sigma=0.008 mostly_neg
+  (... 15 more)
+Sign-group counts: mostly_neg=11 bump=9 mostly_pos=0
+Top-20 boost tokens: ' the' ',' '-' ' in' ' and' '.' ' a' ' "' ' ('
+  ' with' ' to' ' of' ' on' '\n' ' is' ':' ' that' ' for' ' The' ' from'
+Top-5 suppress tokens: ' blat' 'Ire' ' fortun' ' indo' ' misunder'
+max |cos(b, wte)| = 0.1976
+Block-2 Q/K/V top-5 |cos| sum:
+  Q=0.4771 top1=0.1563 (+4.5 sigma)
+  K=0.9387 top1=0.2047 (+13.8 sigma) <<< even stronger than dir 0
+  V=0.1902 top1=0.0586 (-1.7 sigma, below null mean)
+
+Note: dir 1 is essentially ORTHOGONAL to block-2 V-reader, while both
+directions align strongly with K-reader. Block-2 attention uses the rank-2
+c_proj-1 writes primarily through its K (key) subspace, not V (value).
+
+== SVD-init boost tokens (for comparison; no retrain) ==
+dir 0 init top-5: ' the' ',' ' a' ' and' '.'   (n_stop/n_alpha = 18/2)
+dir 1 init top-5: ',' ' the' '-' ' and' '.'   (n_stop/n_alpha = 19/1)
+
+Trained vs init overlap:
+- dir 0: trained ∩ init = 17/20. Only_trained = {' one', ' with', '/'};
+         Only_init = {' an', ' is', "'s"}.
+- dir 1: trained ∩ init = 19/20. Only_trained = {' from'}; Only_init = {"'s"}.
+
+The token-level semantics of the rank-2 bottleneck is essentially SET at
+SVD init. Adam's 8.6 PPL recovery is NOT moving the "which tokens get
+boosted" structure -- it rotates the row space inside the unigram cluster
+and fine-tunes the bias. This is the operational content of cycle 299's
+"SVD init is 83 pct of optimal basin" finding.
+
+== Random null (Q/K/V, 100 unit R^768 vectors, top-5 |cos| sum) ==
+Q: mean 0.2859 std 0.0429  -> mean+1sigma = 0.3288
+K: mean 0.2819 std 0.0477  -> mean+1sigma = 0.3296
+V: mean 0.2837 std 0.0545  -> mean+1sigma = 0.3382
+
+Both directions exceed null mean+1sigma on Q and K; dir 0 also on V.
+Dir 1 V (0.190) is BELOW null mean, the only sub-null reading.
+The "all Q/K/V below null" clause (REFUTED interpretable) does NOT fire.
+
+== Substantive findings ==
+1. Item 310's hypothesis is PARTIALLY RIGHT, PARTIALLY WRONG. Direction 0 is
+   the unigram/stopword axis (matches cycles 217/235) -- 17/20 stopwords.
+   Direction 1 is ALSO a unigram/stopword axis -- 19/20, even more
+   concentrated. The "direction 1 is semantically structured" sub-claim is
+   REFUTED by this experiment.
+
+2. The rank-2 c_proj-1 bottleneck encodes TWO different projections of the
+   unigram-frequency cluster, not "unigram + semantics". The reason block-1
+   eff_rank is ~2 (cycle 278) is that the unigram axis is 2-dimensional (or
+   near-2D) on the block-1 output side -- not 1D.
+
+3. Mostly-negative / GELU-bump channels dominate the INPUT side of both
+   directions: 15/20 and 11/20 mostly_neg, 0/20 and 0/20 mostly_pos. The
+   rank-2 bottleneck reads almost exclusively from dead / bump channels.
+   This is geometrically consistent with cycles 258/278/280 -- the
+   curvature region of GELU is where block-1 compressibility lives.
+
+4. Only 12/3072 channels at block 1 are "mostly_pos" (sigma >= 0.9) at all,
+   and NONE of them appear in either direction's top-20. Hypothesis C from
+   item 310 (mostly-negative dominance) CONFIRMED on both directions.
+
+5. Retrain vs SVD init: boost-token overlap 17/20 and 19/20. Adam barely
+   moves the token-level output structure; the 8.6 PPL gain is happening
+   WITHIN the unigram plane (row-space rotation per cycle 299) plus bias.
+   A closed-form SVD-only compression would have the SAME top-20 boost
+   tokens as the retrained rank-2 -- the semantic content is set by Vh[:2].
+
+6. Block-2 K alignment is the strongest downstream signal: dir 0 top1 cos
+   0.24 and dir 1 top1 cos 0.21, both >=12 sigma above null. Block-2
+   attention reads the unigram axis primarily through its KEY subspace.
+   Q alignment is moderate (top1 0.10 and 0.16), V alignment is weak for
+   dir 0 (top1 0.14) and absent for dir 1 (top1 0.06, below null).
+   Interpretation: block-1 c_proj rank-2 writes the unigram axis; block-2
+   attention keys read it back; block-2 values route other information.
+
+7. The 2D unigram bottleneck at block 1 is the geometric realisation of
+   what cycle 217 called "Δ_0 rank-1 = unigram-frequency axis": at block 0
+   the centred Δ was ~1D unigram; at block 1 the c_proj rank-2 encodes a
+   2D refinement of the same cluster. Cycles 217/218/235 all pointed at
+   this structure; this cycle verifies it at the cycle-280 A-factor level.
+
+== Wall time ==
+Total: 160s  (float+SVD+calib forward ~5s, Adam retrain ~2.5 min, analysis
+~2s) -- under the 10-minute cap.
+
+== Artifacts ==
+experiments/cycle280_A_semantic_cycle300.py
+autoresearch/plans/cycle_300.md
+autoresearch/briefs/cycle_300.md
+autoresearch/results/cycle_300_semantic.json
+autoresearch/results/cycle_300_summary.md
+autoresearch/results/cycle_300_manifest.txt
+autoresearch/results/cycle_300_exec_result.txt
+autoresearch/logs/cycle_300_run.log
+autoresearch/audits/cycle_300.md
+autoresearch/results/cycle_300_audit.txt
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+autoresearch/STATUS.md
+
+item_number: 310
+outcome: confirmed-unigram
+key_metric: verdict=CONFIRMED_unigram_dir0_n_stop_17_of_20_alpha_3_dir1_n_stop_19_of_20_alpha_1_both_exceed_14_unigram_threshold_any_structured_False_10_alpha_threshold_not_met_hypothesis_B_dir1_semantically_structured_REFUTED_dir1_is_even_more_unigram_concentrated_than_dir0_hypothesis_A_dir0_unigram_CONFIRMED_boost_the_comma_and_quote_period_newline_dash_a_in_paren_The_to_of_with_it_one_colon_for_slash_I_hypothesis_C_mostly_neg_GELU_bump_dominance_CONFIRMED_dir0_15_neg_5_bump_0_pos_dir1_11_neg_9_bump_0_pos_both_zero_mostly_pos_only_12_of_3072_block1_channels_are_mostly_pos_sigma_ge_0.9_top_5_input_channels_dir0_c2401_sigma0.008_a5.67_c1120_sigma0.008_a5.40_c293_sigma0.813_a4.69_c1467_sigma0.764_a4.24_c242_sigma0.008_a4.20_dir1_c1120_a12.68_c242_a12.43_c2401_a11.81_c706_a2.68_c8_a1.51_all_sigma_0.008_cycle_280_299_match_init_57.6581_vs_ref_57.664_delta_0.006_best_49.0603_at_3900_vs_ref_49.032_delta_0.028_adam_recovery_8.598_PPL_trained_vs_init_boost_overlap_dir0_17_of_20_only_trained_one_with_slash_only_init_an_is_apostrophe_s_dir1_19_of_20_only_trained_from_only_init_apostrophe_s_retrain_barely_moves_token_level_semantics_consistent_cycle_299_SVD_init_is_83pc_of_optimal_basin_block2_QKV_dir0_Q_0.405_K_0.845_V_0.430_dir1_Q_0.477_K_0.939_V_0.190_null_mean_0.286_std_0.045_dir0_K_plus_12sigma_dir1_K_plus_14sigma_dir1_V_below_null_block2_attention_reads_unigram_axis_primarily_via_KEY_subspace_Q_V_secondary_dir1_orthogonal_to_block2_V_reader_sigma_c_stats_min_0_max_0.995_mean_0.264_n_mostly_neg_1188_of_3072_n_mostly_pos_only_12_of_3072_bump_1872_rank_2_bottleneck_reads_from_dead_and_bump_not_always_on_channels_max_abs_cos_wte_dir0_0.301_dir1_0.198_wall_160s_block_1_rank_2_seed_42_single_seed
+commit: pending
+paths: experiments/cycle280_A_semantic_cycle300.py,autoresearch/plans/cycle_300.md,autoresearch/briefs/cycle_300.md,autoresearch/results/cycle_300_semantic.json,autoresearch/results/cycle_300_summary.md,autoresearch/results/cycle_300_manifest.txt,autoresearch/results/cycle_300_exec_result.txt,autoresearch/audits/cycle_300.md,autoresearch/results/cycle_300_audit.txt,autoresearch/logs/cycle_300_run.log,autoresearch/agenda.md,autoresearch/logs/experiments.tsv,autoresearch/STATUS.md
