@@ -95,9 +95,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - **Run cap**: ~15 minutes (3 variants × 4 ranks × ~1 min each).
    - Depends on: 331.
 
-327. **3-block LASER composition on {b1, b2, b3, b10, b11} — sample all C(5,3)=10 triples at cycle-282-family ranks** — cycle 310 extension to find the smallest destructive tuple.
-   - **Hypothesis**: cycle 310 showed 9/10 pairs non-destructive but one destructive (b10, b11). Cycle 305 showed the 5-stack destructive at +18 PPL. The smallest destructive tuple must be some k ∈ {2, 3, 4, 5}. Cycle 310 established k=2 has only one destructive cell; measuring k=3 localises where the higher-order interaction kicks in. Specifically: does every triple that contains (b10, b11) destruct? Do triples that EXCLUDE both b10 and b11 (e.g. (b1, b2, b3)) compose benignly? **Setup**: TRIPLES = sorted(itertools.combinations([1, 2, 3, 10, 11], 3)) — 10 triples total. For each triple install 3 LowRankCProj modules at cycle-282-family ranks (b1 r=2, b2 r=2, b3 r=24, b10 r=5, b11 r=22) simultaneously, freeze rest, joint Adam LR=1e-4, N_STEPS=2000, EVAL_EVERY=100, best-state restore, SEEDS=[42]. Report `triple_best_mean_ppl[10]`, `triple_delta_vs_worst_single[10]`. Worst-single anchors per triple = max over the 3 blocks' single-block PPLs (cycle 280/285/288/289 anchors: b1=49.03, b2=49.33, b3=50.59, b10=51.47, b11=54.47). **Verbatim conditions**: All 4 triples containing (b10, b11) destruct (delta ≥ +5 PPL) AND all 6 triples NOT containing (b10, b11) non-destructive (delta ≤ +2 PPL) → CONFIRMED-b10b11-carries-destruction ("the 5-stack destruction is localised to any tuple containing (b10, b11); the other 3 concentrators compose freely at any depth ≤3"); ≥8/10 triples destruct → CONFIRMED-triple-level-pervasive ("destruction kicks in uniformly at k=3, not from specific blocks"); ≤2/10 triples destruct → REFUTED ("cycle 305's 5-stack destruction is a 4+ higher-order interaction; triples are safe"); else INCONCLUSIVE. **Why P1**: closes open questions 5 and 6; localises the cycle 305 destruction. Demoted from P0 because item 326 is a more direct test of the known (b10, b11) mechanism; this item depends on item 326 only weakly and can run in parallel. Wall ~26 min (10 triples × ~2.6 min at 2000 steps joint Adam).
-
 ### P2
 
 328. **Extended budget rank-1 retrain at b11 — 8000 steps to settle cycle 311's borderline pass** — cycle 311 follow-up.
@@ -126,6 +123,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 317
+
+327. **3-block LASER composition — 10 triples from {1, 2, 3, 10, 11}** *(INCONCLUSIVE — cycle 317)*
+   - **Outcome: INCONCLUSIVE** — 5/10 triples destructive at +5 PPL bar. All 3 (b10, b11)-containing triples destruct (3/3); 2/7 non-(b10,b11) triples ALSO destruct ((1,2,3) +6.49, (1,2,10) +6.07). Criteria required "all 4 (b10,b11)-triples destruct AND all 6 non-b10b11 non-destructive-at-2ppl" — first clause TRUE (note: there are only 3 such triples, not 4), second clause FALSE (3/7 non-b10b11 have delta >+2: (1,2,3)+6.49, (1,2,10)+6.07, (1,2,11)+4.31). Best triple: **(1,3,11) 54.482 ± 0 (delta +0.013, within noise)** — the cycle 284-style early-early-late pattern survives at 3-block. Worst: (2,10,11) 61.687 (+7.22). **Key reframe**: destruction is NOT localized to (b10,b11) at triples level — b1+b2 together is ALSO destructive even without b10/b11. The cycle 310 pair picture was a low-order special case; at triples, the destructive set includes (b1, b2, *). 26.1 min wall, 10 fits. best-state restore clean on all 10.
+   - Artifacts: `experiments/triples_laser_cycle317.py`, `autoresearch/results/cycle_317_triples.json`, `autoresearch/results/cycle_317_summary.md`
 
 ### Cycle 316
 
