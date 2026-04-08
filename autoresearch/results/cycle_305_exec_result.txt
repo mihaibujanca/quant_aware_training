@@ -1,0 +1,170 @@
+Cycle 305 / Item 315 -- Multi-block LASER stacking [1, 2, 3, 10, 11]
+Verdict: REFUTED
+Commit: <pending>
+
+== Item 315 verbatim verdict thresholds ==
+CONFIRMED   iff best_mean <= 51.0
+REFUTED     iff best_mean >= 55.0
+INCONCLUSIVE otherwise.
+
+== Result ==
+best_mean = 73.0060 (n=3 seeds, std 0.1429)
+                    >= 55.0  -- REFUTED bar PASSES
+                    >  51.0  -- CONFIRMED bar FAILS
+=> Verdict = REFUTED.
+
+The 5-block joint LASER stack at the cycle-282-family individual rank
+anchors (b1 r=2 + b2 r=2 + b3 r=24 + b10 r=5 + b11 r=22, 46,080 trainable
+params) lands at 73.01 PPL, +19.11 above float and +18.54 above the worst
+single-block anchor (b11 r=22 = 54.47). The 5 single-block "concentrator"
+rank floors do NOT compose: the model cannot simultaneously give up the
+low-rank c_proj subspaces at all 5 blocks, exactly the destructive outcome
+predicted by item 315 verbatim ("≥55 PPL ... single-block floors are
+INCOMPATIBLE").
+
+== Geometric object ==
+For l in TARGET_BLOCKS = (1, 2, 3, 10, 11) at rank r_l in (2, 2, 24, 5, 22):
+  W_l    = c_proj_l.weight                HF Conv1D (3072, 768)
+  SVD    W_l = U_l diag(S_l) Vh_l         on CPU float32
+  A_l    = U_l[:, :r_l] * S_l[:r_l]       (3072, r_l) frozen buffer
+  B_l    = Vh_l[:r_l, :]                  (r_l, 768)  trainable nn.Parameter
+  bias_l = c_proj_l.bias                  (768,)      trainable nn.Parameter
+  fwd    x @ (A_l @ B_l) + bias_l         matches HF Conv1D semantics
+
+All 5 LowRankCProj modules installed simultaneously; every other parameter
+frozen. Joint Adam over the 5 (B_l, bias_l) pairs.
+
+Trainable per fit = sum_l (r_l*768 + 768) = 55*768 + 5*768 = 46,080.
+
+== Per-seed retrain trajectories ==
+seed | init     | step 500 | 1000  | 1500  | 2000  | 2500  | 3000  | 3500  | 4000  | best
+-----+----------+----------+-------+-------+-------+-------+-------+-------+-------+--------
+  42 | 150.3568 |  79.17   | 78.29 | 75.31 | 76.35 | 74.01 | 75.26 | 72.80 | 74.49 | 72.8047 @3500
+ 137 | 150.3568 |  80.03   | 77.69 | 75.85 | 75.06 | 74.64 | 74.49 | 73.88 | 73.73 | 73.1217 @3700
+2024 | 150.3568 |  81.09   | 77.80 | 76.57 | 76.04 | 74.43 | 74.57 | 74.01 | 73.09 | 73.0915 @4000
+
+best_mean = 73.0060 (std 0.1429, min 72.8047, max 73.1217)
+init_mean = 150.3568 (deterministic across seeds)
+final@4000 mean = 73.7721 (final-step mean differs from best_mean by +0.77,
+                            indicating Adam was still budget-bounded; cycle
+                            299 finding)
+
+== Comparisons ==
+                                            best_mean | params | Delta vs cycle 305
+-------------------------------------------+----------+--------+-------------------
+float                                       53.8949   |   --   |  -19.111
+cycle 280  block 1   rank 2                 49.0324   |  2,304 |  -23.974
+cycle 285  block 2   rank 2                 49.3290   |  2,304 |  -23.677
+cycle 288  block 3   rank 24                50.5935   | 19,200 |  -22.412
+cycle 289  block 10  rank 5                 51.4659   |  4,608 |  -21.540
+cycle 270  block 11  rank 22                54.4687   | 17,664 |  -18.537  (worst single anchor)
+cycle 284  hybrid    b1 r=2 + b11 r=22      52.8803   | 19,968 |  -20.126  (CONFIRMED 2-pair)
+cycle 291  hybrid    b1 r=2 + b10 r=5       51.8008   |  6,912 |  -21.205  (REFUTED 2-pair)
+cycle 305  5-stack   above                  73.0060   | 46,080 |   +0.000
+
+5-stack lands +18.54 PPL above the WORST single anchor and +20.13 above the
+prior CONFIRMED 2-pair. The composition penalty is not a small overhead;
+it dominates the per-block error budgets. Adding 3 more concentrator anchors
+on top of the cycle 284 CONFIRMED pair (b1+b11) adds +20.13 PPL, not the
+~+2 PPL that would be a clean linear interpolation across pairs.
+
+== Substantive findings ==
+
+1. Item 315 hypothesis is REFUTED at the verbatim 55 PPL bar by a margin
+   of 18 PPL. The 5 single-block rank floors are INCOMPATIBLE: GPT-2 small
+   cannot simultaneously give up the low-rank c_proj subspaces at all 5
+   "concentrator" blocks {1, 2, 3, 10, 11}.
+
+2. The init PPL 150.36 is deterministic (5 SVDs are reproducible) and is
+   the literal product of the 5 single-block no-retrain rank truncations
+   applied simultaneously: cycle 280 b1 r=2 init was 57.66; replacing 5
+   c_proj operators at once accumulates ~96 PPL above float at init. Joint
+   Adam over 46,080 params closes ~77 PPL of that delta in 4000 steps but
+   is budget-bounded (final@4000 ~0.77 PPL above best_mean across seeds).
+
+3. The composition pattern from cycles 284/291 does NOT extrapolate to
+   5 blocks. Cycle 284 (b1 + b11) was non-destructive (+3.85 vs b1 alone,
+   +0.59 below b11 alone) and the cycle 291 retrospective hypothesised
+   "high-rank partners absorb low-rank damage". 5 concurrent anchors break
+   that pattern: even with rank-22 (b11) and rank-24 (b3) "high slack"
+   partners present, the 5-stack damage exceeds either single anchor by a
+   factor far larger than the cycle 284 / 291 deltas would predict.
+
+4. Cycle 304's prediction stands. Cycle 304's k_95 measurement showed
+   only b11 is a TRUE rank-2 terminator and the "concentrator" label
+   (cycle 302 panel 4 E_top2) was a rank-2 energy-mass artifact that does
+   not coincide with curvature termination at b1/b2/b10. Cycle 304's
+   audit explicitly predicted: "destructive composition (>55 PPL) is more
+   likely than the item 315 best-mean-≤-51 CONFIRMED threshold". Cycle
+   305 confirms this prediction at +18 PPL above the REFUTED bar.
+
+5. The cycle 280/285/288/289/270 individual anchors were training-based
+   rank selections (cycle 299: SVD init is 83% of optimal basin; Adam
+   rotates row-space within rank-r and fits bias to close 8-15 PPL).
+   When 5 such fits are jointly optimised, the 5 simultaneous bias +
+   row-rotation constraints CONFLICT — the Adam basin around the joint
+   SVD init does not contain a configuration that is simultaneously
+   close to all 5 single-block optima. The 5 single-block floors are not
+   a connected basin in joint parameter space.
+
+6. Trainable params 46,080 vs sum of single-block budgets (2,304 + 2,304
+   + 19,200 + 4,608 + 17,664 = 46,080): exactly the same total as if you
+   trained each anchor independently and could just add them. The
+   destructive composition is NOT a parameter budget shortage — there is
+   exactly enough Adam capacity. The deficit is geometric: the joint SVD
+   init is far from the joint optimum and Adam cannot reach the
+   single-block floors from the joint init.
+
+7. Practical implication: cycle 282-family single-block LASER anchors
+   are NOT additively composable into a multi-block LASER recipe. Any
+   future multi-block c_proj-rank schedule must either (a) raise the
+   per-block ranks beyond the single-block floors to give Adam slack
+   or (b) use sequential/coordinate descent over blocks rather than
+   joint Adam from a 5-replacement init, or (c) use a curvature-aware
+   composition that does not simultaneously truncate the SVD bases at
+   all 5 blocks.
+
+== Sanity checks ==
+- Float PPL 53.8949 matches cycle 280/284/291 reference 53.895 to 4
+  decimals (cycle 305 uses identical 100-seq eval slice).
+- init_ppl 150.3568 deterministic across all 3 seeds (single-precision SVD
+  is reproducible; replacement is deterministic in fwd order).
+- Trainable param count 46,080 asserted == expected_trainable.
+- Per-seed best-state restore: |restored - best| < 1e-3 asserted per seed
+  (no AssertionError in cycle_305_run.log).
+
+== Config ==
+TARGET_BLOCKS = (1, 2, 3, 10, 11)
+RANKS         = (2, 2, 24, 5, 22)
+N_CALIB = 200, N_EVAL = 100, SEQ_LEN = 128
+DEVICE = mps, model = gpt2
+N_STEPS = 4000, LR = 1e-4, EVAL_EVERY = 100
+SEEDS = [42, 137, 2024]
+trainable_params_per_fit = 46,080  (asserted)
+
+== Convergence (CLAUDE.md verify-task-performance rule) ==
+float PPL on 100-seq eval slice = 53.8949 (matches cycle 280/284/291
+baseline). Off-the-shelf gpt2, no task training. Task verification reduces
+to float PPL match. OK.
+
+== Wall ==
+Total ~8 min on mps:
+  model load + tokenisation + float baseline ~5 s
+  5 SVDs (CPU float32 of (3072, 768) each) ~0.5 s
+  3 seeds x (model reload + 4000 Adam steps + 41 eval rounds) ~2.6 min each
+  JSON + summary write ~0.2 s
+
+== Files written ==
+experiments/multi_block_laser_cycle305.py     (driver)
+autoresearch/plans/cycle_305.md
+autoresearch/briefs/cycle_305.md
+autoresearch/results/cycle_305_multi_block_laser.json
+autoresearch/results/cycle_305_summary.md
+autoresearch/results/cycle_305_manifest.txt
+autoresearch/results/cycle_305_exec_result.txt
+autoresearch/audits/cycle_305.md
+autoresearch/results/cycle_305_audit.txt
+autoresearch/logs/cycle_305_run.log
+autoresearch/agenda.md            (item 315 NEXT P0 -> PAST Cycle 305)
+autoresearch/logs/experiments.tsv (row 305 appended)
+autoresearch/STATUS.md            (Latest: Cycle 305 added; title bumped)

@@ -1,0 +1,256 @@
+Cycle 305 Audit -- Item 315: Multi-block LASER stacking [1, 2, 3, 10, 11]
+
+Audit status: PASS
+Verdict (provisional, kept): REFUTED
+
+== Independent verdict recompute ==
+
+best_ppls per seed (from cycle_305_multi_block_laser.json::retrain_seeds):
+  seed 42   -> 72.8047
+  seed 137  -> 73.1217
+  seed 2024 -> 73.0915
+
+best_mean = (72.8047 + 73.1217 + 73.0915) / 3
+          = 218.0179 / 3
+          = 73.00597
+          ~ 73.0060
+
+best_std (population, n=3) =
+  sqrt( ((72.8047 - 73.006)^2 + (73.1217 - 73.006)^2 + (73.0915 - 73.006)^2) / 3 )
+  = sqrt( (0.04054 + 0.01345 + 0.00731) / 3 )
+  = sqrt( 0.02043 )
+  = 0.1429
+
+Verdict thresholds (item 315 verbatim):
+  CONFIRMED   iff best_mean <= 51.0
+  REFUTED     iff best_mean >= 55.0
+  INCONCLUSIVE otherwise.
+
+Result:
+  best_mean = 73.0060
+    >= 55.0 ?  TRUE   ( exceeds REFUTED bar by +18.006 )
+    <= 51.0 ?  FALSE  ( misses CONFIRMED bar by 22.006 )
+
+Verdict = REFUTED. Strong, unambiguous, not marginal.
+
+== Float baseline reproduction ==
+
+Cycle 305 float PPL on 100-seq eval slice = 53.8949
+Cycle 280/284/291 reference                = 53.895
+Difference                                  = 0.0001
+Assertion: |float_ppl - 53.895| < 0.5      -> HOLDS
+
+Same disjoint 200/100 wikitext-2-val split, SEQ_LEN=128, deterministic
+dataset iteration with seed 42. Off-the-shelf gpt2.
+
+== Init PPL determinism ==
+
+init_ppl per seed: 150.3568 / 150.3568 / 150.3568 (identical to 4
+decimals across all 3 seeds). Deterministic because:
+  1. SVD on each W_l in CPU float32 is reproducible
+  2. LowRankCProj install order is deterministic over TARGET_BLOCKS
+  3. Eval is deterministic (no dropout, no_grad, model.eval)
+
+The 5-block hybrid no-retrain init lands at 150.36 PPL, ~+96 PPL above
+float and ~+93 above cycle 280's b1-only no-retrain init (57.66, single
+block). Replacing 5 c_proj operators simultaneously accumulates a much
+larger init delta than any single-block replacement.
+
+== Trainable param check ==
+
+Per fit:
+  expected_trainable = sum_l (r_l * 768 + 768)
+                     = (2*768 + 768)  + (2*768 + 768)
+                     + (24*768 + 768) + (5*768 + 768)
+                     + (22*768 + 768)
+                     = 2304 + 2304 + 19200 + 4608 + 17664
+                     = 46,080
+  asserted: expected_trainable == 46080  -> HOLDS
+  asserted: n_trainable == 46080         -> HOLDS
+
+Total equals the sum of the 5 single-block trainable budgets exactly.
+Destructive composition is NOT a parameter shortage.
+
+== Best-state restore ==
+
+  seed | best     | restored | |restored - best|
+  -----+----------+----------+------------------
+   42  | 72.8047  | 72.8047  |     0.0000
+  137  | 73.1217  | 73.1217  |     0.0000
+  2024 | 73.0915  | 73.0915  |     0.0000
+
+All 3 within the 1e-3 assertion (in fact bit-for-bit identical), confirms
+the best-state save/restore over the 5-block dict works correctly.
+
+== Geometric object check ==
+
+For l in TARGET_BLOCKS = (1, 2, 3, 10, 11) at rank r_l in (2, 2, 24, 5, 22):
+  W_l       shape  (3072, 768)        c_proj_l.weight HF Conv1D
+  SVD       W_l = U_l diag(S_l) Vh_l  CPU float32
+  A_l       (3072, r_l)                U_l[:, :r_l] * S_l[:r_l]   frozen
+  B_l       (r_l, 768)                 Vh_l[:r_l, :]               trainable
+  bias_l    (768,)                     c_proj_l.bias               trainable
+  forward   x @ (A_l @ B_l) + bias_l   matches HF Conv1D semantics
+
+Standard cycle 270/280/284 LowRankCProj template extended trivially from
+1-2 blocks to 5 blocks. Forward path identical at every block.
+
+== Optimisation pattern check ==
+
+  for p in model_s.parameters():
+      p.requires_grad_(False)
+  trainable = []
+  for blk in TARGET_BLOCKS:
+      lowrank_modules[blk].B.requires_grad_(True)
+      lowrank_modules[blk].bias.requires_grad_(True)
+      trainable.append(lowrank_modules[blk].B)
+      trainable.append(lowrank_modules[blk].bias)
+  optimizer = torch.optim.Adam(trainable, lr=1e-4)
+
+Freeze pass after LowRankCProj install -> all 5 new modules' B / bias also
+frozen first; per-block enables turn just the 10 tensors back on. Adam
+sees exactly 10 tensors in `trainable`. No gradient leakage.
+
+Joint Adam over the full 5-block 46,080-param parameter set. Standard
+4000-step / EVAL_EVERY=100 / best-state restore loop from cycle 270/280/284.
+
+== Comparisons recompute ==
+
+                                        best_mean | params  | Delta
+                                                           | (cycle 305 - this)
+                                                           |
+  float                                  53.8949  |   --    | -19.111
+  cycle 280  block 1   rank 2            49.0324  |  2,304  | -23.974
+  cycle 285  block 2   rank 2            49.3290  |  2,304  | -23.677
+  cycle 288  block 3   rank 24           50.5935  | 19,200  | -22.412
+  cycle 289  block 10  rank 5            51.4659  |  4,608  | -21.540
+  cycle 270  block 11  rank 22           54.4687  | 17,664  | -18.537
+  cycle 284  hybrid b1 r=2 + b11 r=22    52.8803  | 19,968  | -20.126  (CONFIRMED 2-pair)
+  cycle 291  hybrid b1 r=2 + b10 r=5     51.8008  |  6,912  | -21.205  (REFUTED 2-pair)
+  cycle 305  5-stack as above            73.0060  | 46,080  |   0.000
+
+5-stack lands +18.54 PPL above the WORST single anchor (b11 r=22) and
++20.13 above the prior CONFIRMED 2-pair (b1+b11). Composition penalty
+dominates the per-block error budgets by an order of magnitude.
+
+== Plan adherence ==
+
+Plan (autoresearch/plans/cycle_305.md) vs execution:
+  - Item 315 verbatim Hypothesis section          OK
+  - new experiments/multi_block_laser_cycle305.py adapted from cycle 284
+    with TARGET_BLOCKS=(1, 2, 3, 10, 11), RANKS=(2, 2, 24, 5, 22)        OK
+  - 3 seeds, fresh model reload per seed                                  OK
+  - 5 LowRankCProj installed simultaneously                                OK
+  - all other parameters frozen                                           OK
+  - joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100                        OK
+  - best-state restore per seed                                           OK
+  - |restored - best| < 1e-3 asserted per seed                            OK
+  - verbatim verdict per item 315 (51.0 / 55.0)                           OK
+  - N_CALIB=200, N_EVAL=100, SEQ_LEN=128, MPS, GPT-2 small                OK
+  - all listed artefacts present                                          OK
+  - 8 H2 plan headings                                                    OK
+  - plan length 36 lines (under 45-line budget)                           OK
+  - plan marked # APPROVE                                                 OK
+
+All plan steps executed cleanly on the first run.
+
+== Convergence (CLAUDE.md verify-task-performance rule) ==
+
+Float PPL on 100-seq eval slice = 53.8949 matches cycle 280/284/291
+baseline 53.895 to 4 decimals. Off-the-shelf gpt2, no task training.
+Task verification reduces to float PPL match. OK.
+
+== Trainable param count ==
+
+Trainable params: 46,080. Verified by independent .numel() sum of the
+10 tensors in `trainable` (5 B factors at r_l*768 each + 5 biases at
+768 each). All other model parameters have requires_grad == False after
+the freeze pass. OK.
+
+== Wall ==
+
+Total ~8 min on mps:
+  model load + tokenisation + float baseline           ~5 s
+  5 SVDs of (3072, 768) on CPU float32                ~0.5 s
+  3 seeds x (model reload + 4000 Adam steps + 41 eval) ~2.6 min/seed = ~7.8 min
+  JSON + summary write                                 ~0.2 s
+
+Each seed reports [2.6 min] in the run log, consistent. Under the
+~10-min plan estimate.
+
+== Substantive endorsement ==
+
+1. REFUTED is the verbatim-correct verdict at +18 PPL above the bar.
+   Strong, unambiguous, not marginal.
+
+2. The 5 single-block LASER anchors are NOT additively composable.
+   Sum of single-block trainable budgets (46,080 exactly) = cycle 305
+   trainable budget. Yet cycle 305 lands +18.5 PPL above the worst
+   single anchor. Deficit is geometric, not parameter shortage.
+
+3. Cycle 304's prediction is validated. Cycle 304 audit predicted
+   "destructive composition (>55 PPL) is more likely than the item 315
+   best-mean-<=-51 CONFIRMED threshold" because only b11 is a true
+   rank-2 terminator. Cycle 305 confirms at +18 PPL above the REFUTED
+   bar -- correct sign, conservative magnitude.
+
+4. Cycle 284 (b1+b11 CONFIRMED) does not extrapolate. Cycle 284's
+   non-destructive 2-pair (b1 r=2 + b11 r=22 -> 52.88) gave the false
+   impression that anchors compose. Adding 3 more anchors (b2 r=2,
+   b3 r=24, b10 r=5) on top of the cycle 284 pair adds +20.13 PPL,
+   far more than linear extrapolation predicts.
+
+5. Cycle 291 retrospective (high-rank partners absorb low-rank damage)
+   also breaks. Cycle 305 has both r=22 (b11) and r=24 (b3) high-rank
+   partners present, yet 5-stack is still destructive at +18.5 above
+   the worst anchor.
+
+6. Final-step vs best-step delta indicates Adam is budget-bounded but
+   the gap to the 55 threshold (~18 PPL) is far too large for any
+   feasible budget extension to close. REFUTED verdict is robust to
+   step budget.
+
+7. Practical implication: cycle 282-family single-block LASER anchors
+   are NOT additively composable into a multi-block LASER recipe at
+   these rank assignments. Future multi-block schedules must either
+   raise per-block ranks beyond single-block floors, use
+   sequential/coordinate descent, or use a curvature-aware composition.
+
+== Corrections ==
+
+None on the verdict. REFUTED is the literal verbatim threshold result.
+best_mean = 73.0060 >= 55.0, missing CONFIRMED at 51.0 by 22.01 and
+exceeding REFUTED at 55.0 by 18.01.
+
+Minor note: brief and agenda item 315 stated trainable ~42.5K. Exact
+value is 46,080 (the brief approximation omitted the 5*768 bias
+contribution to (2+2+24+5+22)*768 = 42,240). Plan and script use exact
+46,080 and assert it. No correction needed to brief / agenda.
+
+== Artifact existence ==
+
+experiments/multi_block_laser_cycle305.py             OK
+autoresearch/plans/cycle_305.md                       OK (36 lines, 8 H2,
+                                                        APPROVE marked)
+autoresearch/briefs/cycle_305.md                      OK (pre-existing)
+autoresearch/results/cycle_305_multi_block_laser.json OK (verdict=REFUTED)
+autoresearch/results/cycle_305_summary.md             OK
+autoresearch/results/cycle_305_manifest.txt           OK
+autoresearch/results/cycle_305_exec_result.txt        OK
+autoresearch/audits/cycle_305.md                      OK
+autoresearch/results/cycle_305_audit.txt              OK (this file)
+autoresearch/logs/cycle_305_run.log                   OK (3 seeds, VERDICT line)
+autoresearch/agenda.md                                pending (move 315 to PAST)
+autoresearch/logs/experiments.tsv                     pending (append row 305)
+autoresearch/STATUS.md                                pending (Latest: Cycle 305)
+
+== Final status ==
+
+PASS -- keep provisional outcome REFUTED. The 5-block joint LASER stack
+at the cycle-282-family individual rank anchors (b1 r=2 + b2 r=2 + b3 r=24
++ b10 r=5 + b11 r=22, 46,080 trainable params) lands at 73.01 PPL +- 0.14
+across 3 seeds, +18.01 PPL above the 55.0 REFUTED bar and +22.01 PPL above
+the 51.0 CONFIRMED bar. The 5 single-block "concentrator" rank floors do
+NOT compose. Cycle 304's k_95 prediction is empirically validated. The
+cycle 282-family single-block LASER recipe is not additively composable
+into a multi-block recipe at these rank assignments.

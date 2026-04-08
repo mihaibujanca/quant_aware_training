@@ -1,0 +1,97 @@
+Cycle 305 Manifest -- Item 315: Multi-block LASER stacking [1, 2, 3, 10, 11]
+
+Commit: <pending>
+Branch: geometric_compression
+Verdict: REFUTED
+
+== Verdict logic (item 315 verbatim) ==
+CONFIRMED   iff best_mean <= 51.0  (additive composition; new Pareto tile)
+REFUTED     iff best_mean >= 55.0  (destructive composition; concentrators
+                                    not simultaneously removable)
+INCONCLUSIVE otherwise.
+
+Measured: best_mean = 73.0060   (>= 55.0  -- REFUTED bar passed)
+                                (>  51.0  -- CONFIRMED bar fails)
+
+== Geometric object ==
+For l in TARGET_BLOCKS = (1, 2, 3, 10, 11) with rank r_l in (2, 2, 24, 5, 22):
+  W_l       = c_proj_l.weight                HF Conv1D (3072, 768)
+  SVD       W_l = U_l diag(S_l) Vh_l         on CPU float32
+  A_l       = U_l[:, :r_l] * S_l[:r_l]       (3072, r_l)  -- frozen buffer
+  B_l       = Vh_l[:r_l, :]                  (r_l, 768)   -- nn.Parameter
+  bias_l    = c_proj_l.bias                  (768,)       -- nn.Parameter
+  forward   x @ (A_l @ B_l) + bias_l         matches HF Conv1D semantics
+
+All 5 LowRankCProj modules installed simultaneously. Joint Adam over
+{(B_l, bias_l) for l in TARGET_BLOCKS}; every other model parameter frozen.
+
+Trainable per fit = sum_l (r_l * 768 + 768)
+                  = (2 + 2 + 24 + 5 + 22) * 768 + 5 * 768
+                  = 55 * 768 + 3,840
+                  = 42,240 + 3,840
+                  = 46,080
+
+== Per-seed results ==
+seed | init     | best     | best_step | final@4000 | restored
+-----+----------+----------+-----------+------------+----------
+  42 | 150.3568 |  72.8047 |   3500    |  74.4899   |  72.8047
+ 137 | 150.3568 |  73.1217 |   3700    |  73.7349   |  73.1217
+2024 | 150.3568 |  73.0915 |   4000    |  73.0915   |  73.0915
+
+best_mean = 73.0060
+best_std  = 0.1429
+best_min  = 72.8047
+best_max  = 73.1217
+init_mean = 150.3568   (deterministic across seeds; SVD reproducible)
+
+== Comparisons ==
+float                                       53.895    (Delta = +19.111)
+cycle 280  block 1  rank 2     49.0324  (2,304)  Delta = +23.974
+cycle 285  block 2  rank 2     49.3290  (2,304)  Delta = +23.677
+cycle 288  block 3  rank 24    50.5935  (19,200) Delta = +22.412
+cycle 289  block 10 rank 5     51.4659  (4,608)  Delta = +21.540
+cycle 270  block 11 rank 22    54.4687  (17,664) Delta = +18.537
+cycle 284  hybrid b1+b11       52.8803  (19,968) Delta = +20.126  CONFIRMED
+cycle 291  hybrid b1+b10       51.8008  ( 6,912) Delta = +21.205  REFUTED
+
+5-stack worst Delta vs single anchors = +18.537 (above worst single anchor
+b11 r=22 by 18.5 PPL) -- destructive composition by ~2 orders of magnitude
+above either CONFIRMED-pair (cycle 284) or REFUTED-pair (cycle 291) levels.
+
+The init PPL 150.36 is the deterministic 5-block hybrid no-retrain init
+(product of all 5 c_proj rank-r truncations applied simultaneously). Joint
+Adam closes only ~77 PPL of the ~96 PPL init delta; the remaining ~19 PPL
+above float is the irreducible composition cost at the (2, 2, 24, 5, 22)
+rank assignment.
+
+== Config ==
+TARGET_BLOCKS = (1, 2, 3, 10, 11)
+RANKS         = (2, 2, 24, 5, 22)
+N_CALIB = 200, N_EVAL = 100, SEQ_LEN = 128
+DEVICE = mps, model = gpt2
+N_STEPS = 4000, LR = 1e-4, EVAL_EVERY = 100
+SEEDS = [42, 137, 2024]
+trainable_params_per_fit = 46,080  (asserted)
+disjoint calib/eval splits, best-state restore, |restored - best| < 1e-3
+asserted per seed.
+
+float PPL on 100-seq eval slice = 53.8949 (matches cycle 280/284/291
+reference 53.895 to 4 decimals; assertion abs(diff) < 0.5 holds).
+
+Trainable params: 46,080 (verified by .numel() sum after .requires_grad_).
+Wall: ~8 min on mps (3 seeds x 2.6 min each).
+
+== Files written ==
+experiments/multi_block_laser_cycle305.py
+autoresearch/plans/cycle_305.md
+autoresearch/briefs/cycle_305.md
+autoresearch/results/cycle_305_multi_block_laser.json
+autoresearch/results/cycle_305_summary.md
+autoresearch/results/cycle_305_manifest.txt
+autoresearch/results/cycle_305_exec_result.txt
+autoresearch/audits/cycle_305.md
+autoresearch/results/cycle_305_audit.txt
+autoresearch/logs/cycle_305_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+autoresearch/STATUS.md
