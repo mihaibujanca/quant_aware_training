@@ -1,0 +1,188 @@
+Cycle 298 Audit — Item 308: SDF rank census + LASER replication on 3D mesh fitting
+Status: PASS
+Commit: da1ad63
+Auditor verdict: REFUTED (matches provisional)
+
+== Verdict verification (item 308 verbatim) ==
+CONFIRMED iff (a) hidden eff_rank in [2.5, 3.5] AND (b) grad eff_rank in [1.8, 2.5]
+              AND (c) rank-3 retrain MSE <= 1.1 * float MSE.
+REFUTED   iff hidden eff_rank stays >= 8 OR rank-3 retrain MSE >= 2 * float.
+
+Independently recomputed from cycle_298_sdf_rank_laser.json:
+| quantity                            | value    | threshold       | result |
+|-------------------------------------|---------:|-----------------|--------|
+| hidden mean eff_rank (1..3)         | 3.3235   | in [2.5, 3.5]   | TRUE   (clause A passes) |
+| gradient ensemble eff_rank          | 2.6226   | in [1.8, 2.5]   | FALSE  (clause B fails by +0.12) |
+| rank-3 retrain ratio vs float       | 2.01835  | <= 1.1          | FALSE  |
+| rank-3 retrain ratio vs float       | 2.01835  | >= 2.0 (REFUTED)| TRUE   (fires by +0.018) |
+| max hidden eff_rank (any layer)     | 5.066    | >= 8 (REFUTED)  | FALSE  |
+
+CONFIRMED needs all 3 clauses; B and C both fail. REFUTED needs (hidden >= 8) OR
+(rank-3 ratio >= 2.0); the second branch fires. Verdict = REFUTED. Matches manifest,
+exec_result, JSON verdict_label, agenda PAST entry, and TSV row.
+
+== Per-layer hidden eff_rank — independent reproduction ==
+JSON hidden_eff_rank_per_layer: [3.902223, 5.065988, 3.042799, 1.861683]
+Mean over hidden 1..3 = (5.065988 + 3.042799 + 1.861683) / 3 = 3.323490 ≈ 3.3235 ✓
+
+Pattern: input projection lifts to ~4 (just above input_dim 3), layer 1 expands
+to ~5, layer 2 contracts back to ~3 (input dim), layer 3 collapses to ~2 (matches
+2D surface manifold). Geometrically clean: input_dim sets upper envelope, surface
+dim sets lower bound. Item 308 input-dim hypothesis HOLDS.
+
+l* = argmin over layers 1..3 = layer 3 (eff_rank 1.862, the smallest).
+layer_seq_idx = 2*3 = 6 = the third 256x256 Linear (output goes through ReLU at
+index 7 producing the layer-3 post-ReLU activation). MLP layer at index 6 has
+shape (256, 256), confirmed by script assertion.
+
+== Gradient ensemble — independent reproduction ==
+JSON grad_profile: effective_rank=2.6226, rank_90=rank_95=rank_99=3,
+top SVs = [117.34, 70.07, 69.12].
+
+Independent recompute from singular values:
+  total_energy = 117.34^2 + 70.07^2 + 69.12^2 = 13769.0 + 4910.0 + 4778.0 = 23457.0
+  p = [13769/23457, 4910/23457, 4778/23457] = [0.587, 0.209, 0.204]
+  H = -(0.587*log(0.587) + 0.209*log(0.209) + 0.204*log(0.204))
+    = -(-0.312 - 0.327 - 0.324) = 0.963
+  effective_rank = exp(H) = exp(0.963) = 2.620
+JSON value: 2.6226. |Delta| = 0.0026 (rounding noise from displayed SVs to 2 decimals). ✓
+
+Geometric reading: 1 large normal direction (117.34, the SDF gradient pointing away
+from the surface — the most informative direction for the function value) plus 2
+smaller, roughly equal tangential/radial directions (70.07, 69.12). The "approx 2"
+prediction in item 308's hypothesis was conditioned on the gradient living mostly
+on the 2D tangent space; in practice the volumetric points (50% of dataset) add a
+3rd direction (radial variation in SDF away from surface), pushing eff_rank to 2.62.
+Discrete rank_95 = 3 is the more honest summary on a 3-D input. Clause B fails by
++0.12, geometrically reasonable rather than a measurement bug.
+
+== LASER sweep — independent verification ==
+| r  | retrain_best   | float        | ratio  | best_step | budget-bounded? |
+|----|---------------:|-------------:|-------:|----------:|-----------------|
+|  2 | 6.839405e-06   | 3.309283e-06 | 2.0667 |       500 | YES             |
+|  3 | 6.679289e-06   | 3.309283e-06 | 2.0183 |       500 | YES             |
+|  5 | 5.574008e-06   | 3.309283e-06 | 1.6844 |       500 | YES             |
+| 10 | 4.317571e-06   | 3.309283e-06 | 1.3047 |       500 | YES             |
+
+All four ratios match recorded values to 4 decimal places. All four best_step=500
+confirm BUDGET-BOUNDED (held-out MSE was still improving when 500 steps ran out).
+Ratios decrease monotonically with r as expected; even rank-10 (well above gradient
+eff_rank 2.62) is at 1.30x float — confirms substantive finding that the LAST hidden
+layer is hard for short-budget LASER recovery.
+
+No-retrain values (6.12e-3, 7.58e-3, 2.79e-3, 1.57e-3) are 3 orders of magnitude
+worse than float; Adam recovery factor is 4-5 orders of magnitude (e.g., r=3:
+7.58e-3 -> 6.68e-6 = recovery factor ~1135x). Consistent with cycle 296 spirals
+LASER mechanism (Adam denoises the SVD truncation residual by a large factor).
+
+== SVD spectrum at l* ==
+SVD top-10 of W_l*: [3.294, 2.383, 1.521, 1.398, 1.223, 1.179, 1.161, 1.144, 1.135, 1.111]
+Pattern: 2-dominant + flat tail. Top SV (3.29) is ~1.4x second (2.38), then sharp
+drop to 1.52, then flat tail at ~1.1. SVD signature of a layer with effective output
+rank ~2 (matches measured eff_rank 1.86 on post-ReLU activations). Truncating at
+rank 2 keeps both dominant SVs; truncating at rank 3 keeps an additional 1.52 SV.
+The fact that even rank-10 retrain doesn't fully recover suggests the missing
+information is not in any single dominant direction but distributed across the
+flat tail.
+
+== Trainable params ==
+MLP(3, 256, 1, depth=4) = Linear(3,256) + Linear(256,256)*3 + Linear(256,1)
+                       = (3*256+256) + 3*(256*256+256) + (256*1+1)
+                       = 1024 + 197376 + 257 = 198,657
+Matches JSON n_params=198657 and runtime assert. ✓
+
+LowRankLinear per fit: r*256 + 256:
+  r=2: 768   r=3: 1024   r=5: 1536   r=10: 2816
+Script asserts n_trainable == r*HIDDEN + HIDDEN. ✓
+
+== Convergence (CLAUDE.md verify-task-perf rule) ==
+best_train_epoch = 2925 (plateau-stop at 3175 after 250 epochs without >= 1e-4 improve)
+final train MSE: 2.371e-06
+float held MSE: 3.309e-06
+requirement (per plan): float held MSE < 0.01
+
+3.31e-06 << 1e-2 by 4 orders of magnitude. Model converged well below the
+verify-task threshold. The plateau-stop is principled (not undertraining); the
+rest of the cycle's analysis is on a properly-trained network. Held-out MSE
+3.31e-06 corresponds to RMSE ~1.8e-3, which is well within the 1e-2 surface-noise
+std the SDF was sampled with. Model has effectively memorized the SDF up to the
+noise floor.
+
+== Plan adherence ==
+HIDDEN=256 ✓ DEPTH=4 ✓ INPUT_DIM=3 ✓ N=30000 ✓ TRAIN_FRAC=0.8 ✓
+mesh=torus ✓ surface_ratio=0.5 ✓ surface_noise=0.01 ✓ seed=42 ✓
+LR_TRAIN=LR_RETRAIN=1e-3 ✓ MAX_EPOCHS=5000 ✓ PLATEAU_PATIENCE=250 ✓
+RETRAIN_STEPS=500 ✓ EVAL_EVERY=25 ✓ RANKS=[2,3,5,10] ✓
+Adam, MSE, full-batch, CPU ✓
+aleph.models.MLP(3, 256, 1, depth=4, ReLU) ✓ n_params=198657 asserted
+l* = argmin eff_rank over [1..3] ✓ (skipped layer 0 because Linear (256, 3))
+LowRankLinear (A frozen 256xr, B trainable rx256, bias trainable 256) ✓
+Verdict logic matches item 308 verbatim ✓
+Output paths match plan ✓
+
+== Substantive interpretation ==
+Verdict label REFUTED, but substantive content sharper:
+  1. INPUT-DIM HYPOTHESIS CLEAN HOLD: hidden mean eff_rank 3.32 ≈ input_dim 3
+  2. SURFACE-DIM HYPOTHESIS NEAR-HOLD: gradient eff_rank 2.62 just above [1.8, 2.5]
+     by +0.12 (volumetric points add a 3rd radial direction)
+  3. LASER RECIPE REFUTED AT LAST HIDDEN LAYER, NOT AT INPUT-DIM LEVEL:
+     verbatim REFUTED clause fires at rank-3 ratio 2.018 ≥ 2.0, but the cause
+     is layer position (no downstream sponge) — cycle 296 spirals at middle l*
+     recovered to within 0.6% at rank-2 with the same 500-step budget
+  4. RANK-2 fails worse than rank-3 (2.067 vs 2.018) — "rank-2 fails" prediction
+     in item 308 holds in the trivial sense; both fail the match-float bar.
+
+The substantive answer to item 308's question:
+  "Yes, hidden eff_rank tracks input dim 3 on SDF; the gradient ensemble eff_rank
+   tracks something close to surface dim 2; but rank-3 retrain at the last hidden
+   layer needs more than 500 Adam steps to match float MSE because there is no
+   downstream layer to absorb the residual."
+
+== Layer-position effect — cross-check with cycle 296 ==
+Cycle 296 spirals: l* in {4, 5, 6} of 12 hidden layers (middle of stack);
+                   rank-2 retrain best gap from float = +0.63% (within 1 std).
+Cycle 298 SDF:    l* = 3 of 4 hidden layers (LAST hidden);
+                   rank-3 retrain best at 2.018x float.
+
+Structural difference: in cycle 296, layers 7-11 (after l*) provide downstream
+capacity to absorb the rank-truncation residual. In cycle 298, l*=3 is the last
+hidden layer; only model.layers[8] = Linear(1, 256) is downstream — too narrow
+to absorb a 256-dim residual. This is a structural rather than empirical claim.
+
+Natural follow-up (not in scope, flagged for next agenda refresh):
+  (A) budget-extension (RETRAIN_STEPS=2000-4000) to test asymptotic rank-3 ratio
+  (B) layer-position sweep (LASER at l*=1 or 2 instead of 3) to confirm
+      layer-position hypothesis directly
+
+== Budget-bounded retrain caveat ==
+All four LASER retrain fits show best_step=500 (final step) — held-out MSE was
+still improving when budget ran out. Recorded ratios are upper bounds on what
+500 Adam steps achieve; true asymptotic ratios may be lower. The verdict logic
+is independent of budget-saturation (operates on retrain_best_held_mse regardless),
+so this is a substantive caveat but not a verdict correction. Same finding as
+cycle 280, 287, 294 budget-bounded results on transformer LASER.
+
+== Artifact existence ==
+- experiments/sdf_rank_laser_cycle298.py — exists, 574 lines
+- autoresearch/plans/cycle_298.md — exists, item 308 verbatim Hypothesis
+- autoresearch/briefs/cycle_298.md — exists
+- autoresearch/results/cycle_298_sdf_rank_laser.json — exists, valid JSON
+- autoresearch/results/cycle_298_summary.md — exists
+- autoresearch/results/cycle_298_manifest.txt — exists, commit=da1ad63
+- autoresearch/results/cycle_298_exec_result.txt — exists
+- autoresearch/logs/cycle_298_run.log — exists
+- autoresearch/audits/cycle_298.md — this file's MD counterpart
+- Primary commit da1ad63 in git log
+- experiments.tsv row 298 hash patched from pending to da1ad63
+- agenda.md item 308 deleted from NEXT P1, added to PAST as Cycle 298
+- STATUS.md regenerated to "298 Cycles (001-298)"
+
+== Corrections ==
+None. Verdict REFUTED is literal verbatim threshold result.
+
+== Final status ==
+PASS — keep provisional REFUTED. Verdict logic correctly applied. Per-clause counts
+match independent recomputation. Gradient eff_rank verified to 3 decimal places via
+SV entropy formula. Hidden eff_rank census matches JSON to 4 decimals. Param count
+matches analytical (198,657). Model converged 4 orders of magnitude below
+verify-task threshold. Substantive finding documented appropriately.

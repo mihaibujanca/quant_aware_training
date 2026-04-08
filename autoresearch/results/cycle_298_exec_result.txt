@@ -1,6 +1,6 @@
 Cycle 298 / Item 308 — SDF rank census + LASER replication on 3D mesh fitting
 Verdict: REFUTED
-Commit: pending
+Commit: da1ad63
 
 == Item 308 verbatim verdict thresholds ==
 CONFIRMED iff (a) hidden output-covariance eff_rank in [2.5, 3.5] post-training,
