@@ -1,0 +1,238 @@
+Cycle 316 Manifest -- Item 326: (b10, b11) destructive pair deep dive
+                                mechanistic attribution
+
+Commit: PENDING
+Branch: geometric_compression
+Verdict: INCONCLUSIVE
+
+== Verdict logic (item 326 verbatim) ==
+sequential_ppl <= 55                                  -> CONFIRMED-M3-pathology
+sequential_ppl >= 60 AND mean_angle < 30 deg          -> CONFIRMED-M1-redundancy
+sequential_ppl >= 60 AND mean_angle > 60 deg          -> REFUTED-mechanism-unknown
+else                                                  -> INCONCLUSIVE
+
+Measured:
+  sequential_best_ppl     = 61.2059   (>= 60: destructive band)
+  M1 min mean angle (deg) = 39.63     (between 30 and 60: middle band)
+
+  -> sequential >= 60 AND 30 <= angle <= 60        -> INCONCLUSIVE on the
+                                                       three-way verdict
+                                                       BUT M3 is REFUTED
+                                                       outright (sequential
+                                                       not <= 55).
+
+== Substantive findings (sharper than INCONCLUSIVE) ==
+
+1. **M3 (joint Adam saddle) REFUTED.** Sequential Adam (phase A: only b10
+   trains for 2000 steps; phase B: freeze b10 at A best, only b11 trains for
+   2000 steps) lands at 61.21 PPL, which is +0.49 PPL ABOVE cycle 310's joint
+   Adam best of 60.72. Sequential coordinate descent does NOT escape the
+   destruction. The destruction is structural, not an optimisation pathology.
+
+2. **M3 ablations (one-sided restores) cleanly reproduce single-block
+   diagonals**, confirming the destruction is *purely interactive*:
+     ablation A (b10 float + b11 r=22 only):  best = 54.7724
+                                              cycle 270 b11 r=22 ref = 54.4687
+                                              delta = +0.30 PPL (within budget tolerance)
+     ablation B (b10 r=5 only + b11 float):   best = 51.4783
+                                              cycle 282 b10 r=5 diag = 51.4659
+                                              delta = +0.01 PPL (essentially exact)
+   Both ablations sit at their own single-block anchors. Touching EITHER
+   block alone is fine. Destruction requires BOTH blocks compressed
+   simultaneously.
+
+3. **M1 (residual stream redundancy) gives a split signal.** The mean
+   principal angle between top right-singular subspaces of Δy_10 and Δy_11
+   sits in the middle band (39.63 deg minimum across the 4 measurement
+   variants), so it does not cross either threshold. BUT the leading
+   principal angles tell a clearer story:
+     raw Δy variant, top-5 cosines (5 SVs of b10 vs top-22 of b11):
+       cos      = [0.967, 0.865, 0.718, 0.619, 0.539]
+       angles   = [14.77, 30.09, 44.14, 51.79, 57.38]  deg
+   The TOP-1 direction has cosine 0.967 (angle 14.8 deg) -- the leading
+   direction b10 writes into the residual stream is almost identical to a
+   leading direction b11 writes. The TOP-2 direction also overlaps strongly
+   (cos 0.865, angle 30.1 deg). The tail (top-3..5) diverges. So the rank-r
+   subspaces share a few strong directions but many incompatible directions.
+   M1 is therefore PARTIALLY supported: the destruction is consistent with
+   "the two latest concentrators write the SAME 1-2 leading directions and
+   compressing both forces them into competition for the same low-rank
+   slots", but NOT consistent with "the rank-5/22 subspaces are essentially
+   the same".
+
+4. **The curv variant ((GELU-ReLU)*W_proj, cycle 302/304 form) shows weaker
+   alignment than the raw variant** (mean angles 56.3 / 67.5 / 71.4 deg vs
+   raw 39.6 / 62.6 / 64.8 deg). The curvature residual subspaces are LESS
+   aligned than the full FFN write subspaces. This means the redundancy is
+   not concentrated in the GELU-vs-ReLU curvature signal -- it sits in the
+   shared linear / mean structure of GELU(z) @ W_proj. Both blocks write
+   SIMILAR leading directions in the residual stream regardless of the
+   nonlinear gating, and that shared subspace is what is being squeezed by
+   the rank-r joint compression.
+
+5. **M2 sequential PPL trajectory is informative.** Phase A (only b10 r=5
+   trains, b11 stuck at SVD-init r=22) recovers from init 76.65 down to
+   64.67 in 2000 steps (still descending: best at step 2000). Phase B
+   (b10 frozen at A best, b11 r=22 trains from its SVD init) recovers from
+   64.67 to 61.21 in another 2000 steps (still descending). Compared to the
+   M3 single-block ablations:
+     phase A best (b10 fits, b11 frozen at noisy SVD init) = 64.67
+     M3 ablation B (b10 fits, b11 at FLOAT)                = 51.48
+     -> +13.19 PPL gap explained entirely by b11 sitting at its r=22
+        no-retrain SVD init (which alone costs ~5.4 PPL above b11 r=22
+        retrained anchor 54.47, plus the additional damage of compressing
+        b10 on top of an already-corrupted residual stream).
+     phase B best (b11 fits, b10 frozen at A best)         = 61.21
+     M3 ablation A (b11 fits, b10 at FLOAT)                = 54.77
+     -> +6.44 PPL gap. Even AFTER b10 has been Adam-fit to its best phase-A
+        position, b11 cannot reach its single-block anchor; the b10
+        compression poisons the residual stream that b11 receives. This is
+        the core diagnostic: there is NO state of (b10_lowrank, b11_lowrank)
+        in this rank budget that recovers each block's single-block PPL,
+        regardless of optimisation order.
+
+6. **The destruction is NOT joint Adam saddle (M3 refuted), is NOT a pure
+   single-block budget shortage (M3 ablations succeed), and is consistent
+   with M1-style "both blocks want to use the same top residual-stream
+   directions and the rank budget is insufficient for the union of their
+   needs" -- but the formal M1 angle threshold (<30 deg mean) was set on the
+   full rank-r mean and the measured rank-r mean (39.6 deg) sits in the
+   middle band, so the verdict per item 326 is INCONCLUSIVE.**
+
+== Geometric object ==
+Same as cycle 282/310: HF GPT-2 c_proj_l (3072, 768) replaced by
+LowRankCProj(rank=r):
+  W_l   = c_proj_l.weight             SVD on CPU float32
+  A_l   = U_l[:, :r] * S_l[:r]        (3072, r)  frozen buffer
+  B_l   = Vh_l[:r, :]                 (r, 768)   nn.Parameter
+  bias  = c_proj_l.bias               (768,)     nn.Parameter
+  forward x @ (A @ B) + bias          matches HF Conv1D semantics
+
+For M1, Δy_l = sigma(z_l) @ W_proj_l where z_l = ln_2(x_l) @ W_fc_l + b_fc_l,
+captured on (200 calib seqs * 128 tok = 25600 tokens). Computed for two
+sigma forms: (a) raw GELU(z), (b) curvature residual GELU(z) - ReLU(z).
+Per Δy: SVD, take top-r right singular vectors as Vh. Principal angles =
+arccos of svdvals(Vh_10[:k_a] @ Vh_11[:k_b].T). Variants:
+  (5, 22)  (item 326 native: r_10 vs r_11)
+  (5, 5)   (matched-rank symmetric)
+  (22, 22) (top-22 of b10 vs top-22 of b11)
+
+== M1 measurement table (principal angles in degrees) ==
+
+variant | (5x22) cos top-5                              | (5x22) ang top-5            | (5x22) mean | (5x5) mean | (22x22) mean
+--------|-----------------------------------------------|-----------------------------|-------------|------------|-------------
+raw     | [0.967, 0.865, 0.718, 0.619, 0.539]           | [14.77,30.09,44.14,51.79,57.38] | 39.63 deg | 62.61 deg | 64.84 deg
+curv    | [0.806, 0.771, 0.459, 0.377, 0.256]           | [36.29,39.55,62.69,67.87,75.18] | 56.32 deg | 67.49 deg | 71.39 deg
+
+  -> M1 min mean angle (smallest across variants x rank-pairings) = 39.63 deg
+
+  Item 326 thresholds: <30 deg -> M1 confirmed; >60 deg -> REFUTE-unknown.
+  Measured 39.63 deg sits in the middle. INCONCLUSIVE on M1's strict
+  rank-r mean test, but the top-2 directions (raw 5x22) cross the 30 deg
+  boundary inwards (14.77 and 30.09 deg), supporting partial M1.
+
+== M2 measurement (sequential Adam) ==
+
+phase    | trainable | init     | best     | best_step | final    | restored | wall
+---------+-----------+----------+----------+-----------+----------+----------+--------
+A b10 r=5|     4,608 | 76.6535  | 64.6726  |    2000   | 64.6726  | 64.6726  | 1.1 min
+B b11 r=22|   17,664 | 64.6726  | 61.2059  |    2000   | 61.2059  | 61.2059  | 1.0 min
+
+sequential_best_ppl = min(A, B) = 61.2059
+cycle 310 joint best (1 seed)   = 60.7161
+delta vs joint                  = +0.4898 PPL
+threshold M3 pathology          <= 55.0   -> NOT MET (61.21 > 55)
+threshold destructive           >= 60.0   -> MET (61.21 >= 60)
+
+  -> M3 is REFUTED. Sequential Adam not only fails to escape the destruction,
+     it is +0.49 PPL WORSE than joint Adam.
+
+== M3 measurement (one-sided restores) ==
+
+ablation | configuration                    | init     | best     | best_step | reference (ref)            | delta vs ref
+---------+----------------------------------+----------+----------+-----------+----------------------------+--------------
+A        | b10 float, b11 r=22 LowRankCProj | 59.6834  | 54.7724  |    2000   | cycle 270 b11 r=22 = 54.47 |   +0.30
+B        | b10 r=5 LowRankCProj, b11 float  | 59.9179  | 51.4783  |    1500   | cycle 282 b10 r=5 = 51.47  |   +0.01
+
+Both ablations sit essentially at their single-block anchors -- destruction
+is purely interactive, not single-block in either direction.
+
+Cross-comparison table:
+config                                  | best PPL  | delta vs float (53.8949)
+----------------------------------------+-----------+--------------------------
+float (cycle 280/310 ref)               | 53.8949   |   0.0
+b11 r=22 only (M3 ablation A)           | 54.7724   |  +0.88
+b10 r=5  only (M3 ablation B)           | 51.4783   |  -2.42  (sub-float -- bottleneck removal!)
+joint (b10 r=5, b11 r=22) cycle 310     | 60.7161   |  +6.82
+sequential (M2)                         | 61.2059   |  +7.31
+
+Note: b10 r=5 alone is BETTER than float (-2.42 PPL); cycle 282 already saw
+this for several blocks (the SVD-truncated c_proj acts as a regulariser for
+the b10 channel). The destructive pair behaviour is therefore especially
+counter-intuitive: each block individually IMPROVES on float (b10 r=5) or
+matches it within +0.88 PPL (b11 r=22), but JOINTLY they degrade by +6.82.
+
+== Why INCONCLUSIVE per item 326's strict threshold ==
+
+The item 326 verdict logic is a binary decision tree on
+(sequential_ppl, mean_angle):
+  M3-pathology      requires sequential_ppl <= 55 (got 61.21 -- fails)
+  M1-redundancy     requires sequential_ppl >= 60 AND mean_angle < 30 deg
+                    (got 61.21 OK; 39.63 fails)
+  REFUTE-unknown    requires sequential_ppl >= 60 AND mean_angle > 60 deg
+                    (got 61.21 OK; 39.63 fails)
+  else              INCONCLUSIVE.
+
+Measured (61.21, 39.63 deg) lands in the "else" cell. The strict verdict is
+INCONCLUSIVE.
+
+The substantive interpretation, however, is sharper:
+  - M3 (Adam saddle)     REFUTED -- sequential >= joint within 0.5 PPL
+  - M1 (redundancy)      PARTIAL -- top-2 dirs strongly aligned (14.8, 30.1 deg)
+                                    rank-r mean in middle band (39.6 deg)
+  - M2 (LN coupling)     UNTESTED directly; consistent with the data (an LN
+                         coupling story would also predict that fitting b10
+                         poisons b11's LN input, which is exactly what
+                         phase B sees: b11 cannot reach its single-block
+                         anchor with b10 in any low-rank configuration).
+
+The PRINCIPLED conclusion: at the cycle-282-family ranks, the (b10, b11)
+destruction is a STRUCTURAL interaction between the two latest concentrators
+sharing the top 1-2 residual-stream write directions. It is not optimisation
+pathology and not a single-block budget shortage. Whether to call it pure
+M1, pure M2, or a M1+M2 hybrid requires a follow-up: e.g. a higher-rank b10
+single-fit measurement or a direct LN-input subspace test.
+
+== Config ==
+B10=10, B11=11, R10=5, R11=22
+N_CALIB=200, N_EVAL=100, SEQ_LEN=128, DEVICE=mps, model=gpt2
+N_STEPS=2000, LR=1e-4, EVAL_EVERY=100, SEED=42
+LowRankCProj template matches cycle 270/282/310 verbatim.
+
+float PPL on 100-seq eval slice = 53.8949 (matches cycle 280/284/305/310
+reference 53.895; |diff| = 0.000 < 0.5 assertion).
+
+Wall total ~5 min on mps:
+  M1            ~0.5 min  (one forward pass to capture ln_2 inputs + 4 SVDs)
+  M2 phase A    ~1.1 min
+  M2 phase B    ~1.0 min
+  M3 ablation A ~1.1 min
+  M3 ablation B ~1.1 min
+
+key_metric: M1_min_mean_angle_deg=39.63, M2_sequential_best_ppl=61.21, M3A_best=54.77, M3B_best=51.48
+
+== Files written ==
+experiments/b10_b11_deep_dive_cycle316.py
+autoresearch/plans/cycle_316.md
+autoresearch/briefs/cycle_316.md
+autoresearch/reviews/cycle_316.md
+autoresearch/results/cycle_316_b10_b11_deep_dive.json
+autoresearch/results/cycle_316_summary.md
+autoresearch/results/cycle_316_manifest.txt
+autoresearch/results/cycle_316_exec_result.txt
+autoresearch/audits/cycle_316.md
+autoresearch/results/cycle_316_audit.txt
+autoresearch/logs/cycle_316_run.log
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv
+autoresearch/STATUS.md

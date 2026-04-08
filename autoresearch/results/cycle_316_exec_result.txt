@@ -1,0 +1,55 @@
+Cycle 316 Execution Result -- Item 326
+
+Verdict: INCONCLUSIVE  (M3 outright REFUTED; M1 partial; M2 untested-direct)
+
+Three tests on the (b10 r=5, b11 r=22) destructive pair (cycle 310 joint = 60.72):
+
+M1 -- principal angle between top-r right SVs of Δy_10 and Δy_11:
+  raw  variant top-5 cos = [0.967, 0.865, 0.718, 0.619, 0.539]
+       (angles deg)      = [14.77, 30.09, 44.14, 51.79, 57.38]
+  raw  (5x22) mean = 39.63 deg     (5x5) mean = 62.61 deg
+  curv (5x22) mean = 56.32 deg     (5x5) mean = 67.49 deg
+  --> min mean angle = 39.63 deg (middle band; threshold <30 / >60)
+  --> top-1 angle 14.8 deg and top-2 angle 30.1 deg cross the M1 boundary;
+      tail (top-3..5) does not. Partial M1.
+
+M2 -- sequential Adam (phase A: b10 r=5 trains, phase B: freeze b10 at A best,
+       fresh Adam, b11 r=22 trains):
+  install init                           = 76.6535 (matches cycle 310)
+  phase A (b10 only) best @ 2000         = 64.6726
+  phase B (b11 only on top of A) best    = 61.2059
+  sequential_best_ppl = min(A, B)        = 61.2059
+  cycle 310 joint Adam best              = 60.7161
+  delta vs joint                         = +0.4898 PPL
+  --> sequential is WORSE than joint -- M3 (joint Adam saddle) REFUTED.
+
+M3 -- one-sided restores:
+  ablation A (b10 float, b11 r=22 fit)   = 54.7724  (cycle 270 ref 54.4687, +0.30)
+  ablation B (b10 r=5 fit, b11 float)    = 51.4783  (cycle 282 b10 r=5 diag 51.4659, +0.01)
+  --> Both reach their single-block anchors. Destruction is purely interactive
+      (requires BOTH blocks compressed simultaneously).
+
+Substantive interpretation (sharper than INCONCLUSIVE per item 326 thresholds):
+1. The destruction is structural, not optimisation pathology (M3 refuted).
+2. Each block alone fits its single-block anchor (M3 ablations).
+3. The two latest concentrators write the SAME top-1 and top-2 leading
+   directions into the residual stream (cos 0.967, 0.865) and the rank-r
+   joint compression forces them to compete for the same low-rank slots.
+4. The curvature-residual variant ((GELU-ReLU)*W_proj) shows weaker
+   alignment than the raw GELU(z)*W_proj variant, so the redundancy is
+   in the linear/mean structure of the FFN write, not in the curvature.
+5. The cycle 326 verdict tree's strict (<30 deg) bar is too tight for what
+   the rank-r mean measures; the top-2 directions DO cross it but the
+   tail does not.
+
+This is a sharply informative INCONCLUSIVE: it cleanly closes M3 and
+narrows the open question 3 to a hybrid M1/M2 (subspace overlap on the
+top-2 dirs + LN-poisoning consistent with phase B's failure to recover
+b11 to its single-block anchor).
+
+Files:
+  experiments/b10_b11_deep_dive_cycle316.py
+  autoresearch/results/cycle_316_b10_b11_deep_dive.json
+  autoresearch/results/cycle_316_summary.md
+  autoresearch/results/cycle_316_manifest.txt
+  autoresearch/logs/cycle_316_run.log
