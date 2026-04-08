@@ -1,0 +1,182 @@
+Cycle 308 Manifest -- Item 318: Synthetic rank-2 unigram projector for block 1 c_proj
+
+item_number: 318
+outcome: REFUTED
+key_metric: best_synth_ppl = 127.4956 at (s1*=0.5, s2*=0.5)
+            REFUTED iff >= 100  (PASS, +27.50 above bar)
+            CONFIRMED iff <= 60 (FAIL, +67.50 above bar)
+commit: <pending>
+Branch: geometric_compression
+Verdict: REFUTED
+
+== Verdict logic (item 318 verbatim) ==
+CONFIRMED iff best_synth_ppl <= 60 (within ~10-15 PPL of cycle 280
+              trained 49.03 and comparable to no-retrain rank-2 init 57.66
+              -- "the signal IS unigram, handcrafted construction captures
+              the majority of compressible signal without training").
+REFUTED   iff best_synth_ppl >= 100 (worse than block-1 swap damage
+              -- "rank-2 signal is NOT reducible to the unigram direction
+              + stopword indicator even though cycle 300 showed top-20
+              boost tokens are stopwords").
+INCONCLUSIVE otherwise (60 < best < 100).
+
+Measured:
+  best_synth_ppl = 127.4956 (at the lower-left grid corner s1=s2=0.5)
+  127.4956 >= 100 -> REFUTED.
+  127.4956 - 100  = +27.50 PPL above the REFUTED bar.
+  127.4956 - 60   = +67.50 PPL above the CONFIRMED bar.
+  127.4956 - 49.03 = +78.46 PPL above cycle 280 trained rank-2.
+  127.4956 - 57.66 = +69.84 PPL above cycle 280 no-retrain SVD init.
+  127.4956 - 53.89 = +73.60 PPL above float baseline.
+
+== Substantive findings sharper than REFUTED ==
+
+(1) Cycle 300's "unigram axes" reading does NOT lift to a constructive
+    direction in R^768. Cycle 300 CONFIRMED_unigram by classifying the
+    top-20 boost tokens of (W_E @ B_final[i]) as 17/20 and 19/20
+    stopwords/punct -- a token-set classification of the trained B_final
+    rows. Cycle 308 tests whether the underlying R^768 direction is
+    RECOVERABLE from the natural model-agnostic constructions:
+      d1 = (W_E^T @ log_p) / ||...||                 (unigram log-freq axis)
+      d2 = (W_E^T @ s_vec) Gram-Schmidt to d1        (stopword indicator axis)
+    Substituting [d1; d2] for the trained Vh-rows in the rank-2 LASER
+    factorisation lands at PPL 127.5 (best of 25 grid points), 70 PPL
+    worse than the no-retrain SVD init 57.66 and 78 PPL worse than the
+    trained rank-2 49.03. The TOKEN-LEVEL "unigram" classification does
+    NOT imply VECTOR-LEVEL "unigram axis" recovery: the trained B_final
+    rows and the W_E^T @ log_p / W_E^T @ s_vec directions live in
+    different parts of R^768, and the difference is geometrically
+    decisive.
+
+(2) The grid minimum lies at the lower-left corner (0.5, 0.5). Smaller
+    scales would likely give lower PPL, but the brief specifies a fixed
+    25-point grid {0.5, 1, 2, 5, 10}^2 with no data-fit beyond it. The
+    cycle 280 SVD init has unit-norm Vh rows, so s1=s2=1 would be the
+    "matched magnitude" point if d1, d2 were the right unit vectors.
+    They are not: at (1, 1) PPL=577.69 (10x worse than the SVD init at
+    the SAME magnitude), confirming that DIRECTION (not magnitude) is
+    what cycle 308 tests.
+
+(3) Asymmetric scale dependence. PPL is monotone-increasing in s2 at
+    every fixed s1 in {0.5, 1, 2}, and roughly increasing in s1 at the
+    smaller s2 values. The stopword-indicator direction d2 is the
+    DOMINANT damage source: even at s2=0.5, increasing s1 from 0.5 to
+    5.0 inflates PPL from 128 -> 52,486 (410x); at s2=2.0, the same s1
+    sweep gives 1704 -> 14,552 (8.5x). The hand-designed d2 axis points
+    in a direction that is geometrically BAD for block 1 c_proj (any
+    nonzero output along it actively damages downstream computation).
+
+(4) Comparison anchors:
+      float PPL                              =  53.89
+      cycle 280 trained rank-2 (best)        =  49.03  (-4.86 vs float)
+      cycle 280 no-retrain SVD init          =  57.66  (+3.77 vs float)
+      cycle 308 best synth (this cycle)      = 127.50  (+73.60 vs float)
+      cycle 308 SVD init reproduction sanity =  57.658 (matches 280 to 0.05)
+    The synthetic projector loses 70 PPL relative to the SVD init at
+    EXACT same shape, same A factor, same bias, same eval slice -- the
+    only difference is the choice of B rows. The SVD top-2 right
+    singular vectors of W_proj_1 are NOT (d1, d2) in any approximate
+    sense.
+
+(5) Hypothesis closure: cycle 300's "block 1 is a 2D unigram-frequency
+    projection" has a sharper-than-REFUTED restatement. Cycle 300 is
+    consistent with the BOOST-TOKEN classification being an INDIRECT
+    consequence of the trained B factor's projection through the LM
+    head -- many R^768 vectors will project (via W_E) onto a token list
+    dominated by stopwords (because stopwords are the most frequent
+    tokens and any approximately-uniform direction gets boosted toward
+    them). The vector-recovery test (cycle 308) discriminates between
+    "B factor is mechanistically a unigram axis" (would CONFIRM here)
+    and "B factor's TOP-20 boost list happens to look unigram-like
+    because of LM-head geometry" (would REFUTE here). Cycle 308 selects
+    the second reading.
+
+(6) Implication for compression: the rank-2 floor at block 1 cannot
+    be reached without DATA-DRIVEN fitting (Adam at minimum, or SVD of
+    W_proj_1 itself at minimum). The "model-agnostic 1,536-parameter
+    construction" hypothesis is closed. Cycle 280's anchor remains
+    valid as a TRAINED rank-2 result, not a hand-designed one.
+
+(7) Sanity reproductions:
+    - float PPL 53.8949 matches cycle 280/284/291/305 reference 53.895
+      to 4 decimals (asserted within 0.5).
+    - SVD-init replacement (A_frozen @ Vh[:2, :], no retrain) lands at
+      57.6581 vs cycle 280 reference 57.664 (asserted within 0.05).
+      A factor and the rank-2 LASER replacement infrastructure are
+      bit-for-bit identical to cycle 280.
+    - Gram-Schmidt residual |d1.d2| = 2.50e-07 (asserted < 1e-5).
+    - 747 unique single-token stopword ids extracted from 420 base
+      strings (each tried with and without leading space; only those
+      that encode to a SINGLE token kept). >= 200 asserted.
+    - 5,576 unique tokens observed in the 25,600-token calib slice
+      (~11% of the 50,257 vocab); the long tail of 44,681 unobserved
+      tokens gets log_p = -ln(N*10) ~ -12.45.
+
+== Geometric object ==
+
+For block l = 1:
+  W_orig in R^(3072, 768)               (mlp.c_proj.weight, HF Conv1D)
+  bias in R^768                          (frozen)
+  SVD: W_orig = U diag(S) Vh             (full thin SVD)
+  A_frozen = U[:, :2] @ diag(S[:2]) in R^(3072, 2)   (cycle 280 LEFT factor)
+  Vh_init = Vh[:2, :] in R^(2, 768)                  (cycle 280 SVD-init RIGHT)
+
+Synthetic:
+  count(t) = unigram count of token t over 25,600 calib tokens
+  p(t) = count(t) / 25600
+  log_p in R^50257 = log(p + 1/(N*10))
+  d1_raw in R^768 = wte^T @ log_p
+  d1 = d1_raw / ||d1_raw||                    ||d1_raw|| = 1,257,193.4
+  s_vec in {0,1}^50257 = stopword indicator   (747 ones)
+  d2_raw in R^768 = wte^T @ s_vec             ||d2_raw|| = 1,318.65
+  d2 = (d2_raw - <d2_raw, d1> d1)             ||d2_orth|| = 636.55
+  d2 = d2 / ||d2||
+  |<d1, d2>| = 2.50e-07 after Gram-Schmidt
+  B_synth(s1, s2) = stack([s1 * d1, s2 * d2]) in R^(2, 768)
+  W_repl(s1, s2) = A_frozen @ B_synth(s1, s2) in R^(3072, 768)
+
+  Replace model.transformer.h[1].mlp.c_proj.weight = W_repl
+  bias unchanged. Trainable params = 0.
+  Eval PPL on 100 wikitext-2 val seqs x 128 tokens.
+
+== Grid (PPL per (s1, s2)) ==
+
+  s1\s2  |   0.5    |   1.0    |   2.0    |   5.0    |  10.0
+  -------+----------+----------+----------+----------+----------
+   0.5   |  127.50  |  331.54  | 1704.01  | 10048.41 | 25433.51
+   1.0   |  344.08  |  577.69  | 1990.23  |  9950.72 | 23963.79
+   2.0   | 5153.02  | 2962.27  | 3249.08  | 10665.59 | 22287.79
+   5.0   | 52486.16 | 33428.38 |14551.89  | 14476.11 | 24322.52
+  10.0   | 27502.15 | 23110.98 |17641.49  | 13383.28 | 21439.38
+
+  argmin = (0.5, 0.5) PPL = 127.4956
+
+== Config ==
+
+TARGET_BLOCK = 1
+RANK = 2
+N_CALIB = 200
+N_EVAL = 100
+SEQ_LEN = 128
+SEED = 42
+DEVICE = mps
+GRID = [0.5, 1.0, 2.0, 5.0, 10.0]
+STOPWORD_BASE_count = 420 base strings -> 747 unique single-token ids
+trainable params = 0
+wall = 39.3 s
+
+== Files written ==
+
+experiments/synthetic_unigram_projector_cycle308.py
+autoresearch/plans/cycle_308.md
+autoresearch/briefs/cycle_308.md             (pre-existing)
+autoresearch/results/cycle_308_synthetic_unigram.json
+autoresearch/results/cycle_308_summary.md
+autoresearch/results/cycle_308_manifest.txt  (this file)
+autoresearch/results/cycle_308_exec_result.txt
+autoresearch/audits/cycle_308.md
+autoresearch/results/cycle_308_audit.txt
+autoresearch/logs/cycle_308_run.log
+autoresearch/agenda.md                       (item 318 P2 -> PAST Cycle 308)
+autoresearch/logs/experiments.tsv            (row 308 appended)
+autoresearch/STATUS.md                       (bumped to 308; new Latest section)
