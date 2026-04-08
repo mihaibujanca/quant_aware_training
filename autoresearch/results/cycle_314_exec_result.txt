@@ -5,7 +5,7 @@ survives the rank-1 reduction (basis-geometric) or goes away (capacity-
 limited).
 
 Verdict: CONFIRMED (CONFIRMED-persistent-destruction)
-Commit: PENDING
+Commit: 870f4c3
 
 == Item 324 verbatim verdict thresholds ==
 CONFIRMED iff (b10, b11) r=1 delta_vs_worst_single_r1 >= +5 PPL

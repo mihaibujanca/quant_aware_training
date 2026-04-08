@@ -5,7 +5,7 @@ Cycle 314 Manifest -- Item 324: Rank-1 pairwise LASER composition matrix
                                 pair is basis-geometric (survives r=1) or
                                 capacity-limited (goes away at r=1).
 
-Commit: PENDING
+Commit: 870f4c3
 Branch: geometric_compression
 Verdict: CONFIRMED
 
