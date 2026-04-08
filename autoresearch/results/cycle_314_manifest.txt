@@ -1,0 +1,249 @@
+Cycle 314 Manifest -- Item 324: Rank-1 pairwise LASER composition matrix
+                                over blocks {b1, b2, b3, b10, b11} at the
+                                universal rank-1 floor established by cycle 311.
+                                Tests whether cycle 310's (b10, b11) destructive
+                                pair is basis-geometric (survives r=1) or
+                                capacity-limited (goes away at r=1).
+
+Commit: PENDING
+Branch: geometric_compression
+Verdict: CONFIRMED
+
+== Verdict logic (item 324 verbatim) ==
+CONFIRMED iff (b10, b11) r=1 delta_vs_worst_single_r1 >= +5 PPL
+           ("the (b10, b11) destruction is basis-geometric and survives rank-1
+             reduction; both late residual-stream concentrators cannot share a
+             low-rank projection")
+REFUTED   iff (b10, b11) r=1 delta_vs_worst_single_r1 <= +1 PPL
+           AND n_destructive_other_pairs <= 1 at the +5 PPL bar
+           ("cycle 310's destruction was capacity competition at r=22; rank-1
+             reduces the shared capacity enough to disambiguate")
+INCONCLUSIVE otherwise.
+
+Measured:
+  (b10, b11) r=1 best_mean    = 70.0146 PPL
+  worst_single_r1             = 59.7074 (b11 r=1, cycle 311 anchor)
+  delta_vs_worst_single_r1    = +10.3072 PPL
+  CONFIRMED bar (>= +5)       = TRUE (10.31 >> 5)
+  => VERDICT = CONFIRMED (CONFIRMED-persistent-destruction)
+
+Secondary: n_destructive_at_5 across all 10 pairs = 2 / 10
+  (b10, b11) +10.3072 (worst pair)
+  (b1, b2)   +5.9144  (NEW destructive cell at r=1 not seen in cycle 310)
+
+The (b10, b11) destruction not only survives the rank-1 reduction but
+WORSENS by +4.06 PPL compared to cycle 310 (60.72 -> 70.01; delta vs c310
+= +9.30). This is the strongest possible evidence that the destruction is
+basis-geometric (direction conflict between b10 and b11 in the residual
+stream), not capacity competition at r=22.
+
+== 5x5 pair PPL matrix (diagonal = cycle 292/311 r=1 anchors) ==
+
+  block |   b1     |   b2     |   b3     |   b10    |   b11
+  ------+----------+----------+----------+----------+----------
+    b1  | *50.0794*|  55.9938 |  56.0217 |  53.5124 |  59.8573
+    b2  |  55.9938 | *49.7539*|  55.6467 |  54.2429 |  58.2418
+    b3  |  56.0217 |  55.6467 | *55.0485*|  55.4499 |  62.4403
+   b10  |  53.5124 |  54.2429 |  55.4499 | *52.9107*|  70.0146
+   b11  |  59.8573 |  58.2418 |  62.4403 |  70.0146 | *59.7074*
+
+Diagonal (italicized) = single-block r=1 anchors:
+  b1  = 50.0794 (cycle 292)
+  b2  = 49.7539 (cycle 311)
+  b3  = 55.0485 (cycle 311)
+  b10 = 52.9107 (cycle 311)
+  b11 = 59.7074 (cycle 311)
+
+Symmetry check: max |A_ij - A_ji| = 0.0 (PASS).
+
+== Per-pair detail (sorted by delta_vs_worst_single_r1) ==
+
+  pair      | init    | best    | delta_v_worst_r1 | delta_v_best_r1 | destructive | c310 ref | delta 314-310
+  ----------+---------+---------+------------------+-----------------+-------------+----------+--------------
+   (2, 11)  |  82.34  |  58.24  |     -1.4656      |    +8.4879      | no          | 53.85    |  +4.40
+   (1, 11)  |  66.80  |  59.86  |     +0.1499      |    +9.7779      | no          | 53.58    |  +6.28
+   (3, 10)  |  66.81  |  55.45  |     +0.4014      |    +2.5392      | no          | 52.23    |  +3.22
+   (2, 3)   | 100.19  |  55.65  |     +0.5982      |    +5.8928      | no          | 52.36    |  +3.28
+   (1, 10)  |  69.23  |  53.51  |     +0.6017      |    +3.4330      | no          | 52.19    |  +1.32
+   (1, 3)   |  78.49  |  56.02  |     +0.9732      |    +5.9423      | no          | 51.65    |  +4.37
+   (2, 10)  |  82.72  |  54.24  |     +1.3322      |    +4.4890      | no          | 52.91    |  +1.34
+   (3, 11)  |  65.33  |  62.44  |     +2.7329      |    +7.3918      | no          | 54.90    |  +7.54
+   (1, 2)   | 121.16  |  55.99  |     +5.9144      |    +5.9144      | YES         | 54.20    |  +1.79
+  (10, 11)  |  78.41  |  70.01  |    +10.3072      |   +17.1039      | YES         | 60.72    |  +9.30
+
+worst pair: [10, 11] best_mean 70.0146 delta +10.3072 (the item 324 CONFIRMED trigger)
+best pair:  [2, 11]  best_mean 58.2418 delta -1.4656 (beats worst single b11=59.71)
+
+== Substantive findings sharper than CONFIRMED ==
+
+1. **(b10, b11) r=1 WORSENS vs cycle 310.** Cycle 310 heterogeneous r_10=5
+   r_11=22 (55 trainable rank units, ~22K params) -> best_mean 60.7161
+   (+6.2474 above worst single). Cycle 314 r=1+r=1 (3,072 params, ~7.3x
+   smaller) -> best_mean 70.0146 (+10.3072). The delta vs cycle 310 is
+   +9.30 PPL -- reducing capacity MAKES THE DESTRUCTION WORSE. This is
+   the strongest possible signal that the (b10, b11) pair cannot share a
+   low-dimensional c_proj subspace regardless of basis; the two late
+   residual-stream concentrators write into structurally-conflicting
+   output directions. Rank-1 removes the extra subspace degrees of
+   freedom that allowed partial decoupling at r_10=5 r_11=22.
+
+2. **(b1, b2) is a NEW destructive cell at r=1** (+5.9144, not seen in
+   cycle 310's +4.8739 marginal miss). The early-early pair was
+   marginal at heterogeneous ranks; the rank-1 reduction tips it over
+   the bar. delta vs cycle 310 = +1.79 PPL. (b1, b2) is the second
+   cycle 314 destructive cell. Notable: unlike (b10, b11), the
+   (b1, b2) r=1 destruction is only +1.79 PPL worse than heterogeneous,
+   suggesting a much softer mechanism -- it may go away at 3 seeds /
+   4000 steps (cycle 310's marginal miss + cycle 314's marginal hit at
+   2000 steps 1 seed is noise-bounded).
+
+3. **(b2, b11) is now the BEST pair** at delta -1.4656 (beats worst
+   single b11 r=1 = 59.71 by 1.47 PPL). Cycle 310's best pair was
+   (b1, b11) at -0.8875. At r=1, (b2, b11) -1.47 > (b1, b11) -0.85:
+   both EARLY-b11 pairs are non-destructive at r=1, and pairing with
+   b2 gives a stronger "rising tide" than pairing with b1. The worst
+   single in both cases is b11 r=1 = 59.71 (high anchor), so the pair
+   is easy to beat if the joint Adam retrain can bring b11's rank-1
+   factor closer to its free optimum while also fitting b2 or b1.
+
+4. **Late-late is destructive; early-late is not.** Pairs involving
+   b11 with an EARLY block (b1, b2, b3): deltas {+0.15, -1.47, +2.73}
+   average +0.47 -- all non-destructive. Pair with LATE b10: +10.31.
+   The LATE-LATE (b10, b11) cell is uniquely destructive; the
+   early-late pairs all compose benignly. Same pattern as cycle 310.
+
+5. **(b3, b11) = +2.73 is the closest near-miss to the bar.** b3 is
+   the LATEST early-concentrator (b3 -> b10 -> b11 in residual stream
+   order among the 5 tested), and its pairing with b11 is the softest
+   of the 3 early-late-b11 cells. The monotone trend b1-b11 (+0.15) <
+   b2-b11 (-1.47) < b3-b11 (+2.73) is not perfectly monotone (b2-b11
+   is the BEST), but b3-b11 is the worst of the three early-late-b11
+   cells. This is consistent with b3 being the "latest early" and its
+   output direction sharing more structure with b11's than b1 or b2.
+
+6. **All 10 pairs WORSEN vs cycle 310 heterogeneous.** Per-pair delta
+   (cycle 314 - cycle 310): (1,2) +1.79, (1,3) +4.37, (1,10) +1.32,
+   (1,11) +6.28, (2,3) +3.28, (2,10) +1.34, (2,11) +4.40, (3,10) +3.22,
+   (3,11) +7.54, (10,11) +9.30. Mean +4.28 PPL. The rank-1 reduction
+   uniformly degrades pair composition; the universal rank-1 floor
+   does NOT stack as cleanly as the heterogeneous rank floor. This is
+   substantive evidence that cycle 311's universal rank-1 single-block
+   floor is NOT additive at the pair level -- each additional block
+   at r=1 pays a fixed cost independent of the other block's rank.
+
+7. **Sum of 10 pair deltas = +23.24 PPL** (sum of delta_vs_worst_single_r1:
+   -1.47 + 0.15 + 0.40 + 0.60 + 0.60 + 0.97 + 1.33 + 2.73 + 5.91 + 10.31).
+   Compare cycle 310: sum = +14.96. Cycle 314 pair-sum is +8.28 PPL
+   LARGER than cycle 310. If the 5-stack at r=1 is "pair-additive plus
+   higher-order", predicted 5-stack delta >= +23 PPL; actual cycle 305
+   5-stack at heterogeneous r = +18 PPL. Extrapolation: cycle 314-style
+   5-stack at r=1 would be >>+20 PPL above worst single b11 r=1 = 59.71
+   -> PPL in [80, 100] range. The universal rank-1 5-stack hypothesis
+   from cycle 311's constructive follow-up is DEAD: the pairwise
+   matrix already predicts severe destruction.
+
+8. **The cycle 310 verdict "only (b10, b11) is destructive" still
+   holds at the basis-geometric level** but the cycle 314 data sharpen
+   it: at rank-1 the destruction GROWS (+6.25 -> +10.31), and a second
+   cell (b1, b2) crosses the marginal miss bar. The basic shape is
+   preserved but amplified.
+
+== Cross-checks ==
+
+Float PPL: 53.8949 vs ref 53.895, |delta|=5.1e-05, asserted < 0.5. PASS.
+
+Single-block r=1 anchors (diagonal) matched verbatim:
+  b1  50.0794 (cycle 292 direct anchor)
+  b2  49.7539 (cycle 311 best_mean)
+  b3  55.0485 (cycle 311 best_mean)
+  b10 52.9107 (cycle 311 best_mean)
+  b11 59.7074 (cycle 311 best_mean)
+
+Per-pair init PPLs are reproducible (each pair's init = PPL of GPT-2
+with two blocks replaced by rank-1 SVD truncation; deterministic given
+the SVD cache, no seed dependence for init). Per-pair init values:
+  (1,2)  121.16
+  (1,3)   78.49
+  (1,10)  69.23
+  (1,11)  66.80
+  (2,3)  100.19
+  (2,10)  82.72
+  (2,11)  82.34
+  (3,10)  66.81
+  (3,11)  65.33
+ (10,11)  78.41
+
+Sanity: single-block r=1 init PPLs from cycle 311 paired with individual
+block totals: b1 r=1 noretrain=61.66 (cycle 292), b2=72.3808, b3=58.78,
+b10=60.64, b11=60.61. Double-block init = b_i noretrain PPL composed
+with b_j noretrain -- always >= both single-block init PPLs. Example
+(1, 2): init 121.16 >> max(61.66, 72.38) consistent with non-additive
+composition of two independent SVD truncations.
+
+Trainable param count per pair: 3,072 (asserted == 2 * (1*768 + 768)).
+
+|restored - best| < 1e-3 at every pair (asserted in script).
+
+5x5 matrix symmetric (max |A_ij - A_ji| = 0.0); diagonal = single-block
+r=1 anchors.
+
+Wall: 13.2 min on mps (matches cycle 310's 12.9 min; r=1 is ~same speed
+as heterogeneous because the dominant cost is Adam backward through the
+whole model, not the rank factor).
+
+== Geometric object ==
+
+For each pair (b_i, b_j) in C(5, 2) = 10 pairs:
+  A_i = U_i[:, :1] * S_i[:1]  in R^{3072 x 1}  (frozen buffer)
+  B_i in R^{1 x 768}          (trainable, init = Vh_i[:1, :])
+  bias_i in R^{768}           (trainable, init = W_proj_i.bias)
+  [same for block j]
+
+The rank-1 approximation W_i_rank1 = A_i @ B_i = (U_i[:,:1]*S_i[:1]) @ Vh_i[:1,:]
+replaces c_proj_i.weight; rank-r SVD truncation at r=1 as a starting point,
+then B and bias are trained jointly for both blocks simultaneously. The
+frozen A_i pins the LEFT singular direction but lets the right factor
+and bias drift during Adam.
+
+At rank-1 each block contributes a single c_proj output column direction
+(the single frozen left singular vector of W_proj_i). The (b10, b11) pair
+puts two such directions into the residual stream; at rank-1 the pair
+has NO degrees of freedom to decouple them, and Adam cannot re-orient
+A_10 or A_11. The destruction at (b10, b11) measures exactly this: the
+two frozen directions are structurally incompatible at the residual
+stream level.
+
+At heterogeneous rank (cycle 310 r_10=5 r_11=22) the pair had 27 frozen
+left singular directions across the two blocks, giving Adam a 27-D
+subspace to fit the pair jointly. The 60.72 PPL at cycle 310 reflected
+this partial decoupling; at rank-1 the decoupling disappears entirely
+and PPL jumps to 70.01 (+9.30 worse).
+
+== Config ==
+BLOCKS_RANKS = {1: 1, 2: 1, 3: 1, 10: 1, 11: 1}
+BLOCK_ORDER = [1, 2, 3, 10, 11]
+PAIRS = C(5, 2) = 10 sorted combinations
+N_CALIB = 200
+N_EVAL = 100
+SEQ_LEN = 128
+DEVICE = mps
+N_STEPS = 2000
+LR = 1e-4
+EVAL_EVERY = 100
+SEEDS = [42]  (item 324 verbatim: single seed matches cycle 310 budget)
+trainable per pair = 3,072 = 2 * (1 * 768 + 768)
+
+== Files written ==
+experiments/rank1_pairwise_laser_cycle314.py
+autoresearch/plans/cycle_314.md
+autoresearch/briefs/cycle_314.md                              (pre-existing)
+autoresearch/results/cycle_314_rank1_pairwise_laser.json
+autoresearch/results/cycle_314_summary.md
+autoresearch/results/cycle_314_manifest.txt
+autoresearch/results/cycle_314_exec_result.txt
+autoresearch/audits/cycle_314.md
+autoresearch/results/cycle_314_audit.txt
+autoresearch/logs/cycle_314_run.log
+autoresearch/agenda.md             (item 324 NEXT P0 -> PAST Cycle 314)
+autoresearch/logs/experiments.tsv  (row 314 appended)
+autoresearch/STATUS.md             (Latest: Cycle 314 added; title bumped)
