@@ -1,0 +1,90 @@
+Cycle 299 / Item 309 — Cycle 280 retrain decomposition (B drift)
+Verdict: INCONCLUSIVE
+Commit: pending
+
+== Item 309 verbatim verdict thresholds ==
+CONFIRMED drift    iff rowspace_cos(B(4000), B(0)) <= 0.6 AND corr(drift, ppl_improve) >= 0.5
+CONFIRMED stay-put iff rowspace_cos(B(t), B(0)) >= 0.95 for all t in snapshots
+INCONCLUSIVE between.
+
+== Result ==
+cos(B(4000), B(0))              = 0.9111
+  → <= 0.6  (CONFIRMED drift)?    FALSE  (misses by 0.311)
+  → always >= 0.95 (CONFIRMED stay-put)? FALSE
+                                  (first 15 snapshots cos >= 0.95; drops below
+                                   0.95 around step 1800-2000; final 0.9111)
+corr(fro_rel, ppl_improvement)  = 0.9584  (tracking CLEARLY HOLDS — drift tightly
+                                           coupled to PPL improvement)
+
+Verdict: INCONCLUSIVE. The drift is real and tightly tracks PPL improvement,
+but the absolute magnitude of the rotation (11% drop in cos over 4000 steps)
+does not cross the 0.6 CONFIRMED-drift threshold. The stay-put clause also
+fails: B leaves the 0.95-ball around step ~1800 and never returns.
+
+== Trajectory (every 500 steps + final) ==
+  step    0: ppl 57.658  cos 1.0000  fro_rel 0.000  W_sv0 28.71  W_sv1 23.10  top1_cos 1.000  top2_cos 1.000
+  step  500: ppl 52.616  cos 0.9855  fro_rel 0.171  W_sv0 28.71  W_sv1 23.33  top1_cos 0.986  top2_cos 0.983
+  step 1000: ppl 51.221  cos 0.9691  fro_rel 0.251  W_sv0 28.86  W_sv1 23.43  top1_cos 0.971  top2_cos 0.966
+  step 1500: ppl 50.297  cos 0.9555  fro_rel 0.303  W_sv0 29.07  W_sv1 23.40  top1_cos 0.957  top2_cos 0.951
+  step 2000: ppl 49.927  cos 0.9446  fro_rel 0.341  W_sv0 29.29  W_sv1 23.30  top1_cos 0.945  top2_cos 0.939
+  step 2500: ppl 49.405  cos 0.9340  fro_rel 0.374  W_sv0 29.54  W_sv1 23.17  top1_cos 0.934  top2_cos 0.927
+  step 3000: ppl 49.449  cos 0.9241  fro_rel 0.403  W_sv0 29.80  W_sv1 23.04  top1_cos 0.924  top2_cos 0.917
+  step 3500: ppl 49.227  cos 0.9179  fro_rel 0.421  W_sv0 30.09  W_sv1 22.93  top1_cos 0.913  top2_cos 0.906
+  step 4000: ppl 49.250  cos 0.9111  fro_rel 0.439  W_sv0 30.40  W_sv1 22.78  top1_cos 0.900  top2_cos 0.896
+
+Best: 49.0603 @ step 3900 (matches cycle 280 seed-42 ~49.03 within MPS noise).
+Cycle 280 ref: init 57.66 → best 49.03 (delta -8.6). Reproduced: 57.658 → 49.060 (-8.60).
+
+== Substantive findings ==
+1. **Item 309's dichotomy is too coarse.** Neither CONFIRMED-drift nor CONFIRMED
+   stay-put fits. B(t) makes a SLOW, STEADY, PARTIAL rotation out of the SVD row
+   space: 1.0 → 0.91 cos over 4000 steps, essentially linear in step count. The
+   SVD init basin contains ~83% of the optimal rank-2 operator (cos² ≈ 0.83);
+   Adam closes the remaining ~17% while also fine-tuning the bias.
+
+2. **Drift tracks PPL improvement tightly.** corr(fro_rel, Δppl) = +0.958. The two
+   quantities move in lock-step. Every 0.01 step of fro_rel buys roughly 0.2 PPL.
+   There is no phase where cos moves but PPL doesn't, or vice versa.
+
+3. **Bias is doing non-trivial work** but not dominant. ||bias(4000) - bias(0)|| = 2.0;
+   compare ||B(4000) - B(0)||_F ≈ 17 (fro_rel 0.44 × ||B(0)||_F ≈ 39.3). Weight
+   delta ~8.5x bias delta in Frobenius norm, but bias still moves a full 2 units
+   from its factory value. A bias-frozen ablation would decompose the 8.6 PPL
+   into (row-rotation, bias) contributions; item 309 did not ask for this.
+
+4. **W(t) = A @ B(t) geometry**: column span invariant by construction (A frozen);
+   row space rotates by ~26° over 4000 steps (acos(0.90) ≈ 26°). Top-1 SV of W(t)
+   rises from 28.71 to 30.40 (+5.9%); top-2 SV drops from 23.10 to 22.78 (-1.4%).
+   The operator is being "sharpened" on its dominant direction.
+
+5. **Geometric implication for LASER**: eff_rank predicts BOTH r AND the basin
+   (SVD init is 83% of optimal by principal-angle energy); Adam fine-tunes a
+   small row-space rotation AND the bias to close the remaining gap. A closed-
+   form SVD-LLM solution without bias fine-tuning would land at 57.66 PPL (the
+   init); it would NOT match cycle 280's 49.03. This is weaker than "eff_rank
+   is the answer" but stronger than "eff_rank is a starting point".
+
+6. **Budget-bounded**: cos and fro_rel are still moving at step 4000 (no plateau);
+   corr(fro_rel, Δppl) = 0.958 shows PPL would keep improving if Adam continued.
+   Cycle 280's choice of 4000 steps is a budget, not a convergence point.
+
+== Convergence (CLAUDE.md verify-task-perf rule) ==
+Float PPL 53.895 matches cycle 266/268/269/270 ref to 3 decimals ✓
+Init rank-2 PPL 57.658 matches cycle 280 ref 57.664 to 0.006 ✓
+Best rank-2 retrained PPL 49.060 matches cycle 280 ref 49.032 to 0.028 (single-seed
+vs 3-seed mean) ✓
+
+== Wall ==
+Total: 157s | float+SVD ~4s | Adam retrain ~2.6 min | snapshot overhead negligible
+(well under 15-min cap)
+
+== Files written ==
+experiments/cycle280_decomp_cycle299.py
+autoresearch/plans/cycle_299.md
+autoresearch/briefs/cycle_299.md
+autoresearch/results/cycle_299_decomp.json
+autoresearch/results/cycle_299_summary.md
+autoresearch/results/cycle_299_drift.png
+autoresearch/results/cycle_299_manifest.txt
+autoresearch/results/cycle_299_exec_result.txt
+autoresearch/logs/cycle_299_run.log
