@@ -1,0 +1,19 @@
+cycle=329
+item=342
+auditor=claude
+timestamp=2026-04-09
+verdict_claimed=REFUTED-flat-spectrum
+verdict_confirmed=yes
+correct_weight_key=blocks.11.mlp.proj.weight
+correct_shape=yes (640, 1280)
+n_singular_values=640
+top13_energy_pct=6.80
+gate_threshold_pct=10
+gate_pass=False
+s0_s12_ratio=1.17
+uniform_baseline_pct=2.03
+spectrum_genuinely_flat=yes
+energy_sanity=sum_s2=4389.03 matches frob_sq=4389.03
+verdict_follows_from_criteria=yes
+notes=S[0]/S[12]=1.17 confirms near-uniform spectrum. 6.80% well below 10% gate. Consistent with b3 (2.60%) and b12 (7.07%) — output eff_rank does not predict weight compressibility.
+flag=no
