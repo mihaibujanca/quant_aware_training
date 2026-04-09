@@ -1,0 +1,52 @@
+cycle: 346
+item: 356
+verdict: INCONCLUSIVE
+date: 2026-04-09
+
+## Centroid affinity as compression predictor on pgolf 13L_640d
+
+INCONCLUSIVE: Spearman rho=-0.506 (p=0.078), cycle 27 GPT-2 rho=0.853
+
+Checkpoint: /Users/mihai/Projects/parameter-golf/logs/13L_640d_322_7k_wd70_batch20k_best.npz
+Tokens: 25600 (seq_len=1024)
+Baseline BPB: 17.702473
+
+Block  Affinity  CentNorm   SwapBPB  SwapDelta
+    0    0.5413   46.5140  19.930054  +2.227581
+    1    0.4566   45.9154  19.028348  +1.325875
+    2    0.6187   88.2652  18.254920  +0.552447
+    3    0.8779  137.4879  18.052294  +0.349821
+    4    0.6788   84.2226  17.856601  +0.154128
+    5    0.6138  114.1114  17.971395  +0.268922
+    6    0.6640  204.9342  18.053736  +0.351263
+    7    0.6667  222.6606  18.076714  +0.374241
+    8    0.6034  189.6311  17.947138  +0.244665
+    9    0.6363  277.4831  18.155658  +0.453185
+   10    0.7086  299.4402  17.789874  +0.087402
+   11    0.9312  626.6659  18.665724  +0.963251
+   12    0.9982    3.4835  17.703305  +0.000832
+
+## Correlation
+Spearman rho = -0.5055 (p = 0.0780)
+Interpretation: moderate negative correlation — direction is correct (higher
+affinity = less swap damage) but magnitude does not reach the |rho| > 0.7
+threshold. Block 11 is the main outlier: very high affinity (0.931) but also
+high swap damage (+0.963), likely because its large centroid norm (627) means
+the centroid itself carries significant information that the swap preserves,
+but the *residual* around the centroid also matters substantially.
+
+GPT-2 cycle 27 had rho=+0.853 (positive) — different sign convention suggests
+the original measurement may have correlated affinity with "compressibility"
+rather than "damage". Even accounting for sign, pgolf |rho|=0.506 is weaker
+than GPT-2's 0.853.
+
+## Verdict Criteria
+CONFIRMED if |rho| > 0.7
+REFUTED if |rho| < 0.3
+INCONCLUSIVE if 0.3 <= |rho| <= 0.7
+
+## Artifacts
+experiments/pgolf_centroid_affinity_cycle346.py
+parameter-golf/local_scripts/pgolf_centroid_affinity.py
+autoresearch/results/cycle_346_pgolf_centroid_affinity.json
+autoresearch/results/cycle_346_manifest.txt

@@ -17,12 +17,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Inconclusive if: accumulation curve is non-monotonic but final BPB exceeds threshold — partial composition with interaction effects.
    - Depends on: none (uses existing pgolf checkpoint + established recipe)
 
-356. **Centroid affinity as compression predictor on pgolf — replicate cycle 27's ρ=0.853 on a real model (R3)**
-   - For each of the 13 MLP blocks: compute output centroid c = mean(f(X)) over 2048 val tokens, then centroid affinity = cosine(f(x), c) averaged over tokens. Correlate centroid affinity with single-block swap damage (BPB delta when replacing block output with centroid). On GPT-2 cycle 27 found ρ=0.853 — if this transfers, centroid affinity is a free diagnostic for "which blocks are doing nothing interesting."
-   - Confirmed if: rank correlation |ρ| > 0.7 between centroid affinity and single-block swap BPB delta.
-   - Refuted if: |ρ| < 0.3 — centroid affinity has no predictive power on pgolf.
-   - Inconclusive if: 0.3 ≤ |ρ| ≤ 0.7 — weak signal, possibly confounded by block size variation.
-   - Depends on: none (uses existing pgolf checkpoint)
+~~356. **Centroid affinity as compression predictor on pgolf — replicate cycle 27's ρ=0.853 on a real model (R3)**~~ → INCONCLUSIVE (cycle 346): rho=-0.506 (p=0.078). Direction correct (high affinity → low swap damage) but |rho|=0.506 falls in inconclusive range. Block 11 outlier: affinity=0.931 but swap_delta=+0.963.
 
 ### P2
 
