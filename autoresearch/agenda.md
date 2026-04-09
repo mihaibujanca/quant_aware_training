@@ -6,9 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-376. **Block importance pruning — zero-out FFN contribution per block, measure PPL delta (R4)**
-   - Cycle 339 showed b12 is free to prune on pgolf (delta=-0.000004 BPB). Run the same test on GPT-2: for each of 12 blocks, zero out the FFN residual contribution and measure PPL. Blocks with delta < 0.5 PPL can be skipped entirely (no compression needed), freeing the error budget for harder blocks. If 2+ blocks are prunable, the effective composition problem shrinks from 12 to 10 or fewer blocks.
-   - Depends on: none
 
 377. **Mixed compression — topk+lstsq for hard blocks, aggressive pruning for easy blocks (R4)**
    - Combine findings from 374 (adaptive k) and 376 (block importance). Use topk+lstsq+adapter only on blocks that need it (high importance, high error). Easy blocks get either zeroed FFN or higher compression ratio (k=256 or k=128). Hard blocks get k=768 or k=1024. Test on 6 blocks with mixed assignment vs uniform k=512. Threshold: mixed PPL < 58 (below progressive's 65.54).
@@ -45,6 +42,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 367
+
+376. ~~**Block importance pruning — zero-out FFN contribution per block, measure PPL delta (R4)**~~ REFUTED — No GPT-2 FFN block is prunable at the |delta| < 0.5 threshold. All 12 blocks are important. Block 0 is catastrophically critical (+3021 PPL delta). Most prunable: block 1 (+1.60 mean delta), block 7 (+2.35), block 2 (+3.85). Ranking: [1,7,2,6,9,10,8,3,5,4,11,0]. Blocks 10 and 11 (cycle 366 high-error blocks) rank 6th and 5th most important — consistent with the error explosion finding. Item 377 (mixed compression) should use importance ranking to allocate k, not binary prune/keep.
+   - *cycle 367 — verdict: REFUTED*
+   - Artifacts: `experiments/gpt2_block_importance_item376.py`, `autoresearch/results/cycle_367_block_importance.json`, `autoresearch/results/cycle_367_block_importance.png`, `autoresearch/results/cycle_367_manifest.txt`
 
 ### Cycle 366
 
