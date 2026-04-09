@@ -10,16 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-342. **LASER on parameter-golf b11 — rank-13 weight-SVD + B-factor retrain (third target)** *(cross-project, action item)*
-   - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.** Also required: `parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` section 6.3.
-   - **Motivation**: cycle 318 measured `eff_rank(b11) = 13.40` with top-1 fraction 56.91%. Block 11 has hidden=1280, so a rank-13 truncation gives `13×(1280+640) = ~25K params` vs the original 1280×640 = 819K — a 33× reduction. Action 6.3 from the report. Backup target if 340 + 341 work and you want a third compressed block before testing composition.
-   - **Setup**: same as item 340, but with `--target-block 11 --rank 13` (and possibly `--rank 16` for sensitivity).
-   - **Hypothesis**: rank-13 retrain BPB ≤ baseline + 0.001.
-   - **Outcomes**: same verdict structure as item 340.
-   - **Baselines**: cycle 318 b11 eff_rank=13.40.
-   - **Run cap**: ~10 minutes (2 ranks).
-   - Depends on: 340.
-
 343. **Selective LeakyReLU² at b4/b5 only (zero-shot inference test)** *(cross-project, action item, cheap)*
    - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.** Also required: `parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` section 6.4.
    - **Motivation**: cycle 319 found the (LeakyReLU², ReLU²) curvature residual is geometrically concentrated at b4 (rank_95=18, 87.6% of energy in top-1 SV) and b5 (rank_95=33, 84.2% in top-1 SV). The other 11 blocks see the leak diffusely. **Hypothesis**: if we have a true LeakyReLU²-trained checkpoint (item 338), inference-swap blocks 0-3 and 6-12 to ReLU² (only blocks 4 and 5 keep the leak). BPB should be within ±0.0005 of the global-LeakyReLU² baseline. If true, the leaderboard win is structurally localized to 2 blocks and the rest of the network is indifferent.
@@ -125,6 +115,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 329
+
+342. **LASER on parameter-golf b11 — rank-13 weight-SVD + B-factor retrain (third target)** *(cross-project, action item)*
+   - **Outcome: REFUTED-flat-spectrum** — b11's `proj.weight` shape (640, 1280) gives 640 singular values. Top-13 energy fraction = 6.80% < 10% gate threshold. Spectrum is flat: S values run [5.40, 5.11, 4.84, 4.78, 4.76, 4.74, 4.70, ...] with no dominant singular direction. Output eff_rank=13.40 (cycle 318) does not predict weight compressibility. Retrain skipped. **Pattern confirmed across 3 blocks**: b3 (1920-dim, 2.6%), b12 (320-dim, 7.07%), b11 (1280-dim, 6.80%) all have flat weight spectra. LASER via output eff_rank is not viable for this checkpoint. Rank thresholds: 10% energy needs rank 20, 50% needs rank 136, 95% needs rank 458 (out of 640 SVs).
+   - *cycle 329 — verdict: REFUTED-flat-spectrum*
 
 ### Cycle 328
 

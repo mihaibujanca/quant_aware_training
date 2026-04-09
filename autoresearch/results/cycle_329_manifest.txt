@@ -1,0 +1,10 @@
+cycle: 329
+item: 342
+verdict: REFUTED-flat-spectrum
+target_block: 11
+weight_shape: [640, 1280]
+top_13_energy_pct: 6.8028
+gate_pass: False
+n_singular_values: 640
+rank_thresholds: {'0.1': 20, '0.25': 57, '0.5': 136, '0.75': 257, '0.9': 384, '0.95': 458, '0.99': 569}
+s_top5: [5.4007, 5.1123, 4.8445, 4.7812, 4.7553]
