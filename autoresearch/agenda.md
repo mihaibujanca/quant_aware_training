@@ -7,14 +7,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ### P0
 
 
-379. **Residual stream representation geometry across compression stages (R4)**
-   - We know WHERE error explodes (blocks 10-11) and that attention doesn't amplify. But we don't know WHY composition fails — what happens to representation geometry as compressed blocks accumulate? Measure: effective rank of residual stream activations, inter-token cosine similarity, and representation collapse metrics (isotropy score) at each block boundary for 0, 3, 6, and 12 compressed blocks.
-   - Method: Hook residual stream at each block boundary. Compute: (1) activation eff_rank, (2) mean pairwise cosine similarity across tokens, (3) variance explained by top-5 PCs. Compare float vs 3-block vs 6-block configs.
-   - Confirmed if: measurable representation collapse (eff_rank drop >30% or isotropy drop >50%) correlates with PPL explosion onset
-   - Refuted if: representation geometry is indistinguishable between 3-block and 6-block configs (collapse is not geometric)
-   - Inconclusive if: metrics shift but don't clearly separate working (3-block) from failing (6-block) configs
-   - Depends on: none (diagnostic)
-
 ### P1
 
 380. **Importance-weighted k allocation with early-block floor (R4)**
@@ -58,6 +50,10 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 371
+
+379. ~~**Residual stream representation geometry across compression stages (R4)**~~ INCONCLUSIVE — PPL barrier confirmed (3-block=47.67, 6-block=65.70), but eff_rank does NOT cleanly separate the two regimes. 6-block shows moderate degradation at mid-stack layers (3→8, drops 8–22%), 3-block mostly intact (max drop 20% at layer 2 only). No config exceeds the >30% threshold at any layer. The composition barrier is NOT visible as a clean geometric collapse in the residual stream eff_rank, participation ratio, top-5 PC concentration, or mean pairwise cosine. Both trained configs perturb the float geometry similarly in magnitude; the PPL gap (47.67 vs 65.70) does not correspond to a proportional geometry gap. The barrier is functional (task performance), not purely geometric (representation dimensionality). Script: `experiments/gpt2_residual_geometry_cycle371.py`. Results: `autoresearch/results/cycle_371_residual_geometry.json`.
 
 ### Cycle 370
 
