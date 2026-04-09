@@ -1,7 +1,7 @@
 item_number=386
 outcome=CONFIRMED
 key_metric=float+adapter test PPL 39.73 ± 0.05 vs compressed+adapter test PPL 47.22 ± 0.08; gap=7.49 (threshold ≥6); float_test_baseline=56.52
-commit=TBD
+commit=034b120
 paths=autoresearch/results/cycle_378_heldout_test.json,experiments/gpt2_heldout_test_cycle378.py
 learned=The c377 val-set finding holds robustly on held-out wikitext-2-test. Float+adapter (h=64, 297K params) beats compressed+adapter (h=128, 595K adapter + proj weights) by 7.5 PPL across all 3 seeds (std <0.1). The gap actually widens slightly vs val (7.49 vs ~8.5 val gap from c377). Compression actively hurts: adding the same adapter capacity to uncompressed weights is substantially better than applying it to compressed weights. The "beat float" anomaly in earlier cycles was an adapter artifact, not a compression benefit.
 next=Pareto sweep (item 387): map full (k, h) space to find if ANY compressed+adapter config is Pareto-optimal vs float+adapter at matched total params. If not, geometric compression has no efficiency advantage in the adapter regime and the research direction may pivot to full-model adapter baselines or higher-compression regimes.
