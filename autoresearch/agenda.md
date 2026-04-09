@@ -6,13 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-386. **Held-out verification of adapter baseline — wikitext-2-test (R5)**
-   - c377 measured float+adapter (38.94) and compressed+adapter (47.43) on wikitext-2-val, which is also the calibration/eval set. Verify both numbers on wikitext-2-test (held-out) with 3 seeds. If the gap shrinks below 4 PPL, the reframing weakens.
-   - CONFIRMED threshold: held-out gap >= 6 PPL (compression still hurts substantially)
-   - REFUTED threshold: held-out gap < 2 PPL (val set was unreliable)
-   - Script: reuse `experiments/gpt2_adapter_only_cycle377.py` as template, change eval split to `test`
-   - Depends on: 385 (c377)
-
 ### P1
 
 387. **Compression-accuracy Pareto curve — sweep k and adapter h at 3 blocks (R4)**
@@ -58,6 +51,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 378
+
+386. ~~**Held-out verification of adapter baseline — wikitext-2-test (R5)**~~ CONFIRMED — Float+adapter (h=64) achieves test PPL 39.73 ± 0.05; compressed+adapter (h=128) achieves test PPL 47.22 ± 0.08. Gap = 7.49 PPL (threshold >= 6). The val-set ordering (c377) holds on held-out test with low variance across 3 seeds. Float+adapter beats compressed+adapter by 7.5 PPL even at the larger adapter budget (h=128). Float baseline test PPL = 56.52. The adapter alone on uncompressed GPT-2 outperforms the compressed+adapter configuration — compression actively hurts relative to adding adapter capacity to float weights. Script: `experiments/gpt2_heldout_test_cycle378.py`. Results: `autoresearch/results/cycle_378_heldout_test.json`.
+   - *cycle 378 — verdict: CONFIRMED*
 
 ### Cycle 377
 
