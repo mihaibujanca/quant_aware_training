@@ -6,10 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-362. **Multi-block topk+lstsq + adapter h=128 — scale winning recipe to 3 blocks (R4, R5)**
-   - c349 got 3-block topk+lstsq [b2,b1,b10] to 49.03 with h=64 adapters (48.69). h=128 single-block hit 46.22 (c350). Run 3-block topk+lstsq + per-block h=128 adapters, 3 seeds, 2000 steps. Threshold: PPL < 47.0 (below single-block h=128 result). If adapter delta per block stays ~0.34, expect ~48.0; if nonlinear, could beat single-block.
-   - Depends on: 359 (confirmed), 358 (inconclusive — insufficient adapter capacity)
-
 ### P1
 
 364. **Per-block adapter sweep — is b2 special or does topk+lstsq + adapter work on any block? (R4, R5)**
@@ -53,6 +49,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 354
+
+362. ~~**Multi-block topk+lstsq + adapter h=128 — scale winning recipe to 3 blocks (R4, R5)**~~ INCONCLUSIVE — h=128 adapters improve over h=64 (48.69 → 48.53 ± 0.16) but not below 47.0 threshold. Mean PPL 48.53 (min 48.31, max 48.68). Phase 1 topk+lstsq 3-block [b2,b1,b10] PPL 49.70. Phase 2 (2000 steps) adds 494K adapter params. h=128 gains ~0.16 PPL over h=64, well below the expected ~1.4 PPL gap from single-block scaling.
+   - *cycle 354 — verdict: INCONCLUSIVE*
+   - Artifacts: `experiments/gpt2_multiblock_adapter_h128_cycle362.py`, `autoresearch/results/cycle_354_multiblock_adapter_h128.json`, `autoresearch/results/cycle_354_manifest.txt`
 
 ### Cycle 353
 

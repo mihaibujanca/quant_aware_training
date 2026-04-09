@@ -1,0 +1,20 @@
+cycle: 354
+item: 362
+verdict: INCONCLUSIVE
+ppl_mean: 48.5306
+ppl_std: 0.1568
+ppl_min: 48.3147
+ppl_max: 48.6826
+phase1_ppl: 49.7047
+float_ppl: 53.8949
+adapter_hidden: 128
+adapter_params_total: 494208
+n_steps_p2: 2000
+blocks: [2, 1, 10]
+seeds: [42, 137, 2024]
+threshold_confirmed: 47.0
+threshold_refuted: 48.69
+ref_h64_3block: 48.69
+ref_h128_single_block: 46.22
+experiment_file: experiments/gpt2_multiblock_adapter_h128_cycle362.py
+result_file: autoresearch/results/cycle_354_multiblock_adapter_h128.json
