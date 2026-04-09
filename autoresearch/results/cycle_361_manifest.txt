@@ -1,0 +1,13 @@
+item_number=370
+cycle=361
+verdict=REFUTED
+ppl_6block=65.54
+ppl_float=53.89
+ppl_phase1=48.38
+ppl_phase2=47.88
+ppl_phase3=65.54
+ppl_phase4=65.54
+ppl_phase5=113.58
+result_paths=autoresearch/results/cycle_361_progressive_compression.json
+code_paths=experiments/gpt2_progressive_compression_cycle370.py
+agenda_updated=yes

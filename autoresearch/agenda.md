@@ -6,8 +6,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-370. **Progressive 3-block compression with intermediate full-model retrain — GPT-2 (R4)**
-   - 12-block simultaneous compression fails (PPL 186) but 3-block works (PPL 47.43). Test progressive strategy: compress blocks [b1,b4,b7] with topk+lstsq k=512 + adapter h=128, retrain full model 500 steps, then compress [b2,b5,b10], retrain, then [b3,b8,b11], retrain. Compare final PPL against: (a) 3-block-only baseline (47.43), (b) 12-block simultaneous (186), (c) 6-block simultaneous. Threshold: 9-block progressive PPL < 1.5× float baseline (~81).
+370. ~~**Progressive 3-block compression with intermediate full-model retrain — GPT-2 (R4)**~~ REFUTED — 6-block PPL=65.54 (threshold: <55.0 CONFIRMED, >65.0 REFUTED). PPL curve: Phase1 (3-block compress+adapter) 48.38 → Phase2 (adapt 9 remaining) 47.88 → Phase3 (compress 3 more) 65.54 → Phase4 (adapt 6 remaining) 65.54 (no improvement from adaptation). Phase5 (9 blocks) 113.58. Intermediate full-model retraining does not help: going from 3→6 compressed blocks causes a catastrophic jump (~18 PPL) regardless of prior adaptation. The composition barrier is not a matter of uncompressed-block adaptation — the compressed blocks themselves damage the representation in ways the subsequent compressed blocks cannot overcome.
+   - *cycle 361 — verdict: REFUTED*
+   - Artifacts: `experiments/gpt2_progressive_compression_cycle370.py`, `autoresearch/results/cycle_361_progressive_compression.json`, `autoresearch/results/cycle_361_manifest.txt`
    - Depends on: 355 (confirmed), 358 (confirmed)
 
 ### P1

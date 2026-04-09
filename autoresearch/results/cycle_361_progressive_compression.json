@@ -1,0 +1,123 @@
+{
+  "cycle": 361,
+  "item": 370,
+  "verdict": "REFUTED",
+  "float_ppl": 53.89489152418256,
+  "ppl_6block": 65.53508665441262,
+  "phases": [
+    {
+      "phase": 1,
+      "description": "compress [2, 1, 10]",
+      "blocks_compressed": [
+        2,
+        1,
+        10
+      ],
+      "best_ppl": 48.38159337040888,
+      "restored_ppl": 48.38159337040888,
+      "ppl_after_freeze": 48.38159337040888
+    },
+    {
+      "phase": 2,
+      "description": "adapt remaining 9 blocks",
+      "frozen_blocks": [
+        1,
+        2,
+        10
+      ],
+      "best_ppl": 47.883259621705825,
+      "restored_ppl": 47.883259621705825,
+      "ppl_after_freeze": 47.883259621705825
+    },
+    {
+      "phase": 3,
+      "description": "compress [4, 3, 11] (6 blocks total)",
+      "blocks_compressed": [
+        4,
+        3,
+        11
+      ],
+      "all_compressed": [
+        1,
+        2,
+        3,
+        4,
+        10,
+        11
+      ],
+      "best_ppl": 65.53508665441262,
+      "restored_ppl": 65.53508665441262,
+      "ppl_after_freeze": 65.53508665441262
+    },
+    {
+      "phase": 4,
+      "description": "adapt remaining 6 blocks",
+      "frozen_blocks": [
+        1,
+        2,
+        3,
+        4,
+        10,
+        11
+      ],
+      "best_ppl": 65.53508665441262,
+      "restored_ppl": 65.53508665441262,
+      "ppl_after_freeze": 65.53508665441262
+    },
+    {
+      "phase": 5,
+      "description": "compress [0, 5, 7] (9 blocks total)",
+      "blocks_compressed": [
+        0,
+        5,
+        7
+      ],
+      "all_compressed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        7,
+        10,
+        11
+      ],
+      "best_ppl": 113.58307351078913,
+      "restored_ppl": 113.58307351078913,
+      "ppl_after_freeze": 113.58307351078913
+    }
+  ],
+  "references": {
+    "float_baseline": 53.895,
+    "topk_3block_adapter_ref": 47.43
+  },
+  "config": {
+    "PHASE1_BLOCKS": [
+      2,
+      1,
+      10
+    ],
+    "PHASE3_BLOCKS": [
+      4,
+      3,
+      11
+    ],
+    "PHASE5_BLOCKS": [
+      0,
+      5,
+      7
+    ],
+    "HIDDEN_FRACTION": 0.16666666666666666,
+    "ADAPTER_HIDDEN": 64,
+    "N_CALIB": 200,
+    "N_EVAL": 100,
+    "SEQ_LEN": 128,
+    "DEVICE": "mps",
+    "N_STEPS_COMPRESS": 1000,
+    "LR_COMPRESS": 0.0001,
+    "N_STEPS_ADAPT": 200,
+    "LR_ADAPT": 5e-05,
+    "SEED": 42
+  }
+}
