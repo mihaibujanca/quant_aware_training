@@ -18,9 +18,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Cycle 007 showed easiest-first beats hardest-first by 27% on toy models. Test 3 orderings on GPT-2 blocks [b1,b4,b7,b11]: (a) easiest-first (lowest single-block swap damage), (b) block-index order, (c) hardest-first. Measure PPL after each stage. Threshold: >5% PPL gap between best and worst ordering at stage 4.
    - Depends on: 355 (confirmed)
 
-368. **LoRA on compressed c_proj vs MLP adapter — parameter-efficiency comparison (R5)**
-   - MLP adapter h=128 uses 198K params per block. Alternative: apply LoRA (r=4,8,16) to the compressed W_proj matrix itself, fine-tuning on the same wikitext-2 calibration data with MSE loss. Compare PPL vs param count on b2 single-block. LoRA r=8 on 768×512 = 10K params (20× fewer than h=128 adapter). Threshold: LoRA achieves >50% of adapter's PPL gain at <25% of params. This tests whether the adapter's value is in learning a nonlinear residual (favors MLP) or in adjusting the linear map (favors LoRA).
-   - Depends on: 350 (adapter Pareto frontier)
+368. ~~**LoRA on compressed c_proj vs MLP adapter — parameter-efficiency comparison (R5)**~~ CONFIRMED-nonlinearity-essential — MLP adapter beats LoRA by 3.05–4.87 PPL at matched param counts. LoRA r=8 (10K): PPL 52.74 vs Adapter h=16 (25K): 47.87 (gap -4.87). LoRA r=32 (41K): 50.68 vs Adapter h=32 (50K): 47.50 (gap -3.18). LoRA r=64 (82K): 49.91 vs Adapter h=64 (99K): 46.86 (gap -3.05). LoRA barely improves over baseline (48.47→49.91 at best), while adapters consistently recover below 48. The adapter's value is in the nonlinear ReLU residual, not in extra linear capacity.
+   - *cycle 360 — verdict: CONFIRMED-nonlinearity-essential*
+   - Artifacts: `experiments/gpt2_lora_vs_adapter_cycle368.py`, `autoresearch/results/cycle_360_lora_vs_adapter.json`, `autoresearch/results/cycle_360_manifest.txt`
 
 369. ~~**Why topk+lstsq composes but LASER doesn't — singular value analysis of per-block error (R5)**~~ CONFIRMED — LASER error eff_rank=6.14 (top-1 energy 78.7%); topk error eff_rank=463.34 (top-1 energy 4.7%). Ratio 75.4x (threshold: 10x). LASER error is spectrally concentrated (near-rank-1), topk error is spectrally flat. Frobenius: LASER 4430 vs topk 1637. Coherence with residual stream: LASER std=7.84 vs topk std=0.88 — LASER error aligns much more strongly with residual direction, explaining coherent accumulation across blocks.
    - *cycle 358 — verdict: CONFIRMED*

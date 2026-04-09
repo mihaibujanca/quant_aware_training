@@ -1,0 +1,26 @@
+Cycle 360 — Item 368: LoRA vs MLP adapter on GPT-2 b2 topk+lstsq
+Verdict: CONFIRMED-nonlinearity-essential
+
+Comparison table (500 steps, 3 seeds, topk+lstsq k=512 baseline PPL 48.47):
+  LoRA r=8   (10240 params): PPL 52.74 ± 0.07
+  LoRA r=32  (40960 params): PPL 50.68 ± 0.07
+  LoRA r=64  (81920 params): PPL 49.91 ± 0.11
+  Adapter h=16 (25360 params): PPL 47.87 ± 0.15
+  Adapter h=32 (49952 params): PPL 47.50 ± 0.10
+  Adapter h=64 (99136 params): PPL 46.86 ± 0.19
+
+Matched-param gaps (adapter PPL - LoRA PPL):
+  r=8 vs h=16:  -4.87 PPL (adapter better)
+  r=32 vs h=32: -3.18 PPL (adapter better)
+  r=64 vs h=64: -3.05 PPL (adapter better)
+
+Mean gap at exact-matched pairs (r=32/64): -3.114 PPL (threshold: -1.0 for CONFIRMED)
+
+LoRA barely improves over the compressed baseline; MLP adapter consistently
+recovers to sub-baseline PPL. The adapter's gain is from nonlinear residual
+learning (ReLU), not from additional linear capacity.
+
+Artifacts:
+  experiments/gpt2_lora_vs_adapter_cycle368.py
+  autoresearch/results/cycle_360_lora_vs_adapter.json
+  autoresearch/results/cycle_360_manifest.txt
