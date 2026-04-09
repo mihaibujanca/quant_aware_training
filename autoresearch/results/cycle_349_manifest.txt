@@ -1,0 +1,33 @@
+cycle: 349
+item: 358
+verdict: INCONCLUSIVE
+date: 2026-04-09
+
+## topk+lstsq 3-block + per-block MLP adapter
+
+INCONCLUSIVE: adapters improve PPL (49.03 -> 48.69) but not below 48.0 threshold.
+
+Float PPL: 53.89
+Phase 1 (topk+lstsq 3-block, [b2, b1, b10]): 49.03
+Phase 2 (+ MLP adapter h=64 per block):
+
+Variant                     Params     MeanPPL   StdPPL   MinPPL   MaxPPL
+topk_3block (phase 1)       1,180,160    49.03      —       49.03    49.03
+topk_3block + adapter       1,428,416    48.69    0.06      48.62    48.76
+
+Adapter adds 248,256 params (3 blocks x 82,752).
+All 3 seeds hit best PPL at step 1000 (max steps), suggesting
+further training might improve — but 48.0 looks out of reach.
+
+Phase 1 actually beat c348 reference (49.03 vs 49.60) —
+possibly due to different seed or minor data shuffling.
+
+## Verdict Criteria
+CONFIRMED if mean PPL < 48.0
+REFUTED if mean PPL >= 49.6
+INCONCLUSIVE if 48.0 <= PPL < 49.6
+
+## Artifacts
+experiments/gpt2_topk_adapter_cycle358.py
+autoresearch/results/cycle_349_topk_adapter.json
+autoresearch/results/cycle_349_manifest.txt

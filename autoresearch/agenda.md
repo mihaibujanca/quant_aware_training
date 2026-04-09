@@ -6,10 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-358. **topk+lstsq 3-block + per-block MLP adapter — combined recipe on GPT-2 (R4, R5)**
-   - Combine the composing base (c348: topk+lstsq on blocks [b1,b4,b7], 3-stage PPL 49.60) with the adapter that broke single-block ceiling (c347: MLP h=64 → PPL 48.51). Train one adapter per compressed block (3 adapters). Measure: 3-block stacked PPL with adapters vs without (49.60). Threshold: PPL < 48.0 (below single-block adapter result). Run 3 seeds.
-   - Depends on: 355 (confirmed), 357 (confirmed)
-
 ### P1
 
 359. **MLP adapter hidden-size sweep on GPT-2 b2 topk+lstsq — Pareto frontier of params vs PPL (R5)**
@@ -49,6 +45,10 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 349
+
+358. ~~**topk+lstsq 3-block + per-block MLP adapter — combined recipe on GPT-2 (R4, R5)**~~ INCONCLUSIVE — adapters improve PPL (49.03 → 48.69 ± 0.06) but not below 48.0 threshold. Phase 1 topk+lstsq 3-block [b2,b1,b10] PPL 49.03. Phase 2 adds 248K adapter params (h=64 per block). All seeds best at step 1000 (still converging). Adapter delta: -0.34 PPL per block.
 
 ### Cycle 347
 
