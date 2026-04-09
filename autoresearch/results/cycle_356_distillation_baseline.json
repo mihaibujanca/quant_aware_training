@@ -1,0 +1,198 @@
+{
+  "cycle": 356,
+  "item": 365,
+  "verdict": "CONFIRMED",
+  "verdict_detail": "geometric WINS by 10.16 PPL",
+  "float_ppl": 53.89489152418256,
+  "float_ppl_ref": 53.895,
+  "geometric_ppl": 46.22,
+  "distillation_mean": 56.38200223813169,
+  "distillation_std": 0.042833029151961355,
+  "distillation_min": 56.349821214202564,
+  "distillation_max": 56.44253697192153,
+  "delta_dist_minus_geometric": 10.162002238131691,
+  "student_hidden": 641,
+  "student_params": 985985,
+  "geometric_total_params": 985216,
+  "seeds": [
+    {
+      "seed": 42,
+      "n_params": 985985,
+      "init_ppl": 57.88666381441977,
+      "best_ppl": 56.35364852827099,
+      "best_step": 400,
+      "restored_ppl": 56.35364852827099,
+      "history": [
+        {
+          "step": 0,
+          "eval_ppl": 57.88666381441977
+        },
+        {
+          "step": 100,
+          "eval_ppl": 57.212548840042416
+        },
+        {
+          "step": 200,
+          "eval_ppl": 56.81701166620048
+        },
+        {
+          "step": 300,
+          "eval_ppl": 56.671124446591506
+        },
+        {
+          "step": 400,
+          "eval_ppl": 56.35364852827099
+        },
+        {
+          "step": 500,
+          "eval_ppl": 56.54220993507495
+        },
+        {
+          "step": 600,
+          "eval_ppl": 57.067098419011494
+        },
+        {
+          "step": 700,
+          "eval_ppl": 58.52213185374277
+        },
+        {
+          "step": 800,
+          "eval_ppl": 60.20317351604351
+        },
+        {
+          "step": 900,
+          "eval_ppl": 62.86648313429158
+        },
+        {
+          "step": 1000,
+          "eval_ppl": 66.07213809710132
+        }
+      ]
+    },
+    {
+      "seed": 137,
+      "n_params": 985985,
+      "init_ppl": 57.80417801663299,
+      "best_ppl": 56.44253697192153,
+      "best_step": 500,
+      "restored_ppl": 56.44253697192153,
+      "history": [
+        {
+          "step": 0,
+          "eval_ppl": 57.80417801663299
+        },
+        {
+          "step": 100,
+          "eval_ppl": 57.27978718569846
+        },
+        {
+          "step": 200,
+          "eval_ppl": 56.829695198795214
+        },
+        {
+          "step": 300,
+          "eval_ppl": 56.630148908927005
+        },
+        {
+          "step": 400,
+          "eval_ppl": 56.46631919945051
+        },
+        {
+          "step": 500,
+          "eval_ppl": 56.44253697192153
+        },
+        {
+          "step": 600,
+          "eval_ppl": 56.746396005118285
+        },
+        {
+          "step": 700,
+          "eval_ppl": 57.682241887345974
+        },
+        {
+          "step": 800,
+          "eval_ppl": 59.59116823145788
+        },
+        {
+          "step": 900,
+          "eval_ppl": 61.389326516279084
+        },
+        {
+          "step": 1000,
+          "eval_ppl": 63.94187238976676
+        }
+      ]
+    },
+    {
+      "seed": 2024,
+      "n_params": 985985,
+      "init_ppl": 57.89715896485756,
+      "best_ppl": 56.349821214202564,
+      "best_step": 500,
+      "restored_ppl": 56.349821214202564,
+      "history": [
+        {
+          "step": 0,
+          "eval_ppl": 57.89715896485756
+        },
+        {
+          "step": 100,
+          "eval_ppl": 57.240508808225584
+        },
+        {
+          "step": 200,
+          "eval_ppl": 56.72935950750433
+        },
+        {
+          "step": 300,
+          "eval_ppl": 56.53302546224933
+        },
+        {
+          "step": 400,
+          "eval_ppl": 56.5334073101126
+        },
+        {
+          "step": 500,
+          "eval_ppl": 56.349821214202564
+        },
+        {
+          "step": 600,
+          "eval_ppl": 56.48878133482175
+        },
+        {
+          "step": 700,
+          "eval_ppl": 57.62892190370261
+        },
+        {
+          "step": 800,
+          "eval_ppl": 61.548306328118365
+        },
+        {
+          "step": 900,
+          "eval_ppl": 62.484933916800365
+        },
+        {
+          "step": 1000,
+          "eval_ppl": 64.12113894473902
+        }
+      ]
+    }
+  ],
+  "config": {
+    "BLOCK_ID": 2,
+    "D_MODEL": 768,
+    "N_CALIB": 200,
+    "N_EVAL": 100,
+    "SEQ_LEN": 128,
+    "N_STEPS": 1000,
+    "LR": 0.0001,
+    "EVAL_EVERY": 100,
+    "SEEDS": [
+      42,
+      137,
+      2024
+    ],
+    "BATCH_SIZE": 64,
+    "loss": "MSE(student_output, teacher_output)"
+  }
+}

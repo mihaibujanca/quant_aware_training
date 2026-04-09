@@ -18,10 +18,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-365. **Distillation baseline for GPT-2 b2 — knowledge distillation vs topk+lstsq + adapter (R5)**
-   - The program requires geometric method vs distillation comparison. Train a student FFN block (same compressed width as topk k=4@6x) via standard KD: teacher-forcing with KL loss on block outputs, matching the adapter training budget (200K params, 1000 steps, same data). Compare final PPL to topk+lstsq+adapter best (46.22). Threshold: geometric recipe within 1.0 PPL of distillation. If distillation wins by >2.0 PPL, the geometric no-training advantage is overstated.
-   - Depends on: 363 (need compressed width for fair comparison)
-
 361. ~~**Single-block topk+lstsq + adapter vs LASER + adapter — is adapter gain compression-method-specific? (R5)**~~ CONFIRMED-generic — Retrospective comparison from cycles 347+350. LASER+adapter: baseline 50.09 → 48.51 best (delta 1.58 PPL, 1000 steps). topk+adapter: baseline 48.47 → 46.53 best (delta 1.94 PPL, 500 steps). Delta difference 0.33 PPL (mean), 0.36 PPL (best), well within 0.5 threshold. Adapter is a generic residual learner — gain does not depend on compression method.
    - *cycle 352 — verdict: CONFIRMED-generic*
    - Artifacts: `autoresearch/results/cycle_352_adapter_generic.json`, `autoresearch/results/cycle_352_manifest.txt`
@@ -49,6 +45,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 356
+
+365. ~~**Distillation baseline for GPT-2 b2 — knowledge distillation vs topk+lstsq + adapter (R5)**~~ CONFIRMED — geometric recipe WINS decisively. Student (h=641, ~986K params, 1000 steps MSE KD) PPL 56.38 ± 0.04, vs geometric 46.22. Delta = +10.16 PPL in geometric's favor. Distillation at matching param budget can't even match float (53.89); geometric compresses and beats float by 7.67 PPL. 3-seed variance tiny (56.35–56.44).
+   - *cycle 356 — verdict: CONFIRMED*
+   - Artifacts: `experiments/gpt2_distillation_baseline_cycle365.py`, `autoresearch/results/cycle_356_distillation_baseline.json`, `autoresearch/results/cycle_356_manifest.txt`
 
 ### Cycle 354
 

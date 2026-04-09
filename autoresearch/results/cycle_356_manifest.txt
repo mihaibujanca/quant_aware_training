@@ -1,0 +1,25 @@
+cycle: 356
+item: 365
+verdict: CONFIRMED
+verdict_detail: geometric recipe WINS decisively — delta +10.16 PPL in geometric's favor
+
+distillation_ppl_mean: 56.38
+distillation_ppl_std: 0.04
+distillation_ppl_min: 56.35
+distillation_ppl_max: 56.44
+geometric_ppl: 46.22
+float_ppl: 53.89
+delta_dist_minus_geometric: +10.16
+
+student_hidden: 641
+student_params: 985985
+geometric_total_params: 985216
+seeds: [42, 137, 2024]
+n_steps: 1000
+lr: 1e-4
+loss: MSE(student_output, teacher_output)
+
+artifacts:
+  experiments/gpt2_distillation_baseline_cycle365.py
+  autoresearch/results/cycle_356_distillation_baseline.json
+  autoresearch/results/cycle_356_manifest.txt
