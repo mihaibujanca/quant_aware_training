@@ -1,0 +1,6 @@
+item_number=335
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_335_pgolf_eff_rank_multi.json,autoresearch/results/cycle_335_summary.md
+code_paths=experiments/pgolf_eff_rank_multi_cycle335.py,parameter-golf/local_scripts/pgolf_eff_rank_census.py
+final_commit_hash=467d4d9d29c2cda67c027f45ca4606b2e1558991
+agenda_updated=yes
