@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=REFUTED-scale-matters
+new_outcome=REFUTED-scale-matters
+reason=Implementation verified correct: mlp_scale applied post-capture via element-wise multiply, matching model's residual-stream contribution (x += mlp_scale * MLP(...)). Cycle 318 baseline values confirmed against source JSON. Three blocks exceed 50% threshold (b0: -80.6%, b11: -83.2%, b12: -85.1%). The b12 collapse (6.94->1.03) is explained by mlp_scale mean≈0.003 with 577/640 channels |scale|<0.1 and 321 negative — the model learned to suppress b12 MLP entirely. The b3 finding (4.89->4.01, -18.1%) is robust: no channels near zero (min scale=0.114). The verdict is mechanistically sound.
+guardrail_flags=none
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Use post-scale eff_rank for LASER targeting; b11 (2.25) and b12 (1.03) are stronger collapse candidates than b3 (4.01). Item 340 (LASER on b3) should also test b11/b12. Investigate whether b12 MLP suppression means the block is vestigial — can it be pruned entirely?
+interesting=true
+interesting_reason=mlp_scale at b12 has mean 0.003 and 577/640 channels near-zero — the model learned to almost completely suppress this block's MLP, collapsing eff_rank from 6.94 to 1.03. This is a natural pruning signal: the model is telling us b12 MLP is expendable. Also reveals that pre-scale eff_rank profiles substantially misrepresent the geometry that reaches the residual stream.
