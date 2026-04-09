@@ -8,23 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 
 
-338. **True LeakyReLU²-trained parameter-golf checkpoint cycle 318/319 census** *(cross-project, caveat experiment)*
-   - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.**
-   - **Motivation**: cycle 319's (LeakyReLU², ReLU²) measurement was on a ReLU²-TRAINED checkpoint, treating LeakyReLU² as a predictive perturbation. The localization at b4/b5/b12 is what the leak WOULD do if applied to a model that wasn't trained with it. The actual mechanism that produces the leaderboard win is what happens when the model is TRAINED with LeakyReLU² from scratch — the activation distribution z(x) differs, the model could learn to use the leak in different layers, and the localization could shift. To get the right answer, run cycle 318 (eff_rank census) AND cycle 319 (curvature residual) on a true LeakyReLU²-trained checkpoint. If the localization is the same (b4/b5/b12), cycle 319's predictive measurement was correct. If it shifts, the predictive measurement was an artifact of the wrong activation distribution.
-   - **Setup**:
-     - **Step 0** (REQUIRED): `cat autoresearch/cross_project/parameter_golf.md`.
-     - **Step 1**: search `parameter-golf/logs/*.npz` and `parameter-golf/records/track_10min_16mb/*/` for any checkpoint trained with `mlp_act="lrelu2"`. The naming convention from `train_gpt.py:79` suggests `MLP_ACT=lrelu2` env var; the leaderboard table in README shows the LeakyReLU² submission at score 1.1194 by abaybektursun on 2026-03-23. The artifact may be at `records/track_10min_16mb/2026-03-23_LeakyReLU_LegalTTT_ParallelMuon/`.
-     - **Step 2**: if a checkpoint is found, run cycle 318's `pgolf_eff_rank_census.py` and cycle 319's `pgolf_curvature_residual.py` on it. Compare per-block profiles to the ReLU²-trained baseline.
-     - **Step 3**: if NO checkpoint is found, train a small one. Modify `train_gpt_mlx.py` to use `mlp_act="lrelu2"` at all blocks, train for the same step count and hyperparams as the ReLU² checkpoint (`13L_640d_322_7k_wd70_batch20k_best`), save to `parameter-golf/logs/13L_640d_lrelu2_for_cycle338.npz`. Then run the census and curvature residual.
-     - **Step 4**: build `cycle_338_summary.md` with side-by-side: ReLU²-trained (cycle 318/319) vs LeakyReLU²-trained (this cycle).
-   - **Hypothesis**: the LeakyReLU²-trained checkpoint has eff_rank profile within ±30% relative of the ReLU²-trained one at every block, AND the (lrelu², relu²) curvature residual on the lrelu²-trained checkpoint has rank_95 ≤ 50 at the SAME blocks (b4, b5, b12) as cycle 319's predictive measurement. If both hold, the cycle 319 finding is confirmed mechanistically.
-   - **Outcomes**:
-     - **CONFIRMED-localization-stable** if both eff_rank and (lrelu², relu²) rank_95 profiles match within ±30% relative at every block: cycle 319's predictive measurement was correct, the localization is real.
-     - **CONFIRMED-shifted-localization** if the (lrelu², relu²) rank_95 ≤ 50 set differs by ≥1 block: the lrelu²-trained model uses the leak differently than the predictive measurement suggested. New finding: name the actual blocks.
-     - **REFUTED-no-localization** if the lrelu²-trained model has rank_95 > 50 at all blocks: the leak is diffuse on a model trained for it. Cycle 319's localization was an artifact of the wrong activation distribution.
-   - **Baselines**: cycle 319 (lrelu², relu²) per-block rank_95 profile [324, 318, 290, 202, **18**, **33**, 146, 147, 161, 179, 169, 127, **21**] (3 candidate localized blocks).
-   - **Run cap**: ~15 minutes if a checkpoint exists; ~45 minutes if training is required (the parameter-golf training recipe is small enough to run in <30 minutes on MPS for a single model variant).
-   - Depends on: `autoresearch/cross_project/parameter_golf.md`, `parameter-golf/local_scripts/pgolf_eff_rank_census.py`, `parameter-golf/local_scripts/pgolf_curvature_residual.py`, parameter-golf training infrastructure (if no checkpoint found).
 
 339. **Encoder/decoder split analysis on parameter-golf 13L_640d — does the b2→b3 eff_rank drop coincide with the encoder/decoder boundary?** *(cross-project, caveat experiment, mostly analysis)*
    - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.**
@@ -191,6 +174,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 325
+
+338. **True LeakyReLU²-trained parameter-golf checkpoint cycle 318/319 census** *(cross-project, caveat experiment)*
+   - **Outcome: INCONCLUSIVE (MOOT-already-lrelu2-trained)** — The canonical checkpoint `13L_640d_322_7k_wd70_batch20k_best.npz` was always lrelu2-trained. `config.mlp_act = "lrelu2"` confirmed from `13L_640d_322_7k_wd70_batch20k_summary.json`. Cycles 318 and 319 mislabeled it as "ReLU²-trained" in summaries and cross_project/parameter_golf.md, but measured the correct model. The lrelu2-trained census requested by item 338 was already performed. No new training or measurement needed. Errata: cycle_318_summary.md and cycle_319_summary.md refer to checkpoint as "ReLU²"; parameter_golf.md §1 says "ReLU² activation" when it means lrelu2. Items 340–343 depending on 338 should note the canonical checkpoint IS the lrelu2-trained artifact.
+   - *cycle 325 — verdict: inconclusive (MOOT)*
 
 ### Cycle 324
 
