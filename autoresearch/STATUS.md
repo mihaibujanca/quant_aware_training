@@ -1,4 +1,4 @@
-# Research Status -- 379 Cycles (001-379)
+# Research Status -- 380 Cycles (001-380)
 
 ## Current State
 
@@ -57,6 +57,7 @@
 19. **CRITICAL: "Beat float" anomaly is adapter capacity, not compression** (c377). Float+adapter (h=64, 297K params) on 3 uncompressed blocks gives PPL 38.94 ± 0.05, beating compressed+adapter 47.43 by 8.5 PPL. Compression HURTS by 8.5 PPL when controlling for adapter. All prior compressed+adapter vs float comparisons were measuring adapter capacity, not compression quality. The correct baseline is float+adapter.
 20. **Held-out verification confirms c377** (c378). On wikitext-2-test: float+adapter 39.73 vs compressed+adapter 47.22 (gap 7.49 PPL). Consistent with val gap 8.5. Float baseline on test: 56.52. The reframing is robust.
 21. **Pareto split: compressed wins at low params, float+adapter at full params** (c379). At 18% of float FFN params, compressed+adapter gets PPL 47.24 (test). Float+adapter at full params gets PPL 40.23. Two distinct regimes. Compressed adapter saturates at h=32 (PPL 47.49 vs 47.24 at h=128). The 7 PPL gap is the compression penalty.
+22. **Adapter ceiling at ~39.5 regardless of block count** (c380). 12-block float+adapter PPL 39.52, barely better than 3-block 39.73 (0.21 gain). 4x adapter params buys nothing. Adapter benefit saturates at 3 blocks.
 
 ## Dead Directions (cycles 322-367)
 
