@@ -6,7 +6,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-(no P0 items pending)
+370. **Progressive 3-block compression with intermediate full-model retrain — GPT-2 (R4)**
+   - 12-block simultaneous compression fails (PPL 186) but 3-block works (PPL 47.43). Test progressive strategy: compress blocks [b1,b4,b7] with topk+lstsq k=512 + adapter h=128, retrain full model 500 steps, then compress [b2,b5,b10], retrain, then [b3,b8,b11], retrain. Compare final PPL against: (a) 3-block-only baseline (47.43), (b) 12-block simultaneous (186), (c) 6-block simultaneous. Threshold: 9-block progressive PPL < 1.5× float baseline (~81).
+   - Depends on: 355 (confirmed), 358 (confirmed)
 
 ### P1
 
@@ -25,6 +27,18 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 369. ~~**Why topk+lstsq composes but LASER doesn't — singular value analysis of per-block error (R5)**~~ CONFIRMED — LASER error eff_rank=6.14 (top-1 energy 78.7%); topk error eff_rank=463.34 (top-1 energy 4.7%). Ratio 75.4x (threshold: 10x). LASER error is spectrally concentrated (near-rank-1), topk error is spectrally flat. Frobenius: LASER 4430 vs topk 1637. Coherence with residual stream: LASER std=7.84 vs topk std=0.88 — LASER error aligns much more strongly with residual direction, explaining coherent accumulation across blocks.
    - *cycle 358 — verdict: CONFIRMED*
    - Artifacts: `experiments/gpt2_error_spectral_cycle369.py`, `autoresearch/results/cycle_358_spectral.json`
+
+371. **Cross-block error decorrelation for channel selection — GPT-2 (R4, R5)**
+   - Current topk selects channels per-block by weight magnitude. Since topk error is diffuse (eff_rank 463), partial cancellation across blocks is accidental. Test: compute per-channel error covariance across blocks [b1,b4,b7,b10] on calibration data, then select channels to minimize total cross-block error correlation (greedy or eigendecomposition). Compare 3-block stacked PPL against standard topk+lstsq at same k=512. Threshold: >2 PPL improvement over standard topk channel selection.
+   - Depends on: 358 (confirmed)
+
+372. **KD fine-tune after geometric compression — GPT-2 (R4)**
+   - Geometric topk+lstsq + adapter gives PPL 47.43 on 3 blocks. Test whether a short knowledge-distillation pass (1000 steps, KL div against float teacher, lr=1e-5) can further recover PPL. This uses geometric compression for initialization (good structure) and KD for polish (global coherence). Compare: (a) geometric only (47.43), (b) KD only from scratch (57.59 from cycle 349), (c) geometric + KD fine-tune. Threshold: geometric+KD beats both standalone methods by >1 PPL.
+   - Depends on: 355 (confirmed)
+
+373. **Port compression recipe to nanochat teacher model — end-to-end validation (R4)**
+   - All results so far use GPT-2 as proxy. The program requires nanochat benchmark validation. Port the established recipe (topk+lstsq k=512 + adapter h=128) to the nanochat teacher. Compress 3 blocks, measure both PPL and downstream task accuracy (the metrics nanochat uses). Threshold: compressed nanochat PPL within 1.2× of float baseline AND task accuracy within 5% relative.
+   - Depends on: 370
 
 ### P2
 
