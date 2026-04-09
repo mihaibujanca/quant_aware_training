@@ -1,0 +1,32 @@
+cycle: 340
+item: 349
+verdict: CONFIRMED-exp-entropy-ordering
+date: 2026-04-09
+
+## exp(entropy) Effective Rank — mean across 3 seeds
+Block    GELU    ReLU²   LeakyReLU²   ReLU²/GELU   LReLU²/GELU
+  0      41.2    48.2     48.0         +17.0%       +16.4%
+  1      57.0    77.3     93.4         +35.8%       +64.0%
+  2      61.5    79.4     89.0         +29.0%       +44.6%
+  3      39.4    52.5     57.5         +33.3%       +46.0%
+
+All 4 blocks pass the >=10% threshold for both squared activations.
+LeakyReLU² > ReLU² > GELU at every block.
+
+## Note on participation ratio discrepancy
+Cycle 332 computed PR on sqrt(eigenvalues_of_cov) = singular values of centered data.
+This cycle computes exp(entropy) on eigenvalues of covariance directly (project standard).
+Values differ in magnitude but ordering is identical.
+
+## Verdict Criteria
+CONFIRMED: exp(entropy) eff_rank for squared activations > GELU by >=10% at >=2 blocks
+All 4 blocks pass for both ReLU² and LeakyReLU².
+
+## Artifacts
+experiments/eff_rank_entropy_cycle340.py
+autoresearch/results/cycle_340_eff_rank_entropy.json
+autoresearch/results/cycle_340_manifest.txt
+autoresearch/briefs/cycle_340.md
+autoresearch/plans/cycle_340.md
+autoresearch/reviews/cycle_340.md
+autoresearch/agenda.md

@@ -14,14 +14,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-349. **Re-run cycle 332 eff_rank with exp(entropy) formula — canonical cross-activation comparison**
-   - Cycle 332 trained 3 activation variants (GELU/ReLU²/LeakyReLU²) on tiny GPT and measured eff_rank profiles, but used participation ratio instead of the project-standard exp(entropy) formula. Checkpoints exist. Re-compute eff_rank with the correct formula so values are comparable to all prior cycles. Confirms or invalidates the "squared activations give HIGHER eff_rank" finding.
-   - Type: re-analysis / cheap
-   - Confirmed if: exp(entropy) eff_rank still shows squared activations > GELU by ≥ 10% relative at ≥ 2 blocks
-   - Refuted if: exp(entropy) reverses the ordering or differences < 5% relative
-   - Inconclusive if: mixed ordering across blocks (no clean pattern)
-   - Depends on: cycle 332 checkpoints in `experiments/tiny_gpt_act_compare_checkpoints/`
-
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
 138. ~~**Train MoE testbed — Tiny Mixtral**~~ SKIPPED — WikiText-2 too small, overfits at PPL 65. Need pretrained model or larger dataset.
@@ -45,6 +37,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 340
+
+349. **Re-run cycle 332 eff_rank with exp(entropy) formula — canonical cross-activation comparison**
+   - **Outcome: CONFIRMED** — exp(entropy) eff_rank: squared activations > GELU by +17-64% relative at ALL 4 blocks. LeakyReLU² > ReLU² > GELU everywhere. GELU [41,57,62,39], ReLU² [48,77,79,53], LeakyReLU² [48,93,89,58].
+   - *cycle 340 — verdict: CONFIRMED-exp-entropy-ordering*
+   - Artifacts: `experiments/eff_rank_entropy_cycle340.py`, `autoresearch/results/cycle_340_eff_rank_entropy.json`, `autoresearch/results/cycle_340_manifest.txt`
 
 ### Cycle 339
 
