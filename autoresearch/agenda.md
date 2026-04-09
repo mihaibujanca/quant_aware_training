@@ -11,14 +11,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-381. **Probe FFN local Jacobians on calibration data — data-active compression feasibility (R3)**
-   - R3 (data-active geometric compression) is untested on GPT-2. Before building a full system, measure whether FFN input-output Jacobians are low-rank on actual data. If Jacobians are low-rank per region, we can compress the local linear maps rather than the weight matrix.
-   - Method: For blocks b1, b5, b11, compute per-token Jacobians J = dFFN/dx on 512 calibration tokens. Report: (1) mean Jacobian effective rank, (2) variance of rank across tokens, (3) top-10 singular value concentration. Compare to weight matrix SVD rank.
-   - Confirmed if: mean Jacobian eff_rank < 0.5 × weight eff_rank (data-active compression has headroom over static)
-   - Refuted if: Jacobian eff_rank >= weight eff_rank (data conditioning doesn't help)
-   - Inconclusive if: rank reduction exists but varies wildly across tokens (clustering needed before compression)
-   - Depends on: none (R3 scouting)
-
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
 138. ~~**Train MoE testbed — Tiny Mixtral**~~ SKIPPED — WikiText-2 too small, overfits at PPL 65. Need pretrained model or larger dataset.
@@ -2663,3 +2655,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 380. ~~**Importance-weighted k allocation with early-block floor (R4)**~~ PLAN INVALID — Third k-allocation variant after c365 (Frobenius) and c368 (importance). Floor=384 vs 256 doesn't change the starvation mechanism. c370 confirmed barrier is count-driven, making per-block k tuning irrelevant.
    - *cycle 372 — verdict: inconclusive (PLAN INVALID)*
    - Artifacts: `autoresearch/plans/cycle_372.md`
+
+### Cycle 373
+
+381. ~~**Probe FFN local Jacobians on calibration data — data-active compression feasibility (R3)**~~ PLAN INVALID — P1 duplicate of cycles 068 and 195 which already measured per-token FFN Jacobian rank on GPT-2 and found near-full-rank (50-71% at 90% energy). Data-active Jacobian compression has no headroom.
+   - *cycle 373 — verdict: inconclusive (PLAN INVALID)*
+   - Artifacts: `autoresearch/plans/cycle_373.md`

@@ -355,3 +355,5 @@
 371	379	empirical	inconclusive	3block_PPL=47.67_6block_PPL=65.70_max_eff_rank_drop_6block=22pct_layers_gt30pct_drop=0	PPL barrier confirmed but residual stream eff_rank does not cleanly separate 3-block vs 6-block. Max drop 22% at layer 4 for 6-block (no layer exceeds 30%). Composition barrier is functional, not geometric in eff_rank.	NONE	experiments/gpt2_residual_geometry_cycle371.py,autoresearch/results/cycle_371_residual_geometry.json,autoresearch/results/cycle_371_geometry_profiles.png
 
 372	380	empirical	inconclusive	N/A	PLAN INVALID: third k-allocation variant (after c365, c368). Floor=384 doesnt change starvation mechanism. c370 confirmed barrier is count-driven.	NONE	autoresearch/plans/cycle_372.md
+
+373	381	analysis	inconclusive	N/A	PLAN INVALID P1: duplicate of cycles 068/195 — GPT-2 FFN Jacobians near-full-rank (50-71% at 90% energy). R3 data-active compression has no headroom.	NONE	autoresearch/plans/cycle_373.md
