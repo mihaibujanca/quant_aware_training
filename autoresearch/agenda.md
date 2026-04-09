@@ -6,13 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-
-385. **Adapter-only baseline — does compression or the adapter cause the "beat float" anomaly? (R4)**
-   - 3-block compressed + adapter gives PPL 47.43, beating float 53.89. This 6.5-PPL gain is unexplained. Two hypotheses: (A) compression creates a beneficial bottleneck (information filtering), (B) the adapter itself adds useful capacity regardless of compression.
-   - Test: attach and train an identical MLP adapter (h=64) to UNCOMPRESSED blocks [b2,b1,b10] — same architecture, same training schedule, same 2000 steps. The adapter takes the same input (post-FFN residual) and adds a correction.
-   - Confirmed if: float+adapter PPL < 50.0 (adapter alone is responsible). Refuted if: float+adapter PPL > 53.0 (compression is necessary for the gain). Inconclusive if: 50–53.
-   - Depends on: none.
-
 ### P1
 
 ### P2
@@ -40,6 +33,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 377
+
+385. ~~**Adapter-only baseline — does compression or the adapter cause the "beat float" anomaly? (R4)**~~ CONFIRMED — Float+adapter (h=64, 297K params) achieves mean PPL 38.94 ± 0.05 across 3 seeds, dramatically below float 53.89 and below compressed+adapter ref 47.43. The adapter alone on uncompressed GPT-2 blocks beats float by 14.95 PPL — far exceeding the 50.0 confirmation threshold. Adapter provides useful capacity independent of compression; the "beat float" anomaly is entirely explained by the adapter, not the compression bottleneck. Script: `experiments/gpt2_adapter_only_cycle377.py`. Results: `autoresearch/results/cycle_377_adapter_only.json`.
+   - *cycle 377 — verdict: CONFIRMED*
 
 ### Cycle 375
 

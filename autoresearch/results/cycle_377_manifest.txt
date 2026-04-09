@@ -1,0 +1,7 @@
+item_number=385
+outcome=CONFIRMED
+key_metric=float+adapter mean PPL=38.94 ± 0.05 (float=53.89, compressed+adapter ref=47.43, threshold<50.0)
+commit=TBD
+paths=experiments/gpt2_adapter_only_cycle377.py,autoresearch/results/cycle_377_adapter_only.json
+learned=Adapter alone on uncompressed GPT-2 blocks [b2,b1,b10] achieves PPL 38.94, beating float by 14.95 PPL. The "beat float" anomaly is entirely explained by adapter capacity, not compression. Even a conservative h=64 (297K params, half the ref 595K) on float FFNs dramatically outperforms both float baseline and the compressed+adapter reference.
+next=The compression+adapter pipeline's claimed advantage over float was an artifact of the adapter, not the geometric compression. Any further compression research must control for adapter capacity, or the gain is not attributable to compression at all.
