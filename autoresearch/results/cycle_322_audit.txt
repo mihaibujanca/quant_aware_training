@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=REFUTED-checkpoint-specific
+new_outcome=REFUTED-checkpoint-specific
+reason=Verdict correctly follows from data: 13L min at b3 (frac 0.231), 11L min at b10 (frac 0.909), 10L min at b9 (frac 0.900). Spread 7 blocks / 0.678 fractional, both above REFUTED thresholds. However, 11L/10L minimums are terminal-block effects (expected low eff_rank before LM head), while 13L b3 is a genuinely anomalous early-block collapse. The comparison is valid but the interpretation should note this asymmetry: the question "is b3 collapse stable" is trivially REFUTED because the other architectures lack any early-block collapse entirely.
+guardrail_flags=none
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Per-checkpoint eff_rank profiling is mandatory before compression. The 13L b3 anomaly (eff_rank 4.89 surrounded by 86 and 38) warrants investigation — is it a training artifact or structural? Compare b3 weights (condition number, singular value spectrum) across training checkpoints of the same 13L run to distinguish.
+interesting=false
+interesting_reason=
