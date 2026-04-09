@@ -1,7 +1,7 @@
 item_number=360
 outcome=REFUTED
 key_metric=ordering_gap_pct=0.95 (ratio=1.0095); hardest_first=53.27, block_index=53.69, easiest_first=53.78 (mean PPL at stage 4, 3 seeds each)
-commit=TBD
+commit=344bd40
 paths=experiments/gpt2_ordering_sensitivity_cycle369.py,autoresearch/results/cycle_369_ordering_sensitivity.json,autoresearch/results/cycle_369_manifest.txt
 learned=Accumulation order does not matter for topk+lstsq+adapter on GPT-2. All 3 orderings converge to within <1% PPL. Joint-training of adapters at each stage compensates for upstream compression errors regardless of which block was compressed first. This contradicts the cycle-007 toy model finding — GPT-2 adapters are more capable correctors than the toy correction used there.
 next=Order is not a lever. Focus shifts to other axes: k budget allocation across blocks, richer adapter architectures, or different compression methods per block. Item 377 (mixed compression with importance-based k) remains the most promising direction.
