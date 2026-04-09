@@ -1,0 +1,13 @@
+cycle=326
+item=339
+auditor=claude
+status=PASS
+verdict_confirmed=yes
+claimed_verdict=REFUTED-no-correlation
+audited_verdict=REFUTED-no-correlation
+G1_config_extraction=PASS — script uses same auto-computation (0→num_layers//2) as parameter-golf source (train_gpt.py:736), boundary=6 correct
+G3_conclusion_follows=PASS — drop at block 3, boundary at block 6, 3 blocks apart; recovery at block 4 further refutes architectural-boundary explanation
+G5_learning_quality=N/A — config inspection only, no training; eff_rank values from prior cycle 318
+interesting=no
+flags=none
+notes=Script hardcodes cycle-318 eff_rank values rather than reading from JSON; minor provenance issue, not a correctness concern
