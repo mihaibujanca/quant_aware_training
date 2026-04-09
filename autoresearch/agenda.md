@@ -6,20 +6,37 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-(empty — item 350 moved to PAST)
+354. **Jacobian clustering on pgolf — per-block effective number of local linear maps (R3)**
+   - For each of the 13 MLP blocks, sample 2048 tokens from the validation set. Compute per-token Jacobian J(x) = df/dx via `torch.func.jacrev` (f = block MLP forward). Flatten each J to a vector. Run k-means for K = {2, 4, 8, 16, 32}. For each K, replace each token's output with the first-order Taylor approximation f(x) ≈ J̄_k (x − μ_k) + f(μ_k) using cluster centroid k. Report reconstruction MSE / ||f(x)||² per block per K. Find K* = min K such that relative error < 5%.
+   - Confirmed if: K* < 8 for at least 3 blocks — those blocks have genuinely low-complexity nonlinear behavior and are candidates for piecewise-linear compression.
+   - Refuted if: K* ≥ 32 for all blocks — local linear diversity is too high for clustering to be useful.
+   - Inconclusive if: K* < 8 for 1-2 blocks only — limited signal, need to test whether those blocks are also the ones with low mlp_scale.
+   - Depends on: none (uses existing pgolf checkpoint)
 
 ### P1
 
-(empty — item 351 moved to PAST)
+355. **topk+lstsq multi-block accumulation curve on pgolf — is composition failure LASER-specific? (R4)**
+   - Apply the cycle 007 working recipe (topk k=4 at 6× expansion + lstsq, 500 Adam steps) to individual blocks, then accumulate in order of per-block MSE (best first). Report BPB at each accumulation step: 1-block, 2-block, ..., 13-block. Compare the accumulation slope to the LASER accumulation curve from cycle 343 (which was monotonically degrading on GPT-2).
+   - Confirmed if: 4+ block stacking gives BPB < float_baseline + 0.05 — topk+lstsq composes where LASER doesn't.
+   - Refuted if: accumulation curve degrades monotonically like LASER — composition failure is universal, not method-specific.
+   - Inconclusive if: accumulation curve is non-monotonic but final BPB exceeds threshold — partial composition with interaction effects.
+   - Depends on: none (uses existing pgolf checkpoint + established recipe)
 
-(empty — item 352 moved to PAST)
+356. **Centroid affinity as compression predictor on pgolf — replicate cycle 27's ρ=0.853 on a real model (R3)**
+   - For each of the 13 MLP blocks: compute output centroid c = mean(f(X)) over 2048 val tokens, then centroid affinity = cosine(f(x), c) averaged over tokens. Correlate centroid affinity with single-block swap damage (BPB delta when replacing block output with centroid). On GPT-2 cycle 27 found ρ=0.853 — if this transfers, centroid affinity is a free diagnostic for "which blocks are doing nothing interesting."
+   - Confirmed if: rank correlation |ρ| > 0.7 between centroid affinity and single-block swap BPB delta.
+   - Refuted if: |ρ| < 0.3 — centroid affinity has no predictive power on pgolf.
+   - Inconclusive if: 0.3 ≤ |ρ| ≤ 0.7 — weak signal, possibly confounded by block size variation.
+   - Depends on: none (uses existing pgolf checkpoint)
 
 ### P2
 
-   - Confirmed if: combined (b12 prune + LASER on block X) BPB delta < 0.01 above baseline — both interventions compose without interference.
-   - Refuted if: combined BPB delta > 0.03 — the interventions interact destructively despite being individually cheap/free.
-   - Inconclusive if: combined delta is 0.01-0.03 — partial interference that might be addressable with joint retrain.
-   - Depends on: 351 (need output-covariance-gated LASER result on pgolf to know which block to pair with b12)
+357. **GPT-2 b2 rank-2 LASER + learned residual — push past the single-block ceiling**
+   - b2 rank-2 LASER gives PPL 50.21 (3.68 below float 53.89). Train a small learned correction on top: freeze the rank-2 W and train a low-rank residual ΔW (rank 4-8) with the B-factor retrain protocol (500 steps, lr=1e-4). Also try a lightweight MLP adapter (hidden=64) in parallel. Measure PPL.
+   - Confirmed if: PPL < 49.0 — learned residual pushes meaningfully below the rank-2 floor.
+   - Refuted if: PPL ≥ 50.0 — residual training cannot improve on raw rank-2 truncation.
+   - Inconclusive if: 49.0 ≤ PPL < 50.0 — marginal improvement, unclear if the approach has headroom.
+   - Depends on: none (uses existing GPT-2 + cycle 343 LASER result)
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
