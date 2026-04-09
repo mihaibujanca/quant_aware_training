@@ -1,4 +1,4 @@
-# Research Status -- 371 Cycles (001-371)
+# Research Status -- 374 Cycles (001-374)
 
 ## Current State
 
@@ -49,6 +49,7 @@
 13. **All GPT-2 FFN blocks are task-critical** (c367). No block is prunable at <0.5 PPL threshold. Block 0 is catastrophic (+3021 PPL). Least important: b1 (+1.60), b7 (+2.35). Most important: b0 (+3021), b11 (+9.12). Importance ranking ascending: [1,7,2,6,9,10,8,3,5,4,11,0].
 14. **Composition barrier is count-driven, not identity-driven** (c370). 10-block selective (skip b10+b11) gives PPL 150 — far worse than 6-block uniform (65.54) that includes b10/b11. The number of compressed blocks matters more than which blocks.
 15. **Composition barrier is NOT visible in second-order geometry** (c371). eff_rank, participation ratio, PC concentration, mean cosine all fail to distinguish working 3-block from failing 6-block. Max eff_rank drop = 22% (threshold 30%). The 18-PPL gap has no covariance-level signature.
+16. **More channels don't break the barrier** (c374). k=768 (3.2x compression) gives 6-block PPL 61.85 vs k=512 (4.79x) 65.54. Only 3.69 PPL gain for 50% more channels. The 3→6 block gap narrows from 18→15 PPL but does not close.
 
 ## Dead Directions (cycles 322-367)
 
@@ -74,6 +75,9 @@
 | Accumulation order sensitivity (GPT-2) | REFUTED | 369 | <1% PPL gap across 3 orderings; adapter compensates |
 | Selective compression (skip b10+b11) | REFUTED | 370 | 10-block PPL 150 >> 6-block 65.54; count matters, not identity |
 | Representation geometry collapse | INCONCLUSIVE | 371 | No covariance-level signature of 18-PPL gap; metrics too coarse |
+| Importance-weighted k (floor=384) | PLAN INVALID | 372 | Third k-allocation variant; same mechanism as c365 |
+| Jacobian probing (R3) | PLAN INVALID | 373 | Duplicate of c068/c195; GPT-2 FFN Jacobians near-full-rank |
+| Error budget k=768 on 6-block | REFUTED | 374 | PPL 61.85; 50% more channels only buys 3.69 PPL |
 
 ## Open Questions
 
