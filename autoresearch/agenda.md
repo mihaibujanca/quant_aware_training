@@ -8,9 +8,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-364. **Per-block adapter sweep — is b2 special or does topk+lstsq + adapter work on any block? (R4, R5)**
-   - All evidence so far uses b2 (easiest to compress per single-block swap damage). Run topk+lstsq k=4@6x + h=64 adapter on blocks [b1, b4, b7, b10] individually. 2 seeds, 1000 steps each. Measure PPL delta from compressed-no-adapter baseline for each block. Threshold: adapter delta > 0.5 PPL on at least 3/4 blocks. If only b2 benefits, the method is block-specific and multi-block scaling won't work.
-   - Depends on: 359 (confirmed)
+364. ~~**Per-block adapter sweep — is b2 special or does topk+lstsq + adapter work on any block? (R4, R5)**~~ CONFIRMED — adapter works on ALL 4 tested blocks [b1, b4, b7, b10], spanning early/mid/late positions. 4/4 blocks pass delta > 0.5 threshold (mean deltas: b1=+1.44, b4=+1.47, b7=+1.72, b10=+2.74 PPL). b2 is not special. The adapter is a general residual learner that consistently recovers ~1.5–2.7 PPL above the topk+lstsq compressed-only baseline. Late blocks (b7, b10) show larger gains than early blocks (b1, b4).
+   - *cycle 355 — verdict: CONFIRMED*
+   - Artifacts: `experiments/gpt2_perblock_adapter_cycle364.py`, `autoresearch/results/cycle_355_perblock_adapter.json`, `autoresearch/results/cycle_355_manifest.txt`
 
 360. **topk+lstsq accumulation order sensitivity on GPT-2 — easiest-first vs block-index vs hardest-first (R4)**
    - Cycle 007 showed easiest-first beats hardest-first by 27% on toy models. Test 3 orderings on GPT-2 blocks [b1,b4,b7,b11]: (a) easiest-first (lowest single-block swap damage), (b) block-index order, (c) hardest-first. Measure PPL after each stage. Threshold: >5% PPL gap between best and worst ordering at stage 4.

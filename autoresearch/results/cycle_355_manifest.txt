@@ -1,0 +1,28 @@
+cycle: 355
+item: 364
+verdict: CONFIRMED
+description: Per-block adapter sweep — is b2 special or does topk+lstsq + adapter work on any block?
+
+float_ppl: 53.8949
+blocks_tested: [1, 4, 7, 10]
+adapter_delta_threshold: 0.5 PPL
+blocks_passing: 4/4
+
+per_block_results:
+  b1:  compressed_only=51.40  adapter_delta_mean=+1.4398  passes=True
+  b4:  compressed_only=50.41  adapter_delta_mean=+1.4723  passes=True
+  b7:  compressed_only=51.02  adapter_delta_mean=+1.7180  passes=True
+  b10: compressed_only=51.25  adapter_delta_mean=+2.7361  passes=True
+
+config:
+  HIDDEN_FRACTION=1/6 (k=512)
+  ADAPTER_HIDDEN=64
+  N_STEPS_P1=500
+  N_STEPS_P2=1000
+  LR=1e-4
+  SEEDS=[42,137]
+
+artifacts:
+  experiments/gpt2_perblock_adapter_cycle364.py
+  autoresearch/results/cycle_355_perblock_adapter.json
+  autoresearch/results/cycle_355_manifest.txt
