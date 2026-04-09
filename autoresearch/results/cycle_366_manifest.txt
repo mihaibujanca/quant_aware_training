@@ -1,0 +1,7 @@
+item_number=375
+outcome=CONFIRMED
+key_metric=inflection_block=9_in_3/3_seeds; cumul_error_block11=159.57; amplification_ratio=0.91 (actual<additive); mean_ppl=66.33±0.12
+commit=928f59d
+paths=experiments/gpt2_residual_error_monitor_cycle375.py,autoresearch/results/cycle_366_residual_error_monitor.json,autoresearch/results/cycle_366_error_profile.png
+learned=Error grows slowly through blocks 1-9 (cumul 10.0→50.3) then explodes at blocks 10-11 driven by late compressed blocks b10/b11. Attention does NOT amplify error (ratio=0.91<1). Inflection is structural: b10 and b11 have the highest Frobenius error and are directly responsible. Additive baseline > actual, disconfirming attention amplification hypothesis.
+next=Item 376 (block importance pruning) is next P0. Finding suggests prioritizing compression quality on b10/b11 over other blocks — they cause the PPL explosion.
