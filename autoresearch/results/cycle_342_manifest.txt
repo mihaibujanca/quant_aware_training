@@ -1,0 +1,5 @@
+item_number=351
+outcome=refuted
+key_metric=best_delta=+0.034847_rank10_2000step_lr3e-5_vs_c327_rank10_delta=+0.034984_no_improvement
+commit=TBD
+paths=experiments/pgolf_laser_retrain_cycle342.py,autoresearch/results/cycle_342_pgolf_laser_retrain.json,autoresearch/results/cycle_342_summary.md,autoresearch/results/cycle_342_manifest.txt

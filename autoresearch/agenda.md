@@ -10,13 +10,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-351. **LASER with output-covariance gating on pgolf — re-evaluate blocks rejected by weight SVD**
-   - Cycles 327-329 rejected LASER on pgolf b3/b11/b12 because weight SVD was flat (top-5 < 10%). But cycle 338's key insight is that output-covariance, not weight SVD, predicts LASER viability. Compute output-covariance SVD for all 13 pgolf blocks on FineWeb val data. For blocks where output-covariance top-r energy ≥ 50% (for some small r), run rank-r LASER + 500-step B-factor retrain. Compare BPB to baseline (1.3621).
-   - Type: empirical
-   - Confirmed if: ≥1 pgolf block has output-covariance top-5 ≥ 50% AND rank-r LASER retrain achieves BPB delta < 0.005 (vs the +0.035-0.04 seen in cycles 327-329 using weight SVD rank).
-   - Refuted if: all 13 pgolf blocks have output-covariance top-5 < 30% (concentration is absent even in data space) OR output-covariance-gated LASER still gives BPB delta > 0.01.
-   - Inconclusive if: output covariance is concentrated but LASER retrain underperforms despite using the right rank — suggests the retrain budget or procedure is the bottleneck, not the rank selection.
-   - Depends on: 350 (validates the output-covariance methodology on GPT-2 first)
+(empty — item 351 moved to PAST)
 
 352. **GPT-2 multi-block LASER accumulation — ordered stacking of rank-1 LASER on top-k concentrated blocks**
    - We have single-block LASER results (cycle 280: b1 works). Item 350 will identify which other blocks have concentrated output covariance. This item tests whether LASER composes across blocks: apply rank-1 LASER to the top-k most concentrated blocks (by output-covariance eff_rank, ascending), one at a time in order from most to least concentrated. After each block's 500-step B-factor retrain, measure full-model PPL. Plot the accumulation curve: x = number of LASER'd blocks, y = PPL. This directly addresses R4 (compositional validity).
@@ -2542,3 +2536,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Outcome: CONFIRMED
    - Cycle: 173
    - Artifacts: `experiments/regime_ablation_table_cycle173.py`, `autoresearch/results/cycle_173_regime_ablation.json`, `autoresearch/results/cycle_173_regime_ablation.png`
+
+### Cycle 342
+
+351. **LASER with output-covariance gating on pgolf — re-evaluate using correct metric** *(REFUTED — cycle 342)*
+   - Extended retrain (2000 steps, lr=3e-5 and 1e-4) made no difference vs cycle 327 (500 steps). Best delta=+0.035 BPB (rank=10). Output-covariance eff_rank=4.89 is not concentrated enough for LASER — GPT-2 b1 succeeded at eff_rank=1.94. LASER on pgolf b3 is dead regardless of retrain budget.
+   - Outcome: REFUTED
+   - Cycle: 342
+   - Artifacts: `experiments/pgolf_laser_retrain_cycle342.py`, `autoresearch/results/cycle_342_pgolf_laser_retrain.json`, `autoresearch/results/cycle_342_summary.md`
