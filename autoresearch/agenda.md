@@ -6,10 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-375. **Residual stream error propagation monitor — trace per-token error through full GPT-2 forward pass (R5)**
-   - The composition barrier is superlinear despite orthogonal per-block errors. This experiment instruments the forward pass to measure residual stream error norm after each block (not just FFN error, but cumulative error including attention re-routing). Run float vs 6-block-compressed forward pass on 200 wikitext-2 sequences, compute ||h_compressed - h_float|| at each of 12 block outputs. Identify where the error growth transitions from linear to superlinear. Threshold: identify a specific block range where error growth rate doubles (inflection point).
-   - Depends on: none
-
 376. **Block importance pruning — zero-out FFN contribution per block, measure PPL delta (R4)**
    - Cycle 339 showed b12 is free to prune on pgolf (delta=-0.000004 BPB). Run the same test on GPT-2: for each of 12 blocks, zero out the FFN residual contribution and measure PPL. Blocks with delta < 0.5 PPL can be skipped entirely (no compression needed), freeing the error budget for harder blocks. If 2+ blocks are prunable, the effective composition problem shrinks from 12 to 10 or fewer blocks.
    - Depends on: none
@@ -49,6 +45,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 366
+
+375. ~~**Residual stream error propagation monitor — trace per-token error through full GPT-2 forward pass (R5)**~~ CONFIRMED — Inflection block is 9 in all 3/3 seeds. Error grows slowly through blocks 1–9 (cumulative norm rises from 10.0 to 50.3 at block 9) then explodes at blocks 10–11 (50.3 → 71.9 → 159.6). Growth rate g_9=21.2, g_10=86.2 (both >> 2× median ~3.8). Amplification ratio at block 11 = 0.91 (actual < additive baseline), meaning attention partially cancels error rather than amplifying it. Both late compressed blocks (b10, b11) drive the explosion, not attention routing. Mean compressed PPL = 66.33 ± 0.12.
+   - *cycle 366 — verdict: CONFIRMED*
+   - Artifacts: `experiments/gpt2_residual_error_monitor_cycle375.py`, `autoresearch/results/cycle_366_residual_error_monitor.json`, `autoresearch/results/cycle_366_error_profile.png`, `autoresearch/results/cycle_366_manifest.txt`
 
 ### Cycle 365
 
