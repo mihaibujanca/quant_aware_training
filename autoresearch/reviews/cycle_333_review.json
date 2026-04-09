@@ -1,0 +1,14 @@
+{
+  "cycle": 333,
+  "item": 332,
+  "decision": "APPROVE",
+  "round": 1,
+  "issues": [
+    {
+      "severity": "WARN",
+      "description": "Add full-rank sanity check (r=256) as mandatory Step 4.0 to catch nn.Linear vs Conv1D transposition bugs before committing to 36 retrain runs.",
+      "resolution": "Plan must include: construct LowRankCProj at r=256 for GELU seed-42, verify PPL matches baseline within 0.05. Abort if mismatch."
+    }
+  ],
+  "notes": "Spectrum preflight correctly gates retrain (lesson from cycles 327-329). nn.Linear semantics explicitly handled. Time budget realistic at ~15 min."
+}

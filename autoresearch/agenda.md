@@ -62,8 +62,8 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ### Cycle 333
 
 332. **LASER recipe replication on tiny GPT activation variants — does cycle 280's rank-r-beats-baseline transfer across activations on a controlled testbed?**
-   - **Outcome: REFUTED-flat-spectrum** — All 3 activation variants (GELU, ReLU², LeakyReLU²) have flat c_proj weight spectra: best-block top-5 singular energy GELU=6.2%, ReLU²=6.5%, lrelu²=6.7%, all below the 10% gate. LASER is inapplicable because the precondition (concentrated spectrum) is absent in tiny GPT trained from scratch for 3000 steps. Full-rank sanity passed (LowRankCProj r=256 diff=0.000). The question of LASER genericity across activations remains open for models with concentrated spectra (pretrained large models).
-   - *cycle 333 — verdict: REFUTED-flat-spectrum*
+   - **Outcome: INCONCLUSIVE (audit-downgraded from REFUTED-flat-spectrum)** — All 3 activation variants have flat c_proj weight spectra (top-5 energy 6.2-6.7%, below 10% gate). LASER rank sweep was correctly skipped. However, the correct verdict per the agenda's defined tree is INCONCLUSIVE (precondition absent, experiment could not run), not REFUTED (which implies the hypothesis was tested and falsified).
+   - *cycle 333 — verdict: INCONCLUSIVE (audit downgrade)*
    - Artifacts: `experiments/tiny_gpt_laser_cycle333.py`, `autoresearch/results/cycle_333_laser.json`, `autoresearch/results/cycle_333_manifest.txt`
 
 ### Cycle 332

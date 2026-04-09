@@ -1,0 +1,10 @@
+cycle=333
+item=332
+claimed_verdict=REFUTED-flat-spectrum
+audit_verdict=DOWNGRADE-to-INCONCLUSIVE
+status=FAIL
+code_runs=yes
+code_correct=yes
+data_matches_claims=yes
+verdict_in_tree=no
+notes=The agenda item 332 defines three verdicts: CONFIRMED-LASER-generic, REFUTED-LASER-GELU-specific, INCONCLUSIVE. The script invented a fourth verdict REFUTED-flat-spectrum (line 468) for when all variants fail the spectrum preflight gate. This gate was added by the plan, not the agenda. When the experiment cannot run because a precondition is absent, the correct outcome per the original criteria is INCONCLUSIVE, not REFUTED. The REFUTED label implies the hypothesis was tested and falsified; in reality, the testbed lacked the precondition for testing. The scientific content is sound: flat spectra correctly identified, full-rank sanity passed, and the summary correctly notes the question remains open for pretrained models. The only issue is the verdict label.
