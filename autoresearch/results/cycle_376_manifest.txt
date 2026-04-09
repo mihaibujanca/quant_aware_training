@@ -1,7 +1,7 @@
 item_number=384
 outcome=CONFIRMED
 key_metric=CKA gap=0.1010 at layer 11 (3-block CKA=0.7946 vs 6-block CKA=0.6936); layers 0-10 gap≤0.0003; L2 div at layer 11: 3-block mean=117.7, 6-block mean=146.1 (+24%). Float PPL=53.89, 3-block PPL=47.68, 6-block PPL=65.81.
-commit=TBD
+commit=0a47fa8
 paths=experiments/gpt2_cka_divergence_cycle376.py,autoresearch/results/cycle_376_cka_divergence.json,autoresearch/results/cycle_376_cka_divergence.png
 learned=CKA profiles are near-identical for layers 0-10 across 3-block and 6-block (gap ≤ 0.0003). The composition barrier manifests exclusively at layer 11 (the final transformer block): 6-block loses ~10% more CKA alignment than 3-block at this single layer. L2 divergence grows monotonically through the network for both configs but is 24% higher for 6-block at layer 11. The barrier is not distributed across the stack — it is a final-layer phenomenon.
 next=Layer-11-specific interventions: (a) exclude block 11 from 6-block compression and test if PPL recovers; (b) increase adapter capacity specifically at block 11; (c) test whether the block-11 CKA drop is present in other 6-block configurations (different block selections).
