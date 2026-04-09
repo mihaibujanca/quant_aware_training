@@ -1,0 +1,12 @@
+{
+  "global_lrelu2_bpb": 12.802886591984374,
+  "selective_bpb": 16.755052036395337,
+  "global_relu2_bpb": 18.414793310256787,
+  "checkpoint": "/Users/mihai/Projects/parameter-golf/logs/13L_640d_322_7k_wd70_batch20k_best.npz",
+  "n_tokens": 51200,
+  "lrelu_blocks": [
+    4,
+    5
+  ],
+  "n_blocks": 13
+}

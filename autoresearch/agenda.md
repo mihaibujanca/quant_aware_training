@@ -10,23 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-343. **Selective LeakyReLU² at b4/b5 only (zero-shot inference test)** *(cross-project, action item, cheap)*
-   - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.** Also required: `parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` section 6.4.
-   - **Motivation**: cycle 319 found the (LeakyReLU², ReLU²) curvature residual is geometrically concentrated at b4 (rank_95=18, 87.6% of energy in top-1 SV) and b5 (rank_95=33, 84.2% in top-1 SV). The other 11 blocks see the leak diffusely. **Hypothesis**: if we have a true LeakyReLU²-trained checkpoint (item 338), inference-swap blocks 0-3 and 6-12 to ReLU² (only blocks 4 and 5 keep the leak). BPB should be within ±0.0005 of the global-LeakyReLU² baseline. If true, the leaderboard win is structurally localized to 2 blocks and the rest of the network is indifferent.
-   - **Setup**:
-     - **Step 0** (REQUIRED): `cat autoresearch/cross_project/parameter_golf.md` AND `cat parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` (section 6.4).
-     - **Step 1**: write `parameter-golf/local_scripts/pgolf_selective_lrelu2.py`. Loads a true lrelu²-trained checkpoint (from item 338), patches `Block.__call__` per-block to use ReLU² for `block_index ∉ {4, 5}` and LeakyReLU² for `block_index ∈ {4, 5}`, runs BPB eval on FineWeb val. Compares to (a) global-lrelu² baseline, (b) global-relu² baseline (zero-shot patch all blocks).
-     - **Step 2**: subprocess-invoke from qat. JSON output: 3 BPB numbers (global-lrelu², selective, global-relu²).
-     - **Step 3**: build `cycle_343_summary.md` with the 3-cell comparison.
-   - **Hypothesis**: selective BPB is within ±0.0005 of global-lrelu² baseline AND ≥ 0.005 better than global-relu² baseline. If true, the b4/b5 localization is the entire mechanism.
-   - **Outcomes**:
-     - **CONFIRMED-localized-mechanism** if selective ≈ global-lrelu² AND selective < global-relu² by ≥0.003: the leaderboard win is at b4/b5 only. Publishable mechanistic finding.
-     - **REFUTED-distributed-mechanism** if selective is significantly worse than global-lrelu² (≥0.003 worse): the leak does work in more blocks than just b4/b5; the cycle 319 localization captured only part of it.
-     - **INCONCLUSIVE** otherwise.
-   - **Baselines**: parameter-golf leaderboard BPB for the LeakyReLU² submission (~1.1194 per README), the equivalent ReLU² baseline.
-   - **Run cap**: ~5 minutes (3 forward passes, no training).
-   - Depends on: 338 (provides the lrelu²-trained checkpoint), `autoresearch/cross_project/parameter_golf.md`.
-
 344. **Static rank-2 correction at b4/b5 — bake the LeakyReLU² leak as a fixed correction, use ReLU² everywhere** *(cross-project, action item, requires extended cycle 319)*
    - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.** Also required: `parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` section 6.5.
    - **Motivation**: cycle 319 captured the top-5 LEFT singular vectors of the (lrelu², relu²) Δy at each block but NOT the right singular vectors. To bake the leak as a fixed function of pre-activation, we need both: `correction(z) = sum_i V[:, i] · (U[:, i] · z)` where V is the residual-stream direction and U is the per-channel coefficient. This item updates `pgolf_curvature_residual.py` to also save right SVs, then uses them to construct a frozen rank-2 correction module at b4 and b5 in a model that uses ReLU² everywhere.
@@ -115,6 +98,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 330
+
+343. **Selective LeakyReLU² at b4/b5 only (zero-shot inference test)** *(cross-project, action item, cheap)*
+   - **Outcome: REFUTED-distributed-mechanism** — selective (b4+b5 lrelu2 only) BPB = 16.755, far worse than global-lrelu2 BPB = 12.803 (delta = +3.952, threshold = 0.003). global-relu2 BPB = 18.415. Swapping 11 of 13 blocks from lrelu2 to relu2 zero-shot collapses performance severely. The lrelu2 training shaped representations throughout the entire network, not just at b4/b5. The cycle 319 curvature residual localization at b4/b5 reflects the geometric _signature_ of the leak, not its computational _load_. The network as a whole has adapted to lrelu2 statistics; selectively removing it is catastrophic.
+   - *cycle 330 — verdict: REFUTED-distributed-mechanism*
 
 ### Cycle 329
 
