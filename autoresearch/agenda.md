@@ -39,10 +39,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Artifacts: `experiments/gpt2_kd_polish_cycle372.py`, `autoresearch/results/cycle_363_kd_polish.json`, `autoresearch/results/cycle_363_manifest.txt`
    - Depends on: 355 (confirmed)
 
-373. **Port compression recipe to nanochat teacher model — end-to-end validation (R4)**
-   - All results so far use GPT-2 as proxy. The program requires nanochat benchmark validation. Port the established recipe (topk+lstsq k=512 + adapter h=128) to the nanochat teacher. Compress 3 blocks, measure both PPL and downstream task accuracy (the metrics nanochat uses). Threshold: compressed nanochat PPL within 1.2× of float baseline AND task accuracy within 5% relative.
-   - Depends on: 370
-
 ### P2
 
 361. ~~**Single-block topk+lstsq + adapter vs LASER + adapter — is adapter gain compression-method-specific? (R5)**~~ CONFIRMED-generic — Retrospective comparison from cycles 347+350. LASER+adapter: baseline 50.09 → 48.51 best (delta 1.58 PPL, 1000 steps). topk+adapter: baseline 48.47 → 46.53 best (delta 1.94 PPL, 500 steps). Delta difference 0.33 PPL (mean), 0.36 PPL (best), well within 0.5 threshold. Adapter is a generic residual learner — gain does not depend on compression method.
@@ -72,6 +68,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 364
+
+373. ~~**Port compression recipe to nanochat teacher model — end-to-end validation (R4)**~~ INCONCLUSIVE — No nanochat checkpoints exist locally. Cycle 004 audit confirmed: current machine only has runnable gpt2 proxy path. Nanochat d24/d26 checkpoints not available; climbmix dataset not available. Item requires external asset acquisition (not in current scope). Defer pending upstream task to obtain nanochat checkpoint and climbmix dataset.
+   - *cycle 364 — verdict: INCONCLUSIVE*
+   - Artifacts: None (PLAN INVALID)
 
 ### Cycle 363
 
