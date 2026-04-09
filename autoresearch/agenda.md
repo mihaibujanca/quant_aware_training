@@ -6,6 +6,14 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+366. **Full 12-block topk+lstsq k=512 + MLP adapter h=128 — scale recipe to entire GPT-2 (R4)**
+   - The natural endpoint. Compress ALL 12 FFN blocks with topk+lstsq k=512, fit lstsq, then train per-block MLP adapters (h=128). Measure final PPL. 3-block got 48.53; 12-block will reveal whether error accumulation is linear or superlinear. Threshold: PPL < 65 (below float 53.89 + 20% degradation budget). If PPL explodes, identify the breaking point by measuring PPL after each block is added.
+   - Depends on: 354 (3-block result), 355 (per-block adapter universality)
+
+367. **Adapter training schedule — joint vs sequential vs curriculum on 3+ blocks (R4)**
+   - Current multi-block adapter training is joint (all adapters trained simultaneously). Test: (a) joint (current), (b) sequential (train adapter for block with largest residual first, freeze, repeat), (c) curriculum (start with 1-block, add blocks every 500 steps). 3-block setup [b2,b1,b10]. Threshold: >1.0 PPL gap between best and worst schedule. Sequential may help if adapter gradients interfere across blocks.
+   - Depends on: 354 (3-block baseline)
+
 ### P1
 
 364. ~~**Per-block adapter sweep — is b2 special or does topk+lstsq + adapter work on any block? (R4, R5)**~~ CONFIRMED — adapter works on ALL 4 tested blocks [b1, b4, b7, b10], spanning early/mid/late positions. 4/4 blocks pass delta > 0.5 threshold (mean deltas: b1=+1.44, b4=+1.47, b7=+1.72, b10=+2.74 PPL). b2 is not special. The adapter is a general residual learner that consistently recovers ~1.5–2.7 PPL above the topk+lstsq compressed-only baseline. Late blocks (b7, b10) show larger gains than early blocks (b1, b4).
@@ -15,6 +23,14 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 360. **topk+lstsq accumulation order sensitivity on GPT-2 — easiest-first vs block-index vs hardest-first (R4)**
    - Cycle 007 showed easiest-first beats hardest-first by 27% on toy models. Test 3 orderings on GPT-2 blocks [b1,b4,b7,b11]: (a) easiest-first (lowest single-block swap damage), (b) block-index order, (c) hardest-first. Measure PPL after each stage. Threshold: >5% PPL gap between best and worst ordering at stage 4.
    - Depends on: 355 (confirmed)
+
+368. **LoRA on compressed c_proj vs MLP adapter — parameter-efficiency comparison (R5)**
+   - MLP adapter h=128 uses 198K params per block. Alternative: apply LoRA (r=4,8,16) to the compressed W_proj matrix itself, fine-tuning on the same wikitext-2 calibration data with MSE loss. Compare PPL vs param count on b2 single-block. LoRA r=8 on 768×512 = 10K params (20× fewer than h=128 adapter). Threshold: LoRA achieves >50% of adapter's PPL gain at <25% of params. This tests whether the adapter's value is in learning a nonlinear residual (favors MLP) or in adjusting the linear map (favors LoRA).
+   - Depends on: 350 (adapter Pareto frontier)
+
+369. **Why topk+lstsq composes but LASER doesn't — singular value analysis of per-block error (R5)**
+   - topk+lstsq at k=512 composes across blocks (3-block PPL 48.53); LASER rank-2 fails multi-block. Hypothesis: topk+lstsq error is spectrally flat (no dominant direction to amplify), while LASER error is spectrally concentrated (rank-2 truncation leaves coherent error that compounds). Measure: for each of blocks [b1,b2,b4,b7,b10,b11], compute SVD of the error matrix E = W_compressed - W_float for both methods. Report eff_rank(E), top-1 energy fraction, and alignment of top error singular vectors across blocks (cos similarity). Threshold: eff_rank ratio topk/LASER > 2× in majority of blocks.
+   - Depends on: 342 (LASER dead on pgolf), 353 (compression accounting)
 
 ### P2
 
