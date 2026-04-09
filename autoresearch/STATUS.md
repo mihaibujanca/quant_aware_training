@@ -1,4 +1,4 @@
-# Research Status -- 370 Cycles (001-370)
+# Research Status -- 371 Cycles (001-371)
 
 ## Current State
 
@@ -48,6 +48,7 @@
 12. **Error explosion at blocks 10-11** (c366). Residual stream error propagation shows hockey-stick profile: slow growth blocks 0-9 (cumul error 10→50), explosion at blocks 10-11 (50→72→160). Inflection at block 9 in 3/3 seeds. Attention does NOT amplify error (amp ratio 0.91). b10/b11 account for 77% of total local FFN error.
 13. **All GPT-2 FFN blocks are task-critical** (c367). No block is prunable at <0.5 PPL threshold. Block 0 is catastrophic (+3021 PPL). Least important: b1 (+1.60), b7 (+2.35). Most important: b0 (+3021), b11 (+9.12). Importance ranking ascending: [1,7,2,6,9,10,8,3,5,4,11,0].
 14. **Composition barrier is count-driven, not identity-driven** (c370). 10-block selective (skip b10+b11) gives PPL 150 — far worse than 6-block uniform (65.54) that includes b10/b11. The number of compressed blocks matters more than which blocks.
+15. **Composition barrier is NOT visible in second-order geometry** (c371). eff_rank, participation ratio, PC concentration, mean cosine all fail to distinguish working 3-block from failing 6-block. Max eff_rank drop = 22% (threshold 30%). The 18-PPL gap has no covariance-level signature.
 
 ## Dead Directions (cycles 322-367)
 
@@ -72,6 +73,7 @@
 | Mixed compression (importance-based k) | PLAN INVALID | 368 | Both deps refuted; same starvation mechanism as c365 |
 | Accumulation order sensitivity (GPT-2) | REFUTED | 369 | <1% PPL gap across 3 orderings; adapter compensates |
 | Selective compression (skip b10+b11) | REFUTED | 370 | 10-block PPL 150 >> 6-block 65.54; count matters, not identity |
+| Representation geometry collapse | INCONCLUSIVE | 371 | No covariance-level signature of 18-PPL gap; metrics too coarse |
 
 ## Open Questions
 
