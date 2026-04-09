@@ -8,9 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-360. **topk+lstsq accumulation order sensitivity on GPT-2 — easiest-first vs block-index vs hardest-first (R4)**
-   - Cycle 007 showed easiest-first beats hardest-first by 27% on toy models. Test 3 orderings on GPT-2 blocks [b1,b4,b7,b11]: (a) easiest-first (lowest single-block swap damage), (b) block-index order, (c) hardest-first. Measure PPL after each stage. Threshold: >5% PPL gap between best and worst ordering at stage 4.
-   - Depends on: 355 (confirmed)
 
 ### P2
 
@@ -37,6 +34,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 369
+
+360. ~~**topk+lstsq accumulation order sensitivity on GPT-2 — easiest-first vs block-index vs hardest-first (R4)**~~ REFUTED — Ordering has negligible effect (<1% PPL gap). All 3 orderings converge to essentially the same 4-block PPL: hardest_first=53.27, block_index=53.69, easiest_first=53.78. Ratio=1.0095 (<3% threshold). Stage trajectory also similar across orderings (PPL dips to ~49 at stage 2 then rises to ~53 at stage 4). The adapter+joint-training recovers regardless of compression order. Counterintuitive given cycle 007 toy model result — but GPT-2 adapters are better at compensating downstream.
+   - *cycle 369 — verdict: REFUTED*
+   - Artifacts: `experiments/gpt2_ordering_sensitivity_cycle369.py`, `autoresearch/results/cycle_369_ordering_sensitivity.json`, `autoresearch/results/cycle_369_manifest.txt`
 
 ### Cycle 367
 
