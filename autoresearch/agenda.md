@@ -10,14 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-346. **Full 13-block weight spectrum census on pgolf — is ANY block LASER-viable?**
-   - Cycles 327-329 tested b3, b11, b12 and found flat spectra. But 10 blocks remain unmeasured. Compute top-5 and top-13 SVD energy fractions for all 13 `mlp.proj.weight` matrices. If every block is below 10% top-5 energy, LASER is definitively dead for this checkpoint class.
-   - Type: census / measurement
-   - Confirmed if: ≥1 block has top-5 SVD energy fraction ≥ 15% (LASER candidate found)
-   - Refuted if: all 13 blocks have top-5 energy < 10% (LASER dead for pgolf, close R1-LASER permanently)
-   - Inconclusive if: 1+ block in 10-15% range (borderline, needs retrain test)
-   - Depends on: cycles 327-329 (3 blocks already measured), pgolf checkpoint `13L_640d_322_7k_wd70_batch20k_best.npz`
-
 347. **GPT-2 full 12-block weight spectrum census — why does LASER work on GPT-2?**
    - Cycle 280 showed GPT-2 b1 has concentrated weight spectrum (rank-1 energy ~70%). But we never checked the other 11 blocks. If concentrated spectra are widespread in pretrained GPT-2, it explains the LASER gap vs pgolf. If only b1 is concentrated, the GPT-2 LASER result was a lucky block pick.
    - Type: census / measurement
@@ -67,6 +59,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 337
+
+346. **Full 13-block weight spectrum census on pgolf — is ANY block LASER-viable?**
+   - **Outcome: REFUTED** — All 13 blocks have top-5 SVD energy < 10% (max=5.32% at b12, 320-dim hidden). Blocks 0-9 in 2.25-2.62%, blocks 10-11 at 2.58-2.83%, b12 (smallest) at 5.32%. r95 requires 237-524 singular values. Weight spectra are uniformly flat across all hidden dim sizes (320/1280/1920). R1-LASER is definitively dead for this checkpoint class.
+   - *cycle 337 — verdict: REFUTED*
+   - Artifacts: `experiments/pgolf_weight_spectrum_census_cycle337.py`, `autoresearch/results/cycle_337_spectrum_census.json`, `autoresearch/results/cycle_337_summary.md`, `autoresearch/results/cycle_337_manifest.txt`
 
 ### Cycle 336
 

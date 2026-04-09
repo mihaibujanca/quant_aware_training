@@ -1,0 +1,11 @@
+cycle: 337
+item: 346
+verdict: REFUTED
+verdict_detail: All blocks top-5 < 10% (max=5.32%)
+max_top5_pct: 5.3200
+min_top5_pct: 2.2500
+n_blocks_measured: 13
+files:
+  - autoresearch/results/cycle_337_spectrum_census.json
+  - autoresearch/results/cycle_337_summary.md
+  - autoresearch/results/cycle_337_manifest.txt
