@@ -1,7 +1,7 @@
 item_number=382
 outcome=REFUTED
 key_metric=6-block k=768 mean PPL=61.85 ± 0.19 (threshold >60.0 = refuted); 3-block k=768 PPL=46.43 ± 0.28 (beats k=512 ref 47.43 by +1.0)
-commit=TBD
+commit=b12f32c
 paths=experiments/gpt2_error_budget_k768_cycle374.py, autoresearch/results/cycle_374_error_budget_k768.json
 learned=Composition barrier persists at 4x compression (k=768). Reducing per-block reconstruction error by ~30% (frob: ~1500→1200 for b1/b2, adapters still help locally) yields only 3.69 PPL points on 6-block (65.54→61.85), not enough to cross the 55.0 confirmation threshold. The gap between 3-block and 6-block PPL barely narrows with more channels: k=512 delta=18.11, k=768 delta=15.42. The composition barrier is not simply proportional to per-block error budget.
 next=Closes the "more channels" avenue for composition. Items 383-385 remain: adapter dead-neuron census, CKA trajectory diagnostic, and adapter-only baseline to explain why compressed+adapter beats float.
