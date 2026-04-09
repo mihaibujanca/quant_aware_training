@@ -1,0 +1,60 @@
+cycle: 351
+item: 360
+verdict: REFUTED
+date: 2026-04-09
+
+## GPT-2 topk+lstsq accumulation order sensitivity
+
+REFUTED: Accumulation order does NOT matter. All three orderings converge to
+identical stage-4 PPL (53.62), giving a 0.0% gap (threshold: <2% = REFUTED).
+
+Float PPL: 53.89
+
+Single-block swap damage (no Adam fine-tuning):
+  Block 1: PPL=54.97  damage=+1.07  ← easiest
+  Block 4: PPL=56.09  damage=+2.19
+  Block 7: PPL=56.99  damage=+3.10
+  Block 11: PPL=59.04  damage=+5.14  ← hardest
+
+Note: easiest-first and block-index orderings coincide ([1,4,7,11]) because
+blocks [1,4,7,11] are already monotone by damage. Hardest-first uses [11,7,4,1].
+
+Accumulation curves (blocks [b1,b4,b7,b11], k=512/3072, 1000 Adam steps, 3 seeds):
+
+  easiest_first [1,4,7,11]:
+    Stage 1: [b1]          → PPL 49.71 ± 0.06
+    Stage 2: [b1,b4]       → PPL 48.41 ± 0.02
+    Stage 3: [b1,b4,b7]    → PPL 49.97 ± 0.08
+    Stage 4: [b1,b4,b7,b11]→ PPL 53.62 ± 0.04
+
+  block_index [1,4,7,11]:
+    Stage 1: [b1]          → PPL 49.71 ± 0.06
+    Stage 2: [b1,b4]       → PPL 48.41 ± 0.02
+    Stage 3: [b1,b4,b7]    → PPL 49.97 ± 0.08
+    Stage 4: [b1,b4,b7,b11]→ PPL 53.62 ± 0.04
+
+  hardest_first [11,7,4,1]:
+    Stage 1: [b11]         → PPL 50.86 ± 0.01
+    Stage 2: [b11,b7]      → PPL 51.53 ± 0.02
+    Stage 3: [b11,b7,b4]   → PPL 52.18 ± 0.06
+    Stage 4: [b11,b7,b4,b1]→ PPL 53.62 ± 0.04
+
+Stage-4 gap: 0.00 PPL (0.0%) — all orderings identical at completion.
+
+Intermediate stages DO differ: easiest-first reaches PPL 48.41 at stage 2
+(beats float), while hardest-first is at 51.53. But this advantage evaporates
+by stage 4 — the model recovers regardless of order.
+
+Key finding: topk+lstsq is order-invariant at full accumulation. The final
+compressed state is determined by the set of compressed blocks, not their
+addition sequence. This is consistent with independent block optimization
+converging to the same basin regardless of initialization path.
+
+Context (cycle 348): same block set [b2,b1,b10,b11] — stage-4 PPL 55.99.
+Here [b1,b4,b7,b11] stage-4 PPL 53.62 (below float 53.89 — all three orderings!).
+
+## Artifacts
+experiments/gpt2_order_sensitivity_cycle351.py
+autoresearch/results/cycle_351_order_sensitivity.json
+autoresearch/results/cycle_351_manifest.txt
+[result-id: r1]
