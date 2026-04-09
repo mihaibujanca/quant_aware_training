@@ -102,8 +102,8 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ### Cycle 330
 
 343. **Selective LeakyReLU² at b4/b5 only (zero-shot inference test)** *(cross-project, action item, cheap)*
-   - **Outcome: REFUTED-distributed-mechanism** — selective (b4+b5 lrelu2 only) BPB = 16.755, far worse than global-lrelu2 BPB = 12.803 (delta = +3.952, threshold = 0.003). global-relu2 BPB = 18.415. Swapping 11 of 13 blocks from lrelu2 to relu2 zero-shot collapses performance severely. The lrelu2 training shaped representations throughout the entire network, not just at b4/b5. The cycle 319 curvature residual localization at b4/b5 reflects the geometric _signature_ of the leak, not its computational _load_. The network as a whole has adapted to lrelu2 statistics; selectively removing it is catastrophic.
-   - *cycle 330 — verdict: REFUTED-distributed-mechanism*
+   - **Outcome: INCONCLUSIVE (audit-downgraded from REFUTED)** — measured BPB values were invalid: global-lrelu2=12.803, selective=16.755, global-relu2=18.415. Expected baseline ~1.35 (per cycle 327). Root cause: stale `load_model_v2` copy missing xsa_last_n, rope_dims, and mlp_act config from summary.json, breaking attention computation. All 3 BPB numbers are garbage; relative comparisons invalid. Must re-run with cycle 327's loader.
+   - *cycle 330 — verdict: INCONCLUSIVE (audit UNCERTAIN → downgraded)*
 
 ### Cycle 329
 

@@ -1,0 +1,1 @@
+{"cycle": 330, "item": 343, "decision": "APPROVE", "risk": "LOW", "rationale": "Zero-shot eval only, reuses load_model_v2 + eval_bpb. Only new logic: per-block mlp.act patching. Critical detail: load_model_v2 defaults mlp_act to relu2, plan correctly patches post-load."}

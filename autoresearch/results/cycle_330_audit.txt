@@ -1,0 +1,19 @@
+cycle: 330
+item: 343
+status: UNCERTAIN
+flags: G1,G4,G6
+confidence: LOW
+
+diagnosis: Model loader bug — load_model_v2 in pgolf_selective_lrelu2.py
+lacks summary_json support (unlike the cycle 327 loader). This causes three
+wrong hyperparameters at GPT construction time:
+  - mlp_act="relu2" (should be "lrelu2", partially fixed by set_all_act)
+  - xsa_last_n=0 (should be 13 — all blocks use XSA during training)
+  - rope_dims=0 (should be 16 — partial RoPE)
+The missing XSA and wrong rope_dims break attention outputs, inflating BPB
+from ~1.35 (expected) to 12.8 (measured). All 3 configs share the same
+broken attention, so relative deltas reflect activation differences on
+garbage inputs — not valid for drawing conclusions.
+
+action: Re-run with the cycle 327 loader (which reads the summary JSON for
+correct mlp_act/xsa/rope_dims inference). Expect baseline ~1.35 BPB.
