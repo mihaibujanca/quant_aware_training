@@ -1,7 +1,7 @@
 item_number=376
 outcome=REFUTED
 key_metric=no_prunable_blocks; min_delta=+1.60_PPL(block1); block0_delta=+3021_PPL; threshold=0.5
-commit=TBD
+commit=f0022dd
 paths=experiments/gpt2_block_importance_item376.py,autoresearch/results/cycle_367_block_importance.json,autoresearch/results/cycle_367_block_importance.png,autoresearch/results/cycle_367_manifest.txt
 learned=All 12 GPT-2 FFN blocks are task-critical. Block 0 is catastrophically important (+3021 PPL). Most prunable is block 1 (+1.60 PPL). No block falls below the 0.5 PPL threshold. Block 10 and 11 rank 6th and 5th most important, consistent with cycle-366 error explosion findings. The importance ranking [1,7,2,6,9,10,8,3,5,4,11,0] (ascending delta) provides a principled basis for k allocation in item 377.
 next=Item 377 (mixed compression) should use importance ranking to allocate k per block, not binary prune/keep. Low-importance blocks (b1, b7, b2) get k=256-128; high-importance blocks (b11, b0) get k=768-1024. This is still potentially useful even though pruning is ruled out.
