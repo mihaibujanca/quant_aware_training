@@ -8,12 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-388. **Full-model float+adapter ceiling — adapters on all 12 blocks (R3)**
-   - Add h=64 MLP adapters to all 12 uncompressed GPT-2 blocks. Train jointly (same schedule as c377). This sets the adapter ceiling — the best PPL achievable by just adding adapter capacity to float GPT-2 without any compression. Compare to 3-block float+adapter (38.94). If 12-block adapter is much better, the 3-block adapter isn't saturated and the "adapter capacity" explanation may be even stronger.
-   - CONFIRMED threshold: 12-block float+adapter PPL < 36.0 (adapters have headroom beyond 3 blocks)
-   - REFUTED threshold: 12-block float+adapter PPL > 38.0 (3-block adapter already near ceiling)
-   - Depends on: 386
-
 389. **6-block compressed+adapter under new baseline — quantify true composition penalty (R4)**
    - Run 6-block topk+lstsq (k=512) with joint MLP adapter (h=64) and compare against 6-block float+adapter (same blocks, same adapter, no compression). c357 measured 6-block compressed PPL ~65.54 without adapter; adding adapters may recover some gap. The float+adapter 6-block number doesn't exist yet — measure both. Key question: does the composition penalty (compressed vs float at same adapter budget) grow superlinearly with block count? Compare 3-block penalty (8.5 PPL from c377) to 6-block penalty.
    - CONFIRMED threshold: 6-block compression penalty < 15 PPL (sublinear growth from 3-block's 8.5)
@@ -45,6 +39,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 380
+
+388. ~~**Full-model float+adapter ceiling — adapters on all 12 blocks (R3)**~~ REFUTED — 12-block float+adapter (h=64, 1.19M params) achieves mean test PPL 39.52 ± 0.14 across 3 seeds (39.71/39.37/39.47). This is only 0.21 PPL better than the 3-block ref (39.73), far above the 38.0 refutation threshold. The 3-block adapter is already near ceiling: adding 9 more adapters yields negligible gain (<0.5%). Training converged in ~800 steps and plateaued/slightly degraded after (overfitting on small val set). Float test PPL = 56.52. Script: `experiments/gpt2_adapter_12block_cycle380.py`. Results: `autoresearch/results/cycle_380_adapter_12block.json`.
+   - *cycle 380 — verdict: REFUTED*
 
 ### Cycle 378
 

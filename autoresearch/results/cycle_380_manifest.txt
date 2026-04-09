@@ -1,0 +1,40 @@
+cycle: 380
+item: 388
+title: Full-model float+adapter ceiling — adapters on all 12 GPT-2 blocks (h=64)
+verdict: REFUTED
+
+## Thresholds
+confirmed_lt: 36.0 (adapters have headroom beyond 3 blocks)
+refuted_gt:   38.0 (3-block adapter already near ceiling)
+
+## Key Metrics
+float_test_ppl:       56.52
+three_block_ref_test: 39.73 (c377/c378)
+twelve_block_mean:    39.52 ± 0.14
+  seed 42:            39.71
+  seed 137:           39.37
+  seed 2024:          39.47
+gain_vs_3block:       0.21 PPL (< 1%)
+
+adapter_params: 1,189,632 (12 × 99,136 per block)
+adapter_hidden: 64
+n_steps:        2000
+lr:             1e-4
+
+## Convergence
+All 3 seeds: best checkpoint reached at ~800 steps, then val PPL drifted upward (overfitting
+on 50-seq val set). converged=False by end-of-training metric, but checkpoint selection
+captured best val state (~38.0–38.2 val PPL for each seed).
+
+## Interpretation
+The 3-block float+adapter (39.73) is already at the adapter ceiling for this architecture.
+Adding 9 more adapters (4x more params) yields only 0.21 PPL improvement. This strongly
+indicates the 3-block adapter saturates rapidly — the gain is in early blocks, not distributed
+across the full stack. The adapter capacity explanation (from c377) holds: small adapters on
+uncompressed GPT-2 dramatically outperform the compressed+adapter baseline, but this benefit
+does not scale with more adapter blocks.
+
+## Files
+experiments/gpt2_adapter_12block_cycle380.py
+autoresearch/results/cycle_380_adapter_12block.json
+autoresearch/results/cycle_380_manifest.txt
