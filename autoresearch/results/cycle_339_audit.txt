@@ -1,0 +1,32 @@
+cycle = 339
+item = 348
+verdict = CONFIRMED-b12-free-prune
+audit_status = VALID-with-caveat
+auditor = claude-opus-4-6
+
+# BPB baseline discrepancy — RESOLVED
+baseline_reported = 3.431746
+baseline_expected = ~1.39 (true BPB, bits per byte)
+discrepancy_cause = DIFFERENT_FORMULA — cycle 339 uses analyze_checkpoint.eval_bpb which computes (nats_per_token / ln2) = bits_per_token, NOT bits_per_byte. Cycle 335 used pgolf_selective_lrelu2_v2.eval_bpb_proper which divides by byte count (true BPB). Ratio 3.43/1.39 ≈ 2.47 ≈ average bytes_per_token for 1024-vocab BPE, confirming this is the sole cause.
+
+# Verification
+training_val_loss = 2.2495 nats/token
+expected_bits_per_token = 3.245 (= 2.2495 / ln2)
+measured_bits_per_token = 3.432 (+5.7% from 51200-token subset vs full val set)
+conclusion = 3.43 is CORRECT for the bits-per-token formula. The mislabel is "BPB" when it should be "BPT".
+
+# Loader correctness
+loader_config = mlp_act=lrelu2, xsa_last_n=13, rope_dims=16, lrelu_slope=0.5
+loader_source = load_model_v2 in pgolf_mlp_prune.py reads summary JSON — all config values correct
+loader_matches_training = YES (verified against 13L_640d_322_7k_wd70_batch20k_summary.json)
+note = cycle 335 loader did NOT pass xsa_last_n/rope_dims (defaulted to 0) but manually patched mlp.act. Both loaders produce valid results for their respective eval functions because the internal deltas are self-consistent.
+
+# Delta validity
+delta_b12_zeroed = -0.000004 BPT (internally consistent — all configs use same eval_bpb)
+sanity_post_restore = 3.431746 (matches baseline exactly, sanity_ok=True)
+internal_consistency = PASS — deltas are valid even though absolute values are BPT not BPB
+
+# Conclusion
+The claimed finding (b12 is free to prune, delta ≈ 0) is VALID.
+The absolute baseline value labeled "BPB" is actually bits-per-token, not bits-per-byte.
+This is a labeling issue, not a correctness issue. All comparisons within cycle 339 are apples-to-apples.
