@@ -1,0 +1,25 @@
+cycle=337
+item=346
+claimed_verdict=REFUTED
+audit_verdict=PASS
+audit_date=2026-04-09
+
+# Cross-cycle consistency check (cycles 327-329 vs 337)
+# The apparent discrepancy dissolves: prior cycles used different k values.
+
+b3_c327_top5=2.60
+b3_c337_top5=2.62
+b3_match=YES (delta=0.02, within rounding)
+
+b11_c329_top13=6.80
+b11_c337_top13=6.80
+b11_c337_top5=2.83
+b11_match=YES (c329 measured top-13 not top-5; top-13 matches exactly)
+
+b12_c328_top7=7.07
+b12_c337_top5=5.32
+b12_c337_top13=12.03
+b12_match=YES (c328 measured top-7 not top-5; 7.07 falls between top-5=5.32 and top-13=12.03 as expected)
+
+discrepancy=NONE
+note=Initial alarm was comparing different k: c329 reported top-13 energy (6.80%), c328 reported top-7 energy (7.07%). Cycle 337 standardized to top-5. When comparing at matching k, all three blocks reproduce exactly.

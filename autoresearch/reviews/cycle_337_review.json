@@ -1,0 +1,8 @@
+{
+  "cycle": 337,
+  "item": 346,
+  "decision": "APPROVE",
+  "round": 1,
+  "issues": [],
+  "notes": "Numpy-only SVD census over all 13 blocks. No MLX/subprocess needed. Same pattern as cycle 329, extended from 1 block to 13. Verdict thresholds match agenda item 346."
+}
