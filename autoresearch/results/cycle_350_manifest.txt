@@ -1,0 +1,25 @@
+cycle: 350
+item: 359
+verdict: CONFIRMED
+experiment: experiments/gpt2_adapter_sweep_cycle359.py
+results_json: autoresearch/results/cycle_350_adapter_sweep.json
+brief: autoresearch/briefs/cycle_350.md
+plan: autoresearch/plans/cycle_350.md
+
+method: topk+lstsq b2 (k=512/3072) + MLP residual adapter
+block: b2 (output-cov concentration 99.6%)
+sweep: h in {16, 32, 64, 128}, 3 seeds x 500 steps each
+
+float_ppl: 53.895
+topk_baseline_ppl: 48.47
+
+pareto_table:
+  h=16:   PPL 47.81 +/- 0.13  (25,360 adapter params)
+  h=32:   PPL 47.43 +/- 0.08  (49,952 adapter params)
+  h=64:   PPL 46.82 +/- 0.22  (99,136 adapter params)
+  h=128:  PPL 46.22 +/- 0.23  (197,504 adapter params)
+
+pareto_monotone: True
+any_beats_topk: True
+any_beats_float: True
+verdict_reason: All h beat float (53.89) and topk baseline (48.47). Clear monotone Pareto structure.

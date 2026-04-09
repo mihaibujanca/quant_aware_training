@@ -8,10 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-359. **MLP adapter hidden-size sweep on GPT-2 b2 topk+lstsq — Pareto frontier of params vs PPL (R5)**
-   - Cycle 347 tested adapter h=64 on LASER. Test h ∈ {16, 32, 64, 128} on topk+lstsq b2 (which composes better). Measure PPL and adapter param count at each size. Report Pareto frontier: smallest adapter that crosses below float (53.89). 3 seeds per config.
-   - Depends on: 355 (confirmed), 357 (confirmed)
-
 360. **topk+lstsq accumulation order sensitivity on GPT-2 — easiest-first vs block-index vs hardest-first (R4)**
    - Cycle 007 showed easiest-first beats hardest-first by 27% on toy models. Test 3 orderings on GPT-2 blocks [b1,b4,b7,b11]: (a) easiest-first (lowest single-block swap damage), (b) block-index order, (c) hardest-first. Measure PPL after each stage. Threshold: >5% PPL gap between best and worst ordering at stage 4.
    - Depends on: 355 (confirmed)
@@ -45,6 +41,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 350
+
+359. ~~**MLP adapter hidden-size sweep on GPT-2 b2 topk+lstsq — Pareto frontier of params vs PPL (R5)**~~ CONFIRMED — All h ∈ {16, 32, 64, 128} beat topk+lstsq alone (48.47) and float (53.89). Pareto frontier is monotone: h=16→PPL 47.81±0.13 (25K params), h=32→47.43±0.08 (50K), h=64→46.82±0.22 (99K), h=128→46.22±0.23 (198K). Smallest useful adapter: h=16. Saturation not yet observed at h=128.
+   - *cycle 350 — verdict: CONFIRMED*
+   - Artifacts: `experiments/gpt2_adapter_sweep_cycle359.py`, `autoresearch/results/cycle_350_adapter_sweep.json`, `autoresearch/results/cycle_350_manifest.txt`
 
 ### Cycle 349
 
