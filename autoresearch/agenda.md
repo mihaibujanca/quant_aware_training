@@ -10,6 +10,40 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
+346. **Full 13-block weight spectrum census on pgolf — is ANY block LASER-viable?**
+   - Cycles 327-329 tested b3, b11, b12 and found flat spectra. But 10 blocks remain unmeasured. Compute top-5 and top-13 SVD energy fractions for all 13 `mlp.proj.weight` matrices. If every block is below 10% top-5 energy, LASER is definitively dead for this checkpoint class.
+   - Type: census / measurement
+   - Confirmed if: ≥1 block has top-5 SVD energy fraction ≥ 15% (LASER candidate found)
+   - Refuted if: all 13 blocks have top-5 energy < 10% (LASER dead for pgolf, close R1-LASER permanently)
+   - Inconclusive if: 1+ block in 10-15% range (borderline, needs retrain test)
+   - Depends on: cycles 327-329 (3 blocks already measured), pgolf checkpoint `13L_640d_322_7k_wd70_batch20k_best.npz`
+
+347. **GPT-2 full 12-block weight spectrum census — why does LASER work on GPT-2?**
+   - Cycle 280 showed GPT-2 b1 has concentrated weight spectrum (rank-1 energy ~70%). But we never checked the other 11 blocks. If concentrated spectra are widespread in pretrained GPT-2, it explains the LASER gap vs pgolf. If only b1 is concentrated, the GPT-2 LASER result was a lucky block pick.
+   - Type: census / measurement
+   - Confirmed if: ≥4 blocks have top-5 SVD energy fraction ≥ 15% (concentrated spectra are a pretrained GPT-2 property)
+   - Refuted if: only b1 has top-5 energy ≥ 15% (b1 is an outlier, not a pattern)
+   - Inconclusive if: 2-3 blocks pass (partial pattern, needs further investigation)
+   - Depends on: cycle 280 (b1 already measured), GPT-2 small weights from HuggingFace
+
+### P2
+
+348. **mlp_scale-based block pruning — zero out b12's MLP contribution**
+   - Cycle 323 found b12's mean mlp_scale is 0.003, effectively pruning its MLP. Test: set b12's MLP output to zero and measure BPB. If no degradation, b12's MLP params are free compression (320-dim hidden = smallest block). Extend to any block with mean scale < 0.01.
+   - Type: ablation / cheap
+   - Confirmed if: BPB delta ≤ 0.005 when zeroing b12 MLP (safe to prune)
+   - Refuted if: BPB delta > 0.02 (scale 0.003 ≠ zero; residual contribution matters)
+   - Inconclusive if: BPB delta 0.005-0.02 (marginal; may need distillation to absorb)
+   - Depends on: cycle 323 (mlp_scale measurements), pgolf checkpoint
+
+349. **Re-run cycle 332 eff_rank with exp(entropy) formula — canonical cross-activation comparison**
+   - Cycle 332 trained 3 activation variants (GELU/ReLU²/LeakyReLU²) on tiny GPT and measured eff_rank profiles, but used participation ratio instead of the project-standard exp(entropy) formula. Checkpoints exist. Re-compute eff_rank with the correct formula so values are comparable to all prior cycles. Confirms or invalidates the "squared activations give HIGHER eff_rank" finding.
+   - Type: re-analysis / cheap
+   - Confirmed if: exp(entropy) eff_rank still shows squared activations > GELU by ≥ 10% relative at ≥ 2 blocks
+   - Refuted if: exp(entropy) reverses the ordering or differences < 5% relative
+   - Inconclusive if: mixed ordering across blocks (no clean pattern)
+   - Depends on: cycle 332 checkpoints in `experiments/tiny_gpt_act_compare_checkpoints/`
+
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
 138. ~~**Train MoE testbed — Tiny Mixtral**~~ SKIPPED — WikiText-2 too small, overfits at PPL 65. Need pretrained model or larger dataset.
