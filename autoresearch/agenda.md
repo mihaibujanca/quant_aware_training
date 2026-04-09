@@ -6,17 +6,25 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-(none — promoted from P1)
+358. **topk+lstsq 3-block + per-block MLP adapter — combined recipe on GPT-2 (R4, R5)**
+   - Combine the composing base (c348: topk+lstsq on blocks [b1,b4,b7], 3-stage PPL 49.60) with the adapter that broke single-block ceiling (c347: MLP h=64 → PPL 48.51). Train one adapter per compressed block (3 adapters). Measure: 3-block stacked PPL with adapters vs without (49.60). Threshold: PPL < 48.0 (below single-block adapter result). Run 3 seeds.
+   - Depends on: 355 (confirmed), 357 (confirmed)
 
 ### P1
 
-~~355. **topk+lstsq multi-block accumulation curve on pgolf — is composition failure LASER-specific? (R4)**~~ → CONFIRMED (cycle 348): topk+lstsq composes where LASER fails. Ran on GPT-2 (same blocks/order as cycle 343 LASER). Stages 1-3 all below float (48.47, 49.24, 49.60 vs float 53.89). Stage 4 (b11) = 55.99 (above 54.90 threshold but -12.98 vs LASER's 68.97). LASER exceeded float at stage 2; topk+lstsq stays below for 3 blocks. Composition failure is LASER-specific (SVD rank reduction), not universal.
+359. **MLP adapter hidden-size sweep on GPT-2 b2 topk+lstsq — Pareto frontier of params vs PPL (R5)**
+   - Cycle 347 tested adapter h=64 on LASER. Test h ∈ {16, 32, 64, 128} on topk+lstsq b2 (which composes better). Measure PPL and adapter param count at each size. Report Pareto frontier: smallest adapter that crosses below float (53.89). 3 seeds per config.
+   - Depends on: 355 (confirmed), 357 (confirmed)
 
-~~356. **Centroid affinity as compression predictor on pgolf — replicate cycle 27's ρ=0.853 on a real model (R3)**~~ → INCONCLUSIVE (cycle 346): rho=-0.506 (p=0.078). Direction correct (high affinity → low swap damage) but |rho|=0.506 falls in inconclusive range. Block 11 outlier: affinity=0.931 but swap_delta=+0.963.
+360. **topk+lstsq accumulation order sensitivity on GPT-2 — easiest-first vs block-index vs hardest-first (R4)**
+   - Cycle 007 showed easiest-first beats hardest-first by 27% on toy models. Test 3 orderings on GPT-2 blocks [b1,b4,b7,b11]: (a) easiest-first (lowest single-block swap damage), (b) block-index order, (c) hardest-first. Measure PPL after each stage. Threshold: >5% PPL gap between best and worst ordering at stage 4.
+   - Depends on: 355 (confirmed)
 
 ### P2
 
-~~357. **GPT-2 b2 rank-2 LASER + learned residual — push past the single-block ceiling**~~ → CONFIRMED (cycle 347): MLP adapter (hidden=64, 246K params) achieves PPL 48.51 (mean 48.77 ± 0.19). Low-rank residuals r4→49.67, r8→49.53 (INCONCLUSIVE zone). Nonlinearity essential — MLP ReLU captures signal the rank-2 linear subspace misses.
+361. **Single-block topk+lstsq + adapter vs LASER + adapter — is adapter gain compression-method-specific? (R5)**
+   - Cycle 347 showed adapter helps LASER (50.09 → 48.51). Does it also help topk+lstsq single-block, or is the gain LASER-specific (compensating SVD truncation artifacts)? Run topk+lstsq on b2, add MLP adapter h=64, compare delta-PPL vs LASER+adapter delta-PPL. If topk+lstsq+adapter also improves, the adapter is a generic residual learner. If not, it's patching LASER-specific distortion. 3 seeds.
+   - Depends on: 357 (confirmed)
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
