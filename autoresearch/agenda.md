@@ -6,7 +6,32 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+386. **Held-out verification of adapter baseline — wikitext-2-test (R5)**
+   - c377 measured float+adapter (38.94) and compressed+adapter (47.43) on wikitext-2-val, which is also the calibration/eval set. Verify both numbers on wikitext-2-test (held-out) with 3 seeds. If the gap shrinks below 4 PPL, the reframing weakens.
+   - CONFIRMED threshold: held-out gap >= 6 PPL (compression still hurts substantially)
+   - REFUTED threshold: held-out gap < 2 PPL (val set was unreliable)
+   - Script: reuse `experiments/gpt2_adapter_only_cycle377.py` as template, change eval split to `test`
+   - Depends on: 385 (c377)
+
 ### P1
+
+387. **Compression-accuracy Pareto curve — sweep k and adapter h at 3 blocks (R4)**
+   - Sweep k ∈ {256, 384, 512, 768, 1024} × adapter h ∈ {0, 32, 64, 128} on the 3-block config. For each (k, h) pair, record total params and PPL on wikitext-2-test (use held-out split from item 386). Plot Pareto frontier. Include float+adapter (k=3072 i.e. no compression, h=64) as upper-left anchor. Key question: is ANY compressed+adapter config Pareto-optimal vs float+adapter, or does compression always lose at matched total params?
+   - CONFIRMED threshold: at least one compressed config is within 2 PPL of float+adapter at ≤80% of its total params
+   - REFUTED threshold: all compressed configs are Pareto-dominated by float+adapter
+   - Depends on: 386
+
+388. **Full-model float+adapter ceiling — adapters on all 12 blocks (R3)**
+   - Add h=64 MLP adapters to all 12 uncompressed GPT-2 blocks. Train jointly (same schedule as c377). This sets the adapter ceiling — the best PPL achievable by just adding adapter capacity to float GPT-2 without any compression. Compare to 3-block float+adapter (38.94). If 12-block adapter is much better, the 3-block adapter isn't saturated and the "adapter capacity" explanation may be even stronger.
+   - CONFIRMED threshold: 12-block float+adapter PPL < 36.0 (adapters have headroom beyond 3 blocks)
+   - REFUTED threshold: 12-block float+adapter PPL > 38.0 (3-block adapter already near ceiling)
+   - Depends on: 386
+
+389. **6-block compressed+adapter under new baseline — quantify true composition penalty (R4)**
+   - Run 6-block topk+lstsq (k=512) with joint MLP adapter (h=64) and compare against 6-block float+adapter (same blocks, same adapter, no compression). c357 measured 6-block compressed PPL ~65.54 without adapter; adding adapters may recover some gap. The float+adapter 6-block number doesn't exist yet — measure both. Key question: does the composition penalty (compressed vs float at same adapter budget) grow superlinearly with block count? Compare 3-block penalty (8.5 PPL from c377) to 6-block penalty.
+   - CONFIRMED threshold: 6-block compression penalty < 15 PPL (sublinear growth from 3-block's 8.5)
+   - REFUTED threshold: 6-block compression penalty > 25 PPL (superlinear, composition barrier persists)
+   - Depends on: 386
 
 ### P2
 
