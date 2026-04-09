@@ -6,10 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-374. **Adaptive k per block — equalize Frobenius error across GPT-2 blocks (R4)**
-   - Cycle 362 showed 4.5x Frobenius norm variation across blocks (b1=1385 to b11=6293) under uniform k=512. Hypothesis: the composition barrier at 6+ blocks is driven by high-error blocks dominating the residual stream. Allocate k per block proportional to Frobenius error of the uniform-k compression: high-error blocks get more channels (larger k), low-error blocks get fewer, holding total channel budget constant at 6×512=3072 across 6 blocks. Measure 6-block PPL with adaptive-k vs uniform-k. Threshold: adaptive PPL < 60 (uniform = 65.54 at 6 blocks).
-   - Depends on: 362 (c362 error norms)
-
 375. **Residual stream error propagation monitor — trace per-token error through full GPT-2 forward pass (R5)**
    - The composition barrier is superlinear despite orthogonal per-block errors. This experiment instruments the forward pass to measure residual stream error norm after each block (not just FFN error, but cumulative error including attention re-routing). Run float vs 6-block-compressed forward pass on 200 wikitext-2 sequences, compute ||h_compressed - h_float|| at each of 12 block outputs. Identify where the error growth transitions from linear to superlinear. Threshold: identify a specific block range where error growth rate doubles (inflection point).
    - Depends on: none
@@ -84,6 +80,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 365
+
+374. ~~**Adaptive k per block — equalize Frobenius error across GPT-2 blocks (R4)**~~ REFUTED — Adaptive k (proportional to per-block Frobenius) gives PPL 67.63 ± 0.03, WORSE than uniform 66.34 ± 0.13. Sqrt-proportional fallback also worse (67.52 ± 0.25). Budget-neutral reallocation (k_min=256, total=3072) concentrates channels in high-error blocks b10 (k=904) and b11 (k=1025) but this does not compensate for starving low-error blocks. Adaptive k actively hurts.
+   - *cycle 365 — verdict: REFUTED*
+   - Artifacts: `experiments/gpt2_adaptive_k_cycle374.py`, `autoresearch/results/cycle_365_adaptive_k.json`, `autoresearch/results/cycle_365_manifest.txt`
 
 ### Cycle 364
 

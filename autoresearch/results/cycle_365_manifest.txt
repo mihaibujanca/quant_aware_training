@@ -1,0 +1,7 @@
+item_number=374
+outcome=REFUTED
+key_metric=adaptive_mean_ppl=67.63±0.03_vs_uniform=66.34±0.13 (adaptive WORSE than uniform)
+commit=TBD
+paths=experiments/gpt2_adaptive_k_cycle374.py,autoresearch/results/cycle_365_adaptive_k.json,autoresearch/results/cycle_365_manifest.txt
+learned=Adaptive k proportional to per-block Frobenius error (k_min=256, budget=3072) is worse than uniform k=512. Sqrt-proportional allocation also worse (67.52±0.25). Concentrating channels in high-error blocks b10 (k=904) and b11 (k=1025) while starving b1 (k=256) and b2 (k=273) damages the low-error blocks more than it helps the high-error blocks. The composition barrier is not reducible via static k allocation.
+next=Item 375 (residual stream error propagation monitor) and 376 (block importance pruning) proceed independently. Item 377 (mixed compression) depended on 374+376 — partial blocker resolved (374 refuted, so mixed compression must use block importance findings from 376 rather than Frobenius-proportional k).
