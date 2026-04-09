@@ -1,0 +1,179 @@
+{
+  "configs": [
+    {
+      "label": "float_k3072_h0",
+      "k": 3072,
+      "h": 0,
+      "is_float": true,
+      "total_ffn_params": 14167296,
+      "best_val_ppl": 51.81637320642553,
+      "test_ppl": 56.517045898658814,
+      "pareto_optimal": false
+    },
+    {
+      "label": "float_k3072_h32",
+      "k": 3072,
+      "h": 32,
+      "is_float": true,
+      "total_ffn_params": 14538336,
+      "best_val_ppl": 39.45605575422352,
+      "test_ppl": 41.26237737645246,
+      "pareto_optimal": true
+    },
+    {
+      "label": "float_k3072_h64",
+      "k": 3072,
+      "h": 64,
+      "is_float": true,
+      "total_ffn_params": 14907072,
+      "best_val_ppl": 38.92723134531685,
+      "test_ppl": 40.605313907755814,
+      "pareto_optimal": true
+    },
+    {
+      "label": "float_k3072_h128",
+      "k": 3072,
+      "h": 128,
+      "is_float": true,
+      "total_ffn_params": 15644544,
+      "best_val_ppl": 38.47157374619168,
+      "test_ppl": 40.23310092874356,
+      "pareto_optimal": true
+    },
+    {
+      "label": "comp_k512_h0",
+      "k": 512,
+      "h": 0,
+      "is_float": false,
+      "total_ffn_params": 2363136,
+      "best_val_ppl": 60.33610134510553,
+      "test_ppl": 64.56468067080965,
+      "pareto_optimal": true
+    },
+    {
+      "label": "comp_k512_h32",
+      "k": 512,
+      "h": 32,
+      "is_float": false,
+      "total_ffn_params": 2488416,
+      "best_val_ppl": 45.87133779814902,
+      "test_ppl": 47.48636119481309,
+      "pareto_optimal": true
+    },
+    {
+      "label": "comp_k512_h64",
+      "k": 512,
+      "h": 64,
+      "is_float": false,
+      "total_ffn_params": 2611392,
+      "best_val_ppl": 45.87558794970218,
+      "test_ppl": 47.511106875229785,
+      "pareto_optimal": false
+    },
+    {
+      "label": "comp_k512_h128",
+      "k": 512,
+      "h": 128,
+      "is_float": false,
+      "total_ffn_params": 2857344,
+      "best_val_ppl": 46.24889077161092,
+      "test_ppl": 47.23744073559289,
+      "pareto_optimal": true
+    }
+  ],
+  "pareto_frontier": [
+    {
+      "label": "float_k3072_h32",
+      "k": 3072,
+      "h": 32,
+      "is_float": true,
+      "total_ffn_params": 14538336,
+      "best_val_ppl": 39.45605575422352,
+      "test_ppl": 41.26237737645246,
+      "pareto_optimal": true
+    },
+    {
+      "label": "float_k3072_h64",
+      "k": 3072,
+      "h": 64,
+      "is_float": true,
+      "total_ffn_params": 14907072,
+      "best_val_ppl": 38.92723134531685,
+      "test_ppl": 40.605313907755814,
+      "pareto_optimal": true
+    },
+    {
+      "label": "float_k3072_h128",
+      "k": 3072,
+      "h": 128,
+      "is_float": true,
+      "total_ffn_params": 15644544,
+      "best_val_ppl": 38.47157374619168,
+      "test_ppl": 40.23310092874356,
+      "pareto_optimal": true
+    },
+    {
+      "label": "comp_k512_h0",
+      "k": 512,
+      "h": 0,
+      "is_float": false,
+      "total_ffn_params": 2363136,
+      "best_val_ppl": 60.33610134510553,
+      "test_ppl": 64.56468067080965,
+      "pareto_optimal": true
+    },
+    {
+      "label": "comp_k512_h32",
+      "k": 512,
+      "h": 32,
+      "is_float": false,
+      "total_ffn_params": 2488416,
+      "best_val_ppl": 45.87133779814902,
+      "test_ppl": 47.48636119481309,
+      "pareto_optimal": true
+    },
+    {
+      "label": "comp_k512_h128",
+      "k": 512,
+      "h": 128,
+      "is_float": false,
+      "total_ffn_params": 2857344,
+      "best_val_ppl": 46.24889077161092,
+      "test_ppl": 47.23744073559289,
+      "pareto_optimal": true
+    }
+  ],
+  "verdict": "CONFIRMED",
+  "float_baseline_test_ppl": 56.516925973833445,
+  "best_compressed": {
+    "k": 512,
+    "h": 128,
+    "ppl": 47.23744073559289,
+    "params": 2857344
+  },
+  "best_float": {
+    "k": 3072,
+    "h": 128,
+    "ppl": 40.23310092874356,
+    "params": 15644544
+  },
+  "config": {
+    "blocks": [
+      2,
+      1,
+      10
+    ],
+    "k_float": 3072,
+    "k_comp": 512,
+    "h_values": [
+      0,
+      32,
+      64,
+      128
+    ],
+    "n_steps": 2000,
+    "seed": 42,
+    "val_used_for": "training and checkpoint selection",
+    "test_used_for": "final evaluation only"
+  }
+}
