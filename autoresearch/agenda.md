@@ -6,13 +6,29 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+362. **Multi-block topk+lstsq + adapter h=128 — scale winning recipe to 3 blocks (R4, R5)**
+   - c349 got 3-block topk+lstsq [b2,b1,b10] to 49.03 with h=64 adapters (48.69). h=128 single-block hit 46.22 (c350). Run 3-block topk+lstsq + per-block h=128 adapters, 3 seeds, 2000 steps. Threshold: PPL < 47.0 (below single-block h=128 result). If adapter delta per block stays ~0.34, expect ~48.0; if nonlinear, could beat single-block.
+   - Depends on: 359 (confirmed), 358 (inconclusive — insufficient adapter capacity)
+
+363. **Compression ratio accounting — params saved vs params added for best recipe (R4)**
+   - The program needs compression ratios, not just PPL deltas. For the best single-block recipe (topk+lstsq k=4@6x + h=128 adapter on b2): compute (a) original FFN param count, (b) compressed FFN param count (topk selection + lstsq coefficients), (c) adapter param count, (d) net compression ratio. Repeat for 3-block variant. Threshold: net ratio > 1.5x (removing more than adding). If ratio < 1.0, the adapter is bigger than the savings — recipe is negative compression.
+   - Depends on: 359 (confirmed)
+
 ### P1
+
+364. **Per-block adapter sweep — is b2 special or does topk+lstsq + adapter work on any block? (R4, R5)**
+   - All evidence so far uses b2 (easiest to compress per single-block swap damage). Run topk+lstsq k=4@6x + h=64 adapter on blocks [b1, b4, b7, b10] individually. 2 seeds, 1000 steps each. Measure PPL delta from compressed-no-adapter baseline for each block. Threshold: adapter delta > 0.5 PPL on at least 3/4 blocks. If only b2 benefits, the method is block-specific and multi-block scaling won't work.
+   - Depends on: 359 (confirmed)
 
 360. **topk+lstsq accumulation order sensitivity on GPT-2 — easiest-first vs block-index vs hardest-first (R4)**
    - Cycle 007 showed easiest-first beats hardest-first by 27% on toy models. Test 3 orderings on GPT-2 blocks [b1,b4,b7,b11]: (a) easiest-first (lowest single-block swap damage), (b) block-index order, (c) hardest-first. Measure PPL after each stage. Threshold: >5% PPL gap between best and worst ordering at stage 4.
    - Depends on: 355 (confirmed)
 
 ### P2
+
+365. **Distillation baseline for GPT-2 b2 — knowledge distillation vs topk+lstsq + adapter (R5)**
+   - The program requires geometric method vs distillation comparison. Train a student FFN block (same compressed width as topk k=4@6x) via standard KD: teacher-forcing with KL loss on block outputs, matching the adapter training budget (200K params, 1000 steps, same data). Compare final PPL to topk+lstsq+adapter best (46.22). Threshold: geometric recipe within 1.0 PPL of distillation. If distillation wins by >2.0 PPL, the geometric no-training advantage is overstated.
+   - Depends on: 363 (need compressed width for fair comparison)
 
 361. ~~**Single-block topk+lstsq + adapter vs LASER + adapter — is adapter gain compression-method-specific? (R5)**~~ CONFIRMED-generic — Retrospective comparison from cycles 347+350. LASER+adapter: baseline 50.09 → 48.51 best (delta 1.58 PPL, 1000 steps). topk+adapter: baseline 48.47 → 46.53 best (delta 1.94 PPL, 500 steps). Delta difference 0.33 PPL (mean), 0.36 PPL (best), well within 0.5 threshold. Adapter is a generic residual learner — gain does not depend on compression method.
    - *cycle 352 — verdict: CONFIRMED-generic*
