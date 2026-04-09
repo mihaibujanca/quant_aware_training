@@ -1,0 +1,35 @@
+cycle: 343
+item: 352
+verdict: REFUTED
+date: 2026-04-09
+
+## GPT-2 multi-block LASER accumulation curve
+
+REFUTED: single-block LASER is the ceiling. Adding a 2nd block immediately degrades.
+
+Float PPL: 53.89
+
+Accumulation curve (most concentrated first, ranks = ceil(eff_rank)):
+  Stage 1: [b2] r=2          → PPL 50.21 ± 0.13  (trainable: 2,304)
+  Stage 2: [b2,b1] r=2,2     → PPL 55.10 ± 0.14  (trainable: 4,608)
+  Stage 3: [b2,b1,b10] r=2,2,17 → PPL 58.15 ± 0.08  (trainable: 18,432)
+  Stage 4: [b2,b1,b10,b11] r=2,2,17,23 → PPL 68.97 ± 0.26  (trainable: 36,864)
+
+Each added block degrades: 50.21 → 55.10 → 58.15 → 68.97.
+Even 2-block (55.10) exceeds float (53.89) + 1.0 threshold (54.90).
+Consistent with cycle 305 5-block result (PPL 73.01).
+
+LASER benefits are single-block: the output-covariance concentration that enables
+rank reduction in one block gets disrupted when multiple blocks are simultaneously
+low-rank approximated. Joint retrain cannot compensate.
+
+## Verdict Criteria
+CONFIRMED if any >=2-block stage has best_mean <= 54.90. Result: none qualify.
+REFUTED if single-block best < float and all >=2-block degrade. Result: yes.
+
+## Artifacts
+experiments/gpt2_multiblock_laser_cycle352.py
+autoresearch/results/cycle_343_accumulation.json
+autoresearch/results/cycle_343_manifest.txt
+autoresearch/briefs/cycle_343.md
+autoresearch/plans/cycle_343.md

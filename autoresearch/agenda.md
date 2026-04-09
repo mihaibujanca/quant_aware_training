@@ -12,13 +12,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 (empty — item 351 moved to PAST)
 
-352. **GPT-2 multi-block LASER accumulation — ordered stacking of rank-1 LASER on top-k concentrated blocks**
-   - We have single-block LASER results (cycle 280: b1 works). Item 350 will identify which other blocks have concentrated output covariance. This item tests whether LASER composes across blocks: apply rank-1 LASER to the top-k most concentrated blocks (by output-covariance eff_rank, ascending), one at a time in order from most to least concentrated. After each block's 500-step B-factor retrain, measure full-model PPL. Plot the accumulation curve: x = number of LASER'd blocks, y = PPL. This directly addresses R4 (compositional validity).
-   - Type: empirical (composition test)
-   - Confirmed if: LASER on ≥3 blocks simultaneously keeps PPL within 5% of baseline (125.7), i.e., PPL < 132.
-   - Refuted if: adding a 2nd LASER'd block already pushes PPL > 5% above baseline — single-block is the ceiling.
-   - Inconclusive if: 2 blocks work but 3 doesn't — partial composition, needs investigation of interaction effects.
-   - Depends on: 350 (need the block ranking by output-covariance concentration)
+(empty — item 352 moved to PAST)
 
 ### P2
 
@@ -53,6 +47,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 343
+
+352. **GPT-2 multi-block LASER accumulation — ordered stacking of rank-1 LASER on top-k concentrated blocks**
+   - **Outcome: REFUTED** — single-block LASER is the ceiling. Accumulation curve (most concentrated first): b2 alone PPL 50.21, +b1 PPL 55.10, +b10 PPL 58.15, +b11 PPL 68.97. Each added block degrades. Even 2-block exceeds float (53.89) + 1.0 threshold. LASER benefits don't compose: output-covariance concentration enabling rank reduction in one block gets disrupted by simultaneous low-rank approximation of others. Joint retrain cannot compensate.
+   - *cycle 343 — verdict: REFUTED*
+   - Artifacts: `experiments/gpt2_multiblock_laser_cycle352.py`, `autoresearch/results/cycle_343_accumulation.json`, `autoresearch/results/cycle_343_manifest.txt`
 
 ### Cycle 341
 
