@@ -1,0 +1,38 @@
+cycle: 381
+item: 389
+verdict: INCONCLUSIVE
+date: 2026-04-09
+
+question: Does the 6-block composition penalty (compressed+adapter vs float+adapter) scale sublinearly (<15 PPL) or superlinearly (>25 PPL) relative to the 3-block reference (7.49 PPL)?
+
+result:
+  float_test_ppl_baseline: 56.52
+  float_adapter_6block_mean_test_ppl: 39.65 ± 0.13
+  compressed_adapter_6block_mean_test_ppl: 64.22 ± 0.22
+  penalty_6block: 24.57
+  penalty_3block_ref: 7.49
+  scaling_factor: 3.28x (from 3-block to 6-block, vs 2x more blocks)
+
+per_seed_float_adapter: [39.82, 39.51, 39.63]
+per_seed_compressed_adapter: [64.34, 63.91, 64.42]
+
+thresholds:
+  CONFIRMED_lt: 15.0 (sublinear growth)
+  REFUTED_gt: 25.0 (superlinear growth)
+  actual_penalty: 24.57 → INCONCLUSIVE (just below refutation threshold)
+
+interpretation:
+  - Penalty grew from 7.49 (3-block) to 24.57 (6-block) — 3.28x growth for 2x more blocks
+  - This is superlinear in character but falls just below the >25 refutation threshold
+  - Float+adapter converged to strong PPL (39.65) showing the float side is well-trained
+  - Compressed+adapter stuck at ~64 PPL — compression bottleneck dominates at 6 blocks
+  - Param ratio: compressed adapter is 5.3x more trainable params per block than float adapter
+    yet still performs far worse — the bottleneck is structural, not parameter count
+
+note: The 3-block float+adapter achieves 39.73 (c378); the 6-block float+adapter achieves 39.65.
+  Adding 3 more float adapter blocks yields negligible gain (0.08 PPL), consistent with c380 (12-block ceiling = 39.52).
+  The composition barrier is in the compressed side: 6-block compressed+adapter PPL 64.22 vs 3-block 47.22 — a 17 PPL increase for 2x more blocks.
+
+script: experiments/gpt2_6block_penalty_cycle381.py
+output: autoresearch/results/cycle_381_6block_penalty.json
+config: blocks=[2,1,10,4,3,11], k=512, float_h=64, comp_h=128, steps=2000, seeds=[42,137,2024]

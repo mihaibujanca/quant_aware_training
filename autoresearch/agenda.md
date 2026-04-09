@@ -8,12 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-389. **6-block compressed+adapter under new baseline — quantify true composition penalty (R4)**
-   - Run 6-block topk+lstsq (k=512) with joint MLP adapter (h=64) and compare against 6-block float+adapter (same blocks, same adapter, no compression). c357 measured 6-block compressed PPL ~65.54 without adapter; adding adapters may recover some gap. The float+adapter 6-block number doesn't exist yet — measure both. Key question: does the composition penalty (compressed vs float at same adapter budget) grow superlinearly with block count? Compare 3-block penalty (8.5 PPL from c377) to 6-block penalty.
-   - CONFIRMED threshold: 6-block compression penalty < 15 PPL (sublinear growth from 3-block's 8.5)
-   - REFUTED threshold: 6-block compression penalty > 25 PPL (superlinear, composition barrier persists)
-   - Depends on: 386
-
 ### P2
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
@@ -39,6 +33,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 381
+
+389. ~~**6-block compressed+adapter under new baseline — quantify true composition penalty (R4)**~~ INCONCLUSIVE — 6-block penalty = 24.57 PPL (float+adapter 39.65 vs compressed+adapter 64.22, both ±0.2). Just below the >25 refutation threshold. 3-block ref penalty was 7.49; penalty grew 3.28x for only 2x more blocks — superlinear in character. Compressed+adapter is stuck near 64 PPL regardless of 5.3x more trainable params per block. Float+adapter converged well (39.65, near the 12-block ceiling of 39.52). The composition barrier is structural, not parameter-count limited. Script: `experiments/gpt2_6block_penalty_cycle381.py`. Results: `autoresearch/results/cycle_381_6block_penalty.json`.
+   - *cycle 381 — verdict: INCONCLUSIVE*
 
 ### Cycle 380
 
