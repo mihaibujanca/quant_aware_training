@@ -10,25 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-340. **LASER on parameter-golf b3 — rank-5 weight-SVD + B-factor retrain (the headline action item)** *(cross-project, action item)*
-   - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.** Also required: `parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` section 6.1 for the full action item description.
-   - **Motivation**: cycle 318 measured `eff_rank(b3) = 4.89` on parameter-golf 13L_640d_322 with top-1 eigenvalue fraction 78.22%. Cycle 319 measured `rank_95(Δy_relu²−relu) = 72` at b3. The block's MLP output covariance is effectively rank ~5. Hypothesis: a rank-5 weight-SVD truncation of `blocks.3.mlp.proj.weight` (1920×640 = 1.23M params) plus a small B-factor retrain matches baseline BPB. If true, the cycle 280 LASER recipe (originally GPT-2 GELU b1) transfers to parameter-golf ReLU² b3, replacing 1.23M params with ~9.6K — a 128× compression at one block, ≈1.2MB savings on the 16MB artifact budget. **This is the highest-leverage actionable item from the EFFRANK_CURVATURE_FINDINGS report.** Depends on items 335 (multi-checkpoint stability — confirms b3 is the right target) and 336 (post-mlp_scale capture — confirms the rank profile is in the right representation).
-   - **Setup**:
-     - **Step 0** (REQUIRED): `cat autoresearch/cross_project/parameter_golf.md` AND `cat parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` (section 6.1 specifically).
-     - **Step 1**: write `parameter-golf/local_scripts/pgolf_laser_retrain.py`. Inputs: `--checkpoint`, `--target-block`, `--rank`, `--n-train-steps`, `--lr`. The script (a) loads the checkpoint via `load_model_v2`, (b) computes `U, S, Vh = mx.linalg.svd(W_proj_b)` for the target block's `mlp.proj.weight` (verify the MLX shape convention — should be `(d_model, hidden)` after transposition), (c) constructs `A_frozen = U[:, :r] · diag(S[:r])` and trainable `B = Vh[:r, :]`, (d) replaces `model.blocks[b].mlp.proj.weight` with the factored form (or wraps the proj forward to compute `B^T @ A^T @ x` instead of the full weight), (e) freezes everything except B, (f) runs an Adam fine-tune loop on FineWeb train tokens (small batch, ~500 steps, lr=1e-4), (g) evaluates BPB on FineWeb val before and after, (h) prints JSON {baseline_bpb, retrained_bpb, b_init_bpb, n_steps, n_params_trainable}.
-     - **Step 2**: write `experiments/pgolf_laser_retrain_cycle340.py` (qat side). Subprocess-invoke with `--target-block 3 --rank 5 --n-train-steps 500 --lr 1e-4`.
-     - **Step 3**: also test `--rank 2` and `--rank 10` for sensitivity. 3 runs total.
-     - **Step 4**: build `cycle_340_summary.md` with the BPB-vs-rank table, comparison to baseline.
-   - **Hypothesis**: rank-5 retrain BPB ≤ baseline + 0.001 (matches baseline within noise). Rank-2 retrain BPB ≤ baseline + 0.005. Rank-10 retrain BPB ≤ baseline.
-   - **Outcomes**:
-     - **CONFIRMED-LASER-transfers** if rank-5 retrain BPB ≤ baseline + 0.001: cycle 280 LASER recipe is generic, transfers to parameter-golf, ~1.2MB savings on the budget. **Major leaderboard-relevant result.** Schedule items 341/342 (LASER on b12/b11) as immediate follow-ups.
-     - **CONFIRMED-partial** if rank-5 retrain is in (baseline + 0.001, baseline + 0.005): partial recovery; rank-10 might do better. Worth a small rank sweep follow-up.
-     - **REFUTED-LASER-fails** if rank-5 retrain BPB ≥ baseline + 0.01: parameter-golf b3's rank-5 capacity is genuinely insufficient; cycle 280 doesn't transfer. Need to understand WHY (training-distribution mismatch? bfloat16 precision? composition with bigram/skip layers?).
-     - **INCONCLUSIVE** otherwise.
-   - **Baselines**: cycle 280 GPT-2 b1 r=2 result (49.03 PPL vs float 53.90, −4.86). Parameter-golf 13L_640d_322 baseline BPB on FineWeb val (read from training summary).
-   - **Run cap**: ~20 minutes (3 ranks × ~5 min each: forward pass + 500-step retrain + BPB eval).
-   - Depends on: 335, 336, `autoresearch/cross_project/parameter_golf.md`, parameter-golf training infrastructure (need to write the retrain loop in MLX — first cross-project measurement that requires backward pass, not just forward).
-
 341. **LASER on parameter-golf b12 — rank-7 weight-SVD + B-factor retrain (smallest block)** *(cross-project, action item)*
    - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.** Also required: `parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` section 6.2.
    - **Motivation**: cycle 318 measured `eff_rank(b12) = 6.94` with top-1 fraction 65.10%. Block 12 has hidden=320 (the smallest block), so a rank-7 truncation gives `7×(320+640) = 6,720 params` vs the original 320×640 = 205K — a 30× reduction. This is action 6.2 from the EFFRANK_CURVATURE_FINDINGS report. Smaller absolute savings than b3 (200KB vs 1.2MB) but nearly free to test once item 340's infrastructure exists.
@@ -154,6 +135,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 327
+
+340. **LASER on parameter-golf b3 — rank-5 weight-SVD + B-factor retrain (the headline action item)** *(cross-project, action item)*
+   - **Outcome: REFUTED-LASER-fails** — rank-5 retrain BPB delta = +0.0378 (baseline 1.3621, retrained 1.3999), far above the 0.001 threshold. Rank-2: +0.0405, rank-10: +0.0350. Monotonic in rank as expected, but all 500-step retrains leave a large residual gap (~0.035–0.04 BPB above baseline). Low-rank SVD of `blocks.3.mlp.proj.weight` (rank-5 captures only 2.6% of Frobenius energy) cannot represent the full projection. Unlike GPT-2 GELU b1 where rank-2 already recovered the output distribution, b3's `proj.weight` S-values are flat (S[0]/S[1] ≈ 1.16, no single dominant direction), so rank-r truncation loses ~97% of the energy regardless of retrain budget. **Key distinction from cycle 280**: GPT-2 b1 had dominant S[0] (rank-1 energy fraction ~70%); pgolf b3 has uniform spectrum (rank-2 energy fraction 1.2%). The low output-covariance eff_rank (~4.89) reflects input distribution, not weight rank. LASER does not transfer.
+   - *cycle 327 — verdict: REFUTED-LASER-fails*
 
 ### Cycle 326
 
