@@ -253,10 +253,17 @@ Read `autoresearch/agenda.md`. Pick the highest-priority item from `## NEXT EXPE
 
 Priority order is `P0 > P1 > P2`, then lower item number first.
 
+**Agenda format rules** (enforced during every bookkeeping step):
+- NEXT EXPERIMENTS has exactly 3 subsections: `### P0`, `### P1`, `### P2`. No other subsection headers.
+- Items in NEXT must have NO outcome/verdict. If an item has a verdict, it belongs in PAST, not NEXT.
+- When moving an item to PAST, DELETE the entire item block from NEXT (title + all bullet lines). Do not leave a stub, strikethrough, or annotation.
+
 If no eligible item exists:
-1. if fewer than 4 items remain in NEXT, refresh the agenda
+1. if ZERO items remain in NEXT (completely empty), trigger an agenda refresh — this must be an in-depth review of all past results and the current research direction, not just appending random items
 2. try selection again
 3. if nothing is still eligible, update `STATUS.md` with the blocker and stop rather than faking progress
+
+**Do NOT refresh the agenda when items still exist in NEXT.** If existing items are blocked by dependencies, note the blocker and stop. Do not invent new items to avoid running existing ones.
 
 ### 2. Brief
 Spawn the brief worker using `autoresearch/prompts/brief.md`.
@@ -296,7 +303,7 @@ Execution must:
 - follow the selected plan unless reality forces a minimal adjustment
 - create the main result artifacts
 - evaluate the outcome against the agenda item's criteria
-- move the item from NEXT to PAST with a **provisional** outcome and artifact paths
+- move the item from NEXT to PAST with a **provisional** outcome and artifact paths. **MOVE means DELETE from NEXT and ADD to PAST** — the item must not appear in both sections. The PAST entry should be a short summary (≤4 lines): item title with verdict in parentheses, one-line key finding, cycle number, artifacts line. Do not copy the full item description to PAST.
 - write `autoresearch/results/cycle_{CYCLE}_manifest.txt` with:
   - `item_number`
   - `outcome`
@@ -319,7 +326,7 @@ After audit:
 1. ensure `agenda.md`, `experiments.tsv`, `STATUS.md`, and the manifest agree on the final audited outcome
 2. append the log row if it is missing
 3. regenerate `STATUS.md`
-4. if fewer than 4 items remain in NEXT, refresh the agenda
+4. refresh the agenda ONLY if NEXT is completely empty (zero items). See selection phase rules.
 
 Keep `PAST EXPERIMENTS` monotonic by cycle number. Append new cycle entries at the end; do not insert newer cycles above older ones.
 
@@ -444,6 +451,7 @@ Do **not** retry the same item immediately.
 
 ```text
 cycle	item	type	outcome	key_metric	description	commit	paths
+333	332	empirical	refuted	flat spectrum: best top5=6.7% < 10% gate	LASER on tiny GPT 3-activation variants — all flat spectrum, LASER inapplicable	TBD	autoresearch/results/cycle_333_laser.json,autoresearch/results/cycle_333_manifest.txt
 ```
 
 - **type**: `literature`, `implementation`, `empirical`, `analysis`

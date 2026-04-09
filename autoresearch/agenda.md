@@ -30,18 +30,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 343, 338, `autoresearch/cross_project/parameter_golf.md`.
 
 
-332. **LASER recipe replication on tiny GPT activation variants — does cycle 280's rank-r-beats-baseline transfer across activations on a controlled testbed?**
-   - **Motivation**: item 331 produces three matched trained checkpoints. The natural follow-up is the cycle 280 LASER recipe applied to each — does block 1 of the tiny ReLU² GPT also admit a rank-r weight replacement that beats baseline? Does the ReLU² version's "rank-r patch beats baseline" gap match the GPT-2 GELU version's −4.86 PPL improvement at r=2? This is the activation-controlled version of the "is cycle 280 generic" question that the spirals item 306 INCONCLUSIVE could not answer (because spirals was already at the rank floor). Together with item 329 (LASER on ReLU² spirals), item 332 closes the cross-activation LASER question on both small and tiny-transformer testbeds.
-   - **Setup**: load each tiny GPT checkpoint from item 331. For the lowest-eff_rank block (per item 331's census), apply the cycle 280 recipe: SVD `c_proj.weight`, freeze `A = U[:, :r] · diag(S[:r])`, retrain `B = Vh[:r, :]` and bias for 500 steps with Adam lr=1e-4 (or 3e-4 if the tiny model's PPL is harder to move). Sweep r ∈ {1, 2, 5, 10}. Report per-r best held-out PPL for each variant. Then a 3×4 table: 3 activations × 4 ranks → 12 PPL numbers. Compare cycle 280's GPT-2 GELU result (−4.86 PPL vs baseline at r=2) to each of the three matched tiny-GPT cells.
-   - **Hypothesis**: all three variants admit a rank-r ≤ 5 patch that matches baseline within +0.5 PPL on this small model; ReLU² and lrelu² need slightly higher r than GELU because their lower mean eff_rank (per item 331 if CONFIRMED-rank-profile-shape) doesn't uniformly translate to single-block patchability — the tighter active set means more sensitivity to which directions get kept.
-   - **Outcomes**:
-     - **CONFIRMED-LASER-generic** if all 3 variants have at least one r where retrained PPL ≤ baseline + 0.5: LASER recipe is activation-agnostic, cycle 280 is not GELU-specific. Strong cross-activation finding.
-     - **REFUTED-LASER-GELU-specific** if only the GELU variant has a rank-r matching baseline AND ReLU²/lrelu² need r ≥ 100 to match: cycle 280's success was specifically about GELU's smooth-everywhere structure leaving more low-rank slack than the harder-thresholded activations.
-     - **INCONCLUSIVE** otherwise.
-   - **Baselines**: cycle 280 GPT-2 b1 r=2 result (49.03 PPL vs float 53.90, −4.86). Cycle 285 b2 r=2 (49.33). Cycle 292 b1 r=1 (50.08).
-   - **Run cap**: ~15 minutes (3 variants × 4 ranks × ~1 min each).
-   - Depends on: 331.
-
 ### P2
 
 328. **Extended budget rank-1 retrain at b11 — 8000 steps to settle cycle 311's borderline pass** — cycle 311 follow-up.
@@ -70,6 +58,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 333
+
+332. **LASER recipe replication on tiny GPT activation variants — does cycle 280's rank-r-beats-baseline transfer across activations on a controlled testbed?**
+   - **Outcome: REFUTED-flat-spectrum** — All 3 activation variants (GELU, ReLU², LeakyReLU²) have flat c_proj weight spectra: best-block top-5 singular energy GELU=6.2%, ReLU²=6.5%, lrelu²=6.7%, all below the 10% gate. LASER is inapplicable because the precondition (concentrated spectrum) is absent in tiny GPT trained from scratch for 3000 steps. Full-rank sanity passed (LowRankCProj r=256 diff=0.000). The question of LASER genericity across activations remains open for models with concentrated spectra (pretrained large models).
+   - *cycle 333 — verdict: REFUTED-flat-spectrum*
+   - Artifacts: `experiments/tiny_gpt_laser_cycle333.py`, `autoresearch/results/cycle_333_laser.json`, `autoresearch/results/cycle_333_manifest.txt`
 
 ### Cycle 332
 

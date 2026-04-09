@@ -1,0 +1,40 @@
+cycle: 333
+item: 332
+verdict: REFUTED-flat-spectrum
+script: experiments/tiny_gpt_laser_cycle333.py
+data: autoresearch/results/cycle_333_laser.json
+elapsed_sec: 7.9
+
+## Summary
+LASER rank sweep could not proceed: all 3 activation variants (GELU, ReLU², LeakyReLU²)
+have flat weight spectra in c_proj. Best block top-5 singular value energy: GELU=6.2%,
+ReLU²=6.5%, lrelu²=6.7% — all below the 10% gate required for LASER applicability.
+
+## Spectrum (c_proj top-5 energy fraction, best block)
+  gelu:   B3 top5=0.0616  (gate: 0.10)  FAIL
+  relu2:  B2 top5=0.0649  (gate: 0.10)  FAIL
+  lrelu2: B3 top5=0.0669  (gate: 0.10)  FAIL
+
+## Baseline PPL (mean over 3 seeds, 100 val seqs)
+  gelu:   257.96
+  relu2:  242.61
+  lrelu2: 243.72
+
+## Full-rank sanity check (GELU seed=42, r=256)
+  LowRankCProj(r=256) PPL = 265.3969 == baseline 265.3969 (diff=0.0000)
+  PASS — no transposition bug in nn.Linear adaptation
+
+## Interpretation
+Tiny GPT trained for 3000 steps on wikitext-2 has near-uniform singular value
+distribution in c_proj. This is consistent with small models trained from random init
+without regularization pressure to concentrate weight energy.
+LASER (as used in cycle 280 on pretrained GPT-2) requires concentrated spectrum.
+The cycle 280 result (rank-r beats baseline) does NOT transfer to this testbed because
+the precondition (concentrated spectrum) is absent, not because of activation-specific
+behavior. The question of GELU vs ReLU²/lrelu² remains open for models with concentrated
+spectra (e.g., larger pretrained models).
+
+## Files
+- experiments/tiny_gpt_laser_cycle333.py
+- autoresearch/results/cycle_333_laser.json
+- autoresearch/results/cycle_333_manifest.txt
