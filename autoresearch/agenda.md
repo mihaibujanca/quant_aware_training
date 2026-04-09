@@ -8,20 +8,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 
 
-337. **Cycle 319 verdict re-classification under rank-only criterion** *(audit-style item, no new measurement)*
-   - **Motivation**: cycle 319 (item 334) returned INCONCLUSIVE under a verdict tree that mixed `rank_95 ≤ 50` AND `‖Δy‖_F ≥ 2× median`. The cycle 319 audit (`autoresearch/audits/cycle_319.md`) explicitly notes the verdict-criterion miss: "geometric concentration ≠ magnitude amplification. A future revised tree should either (a) use 'rank_95 ≤ 50 alone' or (b) compare ‖Δy‖_F to absolute baseline (e.g. (relu², relu) at the same block) rather than relative to median." This item formally re-classifies cycle 319 under the simpler `rank_95 ≤ 50` criterion. No new measurement needed; just re-read the cycle 319 JSON, apply the new criterion, write a new audit annotation. **2 minutes of work.**
-   - **Setup**: open `autoresearch/results/cycle_319_pgolf_curvature_residual.json`, extract per-block `rank_95` for the (lrelu², relu²) pair, count blocks with `rank_95 ≤ 50`. Write `autoresearch/results/cycle_319_reclassification.md` containing:
-     - Strict tree verdict (INCONCLUSIVE, original).
-     - Rank-only criterion verdict (CONFIRMED-leak-localized at b4=18, b5=33, b12=21).
-     - Justification for the audit upgrade.
-     - Cross-reference to cycle 319 audit's recommendation paragraph.
-   - **Hypothesis**: under "rank_95 ≤ 50 alone," cycle 319 verdict shifts from INCONCLUSIVE to CONFIRMED-leak-localized at exactly 3 blocks (b4, b5, b12). All 10 other blocks have rank_95 > 100.
-   - **Outcomes**:
-     - **CONFIRMED-reclassification-clean** if exactly 3 blocks pass and the rest are clearly above the threshold (rank_95 ≥ 100 in all 10 others): the audit recommendation is right and cycle 319's substantive finding is upgraded.
-     - **REFUTED** if more than 3 blocks pass at rank_95 ≤ 50: the rank-only criterion is too lenient, the leak is more diffuse than I thought, the localization to b4/b5/b12 is partial.
-   - **Run cap**: ~2 minutes.
-   - Depends on: `autoresearch/results/cycle_319_pgolf_curvature_residual.json` (already exists).
-
 338. **True LeakyReLU²-trained parameter-golf checkpoint cycle 318/319 census** *(cross-project, caveat experiment)*
    - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.**
    - **Motivation**: cycle 319's (LeakyReLU², ReLU²) measurement was on a ReLU²-TRAINED checkpoint, treating LeakyReLU² as a predictive perturbation. The localization at b4/b5/b12 is what the leak WOULD do if applied to a model that wasn't trained with it. The actual mechanism that produces the leaderboard win is what happens when the model is TRAINED with LeakyReLU² from scratch — the activation distribution z(x) differs, the model could learn to use the leak in different layers, and the localization could shift. To get the right answer, run cycle 318 (eff_rank census) AND cycle 319 (curvature residual) on a true LeakyReLU²-trained checkpoint. If the localization is the same (b4/b5/b12), cycle 319's predictive measurement was correct. If it shifts, the predictive measurement was an artifact of the wrong activation distribution.
@@ -205,6 +191,24 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 324
+
+337. **Cycle 319 verdict re-classification under rank-only criterion** *(audit-style item, no new measurement)*
+   - **Motivation**: cycle 319 (item 334) returned INCONCLUSIVE under a verdict tree that mixed `rank_95 ≤ 50` AND `‖Δy‖_F ≥ 2× median`. The cycle 319 audit (`autoresearch/audits/cycle_319.md`) explicitly notes the verdict-criterion miss: "geometric concentration ≠ magnitude amplification. A future revised tree should either (a) use 'rank_95 ≤ 50 alone' or (b) compare ‖Δy‖_F to absolute baseline (e.g. (relu², relu) at the same block) rather than relative to median." This item formally re-classifies cycle 319 under the simpler `rank_95 ≤ 50` criterion. No new measurement needed; just re-read the cycle 319 JSON, apply the new criterion, write a new audit annotation. **2 minutes of work.**
+   - **Setup**: open `autoresearch/results/cycle_319_pgolf_curvature_residual.json`, extract per-block `rank_95` for the (lrelu², relu²) pair, count blocks with `rank_95 ≤ 50`. Write `autoresearch/results/cycle_319_reclassification.md` containing:
+     - Strict tree verdict (INCONCLUSIVE, original).
+     - Rank-only criterion verdict (CONFIRMED-leak-localized at b4=18, b5=33, b12=21).
+     - Justification for the audit upgrade.
+     - Cross-reference to cycle 319 audit's recommendation paragraph.
+   - **Hypothesis**: under "rank_95 ≤ 50 alone," cycle 319 verdict shifts from INCONCLUSIVE to CONFIRMED-leak-localized at exactly 3 blocks (b4, b5, b12). All 10 other blocks have rank_95 > 100.
+   - **Outcomes**:
+     - **CONFIRMED-reclassification-clean** if exactly 3 blocks pass and the rest are clearly above the threshold (rank_95 ≥ 100 in all 10 others): the audit recommendation is right and cycle 319's substantive finding is upgraded.
+     - **REFUTED** if more than 3 blocks pass at rank_95 ≤ 50: the rank-only criterion is too lenient, the leak is more diffuse than I thought, the localization to b4/b5/b12 is partial.
+   - **Run cap**: ~2 minutes.
+   - Depends on: `autoresearch/results/cycle_319_pgolf_curvature_residual.json` (already exists).
+
+   - *CONFIRMED-reclassification-clean — cycle 324*
 
 ### Cycle 322
 
