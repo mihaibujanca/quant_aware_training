@@ -34,8 +34,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Artifacts: `experiments/gpt2_error_correlation_cycle371.py`, `autoresearch/results/cycle_362_error_correlation.json`
    - Depends on: 358 (confirmed)
 
-372. **KD fine-tune after geometric compression — GPT-2 (R4)**
-   - Geometric topk+lstsq + adapter gives PPL 47.43 on 3 blocks. Test whether a short knowledge-distillation pass (1000 steps, KL div against float teacher, lr=1e-5) can further recover PPL. This uses geometric compression for initialization (good structure) and KD for polish (global coherence). Compare: (a) geometric only (47.43), (b) KD only from scratch (57.59 from cycle 349), (c) geometric + KD fine-tune. Threshold: geometric+KD beats both standalone methods by >1 PPL.
+372. ~~**KD fine-tune after geometric compression — GPT-2 (R4)**~~ REFUTED — KD polish immediately degrades the geometrically-compressed model. Phase 1 (topk+lstsq k=512 + adapter h=64, 3 blocks [b2,b1,b10], 1000 steps): PPL 48.38. Phase 2 (global KD fine-tune, all params unfrozen, KL vs teacher, 500 steps, lr=5e-5): PPL 57–62 (all 3 seeds). Best PPL remains at step 0 (Phase 1 init). KD loss is very large (30-50), indicating the student logits diverge from teacher immediately. KD fine-tune harms the compressed model because the full-model parameter space is too large to optimize stably at 5e-5 with a KL objective in 500 steps — it overwrites the geometric structure rather than polishing it.
+   - *cycle 363 — verdict: REFUTED*
+   - Artifacts: `experiments/gpt2_kd_polish_cycle372.py`, `autoresearch/results/cycle_363_kd_polish.json`, `autoresearch/results/cycle_363_manifest.txt`
    - Depends on: 355 (confirmed)
 
 373. **Port compression recipe to nanochat teacher model — end-to-end validation (R4)**
@@ -71,6 +72,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 363
+
+372. ~~**KD fine-tune after geometric compression — GPT-2 (R4)**~~ REFUTED — KD polish immediately degrades the geometrically-compressed model. Phase 1 PPL: 48.38. Phase 2 (KD fine-tune all params, 500 steps, lr=5e-5): PPL 57–62 across all 3 seeds. Best stays at step 0. KD loss large (30-50); fine-tuning entire model with KL vs teacher overwrites geometric structure rather than polishing it.
+   - *cycle 363 — verdict: REFUTED*
+   - Artifacts: `experiments/gpt2_kd_polish_cycle372.py`, `autoresearch/results/cycle_363_kd_polish.json`, `autoresearch/results/cycle_363_manifest.txt`
 
 ### Cycle 362
 

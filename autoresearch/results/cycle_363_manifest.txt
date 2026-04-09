@@ -1,0 +1,28 @@
+cycle: 363
+item: 372
+verdict: REFUTED
+title: KD fine-tune after geometric compression — GPT-2 3-block [b2,b1,b10]
+
+phase1_ppl: 48.3817
+phase2_mean_ppl: 48.3817
+phase2_improvement: -0.0000
+float_ppl: 53.8949
+
+key_finding: KD polish (unfreeze all params, KL vs teacher, 500 steps, lr=5e-5) drives PPL from 48.38 to 57-62 across all 3 seeds. Best PPL stays at step 0. KD loss is 30-50 (very large), indicating the student diverges from teacher immediately. The geometric structure is overwritten, not polished.
+
+artifacts:
+  experiment: experiments/gpt2_kd_polish_cycle372.py
+  results: autoresearch/results/cycle_363_kd_polish.json
+  manifest: autoresearch/results/cycle_363_manifest.txt
+
+config:
+  blocks: [2, 1, 10]
+  hidden_fraction: 1/6 (k=512)
+  adapter_hidden: 64
+  n_steps_p1: 1000
+  lr_p1: 1e-4
+  n_steps_p2: 500
+  lr_p2: 5e-5
+  kd_temperature: 1.0
+  seeds: [42, 137, 2024]
+  device: mps
