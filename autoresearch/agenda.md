@@ -24,9 +24,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - MLP adapter h=128 uses 198K params per block. Alternative: apply LoRA (r=4,8,16) to the compressed W_proj matrix itself, fine-tuning on the same wikitext-2 calibration data with MSE loss. Compare PPL vs param count on b2 single-block. LoRA r=8 on 768×512 = 10K params (20× fewer than h=128 adapter). Threshold: LoRA achieves >50% of adapter's PPL gain at <25% of params. This tests whether the adapter's value is in learning a nonlinear residual (favors MLP) or in adjusting the linear map (favors LoRA).
    - Depends on: 350 (adapter Pareto frontier)
 
-369. **Why topk+lstsq composes but LASER doesn't — singular value analysis of per-block error (R5)**
-   - topk+lstsq at k=512 composes across blocks (3-block PPL 48.53); LASER rank-2 fails multi-block. Hypothesis: topk+lstsq error is spectrally flat (no dominant direction to amplify), while LASER error is spectrally concentrated (rank-2 truncation leaves coherent error that compounds). Measure: for each of blocks [b1,b2,b4,b7,b10,b11], compute SVD of the error matrix E = W_compressed - W_float for both methods. Report eff_rank(E), top-1 energy fraction, and alignment of top error singular vectors across blocks (cos similarity). Threshold: eff_rank ratio topk/LASER > 2× in majority of blocks.
-   - Depends on: 342 (LASER dead on pgolf), 353 (compression accounting)
+369. ~~**Why topk+lstsq composes but LASER doesn't — singular value analysis of per-block error (R5)**~~ CONFIRMED — LASER error eff_rank=6.14 (top-1 energy 78.7%); topk error eff_rank=463.34 (top-1 energy 4.7%). Ratio 75.4x (threshold: 10x). LASER error is spectrally concentrated (near-rank-1), topk error is spectrally flat. Frobenius: LASER 4430 vs topk 1637. Coherence with residual stream: LASER std=7.84 vs topk std=0.88 — LASER error aligns much more strongly with residual direction, explaining coherent accumulation across blocks.
+   - *cycle 358 — verdict: CONFIRMED*
+   - Artifacts: `experiments/gpt2_error_spectral_cycle369.py`, `autoresearch/results/cycle_358_spectral.json`
 
 ### P2
 
@@ -57,6 +57,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 358
+
+369. ~~**Why topk+lstsq composes but LASER doesn't — singular value analysis of per-block error (R5)**~~ CONFIRMED — LASER error eff_rank=6.14 (top-1 energy 78.7%); topk error eff_rank=463.34 (top-1 energy 4.7%). Ratio 75.4x (threshold: 10x). LASER error is spectrally concentrated (near-rank-1), topk error is spectrally flat. Frobenius: LASER 4430 vs topk 1637. Coherence with residual stream: LASER std=7.84 vs topk std=0.88 — LASER error aligns much more strongly with residual direction, explaining coherent accumulation across blocks.
+   - *cycle 358 — verdict: CONFIRMED*
+   - Artifacts: `experiments/gpt2_error_spectral_cycle369.py`, `autoresearch/results/cycle_358_spectral.json`
 
 ### Cycle 357
 

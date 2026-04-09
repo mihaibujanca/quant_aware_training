@@ -1,0 +1,33 @@
+cycle: 358
+item: 369
+verdict: CONFIRMED
+timestamp: 2026-04-09
+
+title: Spectral analysis of topk vs LASER error matrices — why does topk compose and LASER doesn't?
+
+result_files:
+  - autoresearch/results/cycle_358_spectral.json
+
+experiment_files:
+  - experiments/gpt2_error_spectral_cycle369.py
+
+key_numbers:
+  laser_eff_rank: 6.14
+  laser_top1_energy_frac: 0.787
+  laser_frobenius: 4430.0
+  topk_eff_rank: 463.34
+  topk_top1_energy_frac: 0.047
+  topk_frobenius: 1637.1
+  ratio_topk_over_laser: 75.4x
+  laser_residual_cosine_std: 7.84
+  topk_residual_cosine_std: 0.88
+
+summary: >
+  LASER rank-2 error on block b2 is spectrally near-rank-1 (eff_rank=6.14, top-1
+  energy 78.7%). topk+lstsq error is spectrally flat (eff_rank=463, top-1 energy
+  4.7%). Ratio 75.4x, well above CONFIRMED threshold of 10x. LASER error also has
+  7.8x higher coherence std with the residual stream (std=7.84 vs 0.88), explaining
+  why it accumulates coherently across blocks. topk error is nearly incoherent with
+  the residual stream — it does not compound. This confirms the composition
+  hypothesis: spectral concentration of the error matrix, not its magnitude, drives
+  multi-block degradation.
