@@ -6,13 +6,41 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-(P0 empty — item 339 closed in cycle 326.)
+350. **Output-covariance spectrum census on GPT-2 — all 12 blocks**
+   - Cycle 338 revealed GPT-2 b1 has top-1 output-covariance energy = 92.94% despite flat weight SVD (top-1 = 4.59%). This explains why LASER works: data-dependent concentration, not weight-intrinsic. Compute output-covariance SVD for ALL 12 blocks on 200 wikitext-2 val sequences (same calibration set as cycle 338). For each block: capture MLP output activations Y ∈ ℝ^(N_tokens, 768), compute covariance C = Y^T Y / N, SVD of C, report top-1/top-5/top-10 energy fractions and eff_rank = exp(entropy(eigenvalues)). Identify which blocks have concentrated output covariance (top-5 ≥ 50%) — these are the true LASER candidates.
+   - Type: empirical (measurement)
+   - Confirmed if: ≥3 GPT-2 blocks have output-covariance top-5 energy ≥ 50%, confirming the data-dependent concentration is widespread (not b1-specific).
+   - Refuted if: only b1 has top-5 ≥ 50% and all other blocks are below 30% — concentration is an outlier, not a pattern.
+   - Inconclusive if: 1-2 blocks besides b1 are in the 30-50% range — borderline concentration that needs further investigation.
+   - Depends on: cycle 338 result (b1 output-covariance already measured as a side finding)
 
 ### P1
 
-(P1 empty — item 347 closed in cycle 338.)
+351. **LASER with output-covariance gating on pgolf — re-evaluate blocks rejected by weight SVD**
+   - Cycles 327-329 rejected LASER on pgolf b3/b11/b12 because weight SVD was flat (top-5 < 10%). But cycle 338's key insight is that output-covariance, not weight SVD, predicts LASER viability. Compute output-covariance SVD for all 13 pgolf blocks on FineWeb val data. For blocks where output-covariance top-r energy ≥ 50% (for some small r), run rank-r LASER + 500-step B-factor retrain. Compare BPB to baseline (1.3621).
+   - Type: empirical
+   - Confirmed if: ≥1 pgolf block has output-covariance top-5 ≥ 50% AND rank-r LASER retrain achieves BPB delta < 0.005 (vs the +0.035-0.04 seen in cycles 327-329 using weight SVD rank).
+   - Refuted if: all 13 pgolf blocks have output-covariance top-5 < 30% (concentration is absent even in data space) OR output-covariance-gated LASER still gives BPB delta > 0.01.
+   - Inconclusive if: output covariance is concentrated but LASER retrain underperforms despite using the right rank — suggests the retrain budget or procedure is the bottleneck, not the rank selection.
+   - Depends on: 350 (validates the output-covariance methodology on GPT-2 first)
+
+352. **GPT-2 multi-block LASER accumulation — ordered stacking of rank-1 LASER on top-k concentrated blocks**
+   - We have single-block LASER results (cycle 280: b1 works). Item 350 will identify which other blocks have concentrated output covariance. This item tests whether LASER composes across blocks: apply rank-1 LASER to the top-k most concentrated blocks (by output-covariance eff_rank, ascending), one at a time in order from most to least concentrated. After each block's 500-step B-factor retrain, measure full-model PPL. Plot the accumulation curve: x = number of LASER'd blocks, y = PPL. This directly addresses R4 (compositional validity).
+   - Type: empirical (composition test)
+   - Confirmed if: LASER on ≥3 blocks simultaneously keeps PPL within 5% of baseline (125.7), i.e., PPL < 132.
+   - Refuted if: adding a 2nd LASER'd block already pushes PPL > 5% above baseline — single-block is the ceiling.
+   - Inconclusive if: 2 blocks work but 3 doesn't — partial composition, needs investigation of interaction effects.
+   - Depends on: 350 (need the block ranking by output-covariance concentration)
 
 ### P2
+
+353. **b12 pruning + LASER composition on pgolf — combine free prune with compression**
+   - Cycle 339 confirmed b12 MLP is free to prune (BPB delta = -0.000004). This item tests whether b12 pruning composes with LASER on another block. Zero out b12's MLP contribution, then apply LASER on the best output-covariance-concentrated block (from item 350). Measure combined BPB. If composition works, this gives a 2-block compression recipe for pgolf: one block pruned, one block rank-reduced.
+   - Type: empirical (composition test)
+   - Confirmed if: combined (b12 prune + LASER on block X) BPB delta < 0.01 above baseline — both interventions compose without interference.
+   - Refuted if: combined BPB delta > 0.03 — the interventions interact destructively despite being individually cheap/free.
+   - Inconclusive if: combined delta is 0.01-0.03 — partial interference that might be addressable with joint retrain.
+   - Depends on: 351 (need output-covariance-gated LASER result on pgolf to know which block to pair with b12)
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
