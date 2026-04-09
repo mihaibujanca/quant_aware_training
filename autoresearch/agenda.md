@@ -9,14 +9,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-380. **Importance-weighted k allocation with early-block floor (R4)**
-   - c365 showed Frobenius-proportional k starves early blocks. c367 provides an orthogonal importance ranking. New hypothesis: allocate k proportional to block importance (ascending: b1 gets least, b0/b11 get most), but enforce a FLOOR of k=384 on all blocks so early blocks are never starved below functional threshold. Total budget held constant at 6144 (12×512).
-   - Method: Map importance ranking [1,7,2,6,9,10,8,3,5,4,11,0] to k values with floor=384, ceiling=768, total=6144. Run 6-block compression with joint adapter training.
-   - Confirmed if: 6-block PPL < 64.0 (beats uniform 66.34 by >2 PPL)
-   - Refuted if: 6-block PPL >= 66.0 (floor doesn't help, k allocation is fundamentally not a lever)
-   - Inconclusive if: PPL in [64, 66) — marginal, need larger budget sweep
-   - Depends on: c365 (adaptive k refuted), c367 (importance ranking)
-
 ### P2
 
 381. **Probe FFN local Jacobians on calibration data — data-active compression feasibility (R3)**
@@ -2665,3 +2657,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 377. ~~**Mixed compression — topk+lstsq for hard blocks, aggressive pruning for easy blocks (R4)**~~ PLAN INVALID — Both dependencies refuted: adaptive k (c365) is worse than uniform (same starvation mechanism applies to importance-based k), block pruning (c367) impossible (all blocks >0.5 PPL delta). No viable execution path remains.
    - *cycle 368 — verdict: inconclusive (PLAN INVALID)*
    - Artifacts: `autoresearch/plans/cycle_368.md`
+
+### Cycle 372
+
+380. ~~**Importance-weighted k allocation with early-block floor (R4)**~~ PLAN INVALID — Third k-allocation variant after c365 (Frobenius) and c368 (importance). Floor=384 vs 256 doesn't change the starvation mechanism. c370 confirmed barrier is count-driven, making per-block k tuning irrelevant.
+   - *cycle 372 — verdict: inconclusive (PLAN INVALID)*
+   - Artifacts: `autoresearch/plans/cycle_372.md`
