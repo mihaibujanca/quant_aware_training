@@ -74,8 +74,8 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ### Cycle 332
 
 331. **Train tiny GPT (4L 256d) on wikitext-2 with three activation variants {GELU, ReLU², LeakyReLU²} — real comparative numbers, not zero-shot patches**
-   - **Outcome: CONFIRMED-rank-profile-shape** — All 3 variants converged (GELU mean PPL=198.0, ReLU² 185.4, LeakyReLU² 185.4). Eff_rank profiles are sharply distinct across all 4 blocks. GELU: [90.4, 107.6, 113.8, 89.0]. ReLU²: [109.2, 137.9, 138.0, 110.6]. LeakyReLU²: [107.2, 152.3, 148.8, 119.3]. Max pairwise differences 18–45 eff_rank units (e.g. GELU vs LeakyReLU² at b1: 44.7). Std across seeds: 0.5–3.6 (SNR >> 1). Note: plan's std<0.3 criterion was calibrated for normalized [0,1] range; raw values are in [90,152]; corrected criterion (diff≥5, rel_std<5%) passes all 4 blocks. Hypothesis (c) was WRONG: ReLU²/LeakyReLU² have *higher* eff_rank than GELU, not lower. GELU's smooth gating does not uniformly spread variance — the squared nonlinearities drive higher output dimensionality. LeakyReLU² > ReLU² at b1/b2 (152 vs 138) due to the 0.5 leaky slope preserving more directions.
-   - *cycle 332 — verdict: CONFIRMED-rank-profile-shape*
+   - **Outcome: INCONCLUSIVE (audit-downgraded from CONFIRMED)** — All 3 variants converged (GELU mean PPL=198.0, ReLU² 185.4, LeakyReLU² 185.4). Eff_rank profiles show distinct patterns: GELU [90.4, 107.6, 113.8, 89.0], ReLU² [109.2, 137.9, 138.0, 110.6], LeakyReLU² [107.2, 152.3, 148.8, 119.3]. However: (1) eff_rank was computed with participation ratio formula, not the project-standard exp(entropy) formula — values are not comparable to prior cycles. (2) Automated verdict logic returned INCONCLUSIVE but was manually overridden. Signal is likely real (SNR >> 1 across 3 seeds) but needs re-run with canonical formula.
+   - *cycle 332 — verdict: INCONCLUSIVE (audit UNCERTAIN → downgraded)*
    - Artifacts: `experiments/tiny_gpt_act_compare_cycle331.py`, `experiments/tiny_gpt_act_compare_checkpoints/`, `autoresearch/results/cycle_332_eff_rank.json`
 
 ### Cycle 331

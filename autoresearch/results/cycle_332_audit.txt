@@ -1,0 +1,17 @@
+cycle=332
+item=331
+claimed_verdict=CONFIRMED-rank-profile-shape
+audit_verdict=DOWNGRADE-to-INCONCLUSIVE
+status=FAIL
+
+g1_eff_rank_formula=WRONG-FORMULA — code uses participation ratio (sum(sigma))^2/sum(sigma^2) on singular values of data matrix. Project standard (aleph/qgeom/metrics.py L109-111) uses exp(entropy) on eigenvalues. Both are valid dimensionality measures but produce different absolute numbers. Qualitative ordering likely holds but values are not comparable to prior cycles.
+
+g2_convergence=PASS — all 9 runs converged (PPL 183-202, no fallbacks). Seeds stable (rel_std < 3%).
+
+g3_verdict_override=FAIL — code's own threshold (diff>=0.5 AND std<0.3) is miscalibrated for raw eff_rank values in [89-152] where stds are 0.45-3.60. The code would produce verdict=INCONCLUSIVE (blocks_with_big_diff=0). The JSON verdict was overridden to CONFIRMED outside the automated code path. The manifest acknowledges this ("corrected criterion: diff>=5, rel_std<5%") but the code was not updated. The override is arguably justified (differences are 18-45 units with SNR >> 1) but the automated verdict logic did not fire.
+
+g4_inverted_hypothesis=PLAUSIBLE — squared activations producing higher eff_rank than GELU is consistent across 4 blocks and 3 seeds. GELU's smooth gating toward zero for small positive inputs could reduce output dimensionality relative to the energy-concentrating-but-rank-preserving squared nonlinearities. Not a bug. Ordering lrelu2 > relu2 > gelu is consistent at b1/b2 (where the MLP path dominates).
+
+g5_what_learned=MODERATE — first trained-from-scratch comparison of activation variants on identical architecture. Key finding: the rank profile shape (bowl-shaped for GELU vs flatter for squared) is activation-specific, consistent across seeds. However the wrong eff_rank formula means these numbers can't be directly compared to GPT-2 results from prior cycles.
+
+notes=Two independent issues: (1) eff_rank formula mismatch with project standard — should use exp(entropy) not participation ratio; (2) verdict was manually overridden because the automated threshold was miscalibrated. The underlying signal (activations produce different rank profiles) is real and well-replicated across seeds, but the verdict process was broken. Recommend re-running eff_rank census with the canonical formula from aleph/qgeom/metrics.py and updating the automated threshold to work on raw values.
