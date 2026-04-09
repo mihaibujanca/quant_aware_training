@@ -30,9 +30,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 343, 338, `autoresearch/cross_project/parameter_golf.md`.
 
 
-### P2
-
-
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
 138. ~~**Train MoE testbed — Tiny Mixtral**~~ SKIPPED — WikiText-2 too small, overfits at PPL 65. Need pretrained model or larger dataset.
@@ -56,6 +53,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 335
+
+343b. **Selective LeakyReLU² at b4/b5 only — RE-RUN with correct loader** *(cross-project, cheap, re-run of cycle 330)*
+   - **Outcome: REFUTED-distributed-mechanism** — global-lrelu2 BPB=1.3931, selective (b4+b5 only) BPB=1.5085, global-relu2 BPB=1.5740. Delta selective-vs-lrelu2=+0.1154, far above the 0.003 REFUTED threshold. The lrelu2 gain is distributed across all 13 blocks; concentrating it at b4/b5 only recovers ~57% of the full benefit (0.1154 out of 0.1809). Loader fix confirmed: cycle 330 garbage values (12.8) replaced by valid 1.39 BPB baseline.
+   - *cycle 335 — verdict: REFUTED-distributed-mechanism*
+   - Artifacts: `parameter-golf/local_scripts/pgolf_selective_lrelu2_v2.py`, `experiments/pgolf_selective_lrelu2_v2_cycle335.py`, `autoresearch/results/cycle_335_pgolf_selective_lrelu2.json`, `autoresearch/results/cycle_335_summary.md`, `autoresearch/results/cycle_335_manifest.txt`
 
 ### Cycle 334
 

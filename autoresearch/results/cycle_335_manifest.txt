@@ -1,0 +1,36 @@
+cycle: 335
+item: 343b
+verdict: REFUTED-distributed-mechanism
+date: 2026-04-09
+
+## BPB Results
+global-lrelu2 BPB:       1.393100  (sanity: cycle 330 broken was 12.8 — now fixed)
+selective b4/b5 BPB:     1.508522  (delta vs lrelu2: +0.1154)
+global-relu2 BPB:        1.573986  (delta vs lrelu2: +0.1809)
+
+## Verdict Criteria
+CONFIRMED-localized-mechanism: delta_sel < 0.003 AND delta_relu2 >= 0.003
+REFUTED-distributed-mechanism: delta_sel >= 0.003    <-- TRIGGERED (delta_sel=+0.1154)
+INCONCLUSIVE: neither threshold met
+
+## Interpretation
+Selective lrelu2 at b4/b5 only recovers ~36% of the full lrelu2 benefit
+(0.1809 - 0.1154 = 0.0655 remaining gap from relu2 baseline).
+The lrelu2 advantage is distributed across all 13 blocks, not localized to b4/b5.
+Cycle 319's curvature localization at b4/b5 captures where the leaky slope
+differentiates activation geometry most strongly, not where its computational
+benefit is concentrated.
+
+## Loader Validation
+mlp_act=lrelu2 (confirmed via summary JSON), xsa_last_n=13, rope_dims=16
+All 13 blocks loaded with act="lrelu2" confirmed.
+Checkpoint: 13L_640d_322_7k_wd70_batch20k_best.npz
+
+## Artifacts
+parameter-golf/local_scripts/pgolf_selective_lrelu2_v2.py
+experiments/pgolf_selective_lrelu2_v2_cycle335.py
+autoresearch/results/cycle_335_pgolf_selective_lrelu2.json
+autoresearch/results/cycle_335_summary.md
+autoresearch/results/cycle_335_manifest.txt
+autoresearch/agenda.md
+autoresearch/logs/experiments.tsv

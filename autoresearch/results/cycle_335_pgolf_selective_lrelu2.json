@@ -1,0 +1,19 @@
+{
+  "global_lrelu2_bpb": 1.3931,
+  "selective_bpb": 1.508522,
+  "global_relu2_bpb": 1.573986,
+  "checkpoint": "/Users/mihai/Projects/parameter-golf/logs/13L_640d_322_7k_wd70_batch20k_best.npz",
+  "n_tokens": 51200,
+  "lrelu_blocks": [
+    4,
+    5
+  ],
+  "n_blocks": 13,
+  "loader_config": {
+    "mlp_act": "lrelu2",
+    "xsa_last_n": 0,
+    "rope_dims": 0
+  },
+  "delta_selective_vs_lrelu2": 0.115422,
+  "delta_relu2_vs_lrelu2": 0.180886
+}
