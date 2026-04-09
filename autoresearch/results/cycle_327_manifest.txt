@@ -2,5 +2,5 @@ item_number=340
 tsv_path=autoresearch/logs/experiments.tsv
 result_paths=autoresearch/results/cycle_327_pgolf_laser_retrain.json,autoresearch/results/cycle_327_summary.md
 code_paths=parameter-golf/local_scripts/pgolf_laser_retrain.py,experiments/pgolf_laser_retrain_cycle340.py
-final_commit_hash=TBD
+final_commit_hash=b023a28
 agenda_updated=yes
