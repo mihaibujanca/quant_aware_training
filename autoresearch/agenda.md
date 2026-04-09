@@ -16,9 +16,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-353. **b12 pruning + LASER composition on pgolf — combine free prune with compression**
-   - Cycle 339 confirmed b12 MLP is free to prune (BPB delta = -0.000004). This item tests whether b12 pruning composes with LASER on another block. Zero out b12's MLP contribution, then apply LASER on the best output-covariance-concentrated block (from item 350). Measure combined BPB. If composition works, this gives a 2-block compression recipe for pgolf: one block pruned, one block rank-reduced.
-   - Type: empirical (composition test)
    - Confirmed if: combined (b12 prune + LASER on block X) BPB delta < 0.01 above baseline — both interventions compose without interference.
    - Refuted if: combined BPB delta > 0.03 — the interventions interact destructively despite being individually cheap/free.
    - Inconclusive if: combined delta is 0.01-0.03 — partial interference that might be addressable with joint retrain.
@@ -47,6 +44,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 344
+
+353. **b12 pruning + LASER composition on pgolf — combine free prune with compression**
+   - PLAN INVALID (inconclusive): both dependencies refuted — LASER on pgolf (cycle 342) and LASER composition (cycle 343).
 
 ### Cycle 343
 
