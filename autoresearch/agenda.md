@@ -6,6 +6,30 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+382. **Error budget test — k=768 on 6-block composition (R4)**
+   - Hypothesis: composition barrier is total-error-driven. At k=512 (6x), 3 blocks work and 6 fail. If per-block error is the bottleneck, k=768 (4x, 33% less compression) should push the working frontier past 3 blocks.
+   - Run: 6-block topk+lstsq k=768 + MLP adapter h=64 on the same block set [b2,b1,b10,b4,b3,b11], joint training 2000 steps, 3 seeds.
+   - Also run 3-block k=768 as sanity check (should beat k=512's 47.43).
+   - Confirmed if: 6-block k=768 PPL < 55.0 (float baseline). Refuted if: PPL > 60.0 (barrier persists despite lower per-block error). Inconclusive if: 55–60 range.
+   - Depends on: none.
+
+383. **Adapter dead-neuron census and exact pruning — ReLU MLP adapter (R2)**
+   - R2 exact pruning on GPT-2 GELU FFNs is closed (c128/c162/c192: 0 dead channels). But the trained MLP adapters use ReLU — Serra/Berzins criteria apply directly. Census: for each of 6 trained adapters, count dead neurons (never activate on calibration data) and always-active neurons. Then prune them exactly and measure PPL delta.
+   - If significant fraction is dead: adapter is over-provisioned → can use larger h at same param cost → potential composition headroom.
+   - Confirmed if: ≥10% of adapter neurons are prunable AND pruning causes <0.1 PPL delta. Refuted if: <5% prunable or pruning hurts >0.5 PPL.
+   - Depends on: trained 6-block adapter from any prior cycle (c357 or c359).
+
+384. **Per-token CKA and trajectory divergence — 3-block vs 6-block diagnostic (R4)**
+   - c371 showed covariance statistics (eff_rank, participation ratio, mean cosine) cannot distinguish 3-block (PPL 47) from 6-block (PPL 65). CKA measures kernel-normalized representational similarity and may reveal where alignment with the float model breaks.
+   - Run: for 3-block and 6-block trained models, compute layer-wise CKA(float_hidden_l, compressed_hidden_l) on 512 calibration tokens. Also compute per-token L2 divergence ‖h_float − h_compressed‖ at each layer and report mean + 95th percentile.
+   - Confirmed if: CKA identifies a specific layer range where 6-block diverges from float but 3-block does not (CKA gap > 0.1 at any layer). Refuted if: CKA profiles are indistinguishable (max gap < 0.05).
+   - Depends on: trained 3-block and 6-block models from c359/c357.
+
+385. **Adapter-only baseline — does compression or the adapter cause the "beat float" anomaly? (R4)**
+   - 3-block compressed + adapter gives PPL 47.43, beating float 53.89. This 6.5-PPL gain is unexplained. Two hypotheses: (A) compression creates a beneficial bottleneck (information filtering), (B) the adapter itself adds useful capacity regardless of compression.
+   - Test: attach and train an identical MLP adapter (h=64) to UNCOMPRESSED blocks [b2,b1,b10] — same architecture, same training schedule, same 2000 steps. The adapter takes the same input (post-FFN residual) and adds a correction.
+   - Confirmed if: float+adapter PPL < 50.0 (adapter alone is responsible). Refuted if: float+adapter PPL > 53.0 (compression is necessary for the gain). Inconclusive if: 50–53.
+   - Depends on: none.
 
 ### P1
 
