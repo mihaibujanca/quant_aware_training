@@ -1,0 +1,12 @@
+cycle=326
+item=339
+verdict=REFUTED-no-correlation
+boundary_block=6
+drop_block=3
+distance_drop_to_boundary=3
+b2_eff_rank=86.05
+b3_eff_rank=4.89
+num_encoder_layers_effective=6
+skip_weights_shape=(6, 640)
+skip5_norm=31.4546
+conclusion=b2→b3 collapse is 3 blocks deep inside the encoder, no correlation with enc/dec boundary

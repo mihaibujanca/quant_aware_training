@@ -1,0 +1,38 @@
+{
+  "checkpoint": "/Users/mihai/Projects/parameter-golf/logs/13L_640d_322_7k_wd70_batch20k_best.npz",
+  "num_layers": 13,
+  "num_encoder_layers_raw": 0,
+  "num_encoder_layers_effective": 6,
+  "num_decoder_layers": 7,
+  "boundary_block": 6,
+  "skip_weights_shape": [
+    6,
+    640
+  ],
+  "skip_norms": {
+    "0": 13.094197273254395,
+    "1": 14.235013961791992,
+    "2": 12.40291976928711,
+    "3": 7.844405174255371,
+    "4": 15.677002906799316,
+    "5": 31.4545955657959
+  },
+  "cycle_318_eff_rank_profile": {
+    "0": 187.61,
+    "1": 160.08,
+    "2": 86.05,
+    "3": 4.89,
+    "4": 38.3,
+    "5": 39.96,
+    "6": 28.21,
+    "7": 23.23,
+    "8": 30.78,
+    "9": 28.85,
+    "10": 21.55,
+    "11": 13.4,
+    "12": 6.94
+  },
+  "b2_to_b3_drop_block": 3,
+  "distance_drop_to_boundary": 3,
+  "verdict": "REFUTED-no-correlation"
+}

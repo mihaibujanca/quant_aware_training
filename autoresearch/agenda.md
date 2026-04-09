@@ -6,27 +6,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-
-
-
-339. **Encoder/decoder split analysis on parameter-golf 13L_640d — does the b2→b3 eff_rank drop coincide with the encoder/decoder boundary?** *(cross-project, caveat experiment, mostly analysis)*
-   - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.**
-   - **Motivation**: parameter-golf's GPT class has `num_encoder_layers + num_decoder_layers = num_layers` and adds encoder outputs back into decoder inputs via learned `skip_weights`. Cycle 318 found that the first 3 blocks have HIGH eff_rank (188, 160, 86) and block 3 collapses to 4.89. One candidate explanation is that the first 3 blocks ARE the encoder, and block 3 sits at the encoder/decoder boundary where the model can afford a low-rank summary projection. To test this, identify the encoder/decoder split in the trained checkpoint, check where it falls relative to b3.
-   - **Setup**:
-     - **Step 0** (REQUIRED): `cat autoresearch/cross_project/parameter_golf.md`.
-     - **Step 1**: load the canonical checkpoint via `analyze_checkpoint.load_model` (use the existing `load_model_v2` from `pgolf_eff_rank_census.py`). Read the model object's `num_encoder_layers`, `num_decoder_layers`, `skip_map`, and `skip_weights` (or equivalent fields — check the GPT class structure in `train_gpt_mlx.py:647+`).
-     - **Step 2**: write a small script `parameter-golf/local_scripts/pgolf_encoder_decoder_analysis.py` that prints (a) the encoder/decoder layer counts, (b) the skip_map (which encoder layers feed which decoder layers), (c) the per-skip-weight Frobenius norm (how much each skip is actually used), (d) the boundary block index, (e) cross-reference to cycle 318 eff_rank profile to check if the boundary coincides with the b2→b3 drop.
-     - **Step 3**: build `cycle_339_summary.md` with the architecture description and the cross-reference table.
-   - **Hypothesis**: the encoder/decoder split is at block 3 (i.e., 3 encoder layers + 10 decoder layers) and the b2→b3 eff_rank drop coincides with the boundary. The skip_weights are non-trivial (Frobenius norm ≥ 0.1) confirming the skips are used.
-   - **Outcomes**:
-     - **CONFIRMED-boundary-explains-drop** if encoder/decoder boundary is at block 3 (or within ±1 layer) AND skip weights are non-trivial AND the cycle 318 eff_rank drop coincides: the rank-collapse position is architecturally explained, parameter-golf's b3 is structurally analogous to the post-encoder summary in encoder/decoder transformers.
-     - **REFUTED-no-correlation** if the boundary is somewhere else and there's no obvious structural reason for the b3 drop: the rank-collapse position is something else (maybe just where the model happens to have low capacity in this run).
-     - **INCONCLUSIVE** if the boundary is at b3 but the skip_weights are zero (the architecture had the split but the model didn't use it).
-   - **Baselines**: cycle 318 eff_rank profile (b2→b3 drop from 86.05 to 4.89, the largest single-block drop in the profile).
-   - **Run cap**: ~5 minutes (analysis only, no forward pass).
-   - Depends on: `autoresearch/cross_project/parameter_golf.md`, parameter-golf model class, the canonical checkpoint.
-
-(NEXT/P0 empty after cycle 321 closed item 330; P1 has 331/332/327; P2 has 328.)
+(P0 empty — item 339 closed in cycle 326.)
 
 ### P1
 
@@ -174,6 +154,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 326
+
+339. **Encoder/decoder split analysis on parameter-golf 13L_640d — does the b2→b3 eff_rank drop coincide with the encoder/decoder boundary?**
+   - **Outcome: REFUTED-no-correlation** — `num_encoder_layers=0` → auto=6; encoder blocks 0–5, decoder blocks 6–12. Boundary at block 6. b2→b3 collapse (86→4.89) is at block 3, 3 blocks deep in the encoder. No architectural boundary between b2 and b3. The rank-collapse position has no correlation with the enc/dec split.
 
 ### Cycle 325
 
