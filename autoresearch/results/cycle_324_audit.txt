@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=CONFIRMED-reclassification-clean (exactly 3 blocks pass rank_95 ≤ 50, rest ≥ 100)
+new_outcome=CONFIRMED-reclassification-clean (exactly 3 blocks pass rank_95 ≤ 50, rest ≥ 100)
+reason=All 13 rank_95 values in the reclassification table match the source JSON (pair 1: lrelu²/relu²) exactly. 3 blocks ≤50 (b4=18, b5=33, b12=21) and 10 blocks >100 (min=127) with no ambiguous cases near threshold. Reclassification from INCONCLUSIVE (training NaN blocked secondary metrics) to CONFIRMED under rank-only criterion is logically sound.
+guardrail_flags=none
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Consider whether the b4/b5/b12 low-rank localization pattern persists across other activation pairs (pair 0 shows a different profile: b3=72, b12=68). If the pattern is activation-specific, that's informative about which nonlinearities create compressible residuals.
+interesting=false
+interesting_reason=
