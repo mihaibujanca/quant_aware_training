@@ -1,0 +1,30 @@
+audit_cycle = 335
+audit_item = 343b
+audit_status = PASS
+audit_verdict_agrees = yes
+audit_date = 2026-04-09
+
+claimed_verdict = REFUTED-distributed-mechanism
+audited_verdict = REFUTED-distributed-mechanism
+
+global_lrelu2_bpb = 1.3931
+selective_b4b5_bpb = 1.5085
+global_relu2_bpb = 1.5740
+delta_selective = +0.1154
+delta_relu2 = +0.1809
+threshold = 0.003
+
+loader_correct = yes
+loader_reads_summary_json = yes
+model_xsa_last_n = 13
+model_rope_dims = 16
+
+cosmetic_bug = loader_config in output JSON reports xsa_last_n=0, rope_dims=0 because it reads from hp object (never updated) instead of local variables. Model constructor receives correct values (13, 16) from summary JSON. Does not affect results.
+
+baseline_discrepancy = cycle_327 measured 1.362 with 65536 tokens; cycle_335 measured 1.393 with 51200 tokens. Different eval token counts explain the delta. Within-cycle comparisons are internally consistent (all 3 configs use same 51200 tokens).
+
+selective_recovery_pct = 36% of full lrelu2 benefit recovered by b4/b5 only (manifest says 57% — manifest used wrong formula: 0.1154/0.1809=63.8% of the gap from relu2, not recovery)
+
+note_manifest_math = manifest line 17 says "recovers ~36%" which matches (0.0655/0.1809). Agenda line 60 says "~57%" — computed differently as 1 - 0.1154/0.1809 = 36.2% recovery, or (0.1809-0.1154)/0.1809 = 36.2%. The 57% figure in agenda is wrong; likely computed as selective_delta/relu2_delta = 0.1154/0.1809 = 63.8%, then reported as ~57%. Inconsistent but does not affect verdict.
+
+methodology_note = eval_bpb_proper uses stride=seq_len*16 (non-overlapping chunks of 16 sequences). Same function across all 3 configs within this cycle.

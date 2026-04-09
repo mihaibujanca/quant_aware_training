@@ -1,0 +1,8 @@
+{
+  "cycle": 335,
+  "item": "343b",
+  "decision": "APPROVE",
+  "round": 1,
+  "issues": [],
+  "notes": "Mechanical re-run of cycle 330 with the correct loader from pgolf_laser_retrain.py (cycle 327). The broken loader missed xsa_last_n, rope_dims, and mlp_act from summary JSON, giving 12.8 BPB instead of ~1.35. Plan adds a BPB < 2.0 sanity check to catch this failure mode. Eval logic unchanged from cycle 330."
+}
