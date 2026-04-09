@@ -18,44 +18,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Combine findings from 374 (adaptive k) and 376 (block importance). Use topk+lstsq+adapter only on blocks that need it (high importance, high error). Easy blocks get either zeroed FFN or higher compression ratio (k=256 or k=128). Hard blocks get k=768 or k=1024. Test on 6 blocks with mixed assignment vs uniform k=512. Threshold: mixed PPL < 58 (below progressive's 65.54).
    - Depends on: 374, 376
 
-370. ~~**Progressive 3-block compression with intermediate full-model retrain — GPT-2 (R4)**~~ REFUTED — 6-block PPL=65.54 (threshold: <55.0 CONFIRMED, >65.0 REFUTED). PPL curve: Phase1 (3-block compress+adapter) 48.38 → Phase2 (adapt 9 remaining) 47.88 → Phase3 (compress 3 more) 65.54 → Phase4 (adapt 6 remaining) 65.54 (no improvement from adaptation). Phase5 (9 blocks) 113.58. Intermediate full-model retraining does not help: going from 3→6 compressed blocks causes a catastrophic jump (~18 PPL) regardless of prior adaptation. The composition barrier is not a matter of uncompressed-block adaptation — the compressed blocks themselves damage the representation in ways the subsequent compressed blocks cannot overcome.
-   - *cycle 361 — verdict: REFUTED*
-   - Artifacts: `experiments/gpt2_progressive_compression_cycle370.py`, `autoresearch/results/cycle_361_progressive_compression.json`, `autoresearch/results/cycle_361_manifest.txt`
-   - Depends on: 355 (confirmed), 358 (confirmed)
-
 ### P1
-
-364. ~~**Per-block adapter sweep — is b2 special or does topk+lstsq + adapter work on any block? (R4, R5)**~~ CONFIRMED — adapter works on ALL 4 tested blocks [b1, b4, b7, b10], spanning early/mid/late positions. 4/4 blocks pass delta > 0.5 threshold (mean deltas: b1=+1.44, b4=+1.47, b7=+1.72, b10=+2.74 PPL). b2 is not special. The adapter is a general residual learner that consistently recovers ~1.5–2.7 PPL above the topk+lstsq compressed-only baseline. Late blocks (b7, b10) show larger gains than early blocks (b1, b4).
-   - *cycle 355 — verdict: CONFIRMED*
-   - Artifacts: `experiments/gpt2_perblock_adapter_cycle364.py`, `autoresearch/results/cycle_355_perblock_adapter.json`, `autoresearch/results/cycle_355_manifest.txt`
 
 360. **topk+lstsq accumulation order sensitivity on GPT-2 — easiest-first vs block-index vs hardest-first (R4)**
    - Cycle 007 showed easiest-first beats hardest-first by 27% on toy models. Test 3 orderings on GPT-2 blocks [b1,b4,b7,b11]: (a) easiest-first (lowest single-block swap damage), (b) block-index order, (c) hardest-first. Measure PPL after each stage. Threshold: >5% PPL gap between best and worst ordering at stage 4.
    - Depends on: 355 (confirmed)
 
-368. ~~**LoRA on compressed c_proj vs MLP adapter — parameter-efficiency comparison (R5)**~~ CONFIRMED-nonlinearity-essential — MLP adapter beats LoRA by 3.05–4.87 PPL at matched param counts. LoRA r=8 (10K): PPL 52.74 vs Adapter h=16 (25K): 47.87 (gap -4.87). LoRA r=32 (41K): 50.68 vs Adapter h=32 (50K): 47.50 (gap -3.18). LoRA r=64 (82K): 49.91 vs Adapter h=64 (99K): 46.86 (gap -3.05). LoRA barely improves over baseline (48.47→49.91 at best), while adapters consistently recover below 48. The adapter's value is in the nonlinear ReLU residual, not in extra linear capacity.
-   - *cycle 360 — verdict: CONFIRMED-nonlinearity-essential*
-   - Artifacts: `experiments/gpt2_lora_vs_adapter_cycle368.py`, `autoresearch/results/cycle_360_lora_vs_adapter.json`, `autoresearch/results/cycle_360_manifest.txt`
-
-369. ~~**Why topk+lstsq composes but LASER doesn't — singular value analysis of per-block error (R5)**~~ CONFIRMED — LASER error eff_rank=6.14 (top-1 energy 78.7%); topk error eff_rank=463.34 (top-1 energy 4.7%). Ratio 75.4x (threshold: 10x). LASER error is spectrally concentrated (near-rank-1), topk error is spectrally flat. Frobenius: LASER 4430 vs topk 1637. Coherence with residual stream: LASER std=7.84 vs topk std=0.88 — LASER error aligns much more strongly with residual direction, explaining coherent accumulation across blocks.
-   - *cycle 358 — verdict: CONFIRMED*
-   - Artifacts: `experiments/gpt2_error_spectral_cycle369.py`, `autoresearch/results/cycle_358_spectral.json`
-
-371. ~~**Cross-block error decorrelation for channel selection — GPT-2 (R4, R5)**~~ REFUTED — Mean off-diagonal |cosine| = 0.0162 (max 0.0703), far below the 0.1 REFUTED threshold. Topk per-block errors are essentially orthogonal across blocks [b2,b1,b10,b4,b3,b11]. Errors already decorrelated; deliberate decorrelation cannot help. Frobenius norms vary 4.5x across blocks (b1=1385 to b11=6293); adaptive k per block is the right direction.
-   - *cycle 362 — verdict: REFUTED*
-   - Artifacts: `experiments/gpt2_error_correlation_cycle371.py`, `autoresearch/results/cycle_362_error_correlation.json`
-   - Depends on: 358 (confirmed)
-
-372. ~~**KD fine-tune after geometric compression — GPT-2 (R4)**~~ REFUTED — KD polish immediately degrades the geometrically-compressed model. Phase 1 (topk+lstsq k=512 + adapter h=64, 3 blocks [b2,b1,b10], 1000 steps): PPL 48.38. Phase 2 (global KD fine-tune, all params unfrozen, KL vs teacher, 500 steps, lr=5e-5): PPL 57–62 (all 3 seeds). Best PPL remains at step 0 (Phase 1 init). KD loss is very large (30-50), indicating the student logits diverge from teacher immediately. KD fine-tune harms the compressed model because the full-model parameter space is too large to optimize stably at 5e-5 with a KL objective in 500 steps — it overwrites the geometric structure rather than polishing it.
-   - *cycle 363 — verdict: REFUTED*
-   - Artifacts: `experiments/gpt2_kd_polish_cycle372.py`, `autoresearch/results/cycle_363_kd_polish.json`, `autoresearch/results/cycle_363_manifest.txt`
-   - Depends on: 355 (confirmed)
-
 ### P2
-
-361. ~~**Single-block topk+lstsq + adapter vs LASER + adapter — is adapter gain compression-method-specific? (R5)**~~ CONFIRMED-generic — Retrospective comparison from cycles 347+350. LASER+adapter: baseline 50.09 → 48.51 best (delta 1.58 PPL, 1000 steps). topk+adapter: baseline 48.47 → 46.53 best (delta 1.94 PPL, 500 steps). Delta difference 0.33 PPL (mean), 0.36 PPL (best), well within 0.5 threshold. Adapter is a generic residual learner — gain does not depend on compression method.
-   - *cycle 352 — verdict: CONFIRMED-generic*
-   - Artifacts: `autoresearch/results/cycle_352_adapter_generic.json`, `autoresearch/results/cycle_352_manifest.txt`
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 

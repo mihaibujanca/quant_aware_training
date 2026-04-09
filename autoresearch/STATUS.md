@@ -1,4 +1,4 @@
-# Research Status -- 364 Cycles (001-364)
+# Research Status -- 365 Cycles (001-365)
 
 ## Current State
 
@@ -17,6 +17,7 @@
 | 3-block [b2,b1,b10] (h=64 adapter) | 47.43 | Joint training, best schedule |
 | 3-block (h=128 adapter) | 48.53 | Diminishing returns from larger adapter |
 | 6-block (progressive) | 65.54 | Catastrophic -- composition barrier |
+| 6-block (adaptive k) | 67.63 | WORSE than uniform (c365) |
 | 12-block | 186.38 | Total collapse |
 | Distillation baseline (matched params) | 56.38 | Geometric wins by +10.16 PPL |
 
@@ -26,10 +27,11 @@
 - Progressive compression with intermediate full-model adaptation (c361)
 - Cross-block error decorrelation (errors are already orthogonal, mean cosine=0.016, c362)
 - Knowledge distillation polish (KD overwrites geometric structure, c363)
+- **Adaptive k per block** (Frobenius-proportional k is WORSE than uniform, c365)
 
-The failure mode is **superlinear error accumulation** despite spectrally flat per-block errors. Per-block Frobenius norms vary 4.5x (b1=1385 to b11=6293, c362), suggesting uniform k across blocks is wasteful.
+The failure mode is **superlinear error accumulation** despite spectrally flat per-block errors. Per-block Frobenius norms vary 4.5x (b1=1385 to b11=6293, c362), but reallocating channels proportionally does NOT help — starving low-error early blocks damages composition more than helping high-error late blocks (c365).
 
-## Confirmed Findings (cycles 322-364)
+## Confirmed Findings (cycles 322-365)
 
 1. **topk+lstsq composes where LASER fails** (c348). On the same GPT-2 blocks in the same order, topk stays below float through 3 blocks; LASER exceeds float at 2 blocks.
 2. **Spectral explanation for composition** (c358). LASER error is near-rank-1 (eff_rank=6.14, top-1 energy 78.7%) and coherent with the residual stream (std=7.84). Topk error is spectrally flat (eff_rank=463, top-1 energy 4.7%, residual coherence std=0.88). Rank-1 errors accumulate coherently; flat errors cancel.
@@ -41,8 +43,9 @@ The failure mode is **superlinear error accumulation** despite spectrally flat p
 8. **Per-block errors are orthogonal** (c362). Mean off-diagonal |cosine|=0.016. Composition failure is NOT from correlated errors.
 9. **Frobenius norms vary 4.5x across blocks** (c362). b1=1385 to b11=6293. Uniform k is suboptimal.
 10. **GELU bump rank-1 collapse is activation-specific** (c321). ReLU^2 on same model produces rank 174-443 at mid-stack where GELU-relu is rank-1.
+11. **Adaptive k is worse than uniform** (c365). Frobenius-proportional and sqrt-proportional k allocation both degrade 6-block PPL (67.63 and 67.52 vs 66.34 uniform). Early-block degradation propagates more than late-block improvement helps.
 
-## Dead Directions (cycles 322-364)
+## Dead Directions (cycles 322-365)
 
 | Direction | Verdict | Cycle | Why dead |
 |-----------|---------|-------|----------|
@@ -60,11 +63,12 @@ The failure mode is **superlinear error accumulation** despite spectrally flat p
 | KD fine-tune after geometric compression | REFUTED | 363 | KD overwrites geometric structure; PPL 57-62 vs 48.38 |
 | Progressive compression + intermediate retrain | REFUTED | 361 | 6-block still PPL 65.54; adaptation doesn't help |
 | Port to nanochat | INCONCLUSIVE | 364 | No checkpoints available locally |
+| Adaptive k per block (Frobenius-proportional) | REFUTED | 365 | 67.63 vs 66.34 uniform; early-block degradation dominates |
 
 ## Open Questions
 
-1. **Why does error accumulate superlinearly past 3 blocks?** Per-block errors are orthogonal and spectrally flat, yet 6+ blocks collapse. Is it the cumulative Frobenius norm? The 4.5x norm variation (c362) suggests some blocks contribute disproportionately.
-2. **Can adaptive k per block equalize error norms?** Give high-norm blocks more channels (larger k) and low-norm blocks fewer. Direct intervention for the composition barrier.
-3. **Which blocks matter least?** Block importance pruning could identify blocks that can be skipped or compressed more aggressively.
-4. **Where in the residual stream does error become unrecoverable?** Monitoring error through the full forward pass (not just per-block) could reveal the failure point.
-5. **Accumulation order**: item 360 (easiest-first vs hardest-first) remains untested on GPT-2.
+1. **Why does error accumulate superlinearly past 3 blocks?** Per-block errors are orthogonal and spectrally flat, yet 6+ blocks collapse. Adaptive k doesn't help (c365). Is it the cumulative effect on attention re-routing?
+2. **Where in the residual stream does error become unrecoverable?** (item 375) Monitoring error through the full forward pass (not just per-block) could reveal the inflection point.
+3. **Which blocks matter least?** (item 376) Block importance pruning could identify blocks that can be skipped entirely, shrinking the composition problem.
+4. **Accumulation order**: item 360 (easiest-first vs hardest-first) remains untested on GPT-2.
+5. **Mixed compression strategy** (item 377): after 374 refuted, this needs block importance from 376 rather than Frobenius-proportional k.
