@@ -1,4 +1,4 @@
-# Research Status -- 366 Cycles (001-366)
+# Research Status -- 367 Cycles (001-367)
 
 ## Current State
 
@@ -31,7 +31,7 @@
 
 The failure mode is **superlinear error accumulation** despite spectrally flat per-block errors. Per-block Frobenius norms vary 4.5x (b1=1385 to b11=6293, c362), but reallocating channels proportionally does NOT help — starving low-error early blocks damages composition more than helping high-error late blocks (c365).
 
-## Confirmed Findings (cycles 322-366)
+## Confirmed Findings (cycles 322-367)
 
 1. **topk+lstsq composes where LASER fails** (c348). On the same GPT-2 blocks in the same order, topk stays below float through 3 blocks; LASER exceeds float at 2 blocks.
 2. **Spectral explanation for composition** (c358). LASER error is near-rank-1 (eff_rank=6.14, top-1 energy 78.7%) and coherent with the residual stream (std=7.84). Topk error is spectrally flat (eff_rank=463, top-1 energy 4.7%, residual coherence std=0.88). Rank-1 errors accumulate coherently; flat errors cancel.
@@ -45,8 +45,9 @@ The failure mode is **superlinear error accumulation** despite spectrally flat p
 10. **GELU bump rank-1 collapse is activation-specific** (c321). ReLU^2 on same model produces rank 174-443 at mid-stack where GELU-relu is rank-1.
 11. **Adaptive k is worse than uniform** (c365). Frobenius-proportional and sqrt-proportional k allocation both degrade 6-block PPL (67.63 and 67.52 vs 66.34 uniform). Early-block degradation propagates more than late-block improvement helps.
 12. **Error explosion at blocks 10-11** (c366). Residual stream error propagation shows hockey-stick profile: slow growth blocks 0-9 (cumul error 10→50), explosion at blocks 10-11 (50→72→160). Inflection at block 9 in 3/3 seeds. Attention does NOT amplify error (amp ratio 0.91). b10/b11 account for 77% of total local FFN error.
+13. **All GPT-2 FFN blocks are task-critical** (c367). No block is prunable at <0.5 PPL threshold. Block 0 is catastrophic (+3021 PPL). Least important: b1 (+1.60), b7 (+2.35). Most important: b0 (+3021), b11 (+9.12). Importance ranking ascending: [1,7,2,6,9,10,8,3,5,4,11,0].
 
-## Dead Directions (cycles 322-366)
+## Dead Directions (cycles 322-367)
 
 | Direction | Verdict | Cycle | Why dead |
 |-----------|---------|-------|----------|
@@ -65,11 +66,12 @@ The failure mode is **superlinear error accumulation** despite spectrally flat p
 | Progressive compression + intermediate retrain | REFUTED | 361 | 6-block still PPL 65.54; adaptation doesn't help |
 | Port to nanochat | INCONCLUSIVE | 364 | No checkpoints available locally |
 | Adaptive k per block (Frobenius-proportional) | REFUTED | 365 | 67.63 vs 66.34 uniform; early-block degradation dominates |
+| Block importance pruning (zero-FFN) | REFUTED | 367 | No block below 0.5 PPL delta; min=1.60 (b1) |
 
 ## Open Questions
 
 1. **Why does error accumulate superlinearly past 3 blocks?** PARTIALLY ANSWERED (c366): error grows slowly through blocks 0-9, then explodes at b10/b11 which have the highest Frobenius norms. Attention does not amplify. The remaining question is whether b10/b11 can be compressed better or should be left uncompressed.
 2. **Inflection point identified** (c366): block 9 is where error growth transitions from linear to superlinear, consistent across 3 seeds.
-3. **Which blocks matter least?** (item 376) Block importance pruning could identify blocks that can be skipped entirely, shrinking the composition problem.
+3. **No blocks are skip-safe** (c367). All 12 FFN blocks are >0.5 PPL important. But the importance ranking gives a principled basis for mixed k allocation (item 377).
 4. **Accumulation order**: item 360 (easiest-first vs hardest-first) remains untested on GPT-2.
 5. **Mixed compression strategy** (item 377): after 374 refuted, this needs block importance from 376 rather than Frobenius-proportional k.
