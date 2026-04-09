@@ -1,4 +1,4 @@
-# Research Status -- 376 Cycles (001-376)
+# Research Status -- 377 Cycles (001-377)
 
 ## Current State
 
@@ -13,13 +13,15 @@
 | Config | PPL | Notes |
 |--------|-----|-------|
 | Float GPT-2 | 53.89 | Baseline |
-| Single-block (b2, h=128 adapter) | 46.22 | **Beats float** by 7.67 PPL |
-| 3-block [b2,b1,b10] (h=64 adapter) | 47.43 | Joint training, best schedule |
-| 3-block (h=128 adapter) | 48.53 | Diminishing returns from larger adapter |
-| 6-block (progressive) | 65.54 | Catastrophic -- composition barrier |
-| 6-block (adaptive k) | 67.63 | WORSE than uniform (c365) |
+| **Float + adapter (3 blocks, h=64)** | **38.94** | **NEW: adapter alone, no compression (c377)** |
+| Single-block compressed + adapter (b2, h=128) | 46.22 | Previously "beats float" — now known to be adapter effect |
+| 3-block compressed + adapter (h=64) | 47.43 | 8.5 PPL WORSE than float+adapter (c377) |
+| 3-block compressed + adapter (h=128) | 48.53 | Diminishing returns from larger adapter |
+| 6-block compressed (progressive) | 65.54 | Composition barrier |
+| 6-block compressed (adaptive k) | 67.63 | WORSE than uniform (c365) |
+| 6-block compressed (k=768) | 61.85 | More channels help modestly (c374) |
 | 12-block | 186.38 | Total collapse |
-| Distillation baseline (matched params) | 56.38 | Geometric wins by +10.16 PPL |
+| Distillation baseline (matched params) | 56.38 | Also beaten by float+adapter |
 
 ### Composition Barrier (the #1 problem)
 3 blocks is the ceiling. Going from 3 to 6 compressed blocks causes a catastrophic PPL jump (~18 PPL) regardless of:
@@ -52,6 +54,7 @@
 16. **More channels don't break the barrier** (c374). k=768 (3.2x compression) gives 6-block PPL 61.85 vs k=512 (4.79x) 65.54. Only 3.69 PPL gain for 50% more channels. The 3→6 block gap narrows from 18→15 PPL but does not close.
 17. **Adapter is fully utilized at h=64** (c375). 0/384 dead neurons, 0 always-active. R2 pruning inapplicable to this config.
 18. **CKA divergence concentrates at final layer** (c376, INCONCLUSIVE). Layers 0-10 CKA gap ≤ 0.0003 between 3-block and 6-block. Layer 11 gap = 0.1010. BUT confounded: block 11 is compressed in 6-block but not 3-block. Clean finding: barrier does NOT distribute across the stack.
+19. **CRITICAL: "Beat float" anomaly is adapter capacity, not compression** (c377). Float+adapter (h=64, 297K params) on 3 uncompressed blocks gives PPL 38.94 ± 0.05, beating compressed+adapter 47.43 by 8.5 PPL. Compression HURTS by 8.5 PPL when controlling for adapter. All prior compressed+adapter vs float comparisons were measuring adapter capacity, not compression quality. The correct baseline is float+adapter.
 
 ## Dead Directions (cycles 322-367)
 
