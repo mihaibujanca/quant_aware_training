@@ -1,0 +1,14 @@
+cycle=328
+item=341
+auditor=claude
+status=PASS
+verdict_agrees=yes
+g1_methodology=SVD computed correctly via np.linalg.svd on blocks.12.mlp.proj.weight [640,320]; squared-SV energy metric correct; Frobenius cross-check validates (rel_error negligible)
+g3_conclusion_follows=yes; top-7 energy 7.07% < 10% gate; S[0]/S[1]=1.33 — no dominant direction; spectrum is genuinely flat
+g4_counterintuitive=no; two blocks (b3 eff_rank=4.89, b12 eff_rank=6.94) both have flat weight spectra — confirms output-covariance eff_rank measures data-dependent geometry not weight rank; false positive pattern now established on 2/2 tested blocks
+g5_learned=Output-covariance eff_rank is not a reliable predictor of weight-matrix low-rank structure in this checkpoint. LASER preflight needs a spectrum gate (as implemented here) rather than relying on eff_rank alone.
+g6_artifact_risk=none; correct weight matrix, standard SVD, Frobenius cross-validated
+flags=none
+interesting=yes
+interesting_reason=Confirms the disconnect between output-covariance rank and weight rank on a second block, establishing it as a pattern rather than a one-off. This is a meaningful negative result for the LASER-on-pgolf line.
+recommendations=Consider whether any pgolf blocks have non-flat weight spectra before abandoning LASER entirely; a full 13-block weight-spectrum census would close this line definitively.
