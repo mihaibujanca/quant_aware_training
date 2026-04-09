@@ -6,6 +6,22 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+374. **Adaptive k per block — equalize Frobenius error across GPT-2 blocks (R4)**
+   - Cycle 362 showed 4.5x Frobenius norm variation across blocks (b1=1385 to b11=6293) under uniform k=512. Hypothesis: the composition barrier at 6+ blocks is driven by high-error blocks dominating the residual stream. Allocate k per block proportional to Frobenius error of the uniform-k compression: high-error blocks get more channels (larger k), low-error blocks get fewer, holding total channel budget constant at 6×512=3072 across 6 blocks. Measure 6-block PPL with adaptive-k vs uniform-k. Threshold: adaptive PPL < 60 (uniform = 65.54 at 6 blocks).
+   - Depends on: 362 (c362 error norms)
+
+375. **Residual stream error propagation monitor — trace per-token error through full GPT-2 forward pass (R5)**
+   - The composition barrier is superlinear despite orthogonal per-block errors. This experiment instruments the forward pass to measure residual stream error norm after each block (not just FFN error, but cumulative error including attention re-routing). Run float vs 6-block-compressed forward pass on 200 wikitext-2 sequences, compute ||h_compressed - h_float|| at each of 12 block outputs. Identify where the error growth transitions from linear to superlinear. Threshold: identify a specific block range where error growth rate doubles (inflection point).
+   - Depends on: none
+
+376. **Block importance pruning — zero-out FFN contribution per block, measure PPL delta (R4)**
+   - Cycle 339 showed b12 is free to prune on pgolf (delta=-0.000004 BPB). Run the same test on GPT-2: for each of 12 blocks, zero out the FFN residual contribution and measure PPL. Blocks with delta < 0.5 PPL can be skipped entirely (no compression needed), freeing the error budget for harder blocks. If 2+ blocks are prunable, the effective composition problem shrinks from 12 to 10 or fewer blocks.
+   - Depends on: none
+
+377. **Mixed compression — topk+lstsq for hard blocks, aggressive pruning for easy blocks (R4)**
+   - Combine findings from 374 (adaptive k) and 376 (block importance). Use topk+lstsq+adapter only on blocks that need it (high importance, high error). Easy blocks get either zeroed FFN or higher compression ratio (k=256 or k=128). Hard blocks get k=768 or k=1024. Test on 6 blocks with mixed assignment vs uniform k=512. Threshold: mixed PPL < 58 (below progressive's 65.54).
+   - Depends on: 374, 376
+
 370. ~~**Progressive 3-block compression with intermediate full-model retrain — GPT-2 (R4)**~~ REFUTED — 6-block PPL=65.54 (threshold: <55.0 CONFIRMED, >65.0 REFUTED). PPL curve: Phase1 (3-block compress+adapter) 48.38 → Phase2 (adapt 9 remaining) 47.88 → Phase3 (compress 3 more) 65.54 → Phase4 (adapt 6 remaining) 65.54 (no improvement from adaptation). Phase5 (9 blocks) 113.58. Intermediate full-model retraining does not help: going from 3→6 compressed blocks causes a catastrophic jump (~18 PPL) regardless of prior adaptation. The composition barrier is not a matter of uncompressed-block adaptation — the compressed blocks themselves damage the representation in ways the subsequent compressed blocks cannot overcome.
    - *cycle 361 — verdict: REFUTED*
    - Artifacts: `experiments/gpt2_progressive_compression_cycle370.py`, `autoresearch/results/cycle_361_progressive_compression.json`, `autoresearch/results/cycle_361_manifest.txt`
