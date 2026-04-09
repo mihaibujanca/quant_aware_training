@@ -1,4 +1,4 @@
-# Research Status -- 380 Cycles (001-380)
+# Research Status -- 381 Cycles (001-381)
 
 ## Current State
 
@@ -19,8 +19,11 @@
 | 3-block compressed + adapter (h=128) | 48.53 | Diminishing returns from larger adapter |
 | 6-block compressed (progressive) | 65.54 | Composition barrier |
 | 6-block compressed (adaptive k) | 67.63 | WORSE than uniform (c365) |
+| **6-block float+adapter (h=64)** | **39.65** | **Adapter flat across block count (c381)** |
+| 6-block compressed + adapter (h=64) | 64.22 | 24.57 PPL penalty vs float+adapter (c381) |
 | 6-block compressed (k=768) | 61.85 | More channels help modestly (c374) |
-| 12-block | 186.38 | Total collapse |
+| **12-block float+adapter (h=64)** | **39.52** | **Adapter ceiling — 0.21 better than 3-block (c380)** |
+| 12-block compressed | 186.38 | Total collapse |
 | Distillation baseline (matched params) | 56.38 | Also beaten by float+adapter |
 
 ### Composition Barrier (the #1 problem)
@@ -58,6 +61,7 @@
 20. **Held-out verification confirms c377** (c378). On wikitext-2-test: float+adapter 39.73 vs compressed+adapter 47.22 (gap 7.49 PPL). Consistent with val gap 8.5. Float baseline on test: 56.52. The reframing is robust.
 21. **Pareto split: compressed wins at low params, float+adapter at full params** (c379). At 18% of float FFN params, compressed+adapter gets PPL 47.24 (test). Float+adapter at full params gets PPL 40.23. Two distinct regimes. Compressed adapter saturates at h=32 (PPL 47.49 vs 47.24 at h=128). The 7 PPL gap is the compression penalty.
 22. **Adapter ceiling at ~39.5 regardless of block count** (c380). 12-block float+adapter PPL 39.52, barely better than 3-block 39.73 (0.21 gain). 4x adapter params buys nothing. Adapter benefit saturates at 3 blocks.
+23. **6-block composition penalty is superlinear** (c381). Penalty: 3-block=7.49 PPL, 6-block=24.57 PPL (3.28x for 2x blocks). Float+adapter flat (39.73→39.65), compressed compounds (47.22→64.22). Composition barrier is structural to topk+lstsq, not a capacity issue.
 
 ## Dead Directions (cycles 322-367)
 
