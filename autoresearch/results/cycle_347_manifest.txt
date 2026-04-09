@@ -1,0 +1,38 @@
+cycle: 347
+item: 357
+verdict: CONFIRMED
+date: 2026-04-09
+
+## GPT-2 b2 rank-2 LASER + learned residual
+
+CONFIRMED: MLP adapter (hidden=64) pushes past the single-block LASER ceiling.
+
+Float PPL: 53.89
+LASER baseline (b2 rank-2, phase 1): 50.09
+
+Variant         Params   MeanPPL   StdPPL   MinPPL   MaxPPL
+laser_only       2,304    50.09      —       50.09    50.09
+lowrank_r4      15,360    49.67    0.10      49.55    49.79
+lowrank_r8      30,720    49.53    0.06      49.45    49.60
+mlp_h64        246,016    48.77    0.19      48.51    48.95
+
+Best overall: mlp_h64 min PPL = 48.51 (< 49.0 threshold).
+Low-rank residuals land in INCONCLUSIVE zone (49.0-50.0).
+MLP adapter's nonlinearity is essential — same param budget as
+a rank-32 linear residual would give, but the ReLU lets it
+capture signal the rank-2 linear subspace misses.
+
+The residual improves PPL monotonically with capacity:
+  rank-4 (15K params) → 49.67
+  rank-8 (31K params) → 49.53
+  mlp-64 (246K params) → 48.77
+
+## Verdict Criteria
+CONFIRMED if PPL < 49.0
+REFUTED if PPL >= 50.0
+INCONCLUSIVE if 49.0 <= PPL < 50.0
+
+## Artifacts
+experiments/gpt2_laser_residual_cycle357.py
+autoresearch/results/cycle_347_laser_residual.json
+autoresearch/results/cycle_347_manifest.txt

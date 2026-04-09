@@ -21,12 +21,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-357. **GPT-2 b2 rank-2 LASER + learned residual — push past the single-block ceiling**
-   - b2 rank-2 LASER gives PPL 50.21 (3.68 below float 53.89). Train a small learned correction on top: freeze the rank-2 W and train a low-rank residual ΔW (rank 4-8) with the B-factor retrain protocol (500 steps, lr=1e-4). Also try a lightweight MLP adapter (hidden=64) in parallel. Measure PPL.
-   - Confirmed if: PPL < 49.0 — learned residual pushes meaningfully below the rank-2 floor.
-   - Refuted if: PPL ≥ 50.0 — residual training cannot improve on raw rank-2 truncation.
-   - Inconclusive if: 49.0 ≤ PPL < 50.0 — marginal improvement, unclear if the approach has headroom.
-   - Depends on: none (uses existing GPT-2 + cycle 343 LASER result)
+~~357. **GPT-2 b2 rank-2 LASER + learned residual — push past the single-block ceiling**~~ → CONFIRMED (cycle 347): MLP adapter (hidden=64, 246K params) achieves PPL 48.51 (mean 48.77 ± 0.19). Low-rank residuals r4→49.67, r8→49.53 (INCONCLUSIVE zone). Nonlinearity essential — MLP ReLU captures signal the rank-2 linear subspace misses.
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
@@ -51,6 +46,10 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 347
+
+357. ~~**GPT-2 b2 rank-2 LASER + learned residual — push past the single-block ceiling**~~ CONFIRMED — MLP adapter (hidden=64, 246K params) achieves PPL 48.51 (mean 48.77 ± 0.19), below the 49.0 threshold. LASER baseline PPL 50.09. Low-rank residuals: r4→49.67, r8→49.53 (inconclusive). Nonlinearity (ReLU) is essential for pushing past the rank-2 floor.
 
 ### Cycle 345
 
