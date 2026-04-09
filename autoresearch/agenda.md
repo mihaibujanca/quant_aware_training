@@ -6,13 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-378. **Selective compression — leave b10+b11 uncompressed, compress remaining 10 blocks (R4)**
-   - c366 shows b10+b11 account for 77% of total local FFN error and drive the hockey-stick explosion. c367 confirms b11 is 2nd most important block. Hypothesis: if the composition barrier is driven by late-block error, skipping b10+b11 while compressing all other 10 blocks should break through the 3-block ceiling.
-   - Method: topk+lstsq+adapter (k=512, h=64) on blocks {0,1,2,3,4,5,6,7,8,9}, leave b10+b11 at float. Joint adapter training. Report PPL and effective compression ratio.
-   - Confirmed if: 10-block PPL < 55.0 (within ~1 PPL of float baseline 53.89)
-   - Refuted if: 10-block PPL > 60.0 (composition still collapses even without b10/b11)
-   - Inconclusive if: PPL in [55, 60] — partial improvement but barrier not fully broken
-   - Depends on: c366 (error profile), c367 (block importance)
 
 379. **Residual stream representation geometry across compression stages (R4)**
    - We know WHERE error explodes (blocks 10-11) and that attention doesn't amplify. But we don't know WHY composition fails — what happens to representation geometry as compressed blocks accumulate? Measure: effective rank of residual stream activations, inter-token cosine similarity, and representation collapse metrics (isotropy score) at each block boundary for 0, 3, 6, and 12 compressed blocks.
@@ -65,6 +58,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 370
+
+378. ~~**Selective compression — leave b10+b11 uncompressed, compress remaining 10 blocks (R4)**~~ REFUTED — Skipping b10+b11 does NOT break the composition barrier. 10-block PPL = 150.21 ± 0.65 (seeds 42/137/2024: 150.93/149.35/150.34), far above both the CONFIRMED threshold (55.0) and the 6-block reference (65.54). Even removing the two highest-error blocks (77% of local FFN error), composition collapse persists. The barrier is not b10/b11-specific — it is a property of deep multi-block composition itself.
+   - *cycle 370 — verdict: REFUTED*
+   - Artifacts: `experiments/gpt2_selective_compress_cycle370.py`, `autoresearch/results/cycle_370_selective_compression.json`, `autoresearch/results/cycle_370_manifest.txt`
 
 ### Cycle 369
 
