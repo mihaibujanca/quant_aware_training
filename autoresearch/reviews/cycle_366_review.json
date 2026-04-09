@@ -1,0 +1,1 @@
+{"cycle": 366, "item": 375, "round": 2, "verdict": "APPROVE", "issues_resolved": [1, 2, 3], "remaining_issues": [], "notes": "All round-1 issues addressed. Minor caveat: LayerNorm can suppress error, so additive baseline may exceed actual error at some blocks — plan should log this rather than treat as validation failure."}
