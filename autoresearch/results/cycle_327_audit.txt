@@ -1,0 +1,18 @@
+cycle=327
+item=340
+auditor=claude
+status=PASS
+verdict_confirmed=yes
+claimed_verdict=REFUTED-LASER-fails
+audited_verdict=REFUTED-LASER-fails
+G1_implementation=PASS — SVD of W (640,1920) via np.linalg.svd(full_matrices=False) gives U(640,640) S(640) Vh(640,1920); A=U[:,:r]*S[:r] shape (640,r) frozen, B=Vh[:r,:] shape (r,1920) trainable; forward x@B.T@A.T correctly approximates x@W.T; MLX underscore prefix (_A) freezes A; baseline BPB measured with same eval_bpb_proper function and same 65536-token val subset for all ranks — deltas internally consistent
+G1_baseline_gap=NOTE — training summary val_bpb=1.3478 vs measured baseline=1.3621 (gap +0.014). Cause: training eval uses full val shard; cycle 327 uses first 65536 tokens (N_VAL_TOKENS=65536). Both use proper bits-per-byte computation with tokenizer byte counting. Gap does NOT invalidate rank deltas (all measured against same 65536-token baseline). The summary references val_bpb_pre_quant=1.3474 not val_bpb=1.3478 — a minor mislabel (the checkpoint IS the quantized model).
+G3_conclusion_follows=PASS — rank-5 delta=+0.0378 >> threshold 0.01; rank-2 delta=+0.0405; rank-10 delta=+0.0350; monotonic improvement with rank but all far above threshold; b_init to retrained improvement is only 0.004 BPB (retrain captures <10% of the SVD truncation loss)
+G3_flat_spectrum=PASS — rank-5 energy fraction 2.6% (from stderr during run); rank-2 to rank-10 b_init BPB improvement is only 0.006 (1.407→1.401), consistent with near-uniform singular values where each additional rank captures similar marginal energy; S[0]/S[1]≈1.16 ratio confirms no dominant direction
+G4_counterintuitive=PASS — the finding that low output-covariance eff_rank (4.89) does NOT imply low weight rank is genuine. Output covariance rank reflects input distribution × weight interaction; weight SVD rank reflects the weight matrix alone. A flat-spectrum weight can produce low-rank outputs if the input distribution is concentrated. No code bug — SVD is on the weight matrix directly, eff_rank was computed on output activations in cycle 318.
+G5_learning_quality=PASS — key insight: output-covariance eff_rank is NOT a proxy for weight compressibility via SVD. LASER target selection should not use eff_rank alone; must also check weight singular spectrum.
+G6_method_failure=PASS — SVD shape correct, retrain config reasonable (500 steps Adam 1e-4), eval pipeline consistent. The REFUTED result reflects genuine weight-spectrum flatness, not an artifact.
+interesting=yes
+interesting_reason=eff_rank (output covariance) is not a proxy for weight rank (SVD spectrum). This invalidates using eff_rank to select LASER targets and changes the target-selection methodology for items 341/342.
+flags=none
+notes=Retrain budget (500 steps) is modest but the 10% recovery rate (0.004 out of 0.04 BPB gap) suggests even longer retraining cannot close the gap when 97% of weight energy is discarded. The b3 result is definitive. Post-scale eff_rank from cycle 323 suggests b11/b12 (eff_rank 2.25/1.03) might have more concentrated weight spectra — worth checking before concluding LASER is dead for pgolf entirely.
