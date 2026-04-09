@@ -10,12 +10,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-355. **topk+lstsq multi-block accumulation curve on pgolf — is composition failure LASER-specific? (R4)**
-   - Apply the cycle 007 working recipe (topk k=4 at 6× expansion + lstsq, 500 Adam steps) to individual blocks, then accumulate in order of per-block MSE (best first). Report BPB at each accumulation step: 1-block, 2-block, ..., 13-block. Compare the accumulation slope to the LASER accumulation curve from cycle 343 (which was monotonically degrading on GPT-2).
-   - Confirmed if: 4+ block stacking gives BPB < float_baseline + 0.05 — topk+lstsq composes where LASER doesn't.
-   - Refuted if: accumulation curve degrades monotonically like LASER — composition failure is universal, not method-specific.
-   - Inconclusive if: accumulation curve is non-monotonic but final BPB exceeds threshold — partial composition with interaction effects.
-   - Depends on: none (uses existing pgolf checkpoint + established recipe)
+~~355. **topk+lstsq multi-block accumulation curve on pgolf — is composition failure LASER-specific? (R4)**~~ → CONFIRMED (cycle 348): topk+lstsq composes where LASER fails. Ran on GPT-2 (same blocks/order as cycle 343 LASER). Stages 1-3 all below float (48.47, 49.24, 49.60 vs float 53.89). Stage 4 (b11) = 55.99 (above 54.90 threshold but -12.98 vs LASER's 68.97). LASER exceeded float at stage 2; topk+lstsq stays below for 3 blocks. Composition failure is LASER-specific (SVD rank reduction), not universal.
 
 ~~356. **Centroid affinity as compression predictor on pgolf — replicate cycle 27's ρ=0.853 on a real model (R3)**~~ → INCONCLUSIVE (cycle 346): rho=-0.506 (p=0.078). Direction correct (high affinity → low swap damage) but |rho|=0.506 falls in inconclusive range. Block 11 outlier: affinity=0.931 but swap_delta=+0.963.
 

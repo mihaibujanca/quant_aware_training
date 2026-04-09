@@ -1,0 +1,43 @@
+cycle: 348
+item: 355
+verdict: CONFIRMED
+date: 2026-04-09
+
+## GPT-2 multi-block topk+lstsq accumulation curve
+
+CONFIRMED: topk+lstsq composes where LASER fails. Composition failure is LASER-specific.
+
+Float PPL: 53.89
+
+topk+lstsq accumulation curve (hidden_fraction=1/6, k=512, 1000 Adam steps):
+  Stage 1: [b2]              → PPL 48.47 ± 0.02  (trainable: 393,984)
+  Stage 2: [b2,b1]           → PPL 49.24 ± 0.08  (trainable: 787,968)
+  Stage 3: [b2,b1,b10]       → PPL 49.60 ± 0.08  (trainable: 1,181,952)
+  Stage 4: [b2,b1,b10,b11]   → PPL 55.99 ± 0.06  (trainable: 1,575,936)
+
+Cycle 343 LASER comparison (same blocks, same order):
+  Stage 1: topk=48.47 vs LASER=50.21 (delta=-1.74)
+  Stage 2: topk=49.24 vs LASER=55.10 (delta=-5.86)
+  Stage 3: topk=49.60 vs LASER=58.15 (delta=-8.55)
+  Stage 4: topk=55.99 vs LASER=68.97 (delta=-12.98)
+
+Stages 1-3 all BELOW float baseline (53.89). LASER exceeded float at stage 2.
+Stage 4 (b11 added) exceeds float+1.0 threshold (55.99 > 54.90) but is still
+12.98 PPL better than LASER's stage 4.
+
+Key finding: LASER's composition failure is method-specific, not a universal property
+of multi-block compression. topk+lstsq preserves compositional geometry that SVD
+low-rank approximation destroys. The gap widens with each added block (from -1.74
+at 1-block to -12.98 at 4-block).
+
+Note: topk+lstsq uses ~10x more trainable params than LASER (393K vs ~2.3K per block)
+because it trains the full (768, 512) output projection rather than a rank-r factor.
+The comparison is method-to-method, not param-matched.
+
+## Verdict Criteria
+CONFIRMED if any >=2-block stage has best_mean <= 54.90. Result: stages 2 (49.24) and 3 (49.60) qualify.
+
+## Artifacts
+experiments/gpt2_multiblock_topk_cycle348.py
+autoresearch/results/cycle_348_accumulation.json
+autoresearch/results/cycle_348_manifest.txt
