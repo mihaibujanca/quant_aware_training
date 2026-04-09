@@ -6,10 +6,41 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+378. **Selective compression — leave b10+b11 uncompressed, compress remaining 10 blocks (R4)**
+   - c366 shows b10+b11 account for 77% of total local FFN error and drive the hockey-stick explosion. c367 confirms b11 is 2nd most important block. Hypothesis: if the composition barrier is driven by late-block error, skipping b10+b11 while compressing all other 10 blocks should break through the 3-block ceiling.
+   - Method: topk+lstsq+adapter (k=512, h=64) on blocks {0,1,2,3,4,5,6,7,8,9}, leave b10+b11 at float. Joint adapter training. Report PPL and effective compression ratio.
+   - Confirmed if: 10-block PPL < 55.0 (within ~1 PPL of float baseline 53.89)
+   - Refuted if: 10-block PPL > 60.0 (composition still collapses even without b10/b11)
+   - Inconclusive if: PPL in [55, 60] — partial improvement but barrier not fully broken
+   - Depends on: c366 (error profile), c367 (block importance)
+
+379. **Residual stream representation geometry across compression stages (R4)**
+   - We know WHERE error explodes (blocks 10-11) and that attention doesn't amplify. But we don't know WHY composition fails — what happens to representation geometry as compressed blocks accumulate? Measure: effective rank of residual stream activations, inter-token cosine similarity, and representation collapse metrics (isotropy score) at each block boundary for 0, 3, 6, and 12 compressed blocks.
+   - Method: Hook residual stream at each block boundary. Compute: (1) activation eff_rank, (2) mean pairwise cosine similarity across tokens, (3) variance explained by top-5 PCs. Compare float vs 3-block vs 6-block configs.
+   - Confirmed if: measurable representation collapse (eff_rank drop >30% or isotropy drop >50%) correlates with PPL explosion onset
+   - Refuted if: representation geometry is indistinguishable between 3-block and 6-block configs (collapse is not geometric)
+   - Inconclusive if: metrics shift but don't clearly separate working (3-block) from failing (6-block) configs
+   - Depends on: none (diagnostic)
+
 ### P1
 
+380. **Importance-weighted k allocation with early-block floor (R4)**
+   - c365 showed Frobenius-proportional k starves early blocks. c367 provides an orthogonal importance ranking. New hypothesis: allocate k proportional to block importance (ascending: b1 gets least, b0/b11 get most), but enforce a FLOOR of k=384 on all blocks so early blocks are never starved below functional threshold. Total budget held constant at 6144 (12×512).
+   - Method: Map importance ranking [1,7,2,6,9,10,8,3,5,4,11,0] to k values with floor=384, ceiling=768, total=6144. Run 6-block compression with joint adapter training.
+   - Confirmed if: 6-block PPL < 64.0 (beats uniform 66.34 by >2 PPL)
+   - Refuted if: 6-block PPL >= 66.0 (floor doesn't help, k allocation is fundamentally not a lever)
+   - Inconclusive if: PPL in [64, 66) — marginal, need larger budget sweep
+   - Depends on: c365 (adaptive k refuted), c367 (importance ranking)
 
 ### P2
+
+381. **Probe FFN local Jacobians on calibration data — data-active compression feasibility (R3)**
+   - R3 (data-active geometric compression) is untested on GPT-2. Before building a full system, measure whether FFN input-output Jacobians are low-rank on actual data. If Jacobians are low-rank per region, we can compress the local linear maps rather than the weight matrix.
+   - Method: For blocks b1, b5, b11, compute per-token Jacobians J = dFFN/dx on 512 calibration tokens. Report: (1) mean Jacobian effective rank, (2) variance of rank across tokens, (3) top-10 singular value concentration. Compare to weight matrix SVD rank.
+   - Confirmed if: mean Jacobian eff_rank < 0.5 × weight eff_rank (data-active compression has headroom over static)
+   - Refuted if: Jacobian eff_rank >= weight eff_rank (data conditioning doesn't help)
+   - Inconclusive if: rank reduction exists but varies wildly across tokens (clustering needed before compression)
+   - Depends on: none (R3 scouting)
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
