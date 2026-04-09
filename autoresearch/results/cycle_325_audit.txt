@@ -1,0 +1,9 @@
+cycle=325
+item=338
+claimed_verdict=INCONCLUSIVE (MOOT-already-lrelu2-trained)
+audit_verdict=AGREE
+G1_data_verified=yes — python3 extracted config.mlp_act="lrelu2" from /Users/mihai/Projects/parameter-golf/logs/13L_640d_322_7k_wd70_batch20k_summary.json, matching the summary claim exactly
+G3_conclusion_follows=yes — if the canonical checkpoint was always lrelu2-trained, cycles 318/319 already measured the lrelu2 model, making item 338 moot by definition
+G5_learning_quality=N/A — no new model trained; this cycle is a metadata verification
+errata_noted=yes — summary correctly identifies mislabeling in cycle_318_summary.md, cycle_319_summary.md, and parameter_golf.md; downstream items 340-343 flagged
+interesting=yes — retroactively strengthens cycles 318/319: their eff_rank profile (b3 collapse to 4.9, b12 collapse to 6.9) and curvature residual baselines are confirmed lrelu2 measurements, not relu2
