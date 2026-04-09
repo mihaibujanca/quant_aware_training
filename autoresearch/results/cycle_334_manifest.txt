@@ -1,0 +1,13 @@
+cycle: 334
+item: 328
+verdict: INCONCLUSIVE
+best_mean_ppl: 59.5644
+best_mean_ppl_at_4000: 59.7074
+cycle_311_b11_best_mean_ref: 59.7074
+float_ppl: 53.8949
+init_ppl_noretrain_r1: 60.6103
+seeds: [42, 137, 2024]
+per_seed_best: s42=59.5762@7800, s137=59.5466@8000, s2024=59.5703@7900
+per_seed_best_at_4000: s42=59.7154@3600, s137=59.6968@3600, s2024=59.7099@3900
+outputs: autoresearch/results/cycle_334_b11_extended.json, autoresearch/results/cycle_334_summary.md, autoresearch/results/cycle_334_manifest.txt
+script: experiments/b11_extended_budget_cycle334.py

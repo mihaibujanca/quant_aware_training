@@ -32,8 +32,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-328. **Extended budget rank-1 retrain at b11 — 8000 steps to settle cycle 311's borderline pass** — cycle 311 follow-up.
-   - **Hypothesis**: cycle 311 reported b11 r=1 best_mean = 59.7074 at N_STEPS=4000, passing the bar 60 by only 0.29 PPL, with best_steps = [3600, 3600, 3900] (all 3 seeds still descending at the budget end). Extending to N_STEPS=8000 should either push b11 r=1 firmly below 59 (confirming the universal rank-1 floor is robust for b11) or reveal a plateau above 59 (suggesting b11's borderline pass at 4000 was a budget artifact and b11 is genuinely the tight block at r=1). **Setup**: gpt2 small block 11 c_proj (3072, 768); install LowRankCProj(r=1) from cycle 292/311 template: A=(U[:, :1]*S[:1]) frozen, B=Vh[:1, :] trainable init, bias trainable from W_proj_11 bias. Adam LR=1e-4 for first 4000 steps, then LR=5e-5 for steps 4000-8000 (step decay at midpoint). EVAL_EVERY=100, best-state restore, SEEDS=[42, 137, 2024]. N_CALIB=200, N_EVAL=100, SEQ_LEN=128, MPS, same wikitext-2 slice as cycle 311. Report `best_mean_ppl`, `best_steps`, `trajectory_last_10_evals` (to see plateau behaviour). Trainable per seed = 1·768 + 768 = 1,536. **Verbatim conditions**: `best_mean_ppl ≤ 58` → CONFIRMED-robust-r1 ("b11 r=1 floor is below 58 PPL; cycle 311's pass was real, the universal rank-1 5-stack budget hypothesis survives extended training"); `best_mean_ppl ≥ 60` → REFUTED-borderline-artifact ("b11 at r=1 plateaus above the bar; cycle 311's 59.71 was a lucky 4000-step measurement; b11 is not truly rank-1 at the trained-Adam level and needs ≥2 at the 1,536-param cost"); else INCONCLUSIVE. Sanity: cycle 311 b11 r=1 init PPL 60.6103 exact match to 5 dp; best_mean cycle 311 value 59.7074 reproducible at step 4000 within 0.05 PPL (3-seed Adam is deterministic with best-state restore). **Why P2**: closes open question 7; small cycle (3 seeds × single block × 8000 steps ~= 30 min wall, longest of the 5 items); not load-bearing for any compression result because cycle 311 already confirmed the 4/4 bar. Demoted from P0 because it's a budget-sensitivity audit, not a new result.
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
@@ -58,6 +56,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 334
+
+328. **Extended budget rank-1 retrain at b11 — 8000 steps to settle cycle 311's borderline pass**
+   - **Outcome: INCONCLUSIVE** — best_mean_ppl=59.5644 (59.58/59.55/59.57 per seed), between the 58.0 confirmed and 60.0 refuted thresholds. Cross-val at step 4000 matched cycle 311 exactly (|Δ|=0.0000 all seeds). LR decay to 5e-5 at step 4001 gave continued slow descent (~0.14 PPL over 4000 extra steps) but never broke through 58. Plateau evident: last 10 evals hover 59.54-59.60. b11 r=1 floor sits around 59.5-59.6 with Adam at this param budget.
+   - *cycle 334 — verdict: INCONCLUSIVE*
+   - Artifacts: `experiments/b11_extended_budget_cycle334.py`, `autoresearch/results/cycle_334_b11_extended.json`, `autoresearch/results/cycle_334_summary.md`, `autoresearch/results/cycle_334_manifest.txt`
 
 ### Cycle 333
 
