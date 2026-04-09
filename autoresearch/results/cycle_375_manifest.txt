@@ -1,0 +1,7 @@
+item_number=383
+outcome=REFUTED
+key_metric=pct_prunable=0.0% (0/384 neurons prunable); ppl_delta=0.000
+commit=73e6816
+paths=autoresearch/results/cycle_375_adapter_census.json,experiments/gpt2_adapter_census_cycle375.py
+learned=All 384 adapter neurons (64 per block x 6 blocks) are fully mixed — every neuron crosses the ReLU boundary on calibration data. 0 dead, 0 always-active. The h=64 adapter is fully utilized at this training scale (1500 steps, 200 calib seqs). No over-provisioning. Exact pruning is not applicable.
+next=Dead-neuron pruning is closed for this adapter size/training config. If adapter capacity is a concern, the lever is changing h (not pruning dead neurons). Item 384 (CKA layer-wise divergence) and item 385 (adapter-only baseline) are next P0 items.
