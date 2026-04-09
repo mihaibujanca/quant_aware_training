@@ -1,0 +1,41 @@
+{
+  "cycle": 352,
+  "item": 361,
+  "verdict": "CONFIRMED-generic",
+  "analysis_type": "retrospective_comparison",
+  "note": "No new experiment needed. Conditions match well enough for controlled comparison: same block (b2), same seeds [42,137,2024], same lr=1e-4. Step count differs (LASER: 1000, topk: 500) making topk delta conservative.",
+  "laser_adapter": {
+    "source_cycle": 347,
+    "baseline_ppl": 50.087,
+    "adapter_h64_best_ppl": 48.511,
+    "adapter_h64_mean_ppl": 48.765,
+    "adapter_h64_std_ppl": 0.185,
+    "delta_best": 1.576,
+    "delta_mean": 1.322,
+    "n_steps": 1000,
+    "lr": 0.0001,
+    "seeds": [42, 137, 2024],
+    "n_adapter_params": 245888
+  },
+  "topk_adapter": {
+    "source_cycle": 350,
+    "baseline_ppl": 48.47,
+    "adapter_h64_best_ppl": 46.531,
+    "adapter_h64_mean_ppl": 46.820,
+    "adapter_h64_std_ppl": 0.220,
+    "delta_best": 1.939,
+    "delta_mean": 1.650,
+    "n_steps": 500,
+    "lr": 0.0001,
+    "seeds": [42, 137, 2024],
+    "n_adapter_params": 99136
+  },
+  "comparison": {
+    "delta_diff_mean": 0.328,
+    "delta_diff_best": 0.363,
+    "threshold_confirmed_generic": 0.5,
+    "threshold_refuted_method_specific": 1.5,
+    "verdict_reason": "Delta difference 0.33 (mean) well within confirmed-generic threshold of 0.5 PPL. LASER ran 2x more steps, making topk delta if anything conservative. Adapter gain is not compression-method-specific.",
+    "float_ppl": 53.895
+  }
+}

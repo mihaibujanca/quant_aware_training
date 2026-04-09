@@ -14,9 +14,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-361. **Single-block topk+lstsq + adapter vs LASER + adapter — is adapter gain compression-method-specific? (R5)**
-   - Cycle 347 showed adapter helps LASER (50.09 → 48.51). Does it also help topk+lstsq single-block, or is the gain LASER-specific (compensating SVD truncation artifacts)? Run topk+lstsq on b2, add MLP adapter h=64, compare delta-PPL vs LASER+adapter delta-PPL. If topk+lstsq+adapter also improves, the adapter is a generic residual learner. If not, it's patching LASER-specific distortion. 3 seeds.
-   - Depends on: 357 (confirmed)
+361. ~~**Single-block topk+lstsq + adapter vs LASER + adapter — is adapter gain compression-method-specific? (R5)**~~ CONFIRMED-generic — Retrospective comparison from cycles 347+350. LASER+adapter: baseline 50.09 → 48.51 best (delta 1.58 PPL, 1000 steps). topk+adapter: baseline 48.47 → 46.53 best (delta 1.94 PPL, 500 steps). Delta difference 0.33 PPL (mean), 0.36 PPL (best), well within 0.5 threshold. Adapter is a generic residual learner — gain does not depend on compression method.
+   - *cycle 352 — verdict: CONFIRMED-generic*
+   - Artifacts: `autoresearch/results/cycle_352_adapter_generic.json`, `autoresearch/results/cycle_352_manifest.txt`
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 

@@ -1,0 +1,23 @@
+cycle: 352
+item: 361
+verdict: CONFIRMED-generic
+analysis_type: retrospective_comparison
+experiment: none (data from cycles 347 and 350)
+results_json: autoresearch/results/cycle_352_adapter_generic.json
+
+question: Is MLP adapter gain compression-method-specific (LASER artifacts) or generic?
+
+comparison (h=64, same block b2, same seeds [42,137,2024], same lr=1e-4):
+  LASER+adapter:    baseline 50.09 → 48.51 (best), delta = -1.58 PPL  [1000 steps]
+  topk+adapter:     baseline 48.47 → 46.53 (best), delta = -1.94 PPL  [500 steps]
+  delta difference: 0.36 PPL (best), 0.33 PPL (mean)
+
+threshold: < 0.5 = CONFIRMED-generic (met)
+           > 1.5 = REFUTED-method-specific (not met)
+
+verdict_reason: Delta difference 0.33 PPL (mean) well within the 0.5 threshold.
+  topk used only 500 steps vs LASER's 1000 (conservative for topk).
+  Adapter is a generic residual learner — gain does not depend on compression method.
+  Both methods lose similar amounts of block fidelity vs float; the adapter
+  recovers a comparable absolute PPL gain regardless of whether the distortion
+  came from low-rank SVD truncation (LASER) or activation-aware channel pruning (topk).
