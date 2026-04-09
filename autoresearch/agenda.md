@@ -7,12 +7,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ### P0
 
 
-383. **Adapter dead-neuron census and exact pruning — ReLU MLP adapter (R2)**
-   - R2 exact pruning on GPT-2 GELU FFNs is closed (c128/c162/c192: 0 dead channels). But the trained MLP adapters use ReLU — Serra/Berzins criteria apply directly. Census: for each of 6 trained adapters, count dead neurons (never activate on calibration data) and always-active neurons. Then prune them exactly and measure PPL delta.
-   - If significant fraction is dead: adapter is over-provisioned → can use larger h at same param cost → potential composition headroom.
-   - Confirmed if: ≥10% of adapter neurons are prunable AND pruning causes <0.1 PPL delta. Refuted if: <5% prunable or pruning hurts >0.5 PPL.
-   - Depends on: trained 6-block adapter from any prior cycle (c357 or c359).
-
 384. **Per-token CKA and trajectory divergence — 3-block vs 6-block diagnostic (R4)**
    - c371 showed covariance statistics (eff_rank, participation ratio, mean cosine) cannot distinguish 3-block (PPL 47) from 6-block (PPL 65). CKA measures kernel-normalized representational similarity and may reveal where alignment with the float model breaks.
    - Run: for 3-block and 6-block trained models, compute layer-wise CKA(float_hidden_l, compressed_hidden_l) on 512 calibration tokens. Also compute per-token L2 divergence ‖h_float − h_compressed‖ at each layer and report mean + 95th percentile.
@@ -52,6 +46,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 375
+
+383. ~~**Adapter dead-neuron census and exact pruning — ReLU MLP adapter (R2)**~~ REFUTED — 0 of 384 adapter neurons are dead or always-active. All 64 neurons in each of 6 adapters cross the ReLU boundary on calibration data (100% mixed). pct_prunable=0.0%, ppl_delta=0.000. The adapter is fully utilized by the training data distribution — no dead or saturation neurons remain. Over-provisioning is not the issue; the adapter uses its full h=64 capacity. Script: `experiments/gpt2_adapter_census_cycle375.py`. Results: `autoresearch/results/cycle_375_adapter_census.json`.
+   - *cycle 375 — verdict: REFUTED*
 
 ### Cycle 374
 

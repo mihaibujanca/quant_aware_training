@@ -1,0 +1,53 @@
+{
+  "cycle": 375,
+  "item": 383,
+  "seed": 42,
+  "float_ppl": 53.89489152418256,
+  "baseline_ppl": 67.12479857977115,
+  "census": {
+    "2": {
+      "dead": 0,
+      "always_active": 0,
+      "mixed": 64,
+      "total": 64
+    },
+    "1": {
+      "dead": 0,
+      "always_active": 0,
+      "mixed": 64,
+      "total": 64
+    },
+    "10": {
+      "dead": 0,
+      "always_active": 0,
+      "mixed": 64,
+      "total": 64
+    },
+    "4": {
+      "dead": 0,
+      "always_active": 0,
+      "mixed": 64,
+      "total": 64
+    },
+    "3": {
+      "dead": 0,
+      "always_active": 0,
+      "mixed": 64,
+      "total": 64
+    },
+    "11": {
+      "dead": 0,
+      "always_active": 0,
+      "mixed": 64,
+      "total": 64
+    }
+  },
+  "total_neurons": 384,
+  "total_dead": 0,
+  "total_always_active": 0,
+  "total_prunable": 0,
+  "pct_prunable": 0.0,
+  "pruned_ppl": 67.12479857977115,
+  "ppl_delta": 0.0,
+  "verdict": "REFUTED"
+}
