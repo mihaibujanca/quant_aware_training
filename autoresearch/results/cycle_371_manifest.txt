@@ -1,0 +1,7 @@
+item_number=379
+outcome=INCONCLUSIVE
+key_metric=3block_PPL=47.67, 6block_PPL=65.70; max eff_rank drop 6-block=22% (layer 4), 3-block=20% (layer 2); 0 layers exceed 30% threshold in either config
+commit=e05d536
+paths=experiments/gpt2_residual_geometry_cycle371.py,autoresearch/results/cycle_371_residual_geometry.json,autoresearch/results/cycle_371_geometry_profiles.png
+learned=PPL barrier is confirmed but the residual stream eff_rank, participation ratio, top-5 PC concentration, and mean pairwise cosine do NOT cleanly separate the 3-block (PPL 47.67) from 6-block (PPL 65.70) regime. 6-block shows moderate degradation spread across mid-stack layers (drops 8-22% at layers 2-10), while 3-block is mostly intact (max 20% at layer 2). No superlinear collapse. The composition barrier is functional, not geometric in representation dimensionality.
+next=The barrier is not detectable via simple second-order statistics of the residual stream. Next hypotheses: (a) attention pattern geometry (do attention maps degrade under compression?), (b) per-token trajectory divergence (do token paths in representation space diverge?), or (c) accept the barrier as a fundamental limits result and focus on closing the PPL gap via other levers.
