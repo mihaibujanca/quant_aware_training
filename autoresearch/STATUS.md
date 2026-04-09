@@ -1,4 +1,4 @@
-# Research Status -- 374 Cycles (001-374)
+# Research Status -- 376 Cycles (001-376)
 
 ## Current State
 
@@ -50,6 +50,8 @@
 14. **Composition barrier is count-driven, not identity-driven** (c370). 10-block selective (skip b10+b11) gives PPL 150 — far worse than 6-block uniform (65.54) that includes b10/b11. The number of compressed blocks matters more than which blocks.
 15. **Composition barrier is NOT visible in second-order geometry** (c371). eff_rank, participation ratio, PC concentration, mean cosine all fail to distinguish working 3-block from failing 6-block. Max eff_rank drop = 22% (threshold 30%). The 18-PPL gap has no covariance-level signature.
 16. **More channels don't break the barrier** (c374). k=768 (3.2x compression) gives 6-block PPL 61.85 vs k=512 (4.79x) 65.54. Only 3.69 PPL gain for 50% more channels. The 3→6 block gap narrows from 18→15 PPL but does not close.
+17. **Adapter is fully utilized at h=64** (c375). 0/384 dead neurons, 0 always-active. R2 pruning inapplicable to this config.
+18. **CKA divergence concentrates at final layer** (c376, INCONCLUSIVE). Layers 0-10 CKA gap ≤ 0.0003 between 3-block and 6-block. Layer 11 gap = 0.1010. BUT confounded: block 11 is compressed in 6-block but not 3-block. Clean finding: barrier does NOT distribute across the stack.
 
 ## Dead Directions (cycles 322-367)
 
@@ -78,6 +80,8 @@
 | Importance-weighted k (floor=384) | PLAN INVALID | 372 | Third k-allocation variant; same mechanism as c365 |
 | Jacobian probing (R3) | PLAN INVALID | 373 | Duplicate of c068/c195; GPT-2 FFN Jacobians near-full-rank |
 | Error budget k=768 on 6-block | REFUTED | 374 | PPL 61.85; 50% more channels only buys 3.69 PPL |
+| Adapter dead-neuron census | REFUTED | 375 | 0/384 dead; adapter fully utilized at h=64 |
+| CKA divergence diagnostic | INCONCLUSIVE | 376 | Layer 11 gap confounded by block 11 compression asymmetry |
 
 ## Open Questions
 

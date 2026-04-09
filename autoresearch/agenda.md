@@ -2680,6 +2680,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### Cycle 376
 
-384. ~~**Per-token CKA and trajectory divergence — 3-block vs 6-block diagnostic (R4)**~~ CONFIRMED — CKA gap = 0.1010 at layer 11 (final block). Layers 0-10 show near-identical CKA (3-block: 0.9993-1.0, 6-block: 0.9990-1.0; gap ≤ 0.0003). Layer 11: CKA-3block=0.7946, CKA-6block=0.6936, gap=0.1010. L2 divergence at layer 11: 3-block mean=117.7, 6-block mean=146.1 (24% larger). The composition barrier is localized to the final block (block 11 = GPT-2 layer 11): 6-block compression degrades final-layer representation alignment with float significantly more than 3-block. Float PPL=53.89, 3-block PPL=47.68 (beats float), 6-block PPL=65.81.
-   - *cycle 376 — verdict: CONFIRMED*
+384. ~~**Per-token CKA and trajectory divergence — 3-block vs 6-block diagnostic (R4)**~~ INCONCLUSIVE (audit-corrected from CONFIRMED) — CKA gap = 0.1010 at layer 11 (barely above 0.1 threshold, no bootstrap CI). CONFOUND: block 11 is compressed in 6-block but NOT in 3-block, so the gap conflates direct compression damage with cumulative propagation. Clean result: layers 0-10 CKA gap ≤ 0.0003 — the barrier does NOT distribute across the stack. Needs rerun with 6-block config excluding block 11 as control.
+   - *cycle 376 — verdict: INCONCLUSIVE (audit-corrected)*
    - Artifacts: `experiments/gpt2_cka_divergence_cycle376.py`, `autoresearch/results/cycle_376_cka_divergence.json`, `autoresearch/results/cycle_376_cka_divergence.png`

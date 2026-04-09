@@ -1,0 +1,9 @@
+verdict: APPROVE
+round: 1
+issues: 0 blocking, 1 non-blocking
+feedback:
+  - R1 (premise): Sound. c371 showed covariance statistics (eff_rank, participation ratio, cosine) are indistinguishable between 3-block and 6-block. CKA normalizes by kernel self-similarity, so it can detect representational misalignment that norm-based metrics miss. Correct follow-up.
+  - R2 (measurement): Linear CKA implementation matches Kornblith et al. 2019 exactly (center, HSIC via Frobenius, normalize). Linear variant is standard and appropriate — RBF kernel CKA adds O(n^2) cost and a bandwidth hyperparameter with no empirical advantage for layer-wise transformer comparison. Token count: plan uses N_CKA=200 seqs x 128 tokens = 25,600 tokens subsampled to 4096. Since CKA computes d x d (768 x 768) matrices, the requirement is n > d; 4096 >> 768 satisfies this. Well-conditioned.
+  - R3 (statistical): CKA is deterministic given calibration data (not a per-sample estimate). Single seed adequate for this diagnostic.
+  - R4 (method alignment): Plan correctly trains adapters before measuring (step 2 with PPL verification), so CKA compares the actual working models, not raw-compressed snapshots. **Non-blocking**: The verdict formula `max(cka_3block[l] - cka_6block[l])` is one-directional — it only flags layers where 3-block is closer to float than 6-block. If the reverse occurs at any layer (6-block paradoxically closer), it would be silent. Consider using `max(abs(cka_3block[l] - cka_6block[l]))` or at minimum logging the signed gap per layer so the anomaly is visible in the JSON output even if the verdict doesn't trigger on it. The per-layer arrays in the output JSON do make this auditable, so non-blocking.
+  - R5 (pitfall scan): MP7 — hooks on `transformer.h[i]` capture residual stream before the next block's LayerNorm, so pre-LN measurements, not affected. MP6 — thresholds (0.1/0.05) are concrete and CKA has full [0,1] range. MP3/MP5/MP8 — not applicable.
