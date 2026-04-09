@@ -10,26 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-344. **Static rank-2 correction at b4/b5 — bake the LeakyReLU² leak as a fixed correction, use ReLU² everywhere** *(cross-project, action item, requires extended cycle 319)*
-   - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.** Also required: `parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` section 6.5.
-   - **Motivation**: cycle 319 captured the top-5 LEFT singular vectors of the (lrelu², relu²) Δy at each block but NOT the right singular vectors. To bake the leak as a fixed function of pre-activation, we need both: `correction(z) = sum_i V[:, i] · (U[:, i] · z)` where V is the residual-stream direction and U is the per-channel coefficient. This item updates `pgolf_curvature_residual.py` to also save right SVs, then uses them to construct a frozen rank-2 correction module at b4 and b5 in a model that uses ReLU² everywhere.
-   - **Setup**:
-     - **Step 0** (REQUIRED): `cat autoresearch/cross_project/parameter_golf.md` AND `cat parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` (section 6.5).
-     - **Step 1**: update `parameter-golf/local_scripts/pgolf_curvature_residual.py` to capture both left and right SVs. Re-run cycle 319 measurement on the canonical ReLU²-trained checkpoint (or the lrelu²-trained checkpoint from item 338, if it exists). Save extended JSON.
-     - **Step 2**: write `parameter-golf/local_scripts/pgolf_static_correction.py`. Build the rank-2 correction module: at b4 and b5, after the ReLU² output, add `correction_l(z) = sum_i V_l[:, i] · (U_l[:, i] · z) * S_l[i]` where (U, S, V) are the top-2 SVD components of the (lrelu², relu²) Δy at block l from the extended cycle 319.
-     - **Step 3**: load the canonical ReLU²-trained checkpoint, apply the correction at b4 and b5, evaluate BPB on FineWeb val.
-     - **Step 4**: optional: fine-tune for ~200 steps to let the rest of the model adapt. Compare adapted vs non-adapted.
-     - **Step 5**: build `cycle_344_summary.md` with: baseline ReLU² BPB, +static-correction BPB, +static-correction +adapt BPB, comparison to lrelu² baseline.
-   - **Hypothesis**: static correction recovers ≥50% of the lrelu² advantage over relu² without retraining. With short adapt, recovers ≥80%.
-   - **Outcomes**:
-     - **CONFIRMED-correction-works** if non-adapted recovery ≥ 50% AND adapted ≥ 80%: the lrelu² advantage is captured by 2 fixed residual-stream directions per block, the leaderboard win has been mechanistically explained AND can be replicated without changing the activation function.
-     - **REFUTED-correction-fails** if both ≤ 20%: the leak is more complicated than a rank-2 add; the localization is real but the geometric form of the correction is not.
-     - **INCONCLUSIVE** otherwise.
-   - **Baselines**: cycle 343 selective-lrelu² result (if available), lrelu²-trained baseline BPB, relu²-trained baseline BPB.
-   - **Run cap**: ~30 minutes (cycle 319 redo + correction module + eval + optional adapt).
-   - Depends on: 343, 338, `autoresearch/cross_project/parameter_golf.md`.
-
-
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
 138. ~~**Train MoE testbed — Tiny Mixtral**~~ SKIPPED — WikiText-2 too small, overfits at PPL 65. Need pretrained model or larger dataset.
@@ -53,6 +33,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 336
+
+344. **Static rank-2 correction at b4/b5 — bake the LeakyReLU² leak as a fixed correction, use ReLU² everywhere** *(cross-project, action item)*
+   - **Outcome: INCONCLUSIVE (PLAN INVALID)** — dependency 343 (tested in cycle 335 as 343b) was REFUTED-distributed-mechanism. Keeping the actual lrelu2 activation at b4/b5 only recovered 36% of the full lrelu2 advantage (selective BPB 1.5085 vs global-lrelu2 1.3931). A rank-2 SVD approximation of that activation difference is strictly weaker, so recovery is upper-bounded at ~36% — below the ≥50% CONFIRMED threshold. No experiment run.
+   - *cycle 336 — verdict: PLAN INVALID (P2 dependency refutation)*
+   - Artifacts: `autoresearch/briefs/cycle_336.md`, `autoresearch/plans/cycle_336.md`
 
 ### Cycle 335
 
