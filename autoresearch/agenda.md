@@ -7,12 +7,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 ### P0
 
 
-384. **Per-token CKA and trajectory divergence — 3-block vs 6-block diagnostic (R4)**
-   - c371 showed covariance statistics (eff_rank, participation ratio, mean cosine) cannot distinguish 3-block (PPL 47) from 6-block (PPL 65). CKA measures kernel-normalized representational similarity and may reveal where alignment with the float model breaks.
-   - Run: for 3-block and 6-block trained models, compute layer-wise CKA(float_hidden_l, compressed_hidden_l) on 512 calibration tokens. Also compute per-token L2 divergence ‖h_float − h_compressed‖ at each layer and report mean + 95th percentile.
-   - Confirmed if: CKA identifies a specific layer range where 6-block diverges from float but 3-block does not (CKA gap > 0.1 at any layer). Refuted if: CKA profiles are indistinguishable (max gap < 0.05).
-   - Depends on: trained 3-block and 6-block models from c359/c357.
-
 385. **Adapter-only baseline — does compression or the adapter cause the "beat float" anomaly? (R4)**
    - 3-block compressed + adapter gives PPL 47.43, beating float 53.89. This 6.5-PPL gain is unexplained. Two hypotheses: (A) compression creates a beneficial bottleneck (information filtering), (B) the adapter itself adds useful capacity regardless of compression.
    - Test: attach and train an identical MLP adapter (h=64) to UNCOMPRESSED blocks [b2,b1,b10] — same architecture, same training schedule, same 2000 steps. The adapter takes the same input (post-FFN residual) and adds a correction.
@@ -2683,3 +2677,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 381. ~~**Probe FFN local Jacobians on calibration data — data-active compression feasibility (R3)**~~ PLAN INVALID — P1 duplicate of cycles 068 and 195 which already measured per-token FFN Jacobian rank on GPT-2 and found near-full-rank (50-71% at 90% energy). Data-active Jacobian compression has no headroom.
    - *cycle 373 — verdict: inconclusive (PLAN INVALID)*
    - Artifacts: `autoresearch/plans/cycle_373.md`
+
+### Cycle 376
+
+384. ~~**Per-token CKA and trajectory divergence — 3-block vs 6-block diagnostic (R4)**~~ CONFIRMED — CKA gap = 0.1010 at layer 11 (final block). Layers 0-10 show near-identical CKA (3-block: 0.9993-1.0, 6-block: 0.9990-1.0; gap ≤ 0.0003). Layer 11: CKA-3block=0.7946, CKA-6block=0.6936, gap=0.1010. L2 divergence at layer 11: 3-block mean=117.7, 6-block mean=146.1 (24% larger). The composition barrier is localized to the final block (block 11 = GPT-2 layer 11): 6-block compression degrades final-layer representation alignment with float significantly more than 3-block. Float PPL=53.89, 3-block PPL=47.68 (beats float), 6-block PPL=65.81.
+   - *cycle 376 — verdict: CONFIRMED*
+   - Artifacts: `experiments/gpt2_cka_divergence_cycle376.py`, `autoresearch/results/cycle_376_cka_divergence.json`, `autoresearch/results/cycle_376_cka_divergence.png`
