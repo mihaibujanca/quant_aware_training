@@ -1,0 +1,125 @@
+{
+  "checkpoint": "/Users/mihai/Projects/parameter-golf/logs/13L_640d_322_7k_wd70_batch20k_best.npz",
+  "n_blocks": 13,
+  "n_tokens_total": 25600,
+  "seq_len": 1024,
+  "profile": {
+    "0": {
+      "K_star": 25597,
+      "hidden_dim": 1920,
+      "K_star_over_width": 13.3318,
+      "n_tokens": 25600,
+      "avg_active_neurons": 543.6,
+      "avg_active_frac": 0.2831,
+      "max_possible_patterns": "2^1920"
+    },
+    "1": {
+      "K_star": 25597,
+      "hidden_dim": 1920,
+      "K_star_over_width": 13.3318,
+      "n_tokens": 25600,
+      "avg_active_neurons": 607.9,
+      "avg_active_frac": 0.3166,
+      "max_possible_patterns": "2^1920"
+    },
+    "2": {
+      "K_star": 25597,
+      "hidden_dim": 1920,
+      "K_star_over_width": 13.3318,
+      "n_tokens": 25600,
+      "avg_active_neurons": 664.1,
+      "avg_active_frac": 0.3459,
+      "max_possible_patterns": "2^1920"
+    },
+    "3": {
+      "K_star": 25597,
+      "hidden_dim": 1920,
+      "K_star_over_width": 13.3318,
+      "n_tokens": 25600,
+      "avg_active_neurons": 565.6,
+      "avg_active_frac": 0.2946,
+      "max_possible_patterns": "2^1920"
+    },
+    "4": {
+      "K_star": 25597,
+      "hidden_dim": 1920,
+      "K_star_over_width": 13.3318,
+      "n_tokens": 25600,
+      "avg_active_neurons": 724.1,
+      "avg_active_frac": 0.3772,
+      "max_possible_patterns": "2^1920"
+    },
+    "5": {
+      "K_star": 25597,
+      "hidden_dim": 1920,
+      "K_star_over_width": 13.3318,
+      "n_tokens": 25600,
+      "avg_active_neurons": 720.3,
+      "avg_active_frac": 0.3752,
+      "max_possible_patterns": "2^1920"
+    },
+    "6": {
+      "K_star": 25597,
+      "hidden_dim": 1920,
+      "K_star_over_width": 13.3318,
+      "n_tokens": 25600,
+      "avg_active_neurons": 732.1,
+      "avg_active_frac": 0.3813,
+      "max_possible_patterns": "2^1920"
+    },
+    "7": {
+      "K_star": 25597,
+      "hidden_dim": 1280,
+      "K_star_over_width": 19.9977,
+      "n_tokens": 25600,
+      "avg_active_neurons": 517.1,
+      "avg_active_frac": 0.404,
+      "max_possible_patterns": "2^1280"
+    },
+    "8": {
+      "K_star": 25597,
+      "hidden_dim": 1280,
+      "K_star_over_width": 19.9977,
+      "n_tokens": 25600,
+      "avg_active_neurons": 514.0,
+      "avg_active_frac": 0.4016,
+      "max_possible_patterns": "2^1280"
+    },
+    "9": {
+      "K_star": 25597,
+      "hidden_dim": 1920,
+      "K_star_over_width": 13.3318,
+      "n_tokens": 25600,
+      "avg_active_neurons": 746.9,
+      "avg_active_frac": 0.389,
+      "max_possible_patterns": "2^1920"
+    },
+    "10": {
+      "K_star": 25597,
+      "hidden_dim": 1280,
+      "K_star_over_width": 19.9977,
+      "n_tokens": 25600,
+      "avg_active_neurons": 513.5,
+      "avg_active_frac": 0.4011,
+      "max_possible_patterns": "2^1280"
+    },
+    "11": {
+      "K_star": 25597,
+      "hidden_dim": 1280,
+      "K_star_over_width": 19.9977,
+      "n_tokens": 25600,
+      "avg_active_neurons": 449.4,
+      "avg_active_frac": 0.3511,
+      "max_possible_patterns": "2^1280"
+    },
+    "12": {
+      "K_star": 25597,
+      "hidden_dim": 320,
+      "K_star_over_width": 79.9906,
+      "n_tokens": 25600,
+      "avg_active_neurons": 96.2,
+      "avg_active_frac": 0.3007,
+      "max_possible_patterns": "2^320"
+    }
+  }
+}

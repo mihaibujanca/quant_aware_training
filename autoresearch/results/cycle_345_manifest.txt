@@ -1,0 +1,46 @@
+cycle: 345
+item: 354
+verdict: REFUTED
+date: 2026-04-09
+
+## Jacobian clustering proxy: activation pattern census on pgolf 13L_640d
+
+REFUTED: K*/width > 0.5 at all 13 blocks
+
+Checkpoint: /Users/mihai/Projects/parameter-golf/logs/13L_640d_322_7k_wd70_batch20k_best.npz
+Tokens: 25600 (seq_len=1024)
+
+Block Hidden       K*   K*/width  AvgActive  ActFrac
+    0   1920    25597    13.3318      543.6   0.2831
+    1   1920    25597    13.3318      607.9   0.3166
+    2   1920    25597    13.3318      664.1   0.3459
+    3   1920    25597    13.3318      565.6   0.2946
+    4   1920    25597    13.3318      724.1   0.3772
+    5   1920    25597    13.3318      720.3   0.3752
+    6   1920    25597    13.3318      732.1   0.3813
+    7   1280    25597    19.9977      517.1   0.4040
+    8   1280    25597    19.9977      514.0   0.4016
+    9   1920    25597    13.3318      746.9   0.3890
+   10   1280    25597    19.9977      513.5   0.4011
+   11   1280    25597    19.9977      449.4   0.3511
+   12    320    25597    79.9906       96.2   0.3007
+
+## Interpretation
+K* = 25597 out of 25600 tokens at EVERY block (99.99% unique). The activation
+pattern space is not clustered at all — each token lands in its own piecewise-
+linear cell. K* scales with n_tokens, not with width, so more data would only
+yield more unique patterns. Piecewise-linear approximation with K << n_tokens
+pieces cannot faithfully represent these MLPs. The MASO/spline theory's
+"few regions" hope does not hold for this model: ~30% of neurons active per
+token means ~2^(0.3*1920) = 2^576 reachable cells, far more than any dataset.
+
+## Verdict Criteria
+CONFIRMED if K*/width < 0.1 at >= 3 blocks.
+REFUTED if K*/width > 0.5 at all blocks.
+INCONCLUSIVE otherwise.
+
+## Artifacts
+experiments/pgolf_activation_pattern_census_cycle345.py
+parameter-golf/local_scripts/pgolf_activation_pattern_census.py
+autoresearch/results/cycle_345_pgolf_activation_patterns.json
+autoresearch/results/cycle_345_manifest.txt

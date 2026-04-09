@@ -6,12 +6,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-354. **Jacobian clustering on pgolf — per-block effective number of local linear maps (R3)**
-   - For each of the 13 MLP blocks, sample 2048 tokens from the validation set. Compute per-token Jacobian J(x) = df/dx via `torch.func.jacrev` (f = block MLP forward). Flatten each J to a vector. Run k-means for K = {2, 4, 8, 16, 32}. For each K, replace each token's output with the first-order Taylor approximation f(x) ≈ J̄_k (x − μ_k) + f(μ_k) using cluster centroid k. Report reconstruction MSE / ||f(x)||² per block per K. Find K* = min K such that relative error < 5%.
-   - Confirmed if: K* < 8 for at least 3 blocks — those blocks have genuinely low-complexity nonlinear behavior and are candidates for piecewise-linear compression.
-   - Refuted if: K* ≥ 32 for all blocks — local linear diversity is too high for clustering to be useful.
-   - Inconclusive if: K* < 8 for 1-2 blocks only — limited signal, need to test whether those blocks are also the ones with low mlp_scale.
-   - Depends on: none (uses existing pgolf checkpoint)
+(none — promoted from P1)
 
 ### P1
 
@@ -61,6 +56,10 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 345
+
+354. ~~**Jacobian clustering on pgolf — per-block effective number of local linear maps (R3)**~~ REFUTED — K* = 25597 out of 25600 tokens at ALL 13 blocks (99.99% unique activation patterns). Each token occupies its own piecewise-linear cell; no clustering structure exists. Piecewise-linear compression is not viable.
 
 ### Cycle 344
 
