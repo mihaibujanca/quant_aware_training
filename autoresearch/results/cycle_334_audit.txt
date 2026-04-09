@@ -1,0 +1,21 @@
+cycle=334
+item=328
+auditor=claude
+audit_date=2026-04-09
+verdict_claimed=INCONCLUSIVE
+verdict_actual=INCONCLUSIVE
+status=PASS
+
+G1_cross_val_match=PASS
+G1_detail=Deltas at step 4000 vs cycle 311 refs: s42=1.1e-05, s137=3.7e-05, s2024=3.4e-05. All <1e-4. Claimed |Δ|=0.0000 holds at 4dp.
+
+G2_seeds_steps=PASS
+G2_detail=3 seeds (42, 137, 2024), 8000 steps each, eval every 100. Adequate.
+
+G3_verdict_logic=PASS
+G3_detail=best_mean_ppl=59.5644, confirmed_le=58.0, refuted_ge=60.0. 58.0 < 59.5644 < 60.0 → INCONCLUSIVE correct.
+
+plateau_confirmed=YES
+plateau_detail=Last 10 evals per seed: s42 range [59.576, 59.631], s137 range [59.547, 59.575], s2024 range [59.570, 59.598]. All within ~0.06 PPL. Clear plateau.
+
+notes=Clean experiment. Extended budget (4000→8000 steps with LR decay to 5e-5) gained ~0.14 PPL over the first 4000 steps. b11 rank-1 floor is ~59.5 with this param budget.

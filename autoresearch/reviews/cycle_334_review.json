@@ -1,0 +1,8 @@
+{
+  "cycle": 334,
+  "item": 328,
+  "decision": "APPROVE",
+  "round": 1,
+  "issues": [],
+  "notes": "Straightforward budget extension of cycle 311 template. Single block (b11), 8000 steps with LR decay at step 4000. Cross-validation against cycle 311 values at init and step 4000. Slope analysis predicts INCONCLUSIVE (~59.3-59.5 at best), but confirming the plateau shape is the point."
+}
