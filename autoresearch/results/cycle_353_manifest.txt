@@ -1,0 +1,16 @@
+Cycle 353 — Item 363: Compression ratio accounting
+Verdict: CONFIRMED (net ratio 4.793x >> 1.5x threshold)
+
+Files changed:
+  autoresearch/agenda.md — moved item 363 from NEXT to PAST (cycle 353 section)
+  autoresearch/results/cycle_353_exec_result.txt — param table and ratio computation
+  autoresearch/results/cycle_353_manifest.txt — this file
+
+Key numbers:
+  Original FFN per block:      4,722,432 params
+  Compressed (k=512):            787,712 params  (83.3% reduction)
+  Adapter h=128:                 197,504 params
+  Compressed + adapter:          985,216 params
+  Net ratio (1-block):             4.793x
+  Net ratio (3-block):             4.793x  (same per-block recipe → same ratio)
+  Adapter cost as % of savings:    5.0%   (adapter is negligible overhead)

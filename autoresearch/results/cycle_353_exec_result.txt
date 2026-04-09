@@ -1,0 +1,38 @@
+Cycle 353 — Item 363: Compression ratio accounting — params saved vs params added for best recipe (R4)
+Verdict: CONFIRMED (net compression ratio 4.793x >> 1.5x threshold; adapter cost is small relative to savings)
+
+## Param accounting (GPT-2 small, d_model=768, d_ffn=3072)
+
+### Original FFN per block (c_fc + c_proj, weights + biases)
+  c_fc.weight  (768×3072):  2,359,296
+  c_fc.bias    (3072):          3,072
+  c_proj.weight(3072×768):  2,359,296
+  c_proj.bias  (768):             768
+  TOTAL:                    4,722,432
+
+### topk+lstsq compressed FFN per block (k=512, i.e. 1/6 × 3072)
+  fc_w  (512×768) frozen:     393,216
+  fc_b  (512)     frozen:         512
+  proj_w(768×512) trainable:  393,216
+  proj_b(768)     trainable:      768
+  TOTAL compressed:           787,712
+  Params saved:             3,934,720  (83.3% reduction in FFN)
+
+### Adapter h=128 per block
+  W1(128×768) + b1(128) + W2(768×128) + b2(768): 197,504
+
+### Net accounting
+
+| Variant       | Original    | Compressed+Adapter | Net saved   | Ratio  |
+|---------------|-------------|-------------------|-------------|--------|
+| 1-block (b2)  | 4,722,432   | 985,216           | 3,737,216   | 4.793x |
+| 3-block       | 14,167,296  | 2,955,648         | 11,211,648  | 4.793x |
+
+Note: ratio is identical for 1- and 3-block because the same recipe is applied per block.
+The adapter (197,504 params) recovers only 5.0% of what the topk compression saves (3,934,720).
+Net ratio 4.793x >> 1.5x threshold → CONFIRMED.
+
+## Source
+- Compression: experiments/gpt2_multiblock_topk_cycle348.py (HIDDEN_FRACTION=1/6 → k=512)
+- Adapter: experiments/gpt2_adapter_sweep_cycle359.py (MLPAdapter: 2*h*d_model + h + d_model)
+- Computed analytically (no execution needed — pure arithmetic from architecture constants)

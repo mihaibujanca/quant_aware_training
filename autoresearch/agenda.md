@@ -10,10 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - c349 got 3-block topk+lstsq [b2,b1,b10] to 49.03 with h=64 adapters (48.69). h=128 single-block hit 46.22 (c350). Run 3-block topk+lstsq + per-block h=128 adapters, 3 seeds, 2000 steps. Threshold: PPL < 47.0 (below single-block h=128 result). If adapter delta per block stays ~0.34, expect ~48.0; if nonlinear, could beat single-block.
    - Depends on: 359 (confirmed), 358 (inconclusive — insufficient adapter capacity)
 
-363. **Compression ratio accounting — params saved vs params added for best recipe (R4)**
-   - The program needs compression ratios, not just PPL deltas. For the best single-block recipe (topk+lstsq k=4@6x + h=128 adapter on b2): compute (a) original FFN param count, (b) compressed FFN param count (topk selection + lstsq coefficients), (c) adapter param count, (d) net compression ratio. Repeat for 3-block variant. Threshold: net ratio > 1.5x (removing more than adding). If ratio < 1.0, the adapter is bigger than the savings — recipe is negative compression.
-   - Depends on: 359 (confirmed)
-
 ### P1
 
 364. **Per-block adapter sweep — is b2 special or does topk+lstsq + adapter work on any block? (R4, R5)**
@@ -57,6 +53,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 353
+
+363. ~~**Compression ratio accounting — params saved vs params added for best recipe (R4)**~~ CONFIRMED — Net compression ratio 4.793x >> 1.5x threshold. topk+lstsq k=512 (1/6×3072) reduces per-block FFN from 4,722,432 → 787,712 params (saving 3,934,720). Adapter h=128 adds 197,504 params. Final: 985,216 params per block vs 4,722,432 original. Adapter cost = 5.0% of savings; recipe is strongly positive compression. 3-block variant identical ratio (4.793x per block, 14.17M → 2.96M total for 3 blocks).
+   - *cycle 353 — verdict: CONFIRMED*
+   - Artifacts: `autoresearch/results/cycle_353_exec_result.txt`, `autoresearch/results/cycle_353_manifest.txt`
 
 ### Cycle 350
 
