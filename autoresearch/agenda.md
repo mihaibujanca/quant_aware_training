@@ -6,9 +6,168 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+
+336. **Post-`mlp_scale` eff_rank census on parameter-golf — does the per-channel scaling change the rank picture?** *(cross-project, caveat experiment)*
+   - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.** Specifically read sections 3 (the gotchas about `mlp_scale`) and 6 (the worked example which captures pre-scale).
+   - **Motivation**: cycle 318 captured `MLP.__call__` outputs BEFORE the per-channel `mlp_scale` multiplication in `Block.__call__` (the line `x = x + self.mlp_scale[None, None, :] * self.mlp(...)`). The post-scale output is the actual contribution to the residual stream and may have a different eff_rank profile because `mlp_scale` reweights channels per block. If post-scale eff_rank shows different concentration, the cycle 318 finding "b3 is rank-collapsed" needs to be qualified: rank-collapsed in WHICH representation. If post-scale eff_rank is similar, the pre-scale finding is robust.
+   - **Setup**:
+     - **Step 0** (REQUIRED): `cat autoresearch/cross_project/parameter_golf.md`.
+     - **Step 1**: write `parameter-golf/local_scripts/pgolf_eff_rank_census_post_scale.py`. Copy `pgolf_eff_rank_census.py` and modify the hook: instead of capturing `MLP.__call__` return value, monkey-patch `Block.__call__` to capture the value `self.mlp_scale * self.mlp(self.mlp_norm(x), slope=...)` (the per-channel-scaled MLP contribution). Print JSON to stdout in the same schema as cycle 318.
+     - **Step 2**: write `experiments/pgolf_eff_rank_postscale_cycle336.py` (qat side). Subprocess-invoke against the canonical checkpoint `13L_640d_322_7k_wd70_batch20k_best.npz`. Save to `autoresearch/results/cycle_336_pgolf_postscale_eff_rank.json`.
+     - **Step 3**: build `cycle_336_summary.md` with side-by-side table: pre-scale (cycle 318) vs post-scale (cycle 336) eff_rank per block. Highlight which blocks change concentration class (≤20 vs >20).
+   - **Hypothesis**: post-`mlp_scale` eff_rank profile is within ±20% relative of cycle 318's pre-scale profile at every block. The per-channel scaling rotates and rescales but does not change the rank (which is invariant under linear isomorphism in either direction).
+   - **Outcomes**:
+     - **CONFIRMED-rank-invariant** if post-scale and pre-scale eff_rank agree within ±20% relative at every block: the cycle 318 measurement is in the correct representation, the b3 finding is robust to the choice of capture point. Closes the caveat.
+     - **REFUTED-scale-matters** if any block shifts by ≥50% relative: the per-channel `mlp_scale` is doing meaningful rank reshaping, the cycle 318 reading should be re-interpreted in the post-scale representation, and the LASER target may shift.
+     - **INCONCLUSIVE** otherwise.
+   - **Baselines**: cycle 318 pre-scale profile (b0=187.61, b1=160.08, b2=86.05, b3=4.89, b4=38.30, b5=39.96, b6=28.21, b7=23.23, b8=30.78, b9=28.85, b10=21.55, b11=13.40, b12=6.94).
+   - **Run cap**: ~10 minutes.
+   - Depends on: `autoresearch/cross_project/parameter_golf.md`, `parameter-golf/local_scripts/pgolf_eff_rank_census.py` (template).
+
+337. **Cycle 319 verdict re-classification under rank-only criterion** *(audit-style item, no new measurement)*
+   - **Motivation**: cycle 319 (item 334) returned INCONCLUSIVE under a verdict tree that mixed `rank_95 ≤ 50` AND `‖Δy‖_F ≥ 2× median`. The cycle 319 audit (`autoresearch/audits/cycle_319.md`) explicitly notes the verdict-criterion miss: "geometric concentration ≠ magnitude amplification. A future revised tree should either (a) use 'rank_95 ≤ 50 alone' or (b) compare ‖Δy‖_F to absolute baseline (e.g. (relu², relu) at the same block) rather than relative to median." This item formally re-classifies cycle 319 under the simpler `rank_95 ≤ 50` criterion. No new measurement needed; just re-read the cycle 319 JSON, apply the new criterion, write a new audit annotation. **2 minutes of work.**
+   - **Setup**: open `autoresearch/results/cycle_319_pgolf_curvature_residual.json`, extract per-block `rank_95` for the (lrelu², relu²) pair, count blocks with `rank_95 ≤ 50`. Write `autoresearch/results/cycle_319_reclassification.md` containing:
+     - Strict tree verdict (INCONCLUSIVE, original).
+     - Rank-only criterion verdict (CONFIRMED-leak-localized at b4=18, b5=33, b12=21).
+     - Justification for the audit upgrade.
+     - Cross-reference to cycle 319 audit's recommendation paragraph.
+   - **Hypothesis**: under "rank_95 ≤ 50 alone," cycle 319 verdict shifts from INCONCLUSIVE to CONFIRMED-leak-localized at exactly 3 blocks (b4, b5, b12). All 10 other blocks have rank_95 > 100.
+   - **Outcomes**:
+     - **CONFIRMED-reclassification-clean** if exactly 3 blocks pass and the rest are clearly above the threshold (rank_95 ≥ 100 in all 10 others): the audit recommendation is right and cycle 319's substantive finding is upgraded.
+     - **REFUTED** if more than 3 blocks pass at rank_95 ≤ 50: the rank-only criterion is too lenient, the leak is more diffuse than I thought, the localization to b4/b5/b12 is partial.
+   - **Run cap**: ~2 minutes.
+   - Depends on: `autoresearch/results/cycle_319_pgolf_curvature_residual.json` (already exists).
+
+338. **True LeakyReLU²-trained parameter-golf checkpoint cycle 318/319 census** *(cross-project, caveat experiment)*
+   - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.**
+   - **Motivation**: cycle 319's (LeakyReLU², ReLU²) measurement was on a ReLU²-TRAINED checkpoint, treating LeakyReLU² as a predictive perturbation. The localization at b4/b5/b12 is what the leak WOULD do if applied to a model that wasn't trained with it. The actual mechanism that produces the leaderboard win is what happens when the model is TRAINED with LeakyReLU² from scratch — the activation distribution z(x) differs, the model could learn to use the leak in different layers, and the localization could shift. To get the right answer, run cycle 318 (eff_rank census) AND cycle 319 (curvature residual) on a true LeakyReLU²-trained checkpoint. If the localization is the same (b4/b5/b12), cycle 319's predictive measurement was correct. If it shifts, the predictive measurement was an artifact of the wrong activation distribution.
+   - **Setup**:
+     - **Step 0** (REQUIRED): `cat autoresearch/cross_project/parameter_golf.md`.
+     - **Step 1**: search `parameter-golf/logs/*.npz` and `parameter-golf/records/track_10min_16mb/*/` for any checkpoint trained with `mlp_act="lrelu2"`. The naming convention from `train_gpt.py:79` suggests `MLP_ACT=lrelu2` env var; the leaderboard table in README shows the LeakyReLU² submission at score 1.1194 by abaybektursun on 2026-03-23. The artifact may be at `records/track_10min_16mb/2026-03-23_LeakyReLU_LegalTTT_ParallelMuon/`.
+     - **Step 2**: if a checkpoint is found, run cycle 318's `pgolf_eff_rank_census.py` and cycle 319's `pgolf_curvature_residual.py` on it. Compare per-block profiles to the ReLU²-trained baseline.
+     - **Step 3**: if NO checkpoint is found, train a small one. Modify `train_gpt_mlx.py` to use `mlp_act="lrelu2"` at all blocks, train for the same step count and hyperparams as the ReLU² checkpoint (`13L_640d_322_7k_wd70_batch20k_best`), save to `parameter-golf/logs/13L_640d_lrelu2_for_cycle338.npz`. Then run the census and curvature residual.
+     - **Step 4**: build `cycle_338_summary.md` with side-by-side: ReLU²-trained (cycle 318/319) vs LeakyReLU²-trained (this cycle).
+   - **Hypothesis**: the LeakyReLU²-trained checkpoint has eff_rank profile within ±30% relative of the ReLU²-trained one at every block, AND the (lrelu², relu²) curvature residual on the lrelu²-trained checkpoint has rank_95 ≤ 50 at the SAME blocks (b4, b5, b12) as cycle 319's predictive measurement. If both hold, the cycle 319 finding is confirmed mechanistically.
+   - **Outcomes**:
+     - **CONFIRMED-localization-stable** if both eff_rank and (lrelu², relu²) rank_95 profiles match within ±30% relative at every block: cycle 319's predictive measurement was correct, the localization is real.
+     - **CONFIRMED-shifted-localization** if the (lrelu², relu²) rank_95 ≤ 50 set differs by ≥1 block: the lrelu²-trained model uses the leak differently than the predictive measurement suggested. New finding: name the actual blocks.
+     - **REFUTED-no-localization** if the lrelu²-trained model has rank_95 > 50 at all blocks: the leak is diffuse on a model trained for it. Cycle 319's localization was an artifact of the wrong activation distribution.
+   - **Baselines**: cycle 319 (lrelu², relu²) per-block rank_95 profile [324, 318, 290, 202, **18**, **33**, 146, 147, 161, 179, 169, 127, **21**] (3 candidate localized blocks).
+   - **Run cap**: ~15 minutes if a checkpoint exists; ~45 minutes if training is required (the parameter-golf training recipe is small enough to run in <30 minutes on MPS for a single model variant).
+   - Depends on: `autoresearch/cross_project/parameter_golf.md`, `parameter-golf/local_scripts/pgolf_eff_rank_census.py`, `parameter-golf/local_scripts/pgolf_curvature_residual.py`, parameter-golf training infrastructure (if no checkpoint found).
+
+339. **Encoder/decoder split analysis on parameter-golf 13L_640d — does the b2→b3 eff_rank drop coincide with the encoder/decoder boundary?** *(cross-project, caveat experiment, mostly analysis)*
+   - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.**
+   - **Motivation**: parameter-golf's GPT class has `num_encoder_layers + num_decoder_layers = num_layers` and adds encoder outputs back into decoder inputs via learned `skip_weights`. Cycle 318 found that the first 3 blocks have HIGH eff_rank (188, 160, 86) and block 3 collapses to 4.89. One candidate explanation is that the first 3 blocks ARE the encoder, and block 3 sits at the encoder/decoder boundary where the model can afford a low-rank summary projection. To test this, identify the encoder/decoder split in the trained checkpoint, check where it falls relative to b3.
+   - **Setup**:
+     - **Step 0** (REQUIRED): `cat autoresearch/cross_project/parameter_golf.md`.
+     - **Step 1**: load the canonical checkpoint via `analyze_checkpoint.load_model` (use the existing `load_model_v2` from `pgolf_eff_rank_census.py`). Read the model object's `num_encoder_layers`, `num_decoder_layers`, `skip_map`, and `skip_weights` (or equivalent fields — check the GPT class structure in `train_gpt_mlx.py:647+`).
+     - **Step 2**: write a small script `parameter-golf/local_scripts/pgolf_encoder_decoder_analysis.py` that prints (a) the encoder/decoder layer counts, (b) the skip_map (which encoder layers feed which decoder layers), (c) the per-skip-weight Frobenius norm (how much each skip is actually used), (d) the boundary block index, (e) cross-reference to cycle 318 eff_rank profile to check if the boundary coincides with the b2→b3 drop.
+     - **Step 3**: build `cycle_339_summary.md` with the architecture description and the cross-reference table.
+   - **Hypothesis**: the encoder/decoder split is at block 3 (i.e., 3 encoder layers + 10 decoder layers) and the b2→b3 eff_rank drop coincides with the boundary. The skip_weights are non-trivial (Frobenius norm ≥ 0.1) confirming the skips are used.
+   - **Outcomes**:
+     - **CONFIRMED-boundary-explains-drop** if encoder/decoder boundary is at block 3 (or within ±1 layer) AND skip weights are non-trivial AND the cycle 318 eff_rank drop coincides: the rank-collapse position is architecturally explained, parameter-golf's b3 is structurally analogous to the post-encoder summary in encoder/decoder transformers.
+     - **REFUTED-no-correlation** if the boundary is somewhere else and there's no obvious structural reason for the b3 drop: the rank-collapse position is something else (maybe just where the model happens to have low capacity in this run).
+     - **INCONCLUSIVE** if the boundary is at b3 but the skip_weights are zero (the architecture had the split but the model didn't use it).
+   - **Baselines**: cycle 318 eff_rank profile (b2→b3 drop from 86.05 to 4.89, the largest single-block drop in the profile).
+   - **Run cap**: ~5 minutes (analysis only, no forward pass).
+   - Depends on: `autoresearch/cross_project/parameter_golf.md`, parameter-golf model class, the canonical checkpoint.
+
 (NEXT/P0 empty after cycle 321 closed item 330; P1 has 331/332/327; P2 has 328.)
 
 ### P1
+
+340. **LASER on parameter-golf b3 — rank-5 weight-SVD + B-factor retrain (the headline action item)** *(cross-project, action item)*
+   - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.** Also required: `parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` section 6.1 for the full action item description.
+   - **Motivation**: cycle 318 measured `eff_rank(b3) = 4.89` on parameter-golf 13L_640d_322 with top-1 eigenvalue fraction 78.22%. Cycle 319 measured `rank_95(Δy_relu²−relu) = 72` at b3. The block's MLP output covariance is effectively rank ~5. Hypothesis: a rank-5 weight-SVD truncation of `blocks.3.mlp.proj.weight` (1920×640 = 1.23M params) plus a small B-factor retrain matches baseline BPB. If true, the cycle 280 LASER recipe (originally GPT-2 GELU b1) transfers to parameter-golf ReLU² b3, replacing 1.23M params with ~9.6K — a 128× compression at one block, ≈1.2MB savings on the 16MB artifact budget. **This is the highest-leverage actionable item from the EFFRANK_CURVATURE_FINDINGS report.** Depends on items 335 (multi-checkpoint stability — confirms b3 is the right target) and 336 (post-mlp_scale capture — confirms the rank profile is in the right representation).
+   - **Setup**:
+     - **Step 0** (REQUIRED): `cat autoresearch/cross_project/parameter_golf.md` AND `cat parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` (section 6.1 specifically).
+     - **Step 1**: write `parameter-golf/local_scripts/pgolf_laser_retrain.py`. Inputs: `--checkpoint`, `--target-block`, `--rank`, `--n-train-steps`, `--lr`. The script (a) loads the checkpoint via `load_model_v2`, (b) computes `U, S, Vh = mx.linalg.svd(W_proj_b)` for the target block's `mlp.proj.weight` (verify the MLX shape convention — should be `(d_model, hidden)` after transposition), (c) constructs `A_frozen = U[:, :r] · diag(S[:r])` and trainable `B = Vh[:r, :]`, (d) replaces `model.blocks[b].mlp.proj.weight` with the factored form (or wraps the proj forward to compute `B^T @ A^T @ x` instead of the full weight), (e) freezes everything except B, (f) runs an Adam fine-tune loop on FineWeb train tokens (small batch, ~500 steps, lr=1e-4), (g) evaluates BPB on FineWeb val before and after, (h) prints JSON {baseline_bpb, retrained_bpb, b_init_bpb, n_steps, n_params_trainable}.
+     - **Step 2**: write `experiments/pgolf_laser_retrain_cycle340.py` (qat side). Subprocess-invoke with `--target-block 3 --rank 5 --n-train-steps 500 --lr 1e-4`.
+     - **Step 3**: also test `--rank 2` and `--rank 10` for sensitivity. 3 runs total.
+     - **Step 4**: build `cycle_340_summary.md` with the BPB-vs-rank table, comparison to baseline.
+   - **Hypothesis**: rank-5 retrain BPB ≤ baseline + 0.001 (matches baseline within noise). Rank-2 retrain BPB ≤ baseline + 0.005. Rank-10 retrain BPB ≤ baseline.
+   - **Outcomes**:
+     - **CONFIRMED-LASER-transfers** if rank-5 retrain BPB ≤ baseline + 0.001: cycle 280 LASER recipe is generic, transfers to parameter-golf, ~1.2MB savings on the budget. **Major leaderboard-relevant result.** Schedule items 341/342 (LASER on b12/b11) as immediate follow-ups.
+     - **CONFIRMED-partial** if rank-5 retrain is in (baseline + 0.001, baseline + 0.005): partial recovery; rank-10 might do better. Worth a small rank sweep follow-up.
+     - **REFUTED-LASER-fails** if rank-5 retrain BPB ≥ baseline + 0.01: parameter-golf b3's rank-5 capacity is genuinely insufficient; cycle 280 doesn't transfer. Need to understand WHY (training-distribution mismatch? bfloat16 precision? composition with bigram/skip layers?).
+     - **INCONCLUSIVE** otherwise.
+   - **Baselines**: cycle 280 GPT-2 b1 r=2 result (49.03 PPL vs float 53.90, −4.86). Parameter-golf 13L_640d_322 baseline BPB on FineWeb val (read from training summary).
+   - **Run cap**: ~20 minutes (3 ranks × ~5 min each: forward pass + 500-step retrain + BPB eval).
+   - Depends on: 335, 336, `autoresearch/cross_project/parameter_golf.md`, parameter-golf training infrastructure (need to write the retrain loop in MLX — first cross-project measurement that requires backward pass, not just forward).
+
+341. **LASER on parameter-golf b12 — rank-7 weight-SVD + B-factor retrain (smallest block)** *(cross-project, action item)*
+   - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.** Also required: `parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` section 6.2.
+   - **Motivation**: cycle 318 measured `eff_rank(b12) = 6.94` with top-1 fraction 65.10%. Block 12 has hidden=320 (the smallest block), so a rank-7 truncation gives `7×(320+640) = 6,720 params` vs the original 320×640 = 205K — a 30× reduction. This is action 6.2 from the EFFRANK_CURVATURE_FINDINGS report. Smaller absolute savings than b3 (200KB vs 1.2MB) but nearly free to test once item 340's infrastructure exists.
+   - **Setup**: same as item 340, but with `--target-block 12 --rank 7`. Reuse `pgolf_laser_retrain.py` from item 340.
+   - **Hypothesis**: rank-7 retrain BPB ≤ baseline + 0.001.
+   - **Outcomes**: same verdict structure as item 340.
+   - **Baselines**: cycle 318 b12 eff_rank=6.94, top1=0.6510. Parameter-golf baseline BPB.
+   - **Run cap**: ~5 minutes (1 rank, single retrain).
+   - Depends on: 340, `autoresearch/cross_project/parameter_golf.md`.
+
+342. **LASER on parameter-golf b11 — rank-13 weight-SVD + B-factor retrain (third target)** *(cross-project, action item)*
+   - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.** Also required: `parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` section 6.3.
+   - **Motivation**: cycle 318 measured `eff_rank(b11) = 13.40` with top-1 fraction 56.91%. Block 11 has hidden=1280, so a rank-13 truncation gives `13×(1280+640) = ~25K params` vs the original 1280×640 = 819K — a 33× reduction. Action 6.3 from the report. Backup target if 340 + 341 work and you want a third compressed block before testing composition.
+   - **Setup**: same as item 340, but with `--target-block 11 --rank 13` (and possibly `--rank 16` for sensitivity).
+   - **Hypothesis**: rank-13 retrain BPB ≤ baseline + 0.001.
+   - **Outcomes**: same verdict structure as item 340.
+   - **Baselines**: cycle 318 b11 eff_rank=13.40.
+   - **Run cap**: ~10 minutes (2 ranks).
+   - Depends on: 340.
+
+343. **Selective LeakyReLU² at b4/b5 only (zero-shot inference test)** *(cross-project, action item, cheap)*
+   - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.** Also required: `parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` section 6.4.
+   - **Motivation**: cycle 319 found the (LeakyReLU², ReLU²) curvature residual is geometrically concentrated at b4 (rank_95=18, 87.6% of energy in top-1 SV) and b5 (rank_95=33, 84.2% in top-1 SV). The other 11 blocks see the leak diffusely. **Hypothesis**: if we have a true LeakyReLU²-trained checkpoint (item 338), inference-swap blocks 0-3 and 6-12 to ReLU² (only blocks 4 and 5 keep the leak). BPB should be within ±0.0005 of the global-LeakyReLU² baseline. If true, the leaderboard win is structurally localized to 2 blocks and the rest of the network is indifferent.
+   - **Setup**:
+     - **Step 0** (REQUIRED): `cat autoresearch/cross_project/parameter_golf.md` AND `cat parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` (section 6.4).
+     - **Step 1**: write `parameter-golf/local_scripts/pgolf_selective_lrelu2.py`. Loads a true lrelu²-trained checkpoint (from item 338), patches `Block.__call__` per-block to use ReLU² for `block_index ∉ {4, 5}` and LeakyReLU² for `block_index ∈ {4, 5}`, runs BPB eval on FineWeb val. Compares to (a) global-lrelu² baseline, (b) global-relu² baseline (zero-shot patch all blocks).
+     - **Step 2**: subprocess-invoke from qat. JSON output: 3 BPB numbers (global-lrelu², selective, global-relu²).
+     - **Step 3**: build `cycle_343_summary.md` with the 3-cell comparison.
+   - **Hypothesis**: selective BPB is within ±0.0005 of global-lrelu² baseline AND ≥ 0.005 better than global-relu² baseline. If true, the b4/b5 localization is the entire mechanism.
+   - **Outcomes**:
+     - **CONFIRMED-localized-mechanism** if selective ≈ global-lrelu² AND selective < global-relu² by ≥0.003: the leaderboard win is at b4/b5 only. Publishable mechanistic finding.
+     - **REFUTED-distributed-mechanism** if selective is significantly worse than global-lrelu² (≥0.003 worse): the leak does work in more blocks than just b4/b5; the cycle 319 localization captured only part of it.
+     - **INCONCLUSIVE** otherwise.
+   - **Baselines**: parameter-golf leaderboard BPB for the LeakyReLU² submission (~1.1194 per README), the equivalent ReLU² baseline.
+   - **Run cap**: ~5 minutes (3 forward passes, no training).
+   - Depends on: 338 (provides the lrelu²-trained checkpoint), `autoresearch/cross_project/parameter_golf.md`.
+
+344. **Static rank-2 correction at b4/b5 — bake the LeakyReLU² leak as a fixed correction, use ReLU² everywhere** *(cross-project, action item, requires extended cycle 319)*
+   - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.** Also required: `parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` section 6.5.
+   - **Motivation**: cycle 319 captured the top-5 LEFT singular vectors of the (lrelu², relu²) Δy at each block but NOT the right singular vectors. To bake the leak as a fixed function of pre-activation, we need both: `correction(z) = sum_i V[:, i] · (U[:, i] · z)` where V is the residual-stream direction and U is the per-channel coefficient. This item updates `pgolf_curvature_residual.py` to also save right SVs, then uses them to construct a frozen rank-2 correction module at b4 and b5 in a model that uses ReLU² everywhere.
+   - **Setup**:
+     - **Step 0** (REQUIRED): `cat autoresearch/cross_project/parameter_golf.md` AND `cat parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` (section 6.5).
+     - **Step 1**: update `parameter-golf/local_scripts/pgolf_curvature_residual.py` to capture both left and right SVs. Re-run cycle 319 measurement on the canonical ReLU²-trained checkpoint (or the lrelu²-trained checkpoint from item 338, if it exists). Save extended JSON.
+     - **Step 2**: write `parameter-golf/local_scripts/pgolf_static_correction.py`. Build the rank-2 correction module: at b4 and b5, after the ReLU² output, add `correction_l(z) = sum_i V_l[:, i] · (U_l[:, i] · z) * S_l[i]` where (U, S, V) are the top-2 SVD components of the (lrelu², relu²) Δy at block l from the extended cycle 319.
+     - **Step 3**: load the canonical ReLU²-trained checkpoint, apply the correction at b4 and b5, evaluate BPB on FineWeb val.
+     - **Step 4**: optional: fine-tune for ~200 steps to let the rest of the model adapt. Compare adapted vs non-adapted.
+     - **Step 5**: build `cycle_344_summary.md` with: baseline ReLU² BPB, +static-correction BPB, +static-correction +adapt BPB, comparison to lrelu² baseline.
+   - **Hypothesis**: static correction recovers ≥50% of the lrelu² advantage over relu² without retraining. With short adapt, recovers ≥80%.
+   - **Outcomes**:
+     - **CONFIRMED-correction-works** if non-adapted recovery ≥ 50% AND adapted ≥ 80%: the lrelu² advantage is captured by 2 fixed residual-stream directions per block, the leaderboard win has been mechanistically explained AND can be replicated without changing the activation function.
+     - **REFUTED-correction-fails** if both ≤ 20%: the leak is more complicated than a rank-2 add; the localization is real but the geometric form of the correction is not.
+     - **INCONCLUSIVE** otherwise.
+   - **Baselines**: cycle 343 selective-lrelu² result (if available), lrelu²-trained baseline BPB, relu²-trained baseline BPB.
+   - **Run cap**: ~30 minutes (cycle 319 redo + correction module + eval + optional adapt).
+   - Depends on: 343, 338, `autoresearch/cross_project/parameter_golf.md`.
+
+345. **Eff_rank as per-block budget allocation oracle — train parameter-golf with mlp_mult shifted toward early blocks** *(cross-project, action item, full training run)*
+   - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.** Also required: `parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` section 6.6.
+   - **Motivation**: cycle 318 found that parameter-golf's first 3 blocks (b0/b1/b2) have HIGH eff_rank (188/160/86) while many mid/late blocks are at 20-40. The current `mlp_mult_per_layer` allocates `mlp_mult=3` (hidden=1920) at most blocks regardless of trained eff_rank. Hypothesis: allocate `mlp_mult` proportional to `eff_rank/d_model + epsilon`, keeping total parameter budget constant. Early blocks get more capacity, late blocks get less. Train and compare BPB.
+   - **Setup**:
+     - **Step 0** (REQUIRED): `cat autoresearch/cross_project/parameter_golf.md` AND `cat parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` (section 6.6).
+     - **Step 1**: compute the new `mlp_mult_per_layer` from cycle 318's eff_rank profile, normalized to keep total hidden parameter count constant.
+     - **Step 2**: write `parameter-golf/local_scripts/pgolf_train_eff_rank_allocated.py` that runs the standard parameter-golf training loop with the new per-block `mlp_mult`. Same hyperparams as the baseline `13L_640d_322_7k_wd70_batch20k_best`.
+     - **Step 3**: train and eval. Compare BPB to baseline.
+   - **Hypothesis**: BPB improves by ≥0.001 with the eff_rank-aligned allocation.
+   - **Outcomes**:
+     - **CONFIRMED-budget-oracle** if eff_rank-allocated BPB ≤ baseline − 0.001: the eff_rank measurement is a useful per-block budget oracle. Possibly leaderboard-relevant. Iterate (re-measure eff_rank on the new model, re-allocate, re-train).
+     - **REFUTED** if eff_rank-allocated BPB ≥ baseline + 0.001: the current allocation was already near-optimal for this architecture, eff_rank is descriptive not prescriptive.
+     - **INCONCLUSIVE** otherwise.
+   - **Baselines**: parameter-golf 13L_640d_322 baseline BPB.
+   - **Run cap**: ~30-60 minutes (one full training run on MPS).
+   - Depends on: 335, 336, parameter-golf training infrastructure (much more than the measurement scripts so far).
 
 331. **Train tiny GPT (4L 256d) on wikitext-2 with three activation variants {GELU, ReLU², LeakyReLU²} — real comparative numbers, not zero-shot patches**
    - **Motivation**: item 330 is a *predictive* measurement — applies ReLU²/lrelu² to a GELU-trained model, so the activation distribution is wrong. The cleanest comparison is **trained from scratch** with each activation, then run the same framework. A tiny GPT on wikitext-2 is small enough to train inside the qat runner's normal experiment budget (~30 min wall for 3 variants × 1 model each). This produces three matched checkpoints: same architecture, same data, same optimizer, same seed, only the activation function differs. Then cycle 278 (output covariance eff_rank census) and cycle 312 (unified curvature framework) run on each. Result: a 3×N table of "what does each activation do to the rank profile and the curvature residual geometry" with all confounds controlled. This is the trained-variant counterpart to item 330's zero-shot variant; both items together give a complete (zero-shot vs trained) × (3 activations) × (5 framework panels) result table.
@@ -62,6 +221,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 322
+
+335. **Multi-checkpoint eff_rank census on 3 parameter-golf polished artifacts — is the b3 collapse run-stable?** *(REFUTED-checkpoint-specific — cycle 322)*
+   - **Outcome: REFUTED-checkpoint-specific.** Min-eff_rank block varies widely: 13L→b3 (4.89, frac=0.231), 11L→b10 (2.46, frac=0.909), 10L multiskip→b9 (1.53, frac=0.900). Absolute spread=7, fractional spread=0.678 (far exceeds the ≥0.3 refutation threshold). **b3 collapse is specific to the 13L architecture, not a universal feature of the parameter-golf model family.** The 11L and 10L multiskip checkpoints both collapse near the END of the stack (b10, b9) rather than early. This is a qualitatively different geometry. The 13L b3 collapse is likely tied to the encoder/decoder boundary at layer 6 (num_encoder_layers=6); the early decoder layers are receiving heavy skip traffic and b3 acts as an early post-encoder concentrator. The 11L/10L checkpoints have different encoder/decoder splits and the concentrator shifts to near the output. **Practical implication**: items 340-342 must identify the per-checkpoint min-eff_rank block dynamically rather than assuming b3 is the canonical LASER target. **Infrastructure fix during exec**: `load_model_v2` in `pgolf_eff_rank_census.py` patched to infer `num_encoder_layers` from `skip_weights.shape[0]` via brute-force search over candidates — required for the 10L multiskip checkpoint (skip_weights (6,640) → num_encoder_layers=6, matches multi-skip pattern). **13L baseline reproduces**: b3=4.89 matches cycle 318 exactly. All 3 subprocesses exited 0, all n_blocks validated. **Cross-checks (PASS)**: 3 checkpoints × correct n_blocks (13/11/10); all JSONs valid; 10L multiskip loaded without crash (verifies the num_encoder_layers fix). Wall ~3 min total.
+   - Cycle: 322
+   - Artifacts: `experiments/pgolf_eff_rank_multi_cycle335.py`, `parameter-golf/local_scripts/pgolf_eff_rank_census.py` (patched load_model_v2), `autoresearch/results/cycle_335_pgolf_eff_rank_multi.json`, `autoresearch/results/cycle_335_summary.md`, `autoresearch/results/cycle_322_manifest.txt`
 
 ### Cycle 321
 
