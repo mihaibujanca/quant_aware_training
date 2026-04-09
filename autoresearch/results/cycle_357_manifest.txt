@@ -1,0 +1,20 @@
+cycle: 357
+item: 366
+title: Full 12-block topk+lstsq k=512 + MLP adapter h=64 — scale recipe to entire GPT-2
+verdict: REFUTED
+float_ppl: 53.8949
+init_ppl_12block: 348.66
+mean_ppl: 186.38
+std_ppl: 2.68
+min_ppl: 184.44
+max_ppl: 190.17
+seeds: [42, 137, 2024]
+n_steps: 2000
+lr: 1e-4
+adapter_hidden: 64
+adapter_params_total: 993024
+compressed_ffn_params: 9455616
+artifacts:
+  script: experiments/gpt2_fullmodel_topk_adapter_cycle366.py
+  results: autoresearch/results/cycle_357_fullmodel_topk_adapter.json
+  manifest: autoresearch/results/cycle_357_manifest.txt

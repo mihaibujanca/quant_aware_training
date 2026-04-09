@@ -6,10 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-366. **Full 12-block topk+lstsq k=512 + MLP adapter h=128 — scale recipe to entire GPT-2 (R4)**
-   - The natural endpoint. Compress ALL 12 FFN blocks with topk+lstsq k=512, fit lstsq, then train per-block MLP adapters (h=128). Measure final PPL. 3-block got 48.53; 12-block will reveal whether error accumulation is linear or superlinear. Threshold: PPL < 65 (below float 53.89 + 20% degradation budget). If PPL explodes, identify the breaking point by measuring PPL after each block is added.
-   - Depends on: 354 (3-block result), 355 (per-block adapter universality)
-
 367. **Adapter training schedule — joint vs sequential vs curriculum on 3+ blocks (R4)**
    - Current multi-block adapter training is joint (all adapters trained simultaneously). Test: (a) joint (current), (b) sequential (train adapter for block with largest residual first, freeze, repeat), (c) curriculum (start with 1-block, add blocks every 500 steps). 3-block setup [b2,b1,b10]. Threshold: >1.0 PPL gap between best and worst schedule. Sequential may help if adapter gradients interfere across blocks.
    - Depends on: 354 (3-block baseline)
@@ -61,6 +57,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 357
+
+366. ~~**Full 12-block topk+lstsq k=512 + MLP adapter h=64 — scale recipe to entire GPT-2 (R4)**~~ REFUTED — error accumulation is superlinear; 12-block PPL collapses to 186.38 ± 2.68 (min 184.44, max 190.17) vs float 53.89. Init PPL untuned already 348–379; 2000 steps Adam only recovers to ~186. The recipe does not compose beyond 3 blocks with this param budget.
+   - *cycle 357 — verdict: REFUTED*
+   - Artifacts: `experiments/gpt2_fullmodel_topk_adapter_cycle366.py`, `autoresearch/results/cycle_357_fullmodel_topk_adapter.json`, `autoresearch/results/cycle_357_manifest.txt`
 
 ### Cycle 356
 
