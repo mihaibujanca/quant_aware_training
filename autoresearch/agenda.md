@@ -6,9 +6,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-367. **Adapter training schedule — joint vs sequential vs curriculum on 3+ blocks (R4)**
-   - Current multi-block adapter training is joint (all adapters trained simultaneously). Test: (a) joint (current), (b) sequential (train adapter for block with largest residual first, freeze, repeat), (c) curriculum (start with 1-block, add blocks every 500 steps). 3-block setup [b2,b1,b10]. Threshold: >1.0 PPL gap between best and worst schedule. Sequential may help if adapter gradients interfere across blocks.
-   - Depends on: 354 (3-block baseline)
+(no P0 items pending)
 
 ### P1
 
@@ -57,6 +55,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 359
+
+367. ~~**Adapter training schedule — joint vs sequential vs curriculum on 3+ blocks (R4)**~~ INCONCLUSIVE — Joint training wins: joint=47.43 ± 0.14, curriculum=48.26 ± 0.15, sequential=48.55 ± 0.10. PPL gap=1.12 (threshold: 1.0), but joint is BEST not worst, inverting hypothesis. Sequential and curriculum do NOT improve over joint — they hurt by 0.8–1.1 PPL. Schedule is not the multi-block bottleneck; the bottleneck lies elsewhere (error accumulation, not adapter gradient interference).
+   - *cycle 359 — verdict: INCONCLUSIVE*
+   - Artifacts: `experiments/gpt2_adapter_schedule_cycle367.py`, `autoresearch/results/cycle_359_adapter_schedule.json`, `autoresearch/results/cycle_359_manifest.txt`
 
 ### Cycle 358
 

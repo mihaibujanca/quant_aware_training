@@ -1,0 +1,27 @@
+cycle: 359
+item: 367
+verdict: INCONCLUSIVE
+timestamp: 2026-04-09
+
+description: Adapter training schedule — joint vs sequential vs curriculum on 3 blocks [b2,b1,b10].
+
+results:
+  joint:      mean=47.43 ± 0.14  (min=47.23, max=47.55)  [2000 steps]
+  curriculum: mean=48.26 ± 0.15  (min=48.05, max=48.39)  [500+500+1000 steps]
+  sequential: mean=48.55 ± 0.10  (min=48.41, max=48.62)  [1000 per block × 3]
+  ppl_gap (worst-best): 1.12
+
+  float_ppl: 53.89
+  phase1_ppl (topk+lstsq baseline): 49.03
+  c354_joint_ref: 48.53
+  confirmed_lt: 47.0
+
+interpretation:
+  Joint training wins decisively. Sequential and curriculum HURT by 0.8-1.1 PPL relative
+  to joint. Hypothesis inverted: adapter gradients do NOT interfere across blocks;
+  joint gradient signal from all blocks simultaneously is beneficial.
+  No schedule breaks the 47.0 threshold. Training schedule is not the multi-block bottleneck.
+
+artifacts:
+  experiments/gpt2_adapter_schedule_cycle367.py
+  autoresearch/results/cycle_359_adapter_schedule.json
