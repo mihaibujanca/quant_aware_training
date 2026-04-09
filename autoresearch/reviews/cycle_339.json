@@ -1,0 +1,7 @@
+{
+  "cycle": 339,
+  "item": 348,
+  "plan_verdict": "PASS",
+  "risks": ["mlp_scale restore must copy values not references"],
+  "estimate_minutes": 2
+}

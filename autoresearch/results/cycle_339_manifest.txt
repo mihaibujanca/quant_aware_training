@@ -1,0 +1,38 @@
+cycle: 339
+item: 348
+verdict: CONFIRMED-b12-free-prune
+date: 2026-04-09
+
+## BPB Results
+baseline BPB:          3.431746
+b12 zeroed BPB:        3.431742  (delta: -0.000004)  ← FREE to prune
+b11+b12 zeroed BPB:    3.513900  (delta: +0.082154)  ← b11 matters
+b3+b11+b12 zeroed BPB: 3.606348  (delta: +0.174602)  ← b3 matters
+auto (<0.05 abs_mean):  b12 only  (same as b12_only)
+
+## Verdict Criteria
+CONFIRMED: BPB delta ≤ 0.005 when zeroing b12    <-- TRIGGERED (delta = -0.000004)
+REFUTED: BPB delta > 0.02
+INCONCLUSIVE: 0.005-0.02
+
+## Key Finding
+b12's MLP (hidden=320, smallest block) is a dead block. mlp_scale mean=0.003,
+abs_mean=0.048, 577/640 channels near zero. Zeroing costs literally nothing.
+b11 has LOW eff_rank (2.25) but HIGH scale magnitude (abs_mean=0.667) — low-rank ≠ prunable.
+Only b12 qualifies for free pruning; all other blocks have abs_mean > 0.24.
+
+## Sanity
+Post-restore BPB matches baseline exactly (sanity_ok=True).
+Loader: mlp_act=lrelu2, xsa_last_n=13, rope_dims=16.
+Checkpoint: 13L_640d_322_7k_wd70_batch20k_best.npz
+
+## Artifacts
+parameter-golf/local_scripts/pgolf_mlp_prune.py
+experiments/pgolf_mlp_prune_cycle339.py
+autoresearch/results/cycle_339_pgolf_mlp_prune.json
+autoresearch/results/cycle_339_manifest.txt
+autoresearch/briefs/cycle_339.md
+autoresearch/plans/cycle_339.md
+autoresearch/reviews/cycle_339.md
+autoresearch/reviews/cycle_339.json
+autoresearch/agenda.md

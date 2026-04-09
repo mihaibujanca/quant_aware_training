@@ -14,14 +14,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P2
 
-348. **mlp_scale-based block pruning — zero out b12's MLP contribution**
-   - Cycle 323 found b12's mean mlp_scale is 0.003, effectively pruning its MLP. Test: set b12's MLP output to zero and measure BPB. If no degradation, b12's MLP params are free compression (320-dim hidden = smallest block). Extend to any block with mean scale < 0.01.
-   - Type: ablation / cheap
-   - Confirmed if: BPB delta ≤ 0.005 when zeroing b12 MLP (safe to prune)
-   - Refuted if: BPB delta > 0.02 (scale 0.003 ≠ zero; residual contribution matters)
-   - Inconclusive if: BPB delta 0.005-0.02 (marginal; may need distillation to absorb)
-   - Depends on: cycle 323 (mlp_scale measurements), pgolf checkpoint
-
 349. **Re-run cycle 332 eff_rank with exp(entropy) formula — canonical cross-activation comparison**
    - Cycle 332 trained 3 activation variants (GELU/ReLU²/LeakyReLU²) on tiny GPT and measured eff_rank profiles, but used participation ratio instead of the project-standard exp(entropy) formula. Checkpoints exist. Re-compute eff_rank with the correct formula so values are comparable to all prior cycles. Confirms or invalidates the "squared activations give HIGHER eff_rank" finding.
    - Type: re-analysis / cheap
@@ -53,6 +45,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 339
+
+348. **mlp_scale-based block pruning — zero out b12's MLP contribution**
+   - **Outcome: CONFIRMED** — b12 zeroing: BPB delta = -0.000004 (literally free). b12 is a dead block (mean mlp_scale=0.003, 577/640 channels near zero). b11 (abs_mean=0.667) and b3 (abs_mean=0.352) are NOT prunable despite low eff_rank. Only b12 qualifies.
+   - *cycle 339 — verdict: CONFIRMED-b12-free-prune*
+   - Artifacts: `parameter-golf/local_scripts/pgolf_mlp_prune.py`, `experiments/pgolf_mlp_prune_cycle339.py`, `autoresearch/results/cycle_339_pgolf_mlp_prune.json`, `autoresearch/results/cycle_339_manifest.txt`
 
 ### Cycle 338
 
