@@ -29,8 +29,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - *cycle 358 — verdict: CONFIRMED*
    - Artifacts: `experiments/gpt2_error_spectral_cycle369.py`, `autoresearch/results/cycle_358_spectral.json`
 
-371. **Cross-block error decorrelation for channel selection — GPT-2 (R4, R5)**
-   - Current topk selects channels per-block by weight magnitude. Since topk error is diffuse (eff_rank 463), partial cancellation across blocks is accidental. Test: compute per-channel error covariance across blocks [b1,b4,b7,b10] on calibration data, then select channels to minimize total cross-block error correlation (greedy or eigendecomposition). Compare 3-block stacked PPL against standard topk+lstsq at same k=512. Threshold: >2 PPL improvement over standard topk channel selection.
+371. ~~**Cross-block error decorrelation for channel selection — GPT-2 (R4, R5)**~~ REFUTED — Mean off-diagonal |cosine| = 0.0162 (max 0.0703), far below the 0.1 REFUTED threshold. Topk per-block errors are essentially orthogonal across blocks [b2,b1,b10,b4,b3,b11]. Errors already decorrelated; deliberate decorrelation cannot help. Frobenius norms vary 4.5x across blocks (b1=1385 to b11=6293); adaptive k per block is the right direction.
+   - *cycle 362 — verdict: REFUTED*
+   - Artifacts: `experiments/gpt2_error_correlation_cycle371.py`, `autoresearch/results/cycle_362_error_correlation.json`
    - Depends on: 358 (confirmed)
 
 372. **KD fine-tune after geometric compression — GPT-2 (R4)**
@@ -70,6 +71,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 362
+
+371. ~~**Cross-block error decorrelation for channel selection — GPT-2 (R4, R5)**~~ REFUTED — Mean off-diagonal |cosine| = 0.0162 (max 0.0703), well below REFUTED threshold of 0.1. Topk per-block errors [b2,b1,b10,b4,b3,b11] are essentially orthogonal. No cross-block correlation to exploit. Frobenius norms vary 4.5x (b1=1385 to b11=6293); adaptive k per block is the follow-up direction.
+   - *cycle 362 — verdict: REFUTED*
+   - Artifacts: `experiments/gpt2_error_correlation_cycle371.py`, `autoresearch/results/cycle_362_error_correlation.json`
 
 ### Cycle 359
 
