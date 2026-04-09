@@ -1,0 +1,40 @@
+cycle: 341
+item: 350
+verdict: CONFIRMED
+date: 2026-04-09
+
+## Output-covariance spectrum census — GPT-2 small, all 12 blocks
+
+Block  EffRank  Out-Cov-top5%  Wt-SVD-top5%  Amplif.  LASER
+  0     71.93       48.6%         10.8%        4.5x   MODERATE
+  1      1.94       94.2%         11.7%        8.1x   STRONG
+  2      1.05       99.6%         10.5%        9.5x   STRONG
+  3     24.29       62.1%         11.4%        5.5x   STRONG
+  4     49.04       51.8%          8.6%        6.0x   STRONG
+  5    179.19       30.8%          7.2%        4.3x   MODERATE
+  6    290.97       21.6%          6.7%        3.2x   WEAK
+  7    297.79       19.8%          5.8%        3.4x   WEAK
+  8    291.41       19.7%          5.7%        3.5x   WEAK
+  9    195.50       27.3%          4.6%        5.9x   WEAK
+ 10     16.70       70.4%          5.0%       14.0x   STRONG
+ 11     22.49       68.2%          7.5%        9.2x   STRONG
+
+6 STRONG blocks (top-5 >= 50%): 1, 2, 3, 4, 10, 11
+2 MODERATE blocks (30-50%): 0, 5
+4 WEAK blocks (<30%): 6, 7, 8, 9
+
+Key insight: weight SVD is uniformly flat (5-12%) but output covariance varies 20-100%.
+Data-dependent concentration amplifies weight spectrum by 3-14x.
+Blocks 10,11 are the surprise: flat weight SVD (5-7%) but concentrated output (68-70%).
+
+## Verdict Criteria
+CONFIRMED: >= 3 blocks have output-covariance top-5 >= 50%.
+Result: 6 blocks qualify.
+
+## Artifacts
+experiments/output_cov_census_cycle341.py
+autoresearch/results/cycle_341_output_cov_census.json
+autoresearch/results/cycle_341_manifest.txt
+autoresearch/briefs/cycle_341.md
+autoresearch/plans/cycle_341.md
+autoresearch/audits/cycle_341.md

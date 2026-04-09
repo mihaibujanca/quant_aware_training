@@ -6,13 +6,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-350. **Output-covariance spectrum census on GPT-2 — all 12 blocks**
-   - Cycle 338 revealed GPT-2 b1 has top-1 output-covariance energy = 92.94% despite flat weight SVD (top-1 = 4.59%). This explains why LASER works: data-dependent concentration, not weight-intrinsic. Compute output-covariance SVD for ALL 12 blocks on 200 wikitext-2 val sequences (same calibration set as cycle 338). For each block: capture MLP output activations Y ∈ ℝ^(N_tokens, 768), compute covariance C = Y^T Y / N, SVD of C, report top-1/top-5/top-10 energy fractions and eff_rank = exp(entropy(eigenvalues)). Identify which blocks have concentrated output covariance (top-5 ≥ 50%) — these are the true LASER candidates.
-   - Type: empirical (measurement)
-   - Confirmed if: ≥3 GPT-2 blocks have output-covariance top-5 energy ≥ 50%, confirming the data-dependent concentration is widespread (not b1-specific).
-   - Refuted if: only b1 has top-5 ≥ 50% and all other blocks are below 30% — concentration is an outlier, not a pattern.
-   - Inconclusive if: 1-2 blocks besides b1 are in the 30-50% range — borderline concentration that needs further investigation.
-   - Depends on: cycle 338 result (b1 output-covariance already measured as a side finding)
+(empty — item 350 moved to PAST)
 
 ### P1
 
@@ -65,6 +59,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 341
+
+350. **Output-covariance spectrum census on GPT-2 — all 12 blocks**
+   - **Outcome: CONFIRMED** — 6 blocks have top-5 output-covariance energy >= 50%: b1 (94.2%), b2 (99.6%), b3 (62.1%), b4 (51.8%), b10 (70.4%), b11 (68.2%). Weight SVD is uniformly flat (5-12% top-5) but output covariance varies 20-100%. Data-dependent concentration amplifies weight spectrum by 3-14x. Blocks 10,11 are the surprise: flat weight SVD (5-7%) but 68-70% output concentration.
+   - *cycle 341 — verdict: CONFIRMED*
+   - Artifacts: `experiments/output_cov_census_cycle341.py`, `autoresearch/results/cycle_341_output_cov_census.json`, `autoresearch/results/cycle_341_manifest.txt`
 
 ### Cycle 340
 

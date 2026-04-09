@@ -1,0 +1,177 @@
+{
+  "cycle": 341,
+  "item": 350,
+  "verdict": "CONFIRMED",
+  "verdict_detail": "6 blocks have top-5 output-covariance energy >= 50%",
+  "n_strong_laser": 6,
+  "n_moderate_laser": 2,
+  "n_weak_laser": 4,
+  "strong_blocks": [
+    1,
+    2,
+    3,
+    4,
+    10,
+    11
+  ],
+  "moderate_blocks": [
+    0,
+    5
+  ],
+  "weak_blocks": [
+    6,
+    7,
+    8,
+    9
+  ],
+  "per_block": [
+    {
+      "block": 0,
+      "out_cov_eff_rank": 71.93,
+      "out_cov_top1_pct": 27.71,
+      "out_cov_top5_pct": 48.59,
+      "out_cov_top10_pct": 52.65,
+      "out_cov_top13_pct": 54.19,
+      "wt_svd_top1_pct": 3.43,
+      "wt_svd_top5_pct": 10.8,
+      "wt_svd_top13_pct": 16.47,
+      "laser_viability": "MODERATE"
+    },
+    {
+      "block": 1,
+      "out_cov_eff_rank": 1.94,
+      "out_cov_top1_pct": 92.94,
+      "out_cov_top5_pct": 94.15,
+      "out_cov_top10_pct": 94.44,
+      "out_cov_top13_pct": 94.57,
+      "wt_svd_top1_pct": 4.59,
+      "wt_svd_top5_pct": 11.67,
+      "wt_svd_top13_pct": 16.42,
+      "laser_viability": "STRONG"
+    },
+    {
+      "block": 2,
+      "out_cov_eff_rank": 1.05,
+      "out_cov_top1_pct": 99.61,
+      "out_cov_top5_pct": 99.64,
+      "out_cov_top10_pct": 99.66,
+      "out_cov_top13_pct": 99.67,
+      "wt_svd_top1_pct": 7.16,
+      "wt_svd_top5_pct": 10.49,
+      "wt_svd_top13_pct": 14.89,
+      "laser_viability": "STRONG"
+    },
+    {
+      "block": 3,
+      "out_cov_eff_rank": 24.29,
+      "out_cov_top1_pct": 58.87,
+      "out_cov_top5_pct": 62.12,
+      "out_cov_top10_pct": 63.88,
+      "out_cov_top13_pct": 64.72,
+      "wt_svd_top1_pct": 8.37,
+      "wt_svd_top5_pct": 11.36,
+      "wt_svd_top13_pct": 15.75,
+      "laser_viability": "STRONG"
+    },
+    {
+      "block": 4,
+      "out_cov_eff_rank": 49.04,
+      "out_cov_top1_pct": 47.95,
+      "out_cov_top5_pct": 51.76,
+      "out_cov_top10_pct": 53.88,
+      "out_cov_top13_pct": 54.92,
+      "wt_svd_top1_pct": 5.12,
+      "wt_svd_top5_pct": 8.57,
+      "wt_svd_top13_pct": 13.33,
+      "laser_viability": "STRONG"
+    },
+    {
+      "block": 5,
+      "out_cov_eff_rank": 179.19,
+      "out_cov_top1_pct": 24.62,
+      "out_cov_top5_pct": 30.79,
+      "out_cov_top10_pct": 33.5,
+      "out_cov_top13_pct": 34.84,
+      "wt_svd_top1_pct": 3.41,
+      "wt_svd_top5_pct": 7.21,
+      "wt_svd_top13_pct": 11.58,
+      "laser_viability": "MODERATE"
+    },
+    {
+      "block": 6,
+      "out_cov_eff_rank": 290.97,
+      "out_cov_top1_pct": 14.21,
+      "out_cov_top5_pct": 21.56,
+      "out_cov_top10_pct": 24.59,
+      "out_cov_top13_pct": 26.06,
+      "wt_svd_top1_pct": 3.23,
+      "wt_svd_top5_pct": 6.74,
+      "wt_svd_top13_pct": 10.91,
+      "laser_viability": "WEAK"
+    },
+    {
+      "block": 7,
+      "out_cov_eff_rank": 297.79,
+      "out_cov_top1_pct": 15.35,
+      "out_cov_top5_pct": 19.78,
+      "out_cov_top10_pct": 22.9,
+      "out_cov_top13_pct": 24.42,
+      "wt_svd_top1_pct": 2.75,
+      "wt_svd_top5_pct": 5.75,
+      "wt_svd_top13_pct": 9.98,
+      "laser_viability": "WEAK"
+    },
+    {
+      "block": 8,
+      "out_cov_eff_rank": 291.41,
+      "out_cov_top1_pct": 14.52,
+      "out_cov_top5_pct": 19.7,
+      "out_cov_top10_pct": 23.32,
+      "out_cov_top13_pct": 25.13,
+      "wt_svd_top1_pct": 2.23,
+      "wt_svd_top5_pct": 5.69,
+      "wt_svd_top13_pct": 9.77,
+      "laser_viability": "WEAK"
+    },
+    {
+      "block": 9,
+      "out_cov_eff_rank": 195.5,
+      "out_cov_top1_pct": 22.63,
+      "out_cov_top5_pct": 27.3,
+      "out_cov_top10_pct": 30.69,
+      "out_cov_top13_pct": 32.43,
+      "wt_svd_top1_pct": 1.87,
+      "wt_svd_top5_pct": 4.59,
+      "wt_svd_top13_pct": 8.57,
+      "laser_viability": "WEAK"
+    },
+    {
+      "block": 10,
+      "out_cov_eff_rank": 16.7,
+      "out_cov_top1_pct": 58.89,
+      "out_cov_top5_pct": 70.41,
+      "out_cov_top10_pct": 71.99,
+      "out_cov_top13_pct": 72.74,
+      "wt_svd_top1_pct": 2.31,
+      "wt_svd_top5_pct": 5.03,
+      "wt_svd_top13_pct": 8.63,
+      "laser_viability": "STRONG"
+    },
+    {
+      "block": 11,
+      "out_cov_eff_rank": 22.49,
+      "out_cov_top1_pct": 48.95,
+      "out_cov_top5_pct": 68.18,
+      "out_cov_top10_pct": 71.8,
+      "out_cov_top13_pct": 73.08,
+      "wt_svd_top1_pct": 4.01,
+      "wt_svd_top5_pct": 7.45,
+      "wt_svd_top13_pct": 10.93,
+      "laser_viability": "STRONG"
+    }
+  ],
+  "source_data": {
+    "output_covariance": "cycle_278 (200 wikitext-2 val seqs, 128 tokens, seed 42, mlp.c_proj hook)",
+    "weight_svd": "cycle_338 (c_proj.weight SVD, 768 singular values)"
+  }
+}
