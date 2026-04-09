@@ -1,0 +1,7 @@
+cycle: 328
+item: 341
+verdict: REFUTED-flat-spectrum
+target_block: 12
+weight_shape: [640, 320]
+top_7_energy_pct: 7.0736
+gate_pass: False

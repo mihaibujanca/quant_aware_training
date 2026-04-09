@@ -10,16 +10,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-341. **LASER on parameter-golf b12 — rank-7 weight-SVD + B-factor retrain (smallest block)** *(cross-project, action item)*
-   - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.** Also required: `parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` section 6.2.
-   - **Motivation**: cycle 318 measured `eff_rank(b12) = 6.94` with top-1 fraction 65.10%. Block 12 has hidden=320 (the smallest block), so a rank-7 truncation gives `7×(320+640) = 6,720 params` vs the original 320×640 = 205K — a 30× reduction. This is action 6.2 from the EFFRANK_CURVATURE_FINDINGS report. Smaller absolute savings than b3 (200KB vs 1.2MB) but nearly free to test once item 340's infrastructure exists.
-   - **Setup**: same as item 340, but with `--target-block 12 --rank 7`. Reuse `pgolf_laser_retrain.py` from item 340.
-   - **Hypothesis**: rank-7 retrain BPB ≤ baseline + 0.001.
-   - **Outcomes**: same verdict structure as item 340.
-   - **Baselines**: cycle 318 b12 eff_rank=6.94, top1=0.6510. Parameter-golf baseline BPB.
-   - **Run cap**: ~5 minutes (1 rank, single retrain).
-   - Depends on: 340, `autoresearch/cross_project/parameter_golf.md`.
-
 342. **LASER on parameter-golf b11 — rank-13 weight-SVD + B-factor retrain (third target)** *(cross-project, action item)*
    - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.** Also required: `parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` section 6.3.
    - **Motivation**: cycle 318 measured `eff_rank(b11) = 13.40` with top-1 fraction 56.91%. Block 11 has hidden=1280, so a rank-13 truncation gives `13×(1280+640) = ~25K params` vs the original 1280×640 = 819K — a 33× reduction. Action 6.3 from the report. Backup target if 340 + 341 work and you want a third compressed block before testing composition.
@@ -135,6 +125,12 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 328
+
+341. **LASER on parameter-golf b12 — rank-7 weight-SVD + B-factor retrain (smallest block)** *(cross-project, action item)*
+   - **Outcome: REFUTED-flat-spectrum** — b12's `proj.weight` shape (640, 320) gives 320 singular values. Top-7 energy fraction = 7.07% < 10% gate threshold. Spectrum is as flat as b3 (cycle 327): S values run [5.91, 4.44, 4.44, 4.37, 4.36, 4.33, 4.27, ...] with no dominant singular direction. The first singular value captures only 1.66% of total energy. Output eff_rank=6.94 (cycle 318) reflects input distribution geometry, not weight rank — the same false positive as b3. Retrain skipped. **Pattern confirmed**: both b3 (1920-dim hidden, rank-5 energy=2.6%) and b12 (320-dim hidden, rank-7 energy=7.07%) have flat weight spectra. Low output-eff_rank is not a reliable predictor of low weight rank in this checkpoint. Rank thresholds: 10% energy needs rank 11, 50% energy needs rank 74, 95% energy needs rank 237 (out of 320 singular values).
+   - *cycle 328 — verdict: REFUTED-flat-spectrum*
 
 ### Cycle 327
 
