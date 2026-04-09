@@ -6,9 +6,33 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
+390. **Minimal-penalty compression — compress only the 3 least-important blocks [b1,b7,b2] + adapter (R4)**
+   - These blocks have the lowest importance (c367: b1=+1.60, b7=+2.35, b2=+3.85 PPL delta when zeroed) AND low Frobenius norms. Hypothesis: compressing only these 3 blocks while leaving the other 9 at float should yield a much smaller penalty than the current 7.5 PPL gap (c378). Train adapter (h=64) on the 3 compressed blocks only. Measure test PPL vs float+adapter on same 3 blocks. If penalty < 3 PPL, the method is viable for selective deployment.
+   - Depends on: c367 (block importance), c377/c378 (adapter baseline)
+   - Confirmation: compressed+adapter PPL within 3 PPL of float+adapter on same blocks
+   - Refutation: penalty >= 5 PPL even on easiest blocks
+
+391. **Incremental composition curve — add compressed blocks one at a time, measure marginal penalty (R5)**
+   - Starting from float+adapter baseline (PPL ~39.7), compress blocks one at a time in importance order [b1, b7, b2, b6, b9, b10, ...] with adapter on all compressed blocks. Record PPL after each addition. This reveals whether the superlinear penalty is smooth or has a sharp phase transition. Key diagnostic: at which block count does marginal penalty exceed 3 PPL? Cross-reference with c366 error propagation profile.
+   - Depends on: c367 (importance ordering), c381 (superlinear penalty)
+   - Confirmation: clear inflection point identified (marginal penalty doubles within 1 block)
+   - Refutation: penalty grows smoothly with no identifiable transition
+
 ### P1
 
+392. **Adapter role decomposition — freeze compression, train adapter on float vs compressed blocks (R3)**
+   - On a 3-block config, compare: (A) adapter trained on 3 compressed blocks, (B) adapter trained on same 3 blocks but uncompressed, (C) adapter trained on 3 compressed blocks with frozen adapter from (B) as initialization. If (C) matches (A), the adapter learns compression correction AND capacity in a single pass. If (C) is worse, the two roles interfere. Measure PPL and adapter weight divergence (Frobenius distance between A and B solutions). This determines whether adapter capacity is wasted on error correction.
+   - Depends on: c377 (adapter baseline), c352 (adapter generality)
+   - Confirmation: weight divergence > 20% of adapter norm AND PPL(C) within 1 of PPL(A)
+   - Refutation: weight divergence < 5% (adapter does the same thing regardless of compression)
+
 ### P2
+
+393. **Definitive Pareto comparison document — consolidate all findings into final research answer (R1)**
+   - Write a structured document (`docs/geometric_compression_verdict.md`) answering the program.md research question. Sections: (1) Method summary (topk+lstsq+adapter). (2) What works: 5x FFN param savings at 7 PPL cost, spectral flatness enables 3-block composition, adapter provides nonlinear capacity. (3) What doesn't: composition barrier is structural and superlinear past 3 blocks, no covariance signature, not identity-driven. (4) Pareto positioning: compressed wins at 18% params, float+adapter wins at full params. (5) Honest comparison vs LASER, distillation, pruning. (6) Open questions remaining. Pull numbers from c377-c381, c358, c366-c367, c379.
+   - Depends on: items 390-392 (or their verdicts)
+   - Confirmation: document written and internally consistent with all cited cycle results
+   - Refutation: N/A (documentation item)
 
 ### Closed — SKIPPED, PENDING FIX (Mixtral — need pretrained model or OWT data)
 
