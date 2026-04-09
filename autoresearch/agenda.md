@@ -10,13 +10,7 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P1
 
-347. **GPT-2 full 12-block weight spectrum census — why does LASER work on GPT-2?**
-   - Cycle 280 showed GPT-2 b1 has concentrated weight spectrum (rank-1 energy ~70%). But we never checked the other 11 blocks. If concentrated spectra are widespread in pretrained GPT-2, it explains the LASER gap vs pgolf. If only b1 is concentrated, the GPT-2 LASER result was a lucky block pick.
-   - Type: census / measurement
-   - Confirmed if: ≥4 blocks have top-5 SVD energy fraction ≥ 15% (concentrated spectra are a pretrained GPT-2 property)
-   - Refuted if: only b1 has top-5 energy ≥ 15% (b1 is an outlier, not a pattern)
-   - Inconclusive if: 2-3 blocks pass (partial pattern, needs further investigation)
-   - Depends on: cycle 280 (b1 already measured), GPT-2 small weights from HuggingFace
+(P1 empty — item 347 closed in cycle 338.)
 
 ### P2
 
@@ -59,6 +53,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 338
+
+347. **GPT-2 full 12-block weight spectrum census — why does LASER work on GPT-2?**
+   - **Outcome: REFUTED** — 0/12 blocks have top-5 SVD energy ≥ 15%. Median top-5 = 7.45%. Only blocks 0-3 exceed 10% (b3 peak at 11.36%, b1 at 11.67%). Blocks 7-11 drop to 4.6-7.5%. b1 (11.67%) is NOT an outlier — it is the second-highest — but neither it nor any other block reaches the 15% threshold. Weight spectra are broadly flat across all 12 blocks relative to the hypothesis.
+   - *cycle 338 — verdict: REFUTED*
+   - Artifacts: `experiments/gpt2_weight_spectrum_census_cycle347.py`, `autoresearch/results/cycle_338_spectrum_census.json`, `autoresearch/results/cycle_338_manifest.txt`
 
 ### Cycle 337
 

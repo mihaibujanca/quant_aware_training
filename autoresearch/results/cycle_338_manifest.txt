@@ -1,0 +1,8 @@
+cycle_338_manifest
+verdict: REFUTED
+blocks_ge15_top5: 0
+blocks_ge8_top5: 5
+median_top5_pct: 7.45%
+files:
+  autoresearch/results/cycle_338_spectrum_census.json
+  autoresearch/results/cycle_338_manifest.txt
