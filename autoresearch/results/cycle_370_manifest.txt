@@ -1,7 +1,7 @@
 item_number=378
 outcome=REFUTED
 key_metric=mean PPL=150.21 ± 0.65 (seeds 42: 150.93, 137: 149.35, 2024: 150.34); float=53.89; threshold confirmed<55.0, refuted>60.0
-commit=TBD
+commit=0f59a61
 paths=experiments/gpt2_selective_compress_cycle370.py,autoresearch/results/cycle_370_selective_compression.json,autoresearch/results/cycle_370_manifest.txt
 learned=Skipping b10+b11 (the two highest-error blocks, 77% of local FFN error) does NOT break the composition barrier. 10-block PPL is 150 — worse than 6-block uniform (65.54) and far above float (53.89). The barrier is not caused by b10/b11 specifically; it is a deep multi-block composition property that persists regardless of which high-error blocks are left at float. Per-block frob errors for b0-b9 range from 1385 (b1) to 4295 (b9), comparable to or lower than b10/b11 (b10=5424, b11=6293), yet composition still collapses.
 next=Closes the b10+b11 error-bottleneck hypothesis. The composition barrier is structural, not attributable to any specific high-error block subset. Next: residual stream representation geometry (item 379) to understand WHY composition fails geometrically — effective rank collapse, isotropy, cosine similarity drift across compression stages.
