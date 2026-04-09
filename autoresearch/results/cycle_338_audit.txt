@@ -1,0 +1,10 @@
+cycle=338
+item=347
+status=PASS
+verdict_correct=true
+measurement_correct=true
+discrepancy_with_280=false
+discrepancy_explanation=Cycle 280 explicitly measured WEIGHT SVD and reported block 1 top-1 energy = 4.59%, top-2 = 7.57%. Cycle 338 reproduces these numbers exactly. The apparent discrepancy is between cycle 278 (OUTPUT COVARIANCE SVD, eff_rank=1.94, top-1=92.94%) and cycle 338 (WEIGHT SVD, top-1=4.59%). These are different objects: cycle 278 measures Y^T@Y where Y=c_proj(X) on data; cycle 338 measures W^T@W. Cycle 280's manifest already documents this distinction clearly (lines 76-82).
+methodological_concern=Cycles 327-329 and 337 used weight SVD top-k energy as a spectrum gate to predict LASER viability. But cycle 280 showed that weight SVD does NOT predict no-retrain compressibility (rank-2 weight energy=7.57%, no-retrain PPL=57.66, +3.76 above float). Output covariance eff_rank (cycle 278) DOES predict retrain compressibility (eff_rank=1.94, retrain PPL=49.03, BELOW float). The spectrum gate in cycles 327-329/337 tests the wrong matrix.
+downstream_impact=Cycles 328/329 REFUTED-flat-spectrum on pgolf models may have been correct verdicts for the wrong reason — pgolf spectra ARE flat in both weight and activation space. But for GPT-2 blocks, a weight-SVD gate at 15% top-5 rejects ALL 12 blocks (cycle 338), even though block 1 is compressible to below-float PPL via rank-2 retrain (cycle 280). The gate is too conservative if applied to retrain-based LASER.
+recommendation=Future spectrum gates should measure OUTPUT COVARIANCE SVD on calibration data, not weight SVD. The weight-SVD gate is valid for no-retrain rank truncation but systematically underestimates retrain-based LASER potential.
