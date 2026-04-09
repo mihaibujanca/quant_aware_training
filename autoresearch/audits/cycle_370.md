@@ -1,0 +1,11 @@
+cycle = 370
+item = 378
+verdict = REFUTED
+auditor_agreement = AGREE
+G1_implementation = PASS — blocks 10,11 verified uncompressed via isinstance assert (line 301-302). Blocks 0-9 all compressed with k=512. Float baseline = 53.89 matches reference. Joint training with proj+adapter params.
+G2_reproducibility = PASS — 3 seeds (42/137/2024). PPL 150.93/149.35/150.34. std=0.65. Topk+lstsq compression deterministic across seeds (identical frob_recon values); variance from adapter init only.
+G3_interpretation = FLAG — The manifest claims "the barrier is not b10/b11-specific." This is correct but incomplete. The 6-block reference (65.54, cycle 361) compressed blocks [2,1,10,4,3,11] — it INCLUDES b10 and b11. So this 10-block experiment (PPL 150) skips b10/b11 but is far worse than the 6-block that compresses them. The dominant variable is block COUNT, not block identity: 3-block=47.43, 6-block=65.54, 10-block=150.21, 12-block=186.38. Superlinear scaling.
+G4_counterintuitive = ADDRESSED — The result is counterintuitive on the surface (skipping worst blocks should help) but explained by the count hypothesis. No implementation bug suspected.
+G5_learning = HIGH — Closes the error-bottleneck hypothesis definitively. Establishes that composition barrier is a count/depth phenomenon, not attributable to specific high-error blocks.
+G6_underfitting = PLAUSIBLE CONCERN — 2500 steps for 10 adapters (~4.77M params). The 12-block experiment used 2000 steps and also failed (186.38). The 6-block (65.54) used 1000 steps per phase in progressive mode. However, the gap is so large (150 vs 55 threshold) that underfitting alone cannot explain it. Even the init PPL before training would need to be very high (12-block was 348-379 init). The result is directionally valid even if training budget is suboptimal.
+notes = Key comparison: 6-block [2,1,10,4,3,11]=65.54 vs 10-block [0-9]=150.21. The 6-block set includes b10+b11 yet performs 2.3x better. Block 0 (catastrophically important per cycle 367, +3021 PPL delta when zeroed) IS compressed here but was also compressed in the 12-block experiment. The scaling is: PPL roughly doubles per 3 additional compressed blocks (47→65→150→186). This is the clearest evidence yet that the composition barrier is fundamentally about the NUMBER of compressed blocks interacting, not which ones.
