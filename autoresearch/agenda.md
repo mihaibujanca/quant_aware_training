@@ -6,11 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-
-377. **Mixed compression — topk+lstsq for hard blocks, aggressive pruning for easy blocks (R4)**
-   - Combine findings from 374 (adaptive k) and 376 (block importance). Use topk+lstsq+adapter only on blocks that need it (high importance, high error). Easy blocks get either zeroed FFN or higher compression ratio (k=256 or k=128). Hard blocks get k=768 or k=1024. Test on 6 blocks with mixed assignment vs uniform k=512. Threshold: mixed PPL < 58 (below progressive's 65.54).
-   - Depends on: 374, 376
-
 ### P1
 
 360. **topk+lstsq accumulation order sensitivity on GPT-2 — easiest-first vs block-index vs hardest-first (R4)**
@@ -2635,3 +2630,9 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Outcome: REFUTED
    - Cycle: 342
    - Artifacts: `experiments/pgolf_laser_retrain_cycle342.py`, `autoresearch/results/cycle_342_pgolf_laser_retrain.json`, `autoresearch/results/cycle_342_summary.md`
+
+### Cycle 368
+
+377. ~~**Mixed compression — topk+lstsq for hard blocks, aggressive pruning for easy blocks (R4)**~~ PLAN INVALID — Both dependencies refuted: adaptive k (c365) is worse than uniform (same starvation mechanism applies to importance-based k), block pruning (c367) impossible (all blocks >0.5 PPL delta). No viable execution path remains.
+   - *cycle 368 — verdict: inconclusive (PLAN INVALID)*
+   - Artifacts: `autoresearch/plans/cycle_368.md`

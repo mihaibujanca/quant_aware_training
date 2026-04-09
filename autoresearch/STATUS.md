@@ -1,4 +1,4 @@
-# Research Status -- 367 Cycles (001-367)
+# Research Status -- 368 Cycles (001-368)
 
 ## Current State
 
@@ -67,6 +67,7 @@ The failure mode is **superlinear error accumulation** despite spectrally flat p
 | Port to nanochat | INCONCLUSIVE | 364 | No checkpoints available locally |
 | Adaptive k per block (Frobenius-proportional) | REFUTED | 365 | 67.63 vs 66.34 uniform; early-block degradation dominates |
 | Block importance pruning (zero-FFN) | REFUTED | 367 | No block below 0.5 PPL delta; min=1.60 (b1) |
+| Mixed compression (importance-based k) | PLAN INVALID | 368 | Both deps refuted; same starvation mechanism as c365 |
 
 ## Open Questions
 
