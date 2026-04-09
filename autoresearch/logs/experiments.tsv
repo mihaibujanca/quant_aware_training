@@ -357,3 +357,4 @@
 372	380	empirical	inconclusive	N/A	PLAN INVALID: third k-allocation variant (after c365, c368). Floor=384 doesnt change starvation mechanism. c370 confirmed barrier is count-driven.	NONE	autoresearch/plans/cycle_372.md
 
 373	381	analysis	inconclusive	N/A	PLAN INVALID P1: duplicate of cycles 068/195 — GPT-2 FFN Jacobians near-full-rank (50-71% at 90% energy). R3 data-active compression has no headroom.	NONE	autoresearch/plans/cycle_373.md
+374	382	empirical	refuted	6-block k=768 mean PPL=61.85 ± 0.19 (>60.0 threshold); 3-block k=768 PPL=46.43 (beats k=512 ref 47.43)	Composition barrier persists at 4x compression. k=768 vs k=512: +3.69 PPL gain but not enough. Per-block error reduction (frob ~30% lower at k=768) does not translate to composition recovery.	experiments/gpt2_error_budget_k768_cycle374.py	autoresearch/results/cycle_374_error_budget_k768.json

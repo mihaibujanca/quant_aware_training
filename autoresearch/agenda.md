@@ -6,12 +6,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
 
 ### P0
 
-382. **Error budget test — k=768 on 6-block composition (R4)**
-   - Hypothesis: composition barrier is total-error-driven. At k=512 (6x), 3 blocks work and 6 fail. If per-block error is the bottleneck, k=768 (4x, 33% less compression) should push the working frontier past 3 blocks.
-   - Run: 6-block topk+lstsq k=768 + MLP adapter h=64 on the same block set [b2,b1,b10,b4,b3,b11], joint training 2000 steps, 3 seeds.
-   - Also run 3-block k=768 as sanity check (should beat k=512's 47.43).
-   - Confirmed if: 6-block k=768 PPL < 55.0 (float baseline). Refuted if: PPL > 60.0 (barrier persists despite lower per-block error). Inconclusive if: 55–60 range.
-   - Depends on: none.
 
 383. **Adapter dead-neuron census and exact pruning — ReLU MLP adapter (R2)**
    - R2 exact pruning on GPT-2 GELU FFNs is closed (c128/c162/c192: 0 dead channels). But the trained MLP adapters use ReLU — Serra/Berzins criteria apply directly. Census: for each of 6 trained adapters, count dead neurons (never activate on calibration data) and always-active neurons. Then prune them exactly and measure PPL delta.
@@ -58,6 +52,11 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 374
+
+382. ~~**Error budget test — k=768 on 6-block composition (R4)**~~ REFUTED — Increasing k from 512→768 (4x vs 6x compression) reduces 6-block PPL from 65.54 to 61.85 ± 0.19 — a 3.69-point improvement but still above the 60.0 refutation threshold. Composition barrier persists. 3-block k=768 does beat k=512 (46.43 vs 47.43, +1.0 PPL). The barrier is not proportional to per-block reconstruction error: halving compression ratio (from 6x to 4x) yields only modest PPL gain and does not break composition. Script: `experiments/gpt2_error_budget_k768_cycle374.py`. Results: `autoresearch/results/cycle_374_error_budget_k768.json`.
+   - *cycle 374 — verdict: REFUTED*
 
 ### Cycle 371
 
