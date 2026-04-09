@@ -1,4 +1,4 @@
-# Research Status -- 368 Cycles (001-368)
+# Research Status -- 369 Cycles (001-369)
 
 ## Current State
 
@@ -68,11 +68,12 @@ The failure mode is **superlinear error accumulation** despite spectrally flat p
 | Adaptive k per block (Frobenius-proportional) | REFUTED | 365 | 67.63 vs 66.34 uniform; early-block degradation dominates |
 | Block importance pruning (zero-FFN) | REFUTED | 367 | No block below 0.5 PPL delta; min=1.60 (b1) |
 | Mixed compression (importance-based k) | PLAN INVALID | 368 | Both deps refuted; same starvation mechanism as c365 |
+| Accumulation order sensitivity (GPT-2) | REFUTED | 369 | <1% PPL gap across 3 orderings; adapter compensates |
 
 ## Open Questions
 
 1. **Why does error accumulate superlinearly past 3 blocks?** PARTIALLY ANSWERED (c366): error grows slowly through blocks 0-9, then explodes at b10/b11 which have the highest Frobenius norms. Attention does not amplify. The remaining question is whether b10/b11 can be compressed better or should be left uncompressed.
 2. **Inflection point identified** (c366): block 9 is where error growth transitions from linear to superlinear, consistent across 3 seeds.
 3. **No blocks are skip-safe** (c367). All 12 FFN blocks are >0.5 PPL important. But the importance ranking gives a principled basis for mixed k allocation (item 377).
-4. **Accumulation order**: item 360 (easiest-first vs hardest-first) remains untested on GPT-2.
+4. **Accumulation order doesn't matter** (c369). <1% PPL gap across 3 orderings with joint adapter training. Toy model finding (27% gap) does not transfer to GPT-2.
 5. **Mixed compression strategy** (item 377): after 374 refuted, this needs block importance from 376 rather than Frobenius-proportional k.
