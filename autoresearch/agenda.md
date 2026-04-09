@@ -29,22 +29,6 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - **Run cap**: ~30 minutes (cycle 319 redo + correction module + eval + optional adapt).
    - Depends on: 343, 338, `autoresearch/cross_project/parameter_golf.md`.
 
-345. **Eff_rank as per-block budget allocation oracle — train parameter-golf with mlp_mult shifted toward early blocks** *(cross-project, action item, full training run)*
-   - **REQUIRED READING**: `autoresearch/cross_project/parameter_golf.md`. **Brief stage MUST list this file path under `# Key Files`. Plan stage MUST include `cat autoresearch/cross_project/parameter_golf.md` as Step 0 of the setup. Exec stage MUST execute Step 0 before any other action.** Also required: `parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` section 6.6.
-   - **Motivation**: cycle 318 found that parameter-golf's first 3 blocks (b0/b1/b2) have HIGH eff_rank (188/160/86) while many mid/late blocks are at 20-40. The current `mlp_mult_per_layer` allocates `mlp_mult=3` (hidden=1920) at most blocks regardless of trained eff_rank. Hypothesis: allocate `mlp_mult` proportional to `eff_rank/d_model + epsilon`, keeping total parameter budget constant. Early blocks get more capacity, late blocks get less. Train and compare BPB.
-   - **Setup**:
-     - **Step 0** (REQUIRED): `cat autoresearch/cross_project/parameter_golf.md` AND `cat parameter-golf/docs/EFFRANK_CURVATURE_FINDINGS.md` (section 6.6).
-     - **Step 1**: compute the new `mlp_mult_per_layer` from cycle 318's eff_rank profile, normalized to keep total hidden parameter count constant.
-     - **Step 2**: write `parameter-golf/local_scripts/pgolf_train_eff_rank_allocated.py` that runs the standard parameter-golf training loop with the new per-block `mlp_mult`. Same hyperparams as the baseline `13L_640d_322_7k_wd70_batch20k_best`.
-     - **Step 3**: train and eval. Compare BPB to baseline.
-   - **Hypothesis**: BPB improves by ≥0.001 with the eff_rank-aligned allocation.
-   - **Outcomes**:
-     - **CONFIRMED-budget-oracle** if eff_rank-allocated BPB ≤ baseline − 0.001: the eff_rank measurement is a useful per-block budget oracle. Possibly leaderboard-relevant. Iterate (re-measure eff_rank on the new model, re-allocate, re-train).
-     - **REFUTED** if eff_rank-allocated BPB ≥ baseline + 0.001: the current allocation was already near-optimal for this architecture, eff_rank is descriptive not prescriptive.
-     - **INCONCLUSIVE** otherwise.
-   - **Baselines**: parameter-golf 13L_640d_322 baseline BPB.
-   - **Run cap**: ~30-60 minutes (one full training run on MPS).
-   - Depends on: 335, 336, parameter-golf training infrastructure (much more than the measurement scripts so far).
 
 331. **Train tiny GPT (4L 256d) on wikitext-2 with three activation variants {GELU, ReLU², LeakyReLU²} — real comparative numbers, not zero-shot patches**
    - **Motivation**: item 330 is a *predictive* measurement — applies ReLU²/lrelu² to a GELU-trained model, so the activation distribution is wrong. The cleanest comparison is **trained from scratch** with each activation, then run the same framework. A tiny GPT on wikitext-2 is small enough to train inside the qat runner's normal experiment budget (~30 min wall for 3 variants × 1 model each). This produces three matched checkpoints: same architecture, same data, same optimizer, same seed, only the activation function differs. Then cycle 278 (output covariance eff_rank census) and cycle 312 (unified curvature framework) run on each. Result: a 3×N table of "what does each activation do to the rank profile and the curvature residual geometry" with all confounds controlled. This is the trained-variant counterpart to item 330's zero-shot variant; both items together give a complete (zero-shot vs trained) × (3 activations) × (5 framework panels) result table.
@@ -98,6 +82,13 @@ This queue supersedes the old toy-model-first plan. The goal is to answer the ri
    - Depends on: 22 (refuted), 24 (dead end)
 
 ## PAST EXPERIMENTS
+
+### Cycle 331
+
+345. **Eff_rank as per-block budget allocation oracle — train parameter-golf with mlp_mult shifted toward early blocks** *(cross-project, action item, full training run)*
+   - **Outcome: PLAN INVALID (P2)** — depends on items 335 and 336, both REFUTED. Premise (allocate mlp_mult proportional to eff_rank) required eff_rank to be a stable prescriptive capacity signal. Cycle 322: eff_rank profiles are checkpoint-specific. Cycle 323: pre-scale eff_rank is misleading. Cycles 327-329: eff_rank does not predict weight compressibility. No basis remains.
+   - *cycle 331 — verdict: PLAN INVALID (dependencies refuted)*
+   - Artifacts: `autoresearch/briefs/cycle_331.md`, `autoresearch/plans/cycle_331.md`
 
 ### Cycle 330
 
