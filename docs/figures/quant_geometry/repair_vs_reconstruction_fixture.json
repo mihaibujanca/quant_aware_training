@@ -1,0 +1,58 @@
+{
+  "W": [
+    [
+      1.0,
+      0.65
+    ],
+    [
+      -0.35,
+      0.8
+    ]
+  ],
+  "Wq": [
+    [
+      1.0,
+      1.0
+    ],
+    [
+      -0.0,
+      1.0
+    ]
+  ],
+  "R": [
+    [
+      1.35,
+      -0.14999999999999997
+    ],
+    [
+      -0.35,
+      0.8
+    ]
+  ],
+  "C": [
+    [
+      1.3117001325836177,
+      -0.10955985283611334
+    ],
+    [
+      -0.2912906875971442,
+      0.7832489634495867
+    ]
+  ],
+  "calibration": "Equal weight per sampled grid-line/circle point; named probes A/B excluded",
+  "sample_generator": "aleph.qgeom.geometry_story.build_geometry_stories()[0].points[:-2]",
+  "calibration_samples": 859,
+  "activation": "ReLU",
+  "bias": [
+    0.0,
+    0.0
+  ],
+  "precision": "torch.float64",
+  "quantization_bits": 2,
+  "randomness": "None: fixed weights and deterministically sampled input paths",
+  "R_map_frobenius_squared": 1.232595164407831e-32,
+  "C_map_frobenius_squared": 0.004705099994642662,
+  "R_post_activation_mse": 0.005171025494702384,
+  "C_post_activation_mse": 0.0047516327196250275,
+  "least_squares_normal_residual": 7.840543507322482e-14
+}
