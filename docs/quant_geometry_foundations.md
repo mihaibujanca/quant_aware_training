@@ -30,50 +30,102 @@ The 2-bit quantizer rounds each coefficient to the nearest value in {−1,0,1}: 
 
 ## 2. Which part can a map on the quantized output recover?
 
-Figure 1 suggests a repair: take the quantized shape and move it until it matches the FP shape. Suppose the repair receives **only the quantized preactivation**, not the original input. Can one linear motion of that representation put every point back where it should be?
+### Start with one neuron: a measurement has a direction
 
-When the quantized map keeps the input distinctions, as in Figure 1, it can. Now look at what happens when the map flattens a patch into a line.
+Before considering a whole layer, take one neuron with no bias or activation. In this picture, write the input point x and weight vector w as **column vectors** in two dimensions. The neuron returns the scalar $x^\top w$. Its weight arrow tells us both **which input direction it measures** and **the gain of that measurement**.
 
-![A quantized line can be moved toward the FP patch, but restoring its missing width requires different input-dependent displacements](figures/quant_geometry/geometry_loss.png)
+Quantization changes w into wq. Generally, the arrow changes length and turns: the neuron now measures a different input direction with a different gain. Assume $w_q\ne0$. Suppose we keep only its quantized scalar output and try to repair it by multiplying by a scalar r. Can that put every input's response back where it should be?
 
-**Figure 2 — what the repair channel can and cannot do.** In panel 1, A and B have distinct FP targets. Quantization merges them in panel 2. A repair seeing that shared output must move both to the same place: panel 3 puts them at the best common target, halfway between their two FP targets. It can tilt the line but cannot make the merged samples separate. Panel 4 supplies two different displacements using the original inputs; these restore A and B and the patch's missing width. The dashed line is the panel-3 state; the arrows show the added displacements. All four panels are **before activation**.
+Changing r stretches or reverses the arrow wq along its own line. It cannot turn it toward w. Consequently, exact repair for every input is possible precisely when w lies on that line:
 
-Those two kinds of motion are the reason for the decomposition:
+$$
+r\,x^\top w_q=x^\top w\quad\text{for every }x
+\quad\Longleftrightarrow\quad w=r w_q.
+$$
 
-- **R is the best linear repair available downstream without seeing the input again.** It acts on the quantized preactivation. Samples merged there must stay together under R.
-- **U describes what that repair channel cannot represent.** The displacement xU uses the input distinctions missing from the quantized representation. It can separate samples that R receives as the same point.
+A parallel weight change can be repaired by changing gain. A change of direction leaves a part of the FP measurement outside the direction that this scalar correction can access.
 
-For the highlighted pair, A=(0.4,−0.8) and B=(0.4,0.8) both reach (0.4,0) under the quantized map. Their FP targets are (0.2,−0.08) and (0.6,0.32). R moves their shared point to the midpoint (0.4,0.12). The remaining displacements are (−0.2,−0.2) for A and (+0.2,+0.2) for B. **R moves what is still distinguishable; xU restores the missing distinction.** ReLU's effect on these displacements comes later, in Figure 5.
+![Weight-vector projection and rotated scalar measurement fibers; two inputs have equal Q readings but different FP readings](figures/quant_geometry/geometry_scalar_fibers.png)
 
-### Formalizing the repair we just pictured
+**Figure 2 — a direction changes without a rank collapse.** On the left, the FP arrow w and the quantized arrow wq differ in length and direction. The green arrow rwq is the projection of w onto the line of wq: scalar gain can reach it. The purple arrow u supplies the remaining change of direction. On the right, each line is a **fiber**: all inputs on it give the same scalar response. A and B lie on one blue Q fiber but on different orange FP fibers. Any correction receiving just their shared Q reading must return the same answer for both, although FP requires different answers.
 
-“Best” needs a distance and a family of allowed motions. Here we allow any linear map on the quantized output and minimize squared output displacement, weighting input directions equally. For row-vector weights, that is the problem
+Here the bounded 2-bit quantizer changes $w=(1,0.55)^\top$ to $w_q=(1,1)^\top$. Both measurements have rank 1, as a nonzero scalar measurement in 2D must. **Quantization has rotated the fibers, not reduced the rank.** The distinction FP wants is now along a direction Q ignores.
+
+### Recover the accessible part; name the part that remains
+
+The closest arrow to w on the line of wq is its orthogonal projection. Call its scalar gain r and the remaining arrow u:
+
+$$
+r=\frac{w_q^\top w}{w_q^\top w_q},\qquad
+w=r w_q+u,\qquad w_q^\top u=0.
+$$
+
+This is the least-squares repair of the weight direction: r minimizes $\|w-tw_q\|^2$ over scalar gains t. For each input, the same split becomes
+
+$$
+x^\top w=r\,(x^\top w_q)+x^\top u.
+$$
+
+The first term can be generated from the Q scalar alone. The second measures the input component along u, perpendicular to the direction Q measures. That is exactly the distinction lost when we keep only $x^\top w_q$.
+
+A fiber has the formal definition $F_q(c)=\{x:x^\top w_q=c\}$. In the plane, it is a line perpendicular to wq. Multiplying the scalar by r changes the values assigned to these fibers; it cannot change which inputs share a fiber. If $u\ne0$, moving along u stays on a Q fiber but changes the FP reading, because $u^\top w_q=0$ while $u^\top w=\|u\|^2>0$. This proves that no function of the Q scalar alone can recover every FP response in this case.
+
+For the highlighted points, $A=(0.8,-0.2)^\top$ and $B=(-0.2,0.8)^\top$:
+
+$$
+A^\top w_q=B^\top w_q=0.6,\qquad
+A^\top w=0.69,\qquad B^\top w=0.24.
+$$
+
+The projection gives $r=0.775$ and $u=(0.225,-0.225)^\top$. The output-side repair therefore gives 0.465 for **both** points. To reach FP, A still needs +0.225 while B needs −0.225. Their shared Q scalar contains no way to choose between those two input-dependent additions.
+
+### A layer is the same repair problem with several measurements
+
+Return to the row-vector convention of Section 1. The columns of W are neuron weight vectors, and $xW_q$ is a collection of quantized measurements. A matrix R can mix and rescale those measurements. Unlike a scalar gain, it can use one measured direction to help repair another. What matters is whether the FP measurements can be expressed using the input directions **jointly** measured by Wq.
+
+The geometric question stays the same: **how much of the FP response can we recover using only this quantized representation, without seeing x again?** R is the best linear correction through that channel. Let xU be the displacement still needed after that repair:
+
+$$
+xW=(xW_q)R+xU,\qquad W=W_qR+U.
+$$
+
+If two inputs have the same xWq, R must give them the same repaired output. The term xU can depend on input distinctions that this channel cannot see. In input-direction space, each column of U is perpendicular to the span of Wq's measured directions—the multivariate version of $u\perp w_q$. If Wq already spans all input directions, U=0 even when quantization has changed the map substantially, as in Figure 1.
+
+To formalize “best,” minimize squared output displacement with equally weighted input directions:
 
 $$
 R\in\underset{T\in\mathbb R^{m\times m}}{\operatorname{argmin}}\;
-\|W-W_qT\|_F^2.
+\|W-W_qT\|_F^2,\qquad U=W-W_qR.
 $$
 
-For inputs uniformly distributed on the unit sphere, this objective is proportional to the average squared distance between xW and xWqT. This specifies the input weighting and distance meant by “best” here.
+For inputs uniformly distributed on the unit sphere, this is proportional to the average squared distance between xW and xWqT. As in the scalar projection, the residual is orthogonal to the available measured directions: $W_q^\top U=0$. This is orthogonality in input-direction space; it does not require the output displacements to be perpendicular for each sample.
 
-Once R has placed the quantized shape as close as this channel allows, **define the residual map by the displacements still required**:
+### Derive the correction after identifying the repair channel
+
+We have now specified what R and U should do. To calculate R, write $R=I_m+C$. The repair problem becomes
 
 $$
-U=W-W_qR,\qquad xW=(xW_q)R+xU.
+\min_C\|W-W_q-W_qC\|_F^2.
 $$
 
-This gives the repair-plus-remainder identity directly. Here $R\in\mathbb R^{m\times m}$ and $U\in\mathbb R^{n\times m}$.
-
-The optimum repaired map WqR is unique, but R's action away from the represented output subspace can be unspecified. We choose the minimizing R closest to leaving that output unchanged, namely the one minimizing $\|R-I_m\|_F$ among all solutions. With the exact Moore–Penrose inverse, the resulting solution is
+The exact Moore–Penrose inverse gives the minimum-norm correction increment $C=W_q^\dagger(W-W_q)$. This selects the R closest to leaving the output unchanged among equally good repairs. Substituting it into the residual definition gives
 
 $$
 R=I_m+W_q^\dagger(W-W_q),\qquad
 U=(I_n-W_qW_q^\dagger)(W-W_q).
 $$
 
-This is where subtracting the weights becomes useful: it calculates the displacement map our repair problem has already identified. The remainder obeys $W_q^\top U=0$. Geometrically, no further change through the linear repair channel can reduce it under this objective. This orthogonality is between **maps** in the least-squares problem; it does not say the R-motion and xU arrows are perpendicular at every output point.
+Here $R\in\mathbb R^{m\times m}$ and $U\in\mathbb R^{n\times m}$. The scalar case is exactly this construction with one output: its R is r, and its U column is u.
 
-For Figure 2, the construction yields
+### Exact dimension collapse: an especially visible extreme
+
+A rotated scalar measurement already showed nonrecoverability without a rank change. An outright rank drop makes the missing distinction particularly easy to see: an entire patch flattens into a line.
+
+![A collapsed patch, an output-side repair of its line, and input-dependent displacements restoring width](figures/quant_geometry/geometry_loss.png)
+
+**Figure 2b — a limiting case with genuine dimension collapse.** Panel 1 shows distinct FP targets for A and B. Quantization merges them in panel 2. R moves their shared output to the best common target in panel 3, but cannot separate them or restore the patch's width. Panel 4 supplies different xU displacements from the original inputs and recovers the FP patch. The dashed line is the R-repaired state; the arrows are xU. All panels are before activation.
+
+The matrices are
 
 $$
 W=\begin{bmatrix}1&0.3\\0.25&0.25\end{bmatrix},\qquad
@@ -82,7 +134,7 @@ R=\begin{bmatrix}1&0.3\\0&1\end{bmatrix},\qquad
 U=\begin{bmatrix}0&0\\0.25&0.25\end{bmatrix}.
 $$
 
-The first row of Wq preserves the first input coordinate: R uses it to tilt the line. The second row removes the second input coordinate: U supplies the different displacements needed as that coordinate varies.
+A=(0.4,−0.8) and B=(0.4,0.8) share the Q point (0.4,0). Their FP targets are (0.2,−0.08) and (0.6,0.32). R moves both to the midpoint (0.4,0.12); xU then contributes (−0.2,−0.2) for A and (+0.2,+0.2) for B. The second input direction has disappeared outright. This illustrates an extreme case, rather than an assumption that quantization usually reduces rank. Figure 5 measures the effect after activation.
 
 ### Keeping the shared bias in place
 
@@ -92,7 +144,7 @@ $$
 A(v)=vR+b-bR,\qquad A(z_q)+xU=x(W_qR+U)+b=xW+b.
 $$
 
-A is therefore the bias-preserving version of the same repair. The ledger below uses A so the geometry and the accounting remain consistent with float biases.
+A is the bias-preserving version of the same repair. The ledger below uses A so the geometry and accounting remain consistent with float biases.
 
 ## 3. The ledger: four states, three signed displacements
 
@@ -172,7 +224,7 @@ Compare the recovered route with the FP route after adding xU. The remainder is 
 
 ![Exact range ledger states: a recovered line versus the activated FP patch](figures/quant_geometry/ledger_geometry_range.png)
 
-**Figure 5 — s3 versus s2, using the Figure 2 map.** The recovered route places A and B together at (0.4,0.12). The FP activated route separates them to (0.2,0) and (0.6,0.32). The signed range vectors are therefore (0.2,0.12) for A and (−0.2,−0.20) for B. Their arrows return the separated FP points to the same recovered point. Figure 2 shows the missing width; this figure shows exactly what the ledger measures after clipping.
+**Figure 5 — s3 versus s2, using the Figure 2b map.** The recovered route places A and B together at (0.4,0.12). The FP activated route separates them to (0.2,0) and (0.6,0.32). The signed range vectors are therefore (0.2,0.12) for A and (−0.2,−0.20) for B. Their arrows return the separated FP points to the same recovered point. Figure 2b shows the missing width; this figure shows exactly what the ledger measures after clipping.
 
 ### What fixes the attribution?
 
@@ -241,7 +293,7 @@ P_\tau=W_qW_{q,\tau}^\dagger,\qquad
 U_\tau=(I_n-P_\tau)(W-W_q).
 $$
 
-Only retained-space orthogonality is guaranteed; this remainder need not equal $(I_n-P_\tau)W$. A tiny **nonzero** direction remains present in xWq, and recovering it may require a large gain. A nonzero truncated remainder measures what this correction policy leaves unrecovered; it does not alone establish lost information. Figure 2 has an exact zero direction. A restricted input distribution or activation can also hide the output effect of an exact missing direction.
+Only retained-space orthogonality is guaranteed; this remainder need not equal $(I_n-P_\tau)W$. A tiny **nonzero** direction remains present in xWq, and recovering it may require a large gain. A nonzero truncated remainder measures what this correction policy leaves unrecovered; it does not alone establish lost information. Figure 2b has an exact zero direction. A restricted input distribution or activation can also hide the output effect of an exact missing direction.
 
 See the [implementation README](quant_geometry_implementation.md#quantizer-and-decomposition) for cutoff settings and the [verification report](quant_geometry_verification.md#mathematical-audit-numerical-rank-and-attribution-conventions) for the numerical counterexample.
 

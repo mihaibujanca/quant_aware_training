@@ -8,7 +8,7 @@ This is evidence for the current apparatus and explanatory fixtures. Definitions
 MPLCONFIGDIR=/tmp/qgeom-mpl .venv/bin/python -m pytest tests/test_qgeom_geometry_story.py tests/test_qgeom_exact_ledger.py tests/test_qgeom_instrumented_mlp.py tests/test_qgeom_metrics.py tests/test_qgeom_policy.py tests/test_models.py -q
 ```
 
-The current targeted suite has **74 passing tests**. The geometric fixtures test reversible deformation, a ReLU collision with distinct FP targets, and rank-loss restoration using the input-dependent remainder. Mathematical regression tests include independently specified coordinates, bias handling, truncation, correction-extension dependence, and signed interaction. Runner tests cover single-source and all-layer immediate oracle restoration, delayed-target plumbing, snapshot ownership and unsupported architectures.
+The current targeted suite has **76 passing tests**. The geometric fixtures test reversible deformation, a ReLU collision with distinct FP targets, and rank-loss restoration using the input-dependent remainder. Mathematical regression tests include independently specified coordinates, bias handling, truncation, correction-extension dependence, and signed interaction. Runner tests cover single-source and all-layer immediate oracle restoration, delayed-target plumbing, snapshot ownership and unsupported architectures.
 
 ## Diagnostic figures and numerical evidence
 
@@ -73,6 +73,7 @@ The existing Gram figure (Figure 5) illustrates why signed interaction must be r
 
 | Contribution | Source / artifact | Evidence |
 |---|---|---|
+| Scalar measurement projection and rotated fibers without rank loss | `aleph/qgeom/geometry_story.py::build_scalar_measurement_story`, `experiments/quant_geometry_scalar_measurement.py`; `geometry_scalar_fibers.png`, `scalar_measurement_fixture.json` | Two independent coordinate tests: unchanged scalar rank, changed length/direction, orthogonal residual, equal Q readings, distinct FP readings and opposite missing contributions |
 | Three controlled grid/circle stories with persistent A/B identities | `aleph/qgeom/geometry_story.py`, `experiments/quant_geometry_visual_story.py`; `geometry_deformation.png`, `geometry_relu.png`, `geometry_loss.png` | Four geometric-claim tests; fixed scales within each sequence; All teaching stories use non-identity Wq; deformation and ReLU cases have independently specified FP/Q probe coordinates |
 | Moving view of the same endpoints | `animations/quant_geometry_story.html`; `geometry_story_states.json` | Step controls, full playback, no JavaScript errors, collision label and 360px layout checked |
 | Exact pictures for each formal ledger component | `experiments/quant_geometry_ledger_figures.py`; `ledger_geometry_uncomp.png`, `ledger_geometry_nonlinear.png`, `ledger_geometry_range.png` | Figures use the existing ErrorLedger states directly; arrow endpoints are the states in the definitions |
@@ -83,6 +84,6 @@ All examples are deterministic teaching fixtures, not measurements of mechanism 
 
 ## Markdown math compatibility
 
-The research note uses `$...$` inline and `$$...$$` display blocks, as supported by VS Code's built-in Markdown preview. All 20 display equations and 39 inline expressions were parsed by the installed VS Code's bundled KaTeX renderer with `throwOnError: true` and `strict: "error"`; all rendered without errors. The equations were unchanged by the delimiter conversion.
+The research note uses `$...$` inline and `$$...$$` display blocks, as supported by VS Code's built-in Markdown preview. All 25 display equations and 56 inline expressions were parsed by the installed VS Code's bundled KaTeX renderer with `throwOnError: true` and `strict: "error"`; all rendered without errors. The equations were unchanged by the delimiter conversion.
 
-The Figure 2 repair explanation additionally checks the independently specified A/B midpoint `(0.4,0.12)` and missing displacements `(-0.2,-0.2)` / `(0.2,0.2)`. A least-squares Pythagorean regression verifies that perturbing R through the repair channel adds nonnegative squared error to the remainder. The revised arrows show xU from the repaired point toward the FP targets.
+The Figure 2b rank-collapse explanation additionally checks the independently specified A/B midpoint `(0.4,0.12)` and missing displacements `(-0.2,-0.2)` / `(0.2,0.2)`. A least-squares Pythagorean regression verifies that perturbing R through the repair channel adds nonnegative squared error to the remainder. The revised arrows show xU from the repaired point toward the FP targets.

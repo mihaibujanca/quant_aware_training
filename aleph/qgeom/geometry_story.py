@@ -13,6 +13,26 @@ from aleph.qgeom.weight_quantizer import WeightQuantizer
 
 
 @dataclass(frozen=True)
+class ScalarMeasurementStory:
+    """One scalar measurement changes direction without changing its rank."""
+
+    w: torch.Tensor
+    wq: torch.Tensor
+    r: torch.Tensor
+    u: torch.Tensor
+    points: torch.Tensor
+
+
+def build_scalar_measurement_story() -> ScalarMeasurementStory:
+    W = torch.tensor([[1.], [.55]], dtype=torch.float64)
+    Wq = WeightQuantizer(2)(W).quantized
+    decomposition = MapDecomposition.from_weights(W, Wq)
+    return ScalarMeasurementStory(W[:, 0], Wq[:, 0], decomposition.R[0, 0],
+                                  decomposition.U[:, 0],
+                                  torch.tensor([[.8, -.2], [-.2, .8]], dtype=W.dtype))
+
+
+@dataclass(frozen=True)
 class GeometryStory:
     key: str
     title: str

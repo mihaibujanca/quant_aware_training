@@ -6,6 +6,7 @@ Active experiment scripts.
 
 | File | Description |
 |------|-------------|
+| `quant_geometry_scalar_measurement.py` | Single-neuron measurement geometry: weight directions, scalar projection and rotated fibers without a rank drop. Reproduces research Figure 2 and exact fixture data. |
 | `quant_geometry_visual_story.py` | Geometry-first storyboards and animation states: reversible map deformation, correction versus ReLU order, and rank-loss collapse. See the [research note](../docs/quant_geometry_foundations.md). |
 | `quant_geometry_ledger_figures.py` | Exact state-pair pictures for each formal ledger component and a signed cancellation path. See the [research note](../docs/quant_geometry_foundations.md) and [reproduction instructions](../docs/quant_geometry_implementation.md#reproduce-the-artifacts). |
 | `quant_geometry_foundations.py` | Exact weight-only map/ledger and shared MLP oracle examples. Reproduces eight diagnostic figures, including a numerical-rank audit, and a run manifest; see [verification report](../docs/quant_geometry_verification.md) and [progress tracker](../docs/quant_geometry_progress.md). |

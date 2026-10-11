@@ -1,7 +1,31 @@
 """Verify the geometric claims made by the teaching pictures and animation."""
 import torch
 
-from aleph.qgeom.geometry_story import build_geometry_stories
+from aleph.qgeom.geometry_story import build_geometry_stories, build_scalar_measurement_story
+
+
+def test_scalar_quantization_changes_direction_without_changing_rank():
+    story = build_scalar_measurement_story()
+    torch.testing.assert_close(story.wq, torch.tensor([1., 1.], dtype=torch.float64))
+    torch.testing.assert_close(story.r, torch.tensor(.775, dtype=torch.float64))
+    torch.testing.assert_close(story.u, torch.tensor([.225, -.225], dtype=torch.float64))
+    torch.testing.assert_close(story.wq @ story.u, torch.tensor(0., dtype=torch.float64))
+    assert torch.linalg.matrix_rank(story.w[:, None]) == torch.linalg.matrix_rank(story.wq[:, None]) == 1
+    assert not torch.isclose(torch.linalg.vector_norm(story.w), torch.linalg.vector_norm(story.wq))
+    assert not torch.isclose(story.w[0]*story.wq[1] - story.w[1]*story.wq[0], torch.tensor(0., dtype=torch.float64))
+    # A different scalar gain adds error along wq; it cannot remove u.
+    error = story.w - (story.r + .3)*story.wq
+    torch.testing.assert_close(error.square().sum(), story.u.square().sum() + .3**2*story.wq.square().sum())
+
+
+def test_same_scalar_fiber_has_distinct_fp_responses_and_opposite_missing_terms():
+    story = build_scalar_measurement_story()
+    torch.testing.assert_close(story.points @ story.wq, torch.tensor([.6, .6], dtype=torch.float64))
+    torch.testing.assert_close(story.points @ story.w, torch.tensor([.69, .24], dtype=torch.float64))
+    torch.testing.assert_close(story.r*(story.points @ story.wq), torch.tensor([.465, .465], dtype=torch.float64))
+    torch.testing.assert_close(story.points @ story.u, torch.tensor([.225, -.225], dtype=torch.float64))
+    torch.testing.assert_close((story.points[0]-story.points[1]) @ story.wq, torch.tensor(0., dtype=torch.float64))
+    torch.testing.assert_close((story.points[0]-story.points[1]) @ story.w, torch.tensor(.45, dtype=torch.float64))
 
 
 def test_deformation_is_recoverable_without_collapsing_samples():
