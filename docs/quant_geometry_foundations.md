@@ -1,214 +1,196 @@
-# Quantization geometry: technical reference
+# Quantization geometry: maps, clipping, and an exact error ledger
 
-**Start with [Watch the shape, then name the error](quant_geometry_visual_guide.md)** for the geometric explanation: the same grid and circle deform, ReLU clips them, and distinct points can collapse together. This document records the equations, implementation and numerical checks after that picture is established.
+A layer moves points. Before activation, it moves a grid into another grid and a circle into an ellipse, possibly flattened into a line. ReLU then presses negative coordinates onto the axes. Quantizing the weights changes the first motion; that can also change which points the second motion merges.
 
-Implementation of the first three next steps in [the progress tracker](quant_geometry_progress.md), guided by [the research plan](quantization_geometry_plan.md). These are deterministic algebra and instrumentation examples, not evidence of task accuracy or compression gains.
+We want to distinguish three things: a deformation that a chosen correction could repair, a discrepancy caused by applying that correction on the wrong side of activation, and the output effect of an input direction the recovered map omits. The **ledger** is a record of signed vectors for those three comparisons, for each input. It accounts exactly for the observed output error. The pictures below show the states those vectors connect, rather than just their magnitudes.
 
-## 1. Bounded weight quantization and map decomposition
+## 1. What shape does the layer move?
 
-`aleph/qgeom/weight_quantizer.py` adds a deterministic, per-tensor symmetric weight quantizer. It returns detached original and dequantized weights plus bit width, scale, bounds and rounding metadata. For `bits=b`, the integer bounds are `[-(2**(b-1)-1), +(2**(b-1)-1)]`; one signed code is unused to keep the grid symmetric. Scale is `absmax/qmax`; a zero matrix uses scale 1. Rounding is nearest with ties to even. The runner leaves biases and activations floating point. This is inspectable fake quantization, not packed integer execution.
-
-`aleph/qgeom/map_decomposition.py` implements the network-independent split, using **row-vector weights `[input, output]`**:
+Use row vectors: \(x\in\mathbb R^{1\times n}\), weights \(W,W_q\in\mathbb R^{n\times m}\), and shared float bias \(b\in\mathbb R^{1\times m}\). The full-precision and quantized outputs are
 
 \[
-R=I+W_q^\dagger(W-W_q),\qquad U=(W-W_q)-W_qW_q^\dagger(W-W_q).
+y(x)=\phi(xW+b),\qquad h(x)=\phi(xW_q+b).
 \]
 
-Let `W,Wq` have shape `[n,m]`, so `R` has shape `[m,m]` and `U` has shape `[n,m]`. Writing `D=W-Wq`, reconstruction follows directly:
+Here \(\phi\) is coordinatewise ReLU, unless stated otherwise. Weight-only quantization replaces \(W\) by \(W_q\); it does not quantize the bias or activation. Each plotted grid line and circle consists of sampled inputs, with their identities preserved through every map. A and B mark two particular inputs. Coordinate scales stay fixed within each figure.
+
+![The same grid and circle before mapping, after the FP map, after quantization, and after correction](figures/quant_geometry/geometry_deformation.png)
+
+**Figure 1 — deformation before activation.** Here
+\(W=\left[\begin{smallmatrix}1&0.3\\-0.2&0.8\end{smallmatrix}\right]\) and \(W_q=I\). The FP map tilts the grid and stretches the circle into an ellipse. Quantization returns it to a square and circle; another map recovers the FP shape exactly. None of the input directions collapsed. These panels show **preactivation maps**; the post-activation uncompensated ledger vector is defined separately in Figure 3.
+
+## 2. Which part can a map on the quantized output recover?
+
+Set \(D=W-W_q\). Fix the identity-centered correction and remainder
 
 \[
-W_qR+U=W_q+W_qW_q^\dagger D+(I-W_qW_q^\dagger)D=W_q+D=W.
+R=I_m+W_q^\dagger D,\qquad
+U=(I_n-W_qW_q^\dagger)D.
 \]
 
-For the **exact Moore–Penrose inverse**, `P=Wq Wq†` is the orthogonal projector onto the column space of `Wq` in input space. Then `U=(I-P)W` and `Wq.T @ U=0`. `R` recovers the projection `PW` through the quantized **preactivation**, while `U` maps input information unavailable from `xWq`. If `U!=0`, no linear decoder can reconstruct `xW` from `xWq` for all inputs. Restricted data distributions can change that conclusion, and ReLU can hide a missing direction's output effect.
-
-**Numerical truncation is a different statement.** The implementation uses a tolerance-truncated inverse `Wq†_τ`: singular values at or below `τ=rtol*σmax` are omitted. With `Pτ=Wq Wq†_τ`, the implemented remainder is `Uτ=(I-Pτ)(W-Wq)`. Reconstruction still holds, and `Uτ` is orthogonal to the **retained** column space. However, it need not satisfy `Wq.T @ Uτ=0` or equal `(I-Pτ)W`. A discarded nonzero singular direction is still present in the original quantized preactivation; recovering it may require a very large gain. Accordingly, a nonzero `Uτ` is not by itself proof of information loss from the full `Wq`.
-
-The pseudoinverse tolerance is exposed (`rtol`, default `max(shape)*dtype_epsilon`). Diagnostics report numerical rank, retained-spectrum conditioning, all three singular spectra, `max(abs(Wq.T @ U))`, and reconstruction residual. The reported full-map orthogonality residual need not vanish under truncation; it is not an acceptance criterion in that case. `U_rank` uses an absolute threshold scaled to the original maps so that tiny floating-point leftovers are not counted as meaningful rank.
-
-![Map decomposition and singular spectra](figures/quant_geometry/map_decomposition.png)
-
-**Figure 1.** A bounded 2-bit quantizer maps `W=[[1,-0.35],[0.28,0.22]]` to `Wq=[[1,0],[0,0]]`. The resulting `R=[[1,-0.35],[0,1]]` recovers the first input row. `U=[[0,0],[0.28,0.22]]` retains the second row, which is absent from `Wq`. This example has an exact null direction, so its missing-information interpretation is valid. A full-row-rank widening map has `U=0` in exact arithmetic when no nonzero singular values are discarded.
-
-## 2. Three exact error components, with float bias
-
-`aleph/qgeom/ledger.py` computes actual component vectors for **every sample**. Every local ledger compares the FP and quantized layer on the **same input**. Let
+Thus \(R\in\mathbb R^{m\times m}\), \(U\in\mathbb R^{n\times m}\), and
 
 \[
-z_q=xW_q+b,\quad h=\phi(z_q),\quad y=\phi(xW+b),\quad A(v)=vR+b-bR.
+W_qR+U=W_q+W_qW_q^\dagger D+(I_n-W_qW_q^\dagger)D=W.
 \]
 
-The affine offset preserves the shared float bias:
+The geometry of this identity is a two-part repair: **move the quantized shape by R**, then **add the input-dependent displacement xU**. R sees only the quantized preactivation; xU can use the original input.
+
+With an exact Moore–Penrose inverse, \(P=W_qW_q^\dagger\) projects onto the column space of \(W_q\) in input space. Then \(W_qR=PW\), \(U=(I_n-P)W\), and \(W_q^\top U=0\). A direction \(d\) with \(dW_q=0\) is invisible in the quantized preactivation. If \(dW\ne0\), two inputs separated by d coincide under the Q map but separate under the FP map. No decoder of that preactivation alone can distinguish them over all inputs. A restricted dataset or activation can hide the distinction.
+
+![The patch collapses into a line; R moves the line and xU restores its missing width](figures/quant_geometry/geometry_loss.png)
+
+**Figure 2 — an actual missing direction.** Here
+\(W=\left[\begin{smallmatrix}1&0.3\\0.25&0.25\end{smallmatrix}\right]\),
+\(W_q=\operatorname{diag}(1,0)\),
+\(R=\left[\begin{smallmatrix}1&0.3\\0&1\end{smallmatrix}\right]\), and
+\(U=\left[\begin{smallmatrix}0&0\\0.25&0.25\end{smallmatrix}\right]\).
+A=(0.4,−0.8) and B=(0.4,0.8) coincide after quantization and remain together after R: a map of a line cannot restore its width. Adding xU separates them and restores the entire FP patch. These are preactivation states; Figure 5 shows the associated **activated** range-error comparison.
+
+For a shared bias, use the affine transport
 
 \[
-A(z_q)+xU=(xW_q+b)R+b-bR+xU=x(W_qR+U)+b=xW+b.
+A(v)=vR+b-bR.
 \]
 
-Apply the same affine correction after activation when defining the ledger:
+The translation \(b-bR\) puts the transported bias back where it belongs. Consequently, with \(z_q=xW_q+b\),
 
 \[
-e_{\rm uncomp}=h-A(h),\qquad
- e_{\rm NL}=A(h)-\phi(A(z_q)),\qquad
- e_{\rm range}=\phi(A(z_q))-y.
+A(z_q)+xU=x(W_qR+U)+b=xW+b.
 \]
 
-Their sum telescopes:
+The figures use b=0, so A is simply R. The definitions below retain the bias exactly.
 
-\[
-[h-A(h)]+[A(h)-\phi(A(z_q))]+[\phi(A(z_q))-y]=h-y.
-\]
+### Numerical policy and the meaning of “missing”
 
-The **total** is signed Q-minus-FP; each component is a signed difference between successive counterfactual states, not individually a Q-minus-FP error. With `b=0`, these reduce to the plan's equations. With the identity activation, `h=zq` and `A(h)=phi(A(zq))`, so nonlinear error is zero even with bias.
+If the inverse is tolerance-truncated, write it \(W_{q,\tau}^\dagger\) and use that inverse in the definitions of R and U. Reconstruction still holds, but
+\(U_\tau=(I-P_\tau)(W-W_q)\), where \(P_\tau=W_qW_{q,\tau}^\dagger\) projects onto the retained columns. This need not equal \((I-P_\tau)W\), and only retained-space orthogonality is guaranteed. A tiny **nonzero** direction remains present in xWq: recovering it may require a large gain. A nonzero truncated remainder therefore measures what this correction policy leaves unrecovered; it does not alone establish lost information. The collapse in Figure 2 has an exact zero direction.
 
-These mechanisms are an **accounting convention**, not a unique causal decomposition. The choice `R=I+Wq†(W-Wq)` fixes an identity-centered extension. For an exact pseudoinverse, adding any `N` with `Wq N=0` leaves the reconstructed linear map unchanged. But ReLU can move `h` outside the row space of `Wq`, so `hN` can be nonzero and change the uncompensated/nonlinear terms. The implementation fixes `R`; comparisons across different rank policies or correction extensions must state those choices.
+## 3. The ledger: four states, three signed displacements
 
-The API exposes preactivations, postactivations, `recoverable_pre=A(zq)`, `recoverable_post=phi(A(zq))`, and `transported_post=A(h)`. `ErrorLedger.compute` checks both affine reconstruction and telescoping coordinate by coordinate and raises on failed checks. Default absolute/relative tolerances are `1e-5` for float32 and `1e-10` for float64; callers may override them. Ill-conditioned maps may require float64 or an explicitly changed rank tolerance rather than silently relaxing the check.
+All four states use the **same input x**, the same bias, and the same activation. Define
 
-### Uncompensated recoverable deformation
-
-`ledger.uncomp = h-A(h)` is the discrepancy caused by leaving the available affine correction unapplied. It can be large even when the representation retains enough information to repair the linear map. It is signed Q-minus-corrected, so the correction itself points in the opposite direction.
-
-![Uncompensated deformation: input footprint, signed vectors and example](figures/quant_geometry/component_uncomp.png)
-
-**Figure 2.** The negative shear in `R` would move a positive quantized first coordinate into a negative second coordinate. The blue arrows are `h-A(h)` (from corrected state to uncorrected state), not correction arrows. The right panel compares the two states and their signed difference at the largest example. These corrected-after-ReLU coordinates may be negative; they are intermediate counterfactual states, not ordinary ReLU outputs.
-
-### Nonlinearity-induced error
-
-`ledger.nonlinear = A(h)-phi(A(zq))` measures failure of the recoverable affine correction to commute with the activation. Correcting the map after ReLU and correcting it before ReLU generally give different results. This identifies the failure of this correction family/order; it does not prove that an unrestricted oracle or every other decoder fails.
-
-![Nonlinearity-induced error: input footprint, signed vectors and example](figures/quant_geometry/component_nonlinear.png)
-
-**Figure 3.** For a positive first input coordinate, ReLU clips the negative second coordinate created by the shear; the orange and blue components cancel. For a negative first coordinate (the selected example in the figure), applying the shear before ReLU creates a positive second coordinate, whereas applying ReLU first removes the input needed to create it. The orange vectors capture both cases. Nonlinear error can therefore cancel another component rather than increase the total norm.
-
-### Linearly inaccessible range error
-
-`ledger.range = phi(A(zq))-y` measures the output effect of adding back `xU`. It depends on the input and activation: a nonzero `U` can be masked by ReLU, while another sample exposes it. For an exact null-space split, the missing input contribution cannot be reconstructed linearly from `xWq` for all inputs. Under numerical truncation, this term can instead reflect intentionally uncorrected, small nonzero singular directions. Both remain correctable by an oracle with FP access.
-
-![Range error: input footprint, signed vectors and example](figures/quant_geometry/component_range.png)
-
-**Figure 4.** The removed second input row changes the FP output while leaving the quantized preactivation unchanged for inputs with the same first coordinate. The purple arrows compare the recovered affine output with the actual FP output. This isolates missing input information from the recoverable shear.
-
-### Exactness and interaction
-
-For the specific zero-bias input `x=(1,2)`, the states are:
-
-| State / vector | Value |
-|---|---|
-| Quantized output `h` | `(1, 0)` |
-| Transported output `hR` | `(1, -0.35)` |
-| Activated recovered preactivation | `(1, 0)` |
-| FP output `y` | `(1.56, 0.09)` |
-| Uncompensated | `(0, +0.35)` |
-| Nonlinear | `(0, -0.35)` |
-| Range | `(-0.56, -0.09)` |
-| Total Q-minus-FP | `(-0.56, -0.09)` |
-
-The first two vectors cancel at this input; they do not cancel over the whole grid. For this particular fixture, writing the first input coordinate as `s` and `s_+=max(s,0)` gives
-
-\[
-e_{\rm uncomp}=(0,0.35s_+),\qquad
-e_{\rm NL}=(0,-0.35|s|).
-\]
-
-Thus they cancel for `s>=0`, but for `x=(-1,0)`, uncompensated error is zero and nonlinear error is `(0,-0.35)`. Reporting individual energies as additive fractions of total energy would be misleading. `ledger.gram()` provides `Gij=mean(<ei,ej>)`, with
-
-\[
-\mathbb E\|e_{\rm total}\|^2=\sum_iG_{ii}+2\sum_{i<j}G_{ij}=\sum_{i,j}G_{ij}.
-\]
-
-Each off-diagonal pair contributes **twice** to total energy. This is an uncentered second-moment Gram matrix, not a covariance matrix or unique allocation of error percentages.
-
-![Ledger norms, interaction matrix and exactness](figures/quant_geometry/ledger_accounting.png)
-
-**Figure 5.** Norms are shown separately, the Gram matrix exposes negative cross terms, and the final panel shows the per-sample telescoping residual. In the saved float64 grid experiment its maximum is approximately `5.55e-17`.
-
-## 3. Shared MLP traces and residual oracle
-
-`aleph/qgeom/instrumented_mlp.py` extracts the reusable forward/oracle responsibilities previously embedded in `notebooks/canonical_error_correction.py`. It reuses `ForwardTrace` from `aleph/qgeom/canonical.py`; it does not replace the existing canonical-coordinate analysis. The new runner adapts the old oracle concept to explicit post-activation FP-minus-Q residuals, preserving the raw damaged states.
-
-`InstrumentedMLP` snapshots an ordinary float `nn.Sequential` chain of Linear/ReLU modules or an unprepared `aleph.models.MLP`. Hidden linear layers require ReLU; the final layer may be linear or ReLU. Other modules, prepared QAT models and unsupported wrappers are rejected. PyTorch `[output,input]` weights are transposed at the adapter boundary. The snapshot is detached, independent of later edits to the model, and supports float32/float64 on the model's device.
-
-Each `LayerTrace` contains:
-
-- Layer index/name, activation, quantization metadata and selected status.
-- Actual run input and reference FP input.
-- Reference FP and raw Q pre/post states; consumed post state after any correction.
-- Exact oracle residual, correction-applied flag and ReLU disagreement mask against reference FP.
-- Same-input creation ledger, propagated vector and raw total vector.
-
-For a run input `a` that may already differ from the FP input, the runner defines local creation as `phi(aWq+b)-phi(aW+b)` and propagated error as `phi(aW+b)-h_fp`. These vectors telescope to raw total error. Norms do not necessarily add. This is a local-versus-incoming accounting identity; it does not separately propagate the three mechanisms through nonlinear downstream layers.
-
-`ActivationTrace.fp` is the reference `ForwardTrace`; `.raw_quantized` contains pre/post states before each intervention; `.consumed_post_acts` contains states passed to the next layer. A raw trace in an oracle run is conditioned on earlier corrected inputs, so it must not be confused with ordinary quantized inference. `.output` is the final consumed state.
-
-`ResidualOracle.residual(hq, layer)` returns `h_fp-hq`, the **opposite sign** to the ledger. A `CorrectionBridge(source=i,target=i)` restores the output of linear layer `i` before layer `i+1` consumes it. A later target restores at that later layer. Indices are zero-based **linear-layer indices**, not Sequential module positions. An exact bridge restores all accumulated discrepancy at its target; it is a source-specific intervention only when the named source is the sole perturbed layer.
-
-![Independent layer quantization and raw/consumed states](figures/quant_geometry/activation_trace.png)
-
-**Figure 6.** Only layer 0 of a seeded, untrained `2→5→3→2` MLP is quantized. Ordinary Q inference propagates the damage. The immediate bridge leaves raw damage visible at layer 0, restores its consumed activation, and returns the FP downstream trajectory. The other panels expose the individual sample states, local/propagated accounting, and local component magnitudes. Float biases and activations are preserved.
-
-![All-layer immediate correction and isolated local ledgers](figures/quant_geometry/oracle_trace.png)
-
-**Figure 7.** Quantizing every layer while immediately restoring every output gives every layer the FP input. Each raw ledger still records nonzero damage, while consumed states match FP. The saved example's final discrepancy is zero in float32; tests use explicit numerical tolerances rather than demanding universal bitwise equality.
-
-### API example
-
-```python
-import torch
-from torch import nn
-from aleph.qgeom import (
-    WeightQuantizer, MapDecomposition, ErrorLedger,
-    InstrumentedMLP, CorrectionBridge,
-)
-
-# Geometry modules use row-vector convention.
-W = torch.tensor([[1., -.35], [.28, .22]], dtype=torch.float64)
-x = torch.tensor([[1., 2.]], dtype=W.dtype)
-quantizer = WeightQuantizer(bits=2)
-q = quantizer(W)
-decomp = MapDecomposition.from_weights(W, q.quantized)
-ledger = ErrorLedger.compute(x, decomp)
-assert torch.allclose(ledger.uncomp + ledger.nonlinear + ledger.range, ledger.total)
-
-# Runner adapts nn.Linear weights and keeps all biases/activations float.
-model = nn.Sequential(nn.Linear(2, 5), nn.ReLU(), nn.Linear(5, 2))
-runner = InstrumentedMLP(model, quantizer=quantizer)
-ordinary = runner.run(x.float(), quantized_layers=[0])
-corrected = runner.run(x.float(), quantized_layers=[0],
-                       bridges=[CorrectionBridge(source=0, target=0)])
-```
-
-## Reproduction, validation and contribution record
-
-From repository root:
-
-```sh
-.venv/bin/python -m experiments.quant_geometry_foundations
-.venv/bin/python -m pytest tests/test_qgeom_exact_ledger.py tests/test_qgeom_instrumented_mlp.py tests/test_qgeom_metrics.py tests/test_qgeom_policy.py -q
-```
-
-The experiment saves eight figures plus [the run manifest](figures/quant_geometry/run_manifest.json). The manifest records revision/dirty state, seed, package versions, exact model weights and biases, dataset/grid, precision, quantization scales, sites, tolerances and measured residuals. The grid example uses no trained or fitted component, so no train/test split is claimed. The rank-policy audit uses separately prescribed matrices, explicitly identified in the manifest; they are not outputs of the 2-bit quantizer.
-
-| Contribution | Files | Verification / associated visual |
+| State | Formal definition | Geometric operation |
 |---|---|---|
-| Bounded weight-only quantization and metadata | `aleph/qgeom/weight_quantizer.py` | Bit bounds, ties, zero weights, deterministic output and snapshot ownership; Figure 1 |
-| Recoverable/range map split and diagnostics | `aleph/qgeom/map_decomposition.py` | Rectangular, zero, rank-deficient and explicitly truncated maps; Figure 1 |
-| Bias-aware exact creation ledger and interaction summary | `aleph/qgeom/ledger.py` | Per-sample telescoping, affine reconstruction, identity activation, ReLU cancellation and Gram identity; Figures 2–5 |
-| Shared traces and model adapter | `aleph/qgeom/instrumented_mlp.py` | FP equivalence, arbitrary layer selection, detached snapshots, biasless/final-ReLU models and unsupported architecture checks; Figure 6 |
-| Explicit residual oracle and correction bridges | `aleph/qgeom/instrumented_mlp.py` | Immediate correction at each selected source, all-layer reset of inputs, delayed target sanity check, raw-state preservation and residual sign; Figures 6–7 |
-| Reusable plotting and reproducible example | `aleph/qgeom/ledger_plots.py`, `experiments/quant_geometry_foundations.py` | Generated artifacts and manifest; Figures 1–8 |
+| \(s_0\) | \(h=\phi(z_q)\) | Quantized map, then activation |
+| \(s_1\) | \(A(h)\) | Move the already activated Q shape |
+| \(s_2\) | \(\phi(A(z_q))\) | Move the Q preactivation, then activate |
+| \(s_3\) | \(\phi(A(z_q)+xU)=y\) | Restore the omitted input contribution before activation |
 
-This implements the plan's single-layer foundation and shared MLP/oracle apparatus. The causal tests also establish immediate single-layer and all-layer restoration. Delayed-site plumbing has a sanity test, but fitted correction families, held-out recoverability curves, ordered component propagation and source-specific tracking remain future work. Existing notebook research claims were not revalidated by retraining here.
+These are counterfactual states, not four successive layers of a network. In particular, s1 can have negative coordinates even with ReLU: it is an affine transformation **after** ReLU.
 
-## Mathematical audit: numerical rank and attribution conventions
+The local ledger is
 
-The reconstruction, affine-bias, telescoping, Gram-energy, and local/propagated identities above were checked algebraically and numerically. The zero-bias table and a biased example now have independent expected-coordinate tests. Two interpretation limits needed clarification:
+\[
+\mathcal L(x)=\big(e_{\rm uncomp}(x),e_{\rm NL}(x),e_{\rm range}(x);e_{\rm total}(x)\big),
+\]
 
-**Truncation can create a residual without losing information.** For prescribed `W=I` and `Wq=diag(1,1e-8)`, a cutoff of `1e-6` gives `R=I` and `U=diag(0,1-1e-8)`. Retaining the small singular value instead gives `R=diag(1,1e8)` and `U=0`. The second input coordinate is weakly represented, not absent. In the truncated case, `Wq.T @ U=diag(0,1e-8*(1-1e-8))` is nonzero; only retained-space orthogonality holds.
+with
 
-![Numerical truncation versus an invertible high-gain correction](figures/quant_geometry/rank_policy_audit.png)
+\[
+\boxed{e_{\rm uncomp}=s_0-s_1,\quad
+ e_{\rm NL}=s_1-s_2,\quad
+ e_{\rm range}=s_2-s_3,\quad
+ e_{\rm total}=s_0-s_3=h-y.}
+\]
 
-**Figure 8.** Singular values and both cutoffs, the resulting remainder norms, and recovery of the second output. The rank-2 decoder recovers the FP coordinate from Q alone at gain `1e8`; the truncated correction needs the remainder. This figure distinguishes a numerical policy decision from actual loss through an exact null direction.
+An arrow for \(s_i-s_j\) starts at \(s_j(x)\) and ends at \(s_i(x)\). Every ledger arrow below follows that convention. The three vectors point backwards along the proposed repair path; the total is **Q minus FP**. Telescoping is the exact accounting identity
 
-**The three components depend on the chosen extension of R.** Take `W=Wq=[[1,-1],[0,0]]` and `x=(1,0)`. The implemented identity-centered choice gives `R=I`, `U=0`, and all errors zero. Alternatively, let `N` have every entry `0.5`. Since `Wq N=0`, `R'=I+N` reconstructs the same weights. Yet `h=(1,0)` gives `hR'=(1.5,0.5)`: uncompensated error is `(-0.5,-0.5)` and nonlinear error is `(0.5,0.5)`. They cancel and total error remains zero. Nonzero components alone therefore do not establish physical information destruction; the declared correction convention matters.
+\[
+(s_0-s_1)+(s_1-s_2)+(s_2-s_3)=s_0-s_3.
+\]
 
-The existing Gram figure (Figure 5) illustrates why signed interaction must be reported alongside component magnitudes. No numerical correction was needed to the original `(1,2)` table or the affine-bias equations.
+### Uncompensated deformation: an available motion left unapplied
+
+\[
+e_{\rm uncomp}(x)=\phi(z_q)-A(\phi(z_q)).
+\]
+
+Compare the activated Q shape with that same shape after affine transport. The displacement is what we leave in place by not applying A. Its negative is the correcting motion. It does not assert that this post-activation motion alone will recover FP; the next component measures that limitation.
+
+![Exact uncompensated ledger states with signed displacements from the corrected shape to the Q shape](figures/quant_geometry/ledger_geometry_uncomp.png)
+
+**Figure 3 — s1 versus s0, using the Figure 1 map.** The left panel moves the clipped Q grid by R; the middle leaves it where ReLU put it. The right overlays them and draws s1→s0 for A and B. A=(−0.6,0.5) has s1=(−0.1,0.4), s0=(0,0.5), so its ledger vector is (0.1,0.1). B=(0.7,−0.4) has vector (0,−0.21). The negative coordinate in the corrected shape is permissible because this is s1, not a ReLU output.
+
+### Nonlinear error: the same correction on opposite sides of clipping
+
+\[
+e_{\rm NL}(x)=A(\phi(z_q))-\phi(A(z_q)).
+\]
+
+One route clips and then moves; the other moves and then clips. If they commute, this vector is zero. With identity activation it is always zero, including with bias. For ReLU the geometric question is whether the motion needed a coordinate that clipping removed, or whether the motion created a coordinate that clipping would remove.
+
+![Move then clip versus clip then move, with the exact nonlinear ledger vector](figures/quant_geometry/ledger_geometry_nonlinear.png)
+
+**Figure 4 — s2 versus s1.** Here \(W_q=I\), \(U=0\), and \(R=W=\left[\begin{smallmatrix}1&-0.4\\0.4&1\end{smallmatrix}\right]\). A=(−0.8,0) and B=(0,−0.8) both become the origin under Q's ReLU. Correcting afterwards cannot separate them. Correcting first gives activated outputs (0,0.32) and (0,0), respectively. A's nonlinear arrow points down from (0,0.32) to (0,0); B's vector is zero. The [preactivation storyboard](figures/quant_geometry/geometry_relu.png) shows where the distinction disappears.
+
+In this fixture the collision proves no decoder of h alone can recover both FP outputs. In general, a nonzero nonlinear vector proves only that this declared correction fails to commute with activation; it does not prove every correction family fails.
+
+### Range error: the activated effect of the omitted input contribution
+
+\[
+e_{\rm range}(x)=\phi(A(z_q))-\phi(A(z_q)+xU).
+\]
+
+Compare the recovered route with the FP route after adding xU. The remainder is a preactivation displacement; the ledger component is its **effect after activation**, not generally −xU. ReLU may suppress it, expose it, or change its direction by clipping different coordinates.
+
+![Exact range ledger states: a recovered line versus the activated FP patch](figures/quant_geometry/ledger_geometry_range.png)
+
+**Figure 5 — s3 versus s2, using the Figure 2 map.** The recovered route places A and B together at (0.4,0.12). The FP activated route separates them to (0.2,0) and (0.6,0.32). The signed range vectors are therefore (0.2,0.12) for A and (−0.2,−0.20) for B. Their arrows return the separated FP points to the same recovered point. Figure 2 shows the missing width; this figure shows exactly what the ledger measures after clipping.
+
+### What fixes the attribution?
+
+The ledger is an exact accounting convention relative to the chosen R and rank policy, rather than a unique partition into physical causes. For the exact inverse, replacing R by R+N with \(W_qN=0\) preserves the linear reconstruction with the same U. But the bias-preserving affine transport becomes \(A'(v)=A(v)+(v-b)N\). Activation can move \(h-b\) outside the row space of Wq, so uncompensated and nonlinear components can change while their sum and the total remain unchanged. We fix the identity-centered R above whenever comparing component values.
+
+## 4. Why component magnitudes cannot be added
+
+Take the zero-bias map
+\(W=\left[\begin{smallmatrix}1&-0.35\\0.28&0.22\end{smallmatrix}\right]\),
+\(W_q=\operatorname{diag}(1,0)\), and x=(1,2). The four states are
+
+\[
+s_0=(1,0),\quad s_1=(1,-0.35),\quad s_2=(1,0),\quad s_3=(1.56,0.09).
+\]
+
+![The exact ledger path with opposing uncompensated and nonlinear vectors](figures/quant_geometry/ledger_geometry_cancellation.png)
+
+**Figure 6 — a repair path that doubles back.** Starting at FP (s3), the range arrow reaches s2. The nonlinear arrow goes down to s1; the uncompensated arrow comes straight back to s0=s2. Their vertical displacements cancel:
+
+\[
+e_{\rm uncomp}=(0,0.35),\qquad e_{\rm NL}=(0,-0.35),\qquad
+ e_{\rm range}=e_{\rm total}=(-0.56,-0.09).
+\]
+
+This cancellation is sample-dependent. For this same map, writing \(x=(s,t)\) and \(s_+=\max(s,0)\) gives
+\(e_{\rm uncomp}=(0,0.35s_+)\) and \(e_{\rm NL}=(0,-0.35|s|)\); they cancel for s≥0 but not s<0.
+
+For a dataset \(\{x_k\}_{k=1}^N\), define the interaction ledger
+
+\[
+G_{ij}=\frac1N\sum_k\langle e_i(x_k),e_j(x_k)\rangle,
+\qquad i,j\in\{\mathrm{uncomp},\mathrm{NL},\mathrm{range}\}.
+\]
+
+The inner product measures alignment: same-direction arrows reinforce, opposing arrows cancel, perpendicular arrows have zero cross term. Therefore
+
+\[
+\frac1N\sum_k\|e_{\rm total}(x_k)\|^2
+=\sum_iG_{ii}+2\sum_{i<j}G_{ij}.
+\]
+
+G is an uncentered second-moment Gram matrix. Its diagonal entries are individual mean squared magnitudes; its off-diagonal entries record interaction. Figure 6 supplies the intuitive picture for a negative cross term. Individual energies are not additive percentages of total error.
+
+## 5. Creation here versus propagation through the network
+
+A local ledger uses the same input on both routes. In a network, the quantized run may arrive with input a while FP arrives with a_fp. If \(h_{\rm fp}=\phi(a_{\rm fp}W+b)\), define
+
+\[
+e_{\rm local}=\phi(aW_q+b)-\phi(aW+b),\qquad
+ e_{\rm propagated}=\phi(aW+b)-h_{\rm fp}.
+\]
+
+Then raw total error is their sum. The first term measures the layer's own map change on the arriving point. The second measures where the upstream-displaced point lands under the unchanged FP layer. The three-component ledger decomposes the first term; it does not yet trace each component separately through later nonlinear layers.
+
+An exact residual oracle adds \(h_{\rm fp}-h_q\) at a chosen output. Geometrically, it moves each damaged point back to its FP location before the next layer consumes it. Immediate resets isolate local creation by giving each following layer the FP input. A delayed reset restores the accumulated discrepancy at that later layer; it is source-specific only when the named source is the sole perturbation. Following named points through those alternative trajectories is the next geometric experiment.
+
+The [implementation README](quant_geometry_implementation.md) describes the runner and oracle interfaces. The [verification report](quant_geometry_verification.md) records tests, diagnostic figures, numerical results, and contributions. The [progress tracker](quant_geometry_progress.md) records the remaining experiments.

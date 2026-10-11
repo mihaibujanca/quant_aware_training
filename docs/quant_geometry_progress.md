@@ -12,6 +12,7 @@ Baseline: `0be49df7` (`Snapshot research state before quantization return`).
 - Mark DONE only with reusable implementation, relevant passing tests, and required experiment artifacts. Record paths and verification commands below.
 - For each experiment record revision, seed, dataset/split, model dimensions, quantization scheme/scales/bits, selected quantized layers, correction sites, tolerances, and output paths.
 - Update this file with each meaningful implementation change. Keep research findings separate from implementation completion; append decisions and verification to the dated log.
+- Each tracked ledger component needs a formal definition and a picture of the exact states it compares. Label arrow direction and distinguish preactivation cause from post-activation measurement.
 - Explanatory figures must show the geometric cause with identifiable samples or shapes across transformations. Norm curves, heatmaps and matrix plots support the reference; they do not by themselves satisfy the intuition requirement.
 
 ## Repository audit (initial baseline, before implementation)
@@ -37,7 +38,7 @@ Baseline: `0be49df7` (`Snapshot research state before quantization return`).
 | ID | Status | Deliverable / completion gate |
 |---|---|---|
 | A0 | DONE | Read plan, audit relevant reusable code and prototypes, create branch and this tracker. |
-| M1 | DONE | `weight_quantizer.py`, `map_decomposition.py`, `ledger.py`; exactness/orthogonality tests, bounded bit grid, bias-aware per-sample vectors; Figures 1–5 in the foundations report. |
+| M1 | DONE | `weight_quantizer.py`, `map_decomposition.py`, `ledger.py`; exactness/orthogonality tests, bounded bit grid, bias-aware per-sample vectors; diagnostic Figures 1–5 in the verification report. |
 | M2 | DONE | `instrumented_mlp.py` reuses `ForwardTrace`, selects arbitrary weight-quantized layers, records FP/raw pre/post and corrected consumed post states plus metadata; local/propagated identity tested; Figure 6. |
 | M3 | DONE | Shared `ResidualOracle` and `CorrectionBridge`; immediate intervention tested independently at every layer of a variable-width MLP; raw damage preserved and FP downstream trajectory restored; Figure 6. |
 | M4 | DONE | All-layer immediate mode tested: inputs and consumed outputs match FP at every layer while local damage remains visible; comparison with ordinary Q shown in Figure 7. This is apparatus validation on an untrained MLP, not a trained-model research result. |
@@ -58,7 +59,7 @@ Next implementation slice:
 - Implemented row-vector weights `[in, out]` internally; the MLP adapter transposes `nn.Linear.weight` at the boundary.
 - Resolved float bias with affine transport `A(v)=vR+b-bR`. Use uncompensated `h-A(h)`, nonlinear `A(h)-phi(A(zq))`, and range `phi(A(zq))-y`. This preserves exactness and zero nonlinear error for the identity activation. The zero-bias case reduces to the written plan.
 - Ledger error is Q minus FP; oracle residual is FP minus Q. Name these signs explicitly.
-- Full row rank of a widening `Wq` gives `U=0` in exact arithmetic if no nonzero singular values are discarded. Under truncation, `U` is a correction-policy remainder and need not be orthogonal to the full `Wq` or prove lost information. See the mathematical audit and Figure 8 in the foundations report.
+- Full row rank of a widening `Wq` gives `U=0` in exact arithmetic if no nonzero singular values are discarded. Under truncation, `U` is a correction-policy remainder and need not be orthogonal to the full `Wq` or prove lost information. See the mathematical audit and Figure 8 in the verification report.
 - A same-input ledger measures local creation. Comparing layers fed different upstream states also includes propagation and needs separate accounting.
 - Components are not generally orthogonal. Their norm/energy ratios are not additive percentages of total error; report cross terms or use clearly defined allocations.
 - Attribution also depends on the declared extension of `R`: a change `R -> R+N` with `Wq N=0` can alter post-ReLU components while preserving the original linear map and total error. The implementation fixes the identity-centered convention.
@@ -103,3 +104,11 @@ Next implementation slice:
 - Reproduction: `MPLCONFIGDIR=/tmp/qgeom-mpl .venv/bin/python -m experiments.quant_geometry_visual_story`. Add `--fragment /absolute/path/story.html` to populate the moving version.
 - Browser review verified step controls, full sequence playback, zero JavaScript errors, ReLU collision label, and a 360px layout without horizontal overflow. Visually inspected all three storyboards and desktop/mobile animation screenshots.
 - This corrects the explanatory layer; no quantization or oracle algorithm was changed, and no new trained-model result is claimed.
+
+### 2026-10-11 — unite geometry and rigor; separate document roles
+
+- Rewrote [the foundations research note](quant_geometry_foundations.md) around the affine map split, four precisely defined counterfactual states, and the exact local ledger. Paired each formal component with an actual state-pair figure and signed A/B arrows. Retained bias preservation, numerical truncation, extension dependence, telescope proof and Gram interaction identity.
+- Added `experiments/quant_geometry_ledger_figures.py` and four reproducible figures: three exact component comparisons and the independently specified `(1,2)` cancellation path. Pre-activation storyboards explain causes; new figures show the activated quantities actually measured.
+- Moved API details and reproduction into [the implementation README](quant_geometry_implementation.md). Moved numerical evidence, diagnostic figures, contribution mapping, and the mathematical audit into [the verification report](quant_geometry_verification.md). The old visual guide is now navigation to the unified research note.
+- Reproduction: `MPLCONFIGDIR=/tmp/qgeom-mpl XDG_CACHE_HOME=/tmp/qgeom-cache .venv/bin/python -m experiments.quant_geometry_ledger_figures`. Visually inspected all four new figures and checked caption coordinates against the existing ledger states.
+- No core algorithm changed. The targeted acceptance suite remains **74 passed**. Research scope and the next implementation slice remain unchanged.

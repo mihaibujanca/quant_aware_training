@@ -1,6 +1,6 @@
 # Manim: Geometric Weight Quantization Story
 
-The exact ledger now also has a [geometry-first guide](../docs/quant_geometry_visual_guide.md) and a moving version in `quant_geometry_story.html`. It keeps the grid, circle and sample identities continuous across transformations, following `LayerProgressionScene` and `CorrectionAndTopologyScene`. Generate numeric states and storyboards with `python -m experiments.quant_geometry_visual_story`; pass `--fragment /absolute/path/story.html` to generate the populated animation fragment. The HTML template alone contains a data placeholder and is not a ready-to-open page.
+The exact ledger now also has a [research note pairing definitions and geometry](../docs/quant_geometry_foundations.md) and a moving version in `quant_geometry_story.html`. It keeps the grid, circle and sample identities continuous across transformations, following `LayerProgressionScene` and `CorrectionAndTopologyScene`. Generate numeric states and storyboards with `python -m experiments.quant_geometry_visual_story`; pass `--fragment /absolute/path/story.html` to generate the populated animation fragment. The HTML template alone contains a data placeholder and is not a ready-to-open page.
 
 This animation track follows `docs/geometric_error_correction_brief.md` with a 2->2->2 ReLU toy model.
 
