@@ -88,3 +88,17 @@ __all__ = [
     "ReLUDisagreementTracker",
     "error_attribution",
 ]
+
+# Exact weight-only attribution and intervention toolkit.
+from aleph.qgeom.weight_quantizer import WeightQuantizer, QuantizedWeight, QuantizationMetadata
+from aleph.qgeom.map_decomposition import MapDecomposition
+from aleph.qgeom.ledger import ErrorLedger
+from aleph.qgeom.instrumented_mlp import (
+    ActivationTrace, LayerTrace, InstrumentedMLP, ResidualOracle, CorrectionBridge,
+)
+
+__all__ += [
+    "WeightQuantizer", "QuantizedWeight", "QuantizationMetadata", "MapDecomposition",
+    "ErrorLedger", "ActivationTrace", "LayerTrace", "InstrumentedMLP", "ResidualOracle",
+    "CorrectionBridge",
+]

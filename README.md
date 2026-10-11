@@ -1,5 +1,7 @@
 # Geometric Neural Network Compression Plan
 
+The weight-only quantization geometry workstream has an [implementation plan](docs/quantization_geometry_plan.md), [progress tracker](docs/quant_geometry_progress.md), and [foundations report with component explanations and figures](docs/quant_geometry_foundations.md). Reproduce its examples with `.venv/bin/python -m experiments.quant_geometry_foundations`.
+
 ## What This Project Is About
 
 Neural networks trained via gradient descent are massively overparameterized relative to the functions they learn. The optimization process (SGD, Adam, etc.) *requires* this redundancy — it's how gradient-based methods navigate the loss landscape. But the resulting trained function is typically much simpler than the network that represents it. A ReLU network, for example, builds piecewise linear approximations of smooth curves using many small linear segments, each requiring its own parameters. The network is the shipyard; the function is the ship.
