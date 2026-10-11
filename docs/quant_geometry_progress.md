@@ -112,3 +112,10 @@ Next implementation slice:
 - Moved API details and reproduction into [the implementation README](quant_geometry_implementation.md). Moved numerical evidence, diagnostic figures, contribution mapping, and the mathematical audit into [the verification report](quant_geometry_verification.md). The old visual guide is now navigation to the unified research note.
 - Reproduction: `MPLCONFIGDIR=/tmp/qgeom-mpl XDG_CACHE_HOME=/tmp/qgeom-cache .venv/bin/python -m experiments.quant_geometry_ledger_figures`. Visually inspected all four new figures and checked caption coordinates against the existing ledger states.
 - No core algorithm changed. The targeted acceptance suite remains **74 passed**. Research scope and the next implementation slice remain unchanged.
+
+### 2026-10-11 — Figure 1: make quantization and correction distinguishable
+
+- Replaced the identity-quantized deformation fixture with W=[[1,0.65],[-0.35,0.8]], quantized at 2 bits to Wq=[[1,1],[0,1]]. Both FP and Q visibly deform the input; their shapes differ. R=[[1.35,-0.15],[-0.35,0.8]] recovers the FP map with U=0.
+- Removed the Figure 1 reference overlays and ambiguous probe arrows. Numbered panels, named their actual operations, and explicitly identified the matching right panels as the same endpoint reached by different routes. Replaced “weights snapped” with “apply rounded weights” and documented coefficient rounding.
+- Regenerated endpoint data and the moving fragment. Regenerated the dependent Figure 3 uncompensated comparison and updated its exact A/B coordinates. Other figure examples are unchanged.
+- Strengthened the existing deformation test with independently specified quantized weights, R, and probe coordinates, plus checks that the Q shape differs from both input and FP. Targeted acceptance suite: **74 passed**. Visually inspected revised Figures 1 and 3; `git diff --check` passes.

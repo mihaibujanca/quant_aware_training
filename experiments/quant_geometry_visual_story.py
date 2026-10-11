@@ -24,9 +24,11 @@ def main():
     for story in stories:
         fig, axes = plt.subplots(2, 2, figsize=(11, 10), constrained_layout=True)
         fig.suptitle(story.title, fontsize=19)
+        if story.key == "deformation":
+            fig.supxlabel("Two routes: x → xW (FP target), or x → xWq → (xWq)R (corrected)", fontsize=13)
         all_points = np.concatenate([s.numpy() for s in story.states])
         radius = np.abs(all_points).max() * 1.18
-        for ax, index in zip(axes.flat, story.storyboard_indices):
+        for panel, (ax, index) in enumerate(zip(axes.flat, story.storyboard_indices), start=1):
             state = story.states[index].numpy()
             reference = story.reference_indices[index]
             targets = story.states[reference].numpy() if reference is not None else None
@@ -51,8 +53,16 @@ def main():
                 ax.annotate("A = B", state[-2], xytext=(9, -17), textcoords="offset points", color="#0f172a", fontsize=13)
             ax.axhline(0, color="#cbd5e1", linewidth=.8)
             ax.axvline(0, color="#cbd5e1", linewidth=.8)
+            title = story.labels[index]
+            if story.key == "deformation":
+                title = f"{panel}. {title}\n" + (
+                    "The shape before either map",
+                    "Target computed directly from the input",
+                    "Use Wq instead of W on the same input",
+                    "Same coordinates as panel 2; a different route",
+                )[panel - 1]
             ax.set(xlim=(-radius, radius), ylim=(-radius, radius), aspect="equal",
-                   title=story.labels[index], xlabel="Coordinate 1", ylabel="Coordinate 2")
+                   title=title, xlabel="Coordinate 1", ylabel="Coordinate 2")
         fig.savefig(args.output_dir / f"geometry_{story.key}.png", dpi=140, facecolor="white")
         plt.close(fig)
     payload = {"stories": [s.payload() for s in stories]}

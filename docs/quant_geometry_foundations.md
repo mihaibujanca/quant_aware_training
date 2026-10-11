@@ -16,8 +16,17 @@ Here \(\phi\) is coordinatewise ReLU, unless stated otherwise. Weight-only quant
 
 ![The same grid and circle before mapping, after the FP map, after quantization, and after correction](figures/quant_geometry/geometry_deformation.png)
 
-**Figure 1 — deformation before activation.** Here
-\(W=\left[\begin{smallmatrix}1&0.3\\-0.2&0.8\end{smallmatrix}\right]\) and \(W_q=I\). The FP map tilts the grid and stretches the circle into an ellipse. Quantization returns it to a square and circle; another map recovers the FP shape exactly. None of the input directions collapsed. These panels show **preactivation maps**; the post-activation uncompensated ledger vector is defined separately in Figure 3.
+**Figure 1 — two routes to the same preactivation shape.** Panel 1 is the input. Panel 2 applies the original weights, giving the FP target. Panel 3 applies rounded weights **to that same input**, giving a different, more strongly sheared shape. Panel 4 applies R to the panel-3 shape and recovers the target. **Panels 2 and 4 are identical on purpose:** one computes xW directly; the other reaches the same coordinates through \((xW_q)R=xW\). Their difference is the route, not the result.
+
+For this example,
+
+\[
+W=\begin{bmatrix}1&0.65\\-0.35&0.8\end{bmatrix},\qquad
+W_q=\begin{bmatrix}1&1\\0&1\end{bmatrix},\qquad
+R=\begin{bmatrix}1.35&-0.15\\-0.35&0.8\end{bmatrix}.
+\]
+
+The 2-bit quantizer rounds each coefficient to the nearest value in {−1,0,1}: 0.65→1, −0.35→0, and 0.8→1; 1 stays 1. Applying the new matrix gives the sheared shape in panel 3. Both maps preserve two input directions, and \(W_qR=W\), so no additional input contribution is needed: U=0. Activation has not yet been applied; Figure 3 defines the post-activation ledger comparison.
 
 ## 2. Which part can a map on the quantized output recover?
 
@@ -110,7 +119,7 @@ Compare the activated Q shape with that same shape after affine transport. The d
 
 ![Exact uncompensated ledger states with signed displacements from the corrected shape to the Q shape](figures/quant_geometry/ledger_geometry_uncomp.png)
 
-**Figure 3 — s1 versus s0, using the Figure 1 map.** The left panel moves the clipped Q grid by R; the middle leaves it where ReLU put it. The right overlays them and draws s1→s0 for A and B. A=(−0.6,0.5) has s1=(−0.1,0.4), s0=(0,0.5), so its ledger vector is (0.1,0.1). B=(0.7,−0.4) has vector (0,−0.21). The negative coordinate in the corrected shape is permissible because this is s1, not a ReLU output.
+**Figure 3 — s1 versus s0, using the Figure 1 map.** The left panel moves the clipped Q grid by R; the middle leaves it where ReLU put it. The right overlays them and draws s1→s0 for A and B. A=(−0.6,0.9) has s1=(−0.105,0.24), s0=(0,0.3), so its ledger vector is (0.105,0.06). B=(0.7,−0.4) has s1=(0.84,0.135), s0=(0.7,0.3), and vector (−0.14,0.165). The negative coordinate in the corrected shape is permissible because this is s1, not a ReLU output.
 
 ### Nonlinear error: the same correction on opposite sides of clipping
 

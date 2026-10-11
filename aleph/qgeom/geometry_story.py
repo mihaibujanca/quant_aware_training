@@ -51,7 +51,7 @@ def _geometry(probes):
 def build_geometry_stories() -> tuple[GeometryStory, ...]:
     results = []
     specifications = [
-        ("deformation", "A changed shape can still be recoverable", [[1., .3], [-.2, .8]], [[-.6, .5], [.7, -.4]]),
+        ("deformation", "Two different maps; the quantized route can be corrected", [[1., .65], [-.35, .8]], [[-.6, .9], [.7, -.4]]),
         ("relu", "ReLU can erase what the correction needs", [[1., -.4], [.4, 1.]], [[-.8, 0.], [0., -.8]]),
         ("loss", "A flattened shape has lost a direction", [[1., .3], [.25, .25]], [[.4, -.8], [.4, .8]]),
     ]
@@ -63,8 +63,9 @@ def build_geometry_stories() -> tuple[GeometryStory, ...]:
         ledger = ErrorLedger.compute(x, decomp)
         if key == "deformation":
             states = (x, x @ W, x @ Wq, x @ Wq @ decomp.R)
-            labels = ("Input", "Full-precision map", "Weights snapped", "Correct quantized map")
-            references, indices = (None, None, 1, 1), (0, 1, 2, 3)
+            labels = ("Input x", "FP target: xW", "Apply rounded weights: xWq",
+                      "Apply correction: (xWq)R = xW")
+            references, indices = (None, None, None, None), (0, 1, 2, 3)
         elif key == "relu":
             states = (x @ Wq, x @ Wq @ decomp.R, ledger.fp_post,
                       ledger.quant_post, ledger.transported_post)

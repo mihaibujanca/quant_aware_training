@@ -6,7 +6,17 @@ from aleph.qgeom.geometry_story import build_geometry_stories
 
 def test_deformation_is_recoverable_without_collapsing_samples():
     story = build_geometry_stories()[0]
-    torch.testing.assert_close(story.decomposition.quantized_weight, torch.eye(2, dtype=torch.float64))
+    torch.testing.assert_close(story.decomposition.quantized_weight,
+                               torch.tensor([[1., 1.], [0., 1.]], dtype=torch.float64))
+    # Neither quantization nor the FP map returns the input shape unchanged.
+    assert not torch.allclose(story.states[2], story.states[0])
+    assert not torch.allclose(story.states[2], story.states[1])
+    torch.testing.assert_close(story.decomposition.R,
+                               torch.tensor([[1.35, -.15], [-.35, .8]], dtype=torch.float64))
+    torch.testing.assert_close(story.states[1][-2:],
+                               torch.tensor([[-.915, .33], [.84, .135]], dtype=torch.float64))
+    torch.testing.assert_close(story.states[2][-2:],
+                               torch.tensor([[-.6, .3], [.7, .3]], dtype=torch.float64))
     assert story.decomposition.rank == 2
     torch.testing.assert_close(story.decomposition.U, torch.zeros(2, 2, dtype=torch.float64))
     torch.testing.assert_close(story.states[3], story.states[1])
