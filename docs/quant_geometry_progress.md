@@ -12,6 +12,7 @@ Baseline: `0be49df7` (`Snapshot research state before quantization return`).
 - Mark DONE only with reusable implementation, relevant passing tests, and required experiment artifacts. Record paths and verification commands below.
 - For each experiment record revision, seed, dataset/split, model dimensions, quantization scheme/scales/bits, selected quantized layers, correction sites, tolerances, and output paths.
 - Update this file with each meaningful implementation change. Keep research findings separate from implementation completion; append decisions and verification to the dated log.
+- Explanatory figures must show the geometric cause with identifiable samples or shapes across transformations. Norm curves, heatmaps and matrix plots support the reference; they do not by themselves satisfy the intuition requirement.
 
 ## Repository audit (initial baseline, before implementation)
 
@@ -91,3 +92,14 @@ Next implementation slice:
 - Clarified that individual components are counterfactual differences, not each Q-minus-FP, and depend on the chosen extension of `R`; only the total is fixed by FP/Q outputs. Added a zero-quantization-error counterexample with nonzero cancelling components under an alternative correction.
 - Corrected Figure 3's explanation to cover both signs of the first input coordinate, including its selected negative-input example; documented the exact fixture formula `e_NL=(0,-0.35*abs(s))`.
 - Added five independent mathematical regression tests. Targeted suite: **70 passed** using the same command recorded above. Regenerated eight figures, checked the new audit figure visually, and preserved the original numerical results.
+
+### 2026-10-11 — replace formula-first exposition with geometric motion
+
+- Reviewed the Manim source/narrative and a rendered frame from `LayerProgressionScene`. Adopted its continuous shape/point correspondence, rather than presenting scalar diagnostics as the explanation.
+- Added [Watch the shape, then name the error](quant_geometry_visual_guide.md) as the workstream's entry point. Relabeled the foundations report as a technical reference and linked the guide from the root README and animation documentation.
+- Added three geometric stories under `aleph/qgeom/geometry_story.py`: invertible deformation with U=0, information erased by ReLU despite an invertible quantized map, and a true rank-1 collapse that R alone cannot widen. Every story uses the existing quantizer/decomposition/ledger, zero bias, a grid/circle and named probes A/B.
+- Added three reproducible storyboards, exact endpoint data, and `animations/quant_geometry_story.html` for animated point-preserving transitions. Kept coordinate scales fixed throughout each story. Distinguished exact inference endpoints from visual interpolation frames.
+- Added four tests for the claims in the pictures, including A/B collisions versus distinct FP targets and restoration by input-dependent xU. Targeted suite including existing ledger/runner/metrics/policy/model tests: **74 passed**.
+- Reproduction: `MPLCONFIGDIR=/tmp/qgeom-mpl .venv/bin/python -m experiments.quant_geometry_visual_story`. Add `--fragment /absolute/path/story.html` to populate the moving version.
+- Browser review verified step controls, full sequence playback, zero JavaScript errors, ReLU collision label, and a 360px layout without horizontal overflow. Visually inspected all three storyboards and desktop/mobile animation screenshots.
+- This corrects the explanatory layer; no quantization or oracle algorithm was changed, and no new trained-model result is claimed.

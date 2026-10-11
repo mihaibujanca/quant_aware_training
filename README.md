@@ -1,6 +1,6 @@
 # Geometric Neural Network Compression Plan
 
-The weight-only quantization geometry workstream has an [implementation plan](docs/quantization_geometry_plan.md), [progress tracker](docs/quant_geometry_progress.md), and [foundations report with component explanations and figures](docs/quant_geometry_foundations.md). Reproduce its examples with `.venv/bin/python -m experiments.quant_geometry_foundations`.
+For the weight-only quantization workstream, start with the [visual geometry guide](docs/quant_geometry_visual_guide.md). The [technical reference](docs/quant_geometry_foundations.md), [implementation plan](docs/quantization_geometry_plan.md), and [progress tracker](docs/quant_geometry_progress.md) record the formal details and current state. Reproduce the geometric storyboards with `.venv/bin/python -m experiments.quant_geometry_visual_story`.
 
 ## What This Project Is About
 

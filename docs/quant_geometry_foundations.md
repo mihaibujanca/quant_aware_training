@@ -1,4 +1,6 @@
-# Exact quantization geometry: foundations and interventions
+# Quantization geometry: technical reference
+
+**Start with [Watch the shape, then name the error](quant_geometry_visual_guide.md)** for the geometric explanation: the same grid and circle deform, ReLU clips them, and distinct points can collapse together. This document records the equations, implementation and numerical checks after that picture is established.
 
 Implementation of the first three next steps in [the progress tracker](quant_geometry_progress.md), guided by [the research plan](quantization_geometry_plan.md). These are deterministic algebra and instrumentation examples, not evidence of task accuracy or compression gains.
 

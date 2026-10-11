@@ -6,6 +6,7 @@ Active experiment scripts.
 
 | File | Description |
 |------|-------------|
+| `quant_geometry_visual_story.py` | Geometry-first storyboards and animation states: reversible map deformation, correction versus ReLU order, and rank-loss collapse. See the [visual guide](../docs/quant_geometry_visual_guide.md). |
 | `quant_geometry_foundations.py` | Exact weight-only map/ledger and shared MLP oracle examples. Reproduces eight explanatory figures, including a numerical-rank audit, and a run manifest; see [foundations report](../docs/quant_geometry_foundations.md) and [progress tracker](../docs/quant_geometry_progress.md). |
 | `lambda_sweep.py` | Main sweep for hybrid distillation. Sweeps lambda (layer loss weight), bits, correction_hidden, and seeds across classification/autoencoder/transformer tasks. 162 runs per task. |
 | `layer_distillation.py` | Hybrid distillation: output MSE + per-layer activation MSE. Tests whether layer-level supervision helps correction networks learn. |

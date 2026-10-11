@@ -1,0 +1,170 @@
+<div id="quant-geometry-motion">
+  <style>
+    #quant-geometry-motion .story-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    #quant-geometry-motion .story-layout section { min-width: 0; }
+    #quant-geometry-motion .geometry-plane { display: block; width: 100%; }
+    #quant-geometry-motion .geometry-plane text { fill: var(--foreground); }
+    #quant-geometry-motion .motion-legend { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 0; }
+    #quant-geometry-motion .motion-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    #quant-geometry-motion .swatch { width: 20px; height: 3px; background: var(--viz-series-1); }
+    #quant-geometry-motion .reference-swatch { background: var(--muted-foreground); }
+    #quant-geometry-motion .point-a { background: var(--viz-series-2); width: 9px; height: 9px; border-radius: 50%; }
+    #quant-geometry-motion .point-b { background: var(--viz-series-3); width: 9px; height: 9px; }
+    @media (max-width: 560px) { #quant-geometry-motion .story-layout { grid-template-columns: 1fr; } }
+  </style>
+  <div class="viz-controls">
+    <label class="form-label" for="qg-example">Geometry
+      <select id="qg-example" class="form-select">
+        <option value="0">Deformation we can undo</option>
+        <option value="1">ReLU changes what survives</option>
+        <option value="2">A direction disappears</option>
+      </select>
+    </label>
+  </div>
+  <h3 id="qg-heading">A changed shape can still be recoverable</h3>
+  <div class="story-layout">
+    <section><h3>Same input points</h3><svg id="qg-input" class="geometry-plane" role="img" aria-label="Input grid, circle and two tracked points"></svg></section>
+    <section><h3 id="qg-stage" aria-live="polite">Input</h3><svg id="qg-output" class="geometry-plane" role="img" aria-label="Moving geometric image of the same grid, circle and tracked points"></svg></section>
+  </div>
+  <div class="motion-legend text-small">
+    <span><i class="swatch"></i>Current shape</span>
+    <span><i class="swatch reference-swatch"></i>FP reference (dashed)</span>
+    <span><i class="point-a"></i>Point A</span>
+    <span><i class="point-b"></i>Point B</span>
+  </div>
+  <div class="viz-controls">
+    <button type="button" class="btn" id="qg-back">Back</button>
+    <button type="button" class="btn btn-primary" id="qg-next">Next transformation</button>
+    <button type="button" class="btn" id="qg-play">Play sequence</button>
+    <span id="qg-position" class="text-small tabular-nums" aria-live="polite">1 / 4</span>
+  </div>
+  <script id="qg-data" type="application/json">__GEOMETRY_DATA__</script>
+  <script>
+    (() => {
+      const root = document.getElementById('quant-geometry-motion');
+      const stories = JSON.parse(root.querySelector('#qg-data').textContent).stories;
+      const input = root.querySelector('#qg-input'), output = root.querySelector('#qg-output');
+      const select = root.querySelector('#qg-example'), heading = root.querySelector('#qg-heading');
+      const label = root.querySelector('#qg-stage'), position = root.querySelector('#qg-position');
+      const back = root.querySelector('#qg-back'), next = root.querySelector('#qg-next'), play = root.querySelector('#qg-play');
+      const ns = 'http://www.w3.org/2000/svg';
+      let storyIndex = 0, step = 0, current = stories[0].states[0], activeFrame = null, playTimer = null, playing = false;
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+      function element(tag, attributes, parent, text) {
+        const node = document.createElementNS(ns, tag);
+        for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, String(value));
+        if (text !== undefined) node.textContent = text;
+        parent.appendChild(node); return node;
+      }
+      function draw(svg, points, reference, isInput) {
+        const story = stories[storyIndex];
+        const width = Math.max(240, svg.parentElement.getBoundingClientRect().width);
+        const height = Math.max(265, Math.min(390, width));
+        svg.setAttribute('viewBox', `0 0 ${width} ${height}`); svg.replaceChildren();
+        const all = story.states.flat();
+        const extent = Math.max(...all.map(p => Math.max(Math.abs(p[0]), Math.abs(p[1])))) * 1.15;
+        const side = Math.min(width - 75, height - 65), left = 48 + (width - 75 - side) / 2, top = 12;
+        const X = x => left + side / 2 + x / extent * side / 2;
+        const Y = y => top + side / 2 - y / extent * side / 2;
+        element('title', {}, svg, isInput ? 'Unchanged input grid and circle' : story.labels[step]);
+        element('desc', {}, svg, 'Points A and B retain their identities through each transformation. Coincident points are shown at the same coordinate, without jitter.');
+        element('rect', {x:left, y:top, width:side, height:side, fill:'none', stroke:'var(--border)'}, svg);
+        for (const value of [-1, 0, 1]) {
+          element('line', {x1:X(value),y1:Y(-extent),x2:X(value),y2:Y(extent),stroke:'var(--border)','stroke-width':1}, svg);
+          element('line', {x1:X(-extent),y1:Y(value),x2:X(extent),y2:Y(value),stroke:'var(--border)','stroke-width':1}, svg);
+          element('text', {x:X(value),y:top+side+17,'text-anchor':'middle',class:'text-small'}, svg, String(value));
+          element('text', {x:left-10,y:Y(value)+4,'text-anchor':'end',class:'text-small'}, svg, String(value));
+        }
+        element('text', {x:left+side/2,y:top+side+39,'text-anchor':'middle',class:'text-small'}, svg, 'Coordinate 1');
+        element('text', {x:14,y:top+side/2,'text-anchor':'middle',transform:`rotate(-90 14 ${top+side/2})`,class:'text-small'}, svg, 'Coordinate 2');
+        function geometry(vertices, ref) {
+          let offset = 0;
+          story.pathLengths.forEach((length, index) => {
+            const path = vertices.slice(offset, offset+length).map((p,i) => `${i?'L':'M'}${X(p[0]).toFixed(2)},${Y(p[1]).toFixed(2)}`).join(' ');
+            element('path', {d:path,fill:'none',stroke:ref?'var(--muted-foreground)':'var(--viz-series-1)',
+              'stroke-width':index===story.pathLengths.length-1?2.5:1,
+              'stroke-opacity':ref?.55:.7,...(ref?{'stroke-dasharray':'4 4'}:{})}, svg);
+            offset += length;
+          });
+        }
+        if (reference) geometry(reference, true);
+        geometry(points, false);
+        const probes = points.slice(-2), targets = reference ? reference.slice(-2) : null;
+        if (targets) probes.forEach((p,j) => {
+          const target = targets[j];
+          if (Math.hypot(p[0]-target[0],p[1]-target[1])<.0001) return;
+          element('line', {x1:X(p[0]),y1:Y(p[1]),x2:X(target[0]),y2:Y(target[1]),stroke:`var(--viz-series-${j+2})`,'stroke-width':1.5,'stroke-dasharray':'3 3'}, svg);
+          element('circle', {cx:X(target[0]),cy:Y(target[1]),r:4,fill:'none',stroke:`var(--viz-series-${j+2})`}, svg);
+        });
+        const collide = Math.hypot(probes[0][0]-probes[1][0],probes[0][1]-probes[1][1]) < .00001;
+        probes.forEach((p,j) => {
+          if (j===0) element('circle', {cx:X(p[0]),cy:Y(p[1]),r:5,fill:'var(--viz-series-2)'}, svg);
+          else element('rect', {x:X(p[0])-4,y:Y(p[1])-4,width:8,height:8,fill:'var(--viz-series-3)','fill-opacity':collide?.65:1}, svg);
+          if (!collide) element('text', {x:X(p[0])+8,y:Y(p[1])+(j===0?-8:17),class:'text-small'}, svg, 'AB'[j]);
+        });
+        if (collide) element('text', {x:X(probes[0][0])+9,y:Y(probes[0][1])-9,class:'text-small'}, svg, 'A = B');
+      }
+      function render() {
+        const story = stories[storyIndex];
+        const referenceIndex = story.references[step];
+        draw(input, story.states[0], null, true);
+        draw(output, current, referenceIndex===null?null:story.states[referenceIndex], false);
+        heading.textContent = story.title; label.textContent = story.labels[step];
+        position.textContent = `${step+1} / ${story.states.length}`;
+        back.disabled = step===0; next.disabled = step===story.states.length-1;
+      }
+      function save() {
+        if (window.openai && window.openai.setWidgetState) window.openai.setWidgetState({modelContent:{geometry:stories[storyIndex].key,stage:stories[storyIndex].labels[step]},privateContent:{storyIndex,step}}).catch(()=>{});
+      }
+      function stop() {
+        playing = false; play.textContent = 'Play sequence';
+        if (playTimer !== null) clearTimeout(playTimer);
+        playTimer = null;
+      }
+      function move(target, animated=true) {
+        if (activeFrame !== null) cancelAnimationFrame(activeFrame);
+        const previous = current;
+        step = target;
+        const destination = stories[storyIndex].states[step];
+        if (!animated || reduce.matches) {current=destination; render(); save(); return;}
+        const start = performance.now();
+        function frame(now) {
+          const t = Math.min(1, (now-start)/1200), eased=t*t*(3-2*t);
+          current=previous.map((p,i)=>[p[0]+(destination[i][0]-p[0])*eased,p[1]+(destination[i][1]-p[1])*eased]);
+          render();
+          if(t<1) activeFrame=requestAnimationFrame(frame);
+          else {activeFrame=null; save();}
+        }
+        activeFrame=requestAnimationFrame(frame);
+      }
+      select.addEventListener('change',()=>{
+        stop(); if(activeFrame!==null) cancelAnimationFrame(activeFrame); activeFrame=null;
+        storyIndex=Number(select.value); step=0; current=stories[storyIndex].states[0]; render(); save();
+      });
+      back.addEventListener('click',()=>{stop();move(Math.max(0,step-1));});
+      next.addEventListener('click',()=>{stop();move(Math.min(stories[storyIndex].states.length-1,step+1));});
+      play.addEventListener('click',()=>{
+        if(playing){stop();return;}
+        playing=true; play.textContent='Pause';
+        if(step===stories[storyIndex].states.length-1) move(0,false);
+        function advance(){
+          if(!playing)return;
+          if(step===stories[storyIndex].states.length-1){stop();return;}
+          move(step+1); playTimer=setTimeout(advance,1700);
+        }
+        playTimer=setTimeout(advance,300);
+      });
+      function restore(state){
+        const saved=state && state.privateContent;
+        if(!saved || !Number.isInteger(saved.storyIndex) || !stories[saved.storyIndex] || !Number.isInteger(saved.step) || !stories[saved.storyIndex].states[saved.step])return;
+        // Host echoes of our own optimistic save must not stop playback.
+        if(saved.storyIndex===storyIndex && saved.step===step)return;
+        stop();if(activeFrame!==null)cancelAnimationFrame(activeFrame);activeFrame=null;
+        storyIndex=saved.storyIndex;step=saved.step;current=stories[storyIndex].states[step];select.value=String(storyIndex);render();
+      }
+      new ResizeObserver(render).observe(root);
+      render();restore(window.openai && window.openai.widgetState);
+      window.addEventListener('openai:set_globals',event=>restore(event.detail?.globals?.widgetState));
+    })();
+  </script>
+</div>
