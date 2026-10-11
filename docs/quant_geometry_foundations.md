@@ -4,7 +4,7 @@ Quantization changes the map of a layer. We follow the same points through that 
 
 ## 1. What shape does the layer move?
 
-Use row-vector weights $W,W_q\in\mathbb R^{n\times m}$. For the main argument, take zero bias and let $\phi$ denote ReLU. The full-precision and quantized routes are $y=\phi(xW)$ and $h=\phi(xW_q)$. The exact float-bias extension is given in [Technical details](#b-technical-details).
+An input is a row vector $x\in\mathbb R^{1\times n}$, and the weights are $W,W_q\in\mathbb R^{n\times m}$. Start with the linear part of the layer: full precision (FP) sends x to xW; the quantized map (Q) sends the same x to xWq. The main argument uses zero bias; the float-bias extension comes later in [Technical details](#b3-exact-extension-to-a-shared-float-bias).
 
 ![The same input shape under FP, quantized, and repaired preactivation maps](figures/quant_geometry/geometry_deformation.png)
 
@@ -18,43 +18,53 @@ $$
 R^\star\in\underset{R}{\operatorname{argmin}}\;\|W-W_qR\|_F^2.
 $$
 
-This minimizes map discrepancy with input directions weighted equally. If $W_qR^\star=W$, the preactivation deformation is exactly repaired for every input. Write R for the selected optimizer; its explicit construction is a technical detail, not the reason for introducing it.
+This minimizes map discrepancy with input directions weighted equally. If $W_qR^\star=W$, the linear deformation is exactly repaired for every input. Write R for the selected optimizer; its explicit construction is a technical detail, not the reason for introducing it.
 
-### Map repair and calibration answer different questions
+### Repair the map, rather than fit selected responses
 
-Ordinary least-squares reconstruction fits FP responses on a calibration distribution. A post-ReLU fit, for example, chooses
+The repair objective compares the maps themselves, weighting input directions equally. Ordinary calibration instead fits FP responses for selected inputs, weighting directions according to the data. These objectives can favor different repairs when the map cannot be repaired exactly. The distinction is already present for linear maps; we will see a further difference once the layer applies an activation.
+
+### Introduce ReLU: clipping changes the repair problem
+
+The linear map produces a preactivation; the layer then applies ReLU. Geometrically, ReLU presses each negative coordinate onto zero: a shape can acquire edges on the axes, and distinct points can land together. Formally, $\phi(v)_j=\max(v_j,0)$. The two layer outputs are now
+
+$$
+z_q=xW_q,\qquad h=\phi(z_q),\qquad y=\phi(xW).
+$$
+
+First suppose R repairs the linear map exactly. Repairing before clipping gives the FP output. But a correction applied to the layer's output receives the already clipped shape. Moving a shape and then clipping it generally differs from clipping it and then moving it:
+
+$$
+\phi(z_q)R\ne\phi(z_qR).
+$$
+
+![An exact preactivation repair before ReLU versus a failed repair after ReLU](figures/quant_geometry/geometry_relu.png)
+
+**Figure 2 — the order of repair and clipping matters.** This second map is exactly repairable before ReLU. Correcting first produces distinct positive FP outputs for A and B. Clipping the Q preactivations first merges both at zero; the same R then receives the same point for both. The obstruction arose after the linear map, even though that map's deformation was repairable.
+
+Because repair is exact here, $y=\phi(z_qR)$. This gives a two-term account:
+
+$$
+h-y=\underbrace{h-hR}_{\text{repair left unapplied}}
++\underbrace{hR-\phi(z_qR)}_{\text{repair and activation do not commute}}.
+$$
+
+### Fitting the clipped outputs answers a different question
+
+Now we can state the post-ReLU calibration objective. For a calibration sample set $\mathcal D$, fit a matrix to the activated Q and FP samples instead of reusing the map repair R:
 
 $$
 C_{\mathcal D}\in\underset{C}{\operatorname{argmin}}\;
 \sum_{x\in\mathcal D}\|\phi(xW_q)C-\phi(xW)\|^2.
 $$
 
-**Both objectives are least squares, but they optimize different objects.** R repairs the preactivation map independently of calibration samples. C fits already activated states on the chosen data. Its preferred matrix can change with that distribution and can trade a different deformation for smaller activation error there. Even a preactivation data fit weights directions according to the sampled inputs; a post-ReLU fit also incorporates clipping.
+R repairs the preactivation map; C fits the clipped responses on the chosen data. A post-ReLU fit can incorporate the effect of clipping and favor a different matrix even when R repairs the linear map exactly.
 
 ![FP activated shape, geometric map repair after ReLU, and post-ReLU calibration reconstruction](figures/quant_geometry/geometry_repair_vs_reconstruction.png)
 
-**Figure 2 — the map repair and the activation fit differ.** This uses the Figure 1 map. The middle panel reuses R after activation; the right fits C to the displayed grid/circle samples. Both are compared with the same dashed FP target. C reduces activation error on those samples by choosing a different motion of the shape; it no longer exactly repairs the preactivation map. A/B were excluded from fitting.
+**Figure 3 — the map repair and the activation fit differ.** Return to the Figure 1 map, now with ReLU applied. The middle panel reuses R after activation; the right fits C to the displayed grid/circle samples. Both are compared with the same dashed FP target. C reduces activation error on those samples by choosing a different motion of the shape; it no longer exactly repairs the preactivation map. A/B were excluded from fitting.
 
-The geometric ledger keeps R fixed so we can ask which discrepancy comes from leaving the map repair unapplied, which comes from activation interfering with it, and which map discrepancy that repair leaves behind. Fitting a reconstruction matrix alone does not supply those comparisons. The distinction matters when interpreting PTQ correction: reducing reconstruction loss on calibration data and explaining the changed map are different research questions.
-
-### ReLU can obstruct a repair that worked before activation
-
-Now suppose the linear repair is exact. ReLU clips negative coordinates before a downstream correction can use them. Moving a shape and then clipping it generally differs from clipping it and then moving it:
-
-$$
-\phi(z_q)R\ne\phi(z_qR),\qquad z_q=xW_q.
-$$
-
-![An exact preactivation repair before ReLU versus a failed repair after ReLU](figures/quant_geometry/geometry_relu.png)
-
-**Figure 3 — the order of repair and clipping matters.** This second map is exactly repairable before ReLU. Correcting first produces distinct positive FP outputs for A and B. Clipping the Q preactivations first merges both at zero; the same R then receives the same point for both. The obstruction arose after the linear map, even though that map's deformation was repairable.
-
-This gives a two-term account when preactivation repair is exact. With $h=\phi(z_q)$ and $y=\phi(z_qR)$,
-
-$$
-h-y=\underbrace{h-hR}_{\text{repair left unapplied}}
-+\underbrace{hR-\phi(z_qR)}_{\text{repair and activation do not commute}}.
-$$
+We keep the geometric R fixed to examine how activation interferes with that repair. Choosing C to reduce calibration loss is a separate reconstruction problem. Both are least squares, but they supply different comparisons; this distinction is central to what the geometric ledger adds to PTQ correction.
 
 ### Some map deformation can remain before activation
 
@@ -102,11 +112,11 @@ $$
 e_{\rm NL}=s_1-s_2=hR-\phi(z_qR).
 $$
 
-This compares activation-then-repair with repair-then-activation, the two routes established in Figure 3. It measures failure of the chosen map repair to commute with activation.
+This compares activation-then-repair with repair-then-activation, the two routes established in Figure 2. It measures failure of the chosen map repair to commute with activation.
 
 ![Exact nonlinear state comparisons, with signed arrows between the two orders](figures/quant_geometry/ledger_geometry_nonlinear.png)
 
-**Figure 5 — s2→s1, using the Figure 3 map.** Correcting first gives A/B outputs (0,0.235) and (0,0.07). Correcting after clipping leaves both at zero. The two arrows show the exact nonlinear vectors (0,−0.235) and (0,−0.07).
+**Figure 5 — s2→s1, using the Figure 2 map.** Correcting first gives A/B outputs (0,0.235) and (0,0.07). Correcting after clipping leaves both at zero. The two arrows show the exact nonlinear vectors (0,−0.235) and (0,−0.07).
 
 ### Range error: the activated effect of the remainder
 
@@ -141,11 +151,11 @@ The arrows can oppose one another. A repair that moves a point into a coordinate
 
 ## 5. Creation here versus propagation through the network
 
-A local ledger uses the same input on both routes. In a network, the quantized run may arrive with input a while FP arrives with a_fp. If $h_{\rm fp}=\phi(a_{\rm fp}W+b)$, define
+A local ledger uses the same input on both routes. In a network, the quantized run may arrive with input a while FP arrives with a_fp. Keeping the same zero-bias convention, let $h_q=\phi(aW_q)$ and $h_{\rm fp}=\phi(a_{\rm fp}W)$ and define
 
 $$
-e_{\rm local}=\phi(aW_q+b)-\phi(aW+b),\qquad
- e_{\rm propagated}=\phi(aW+b)-h_{\rm fp}.
+e_{\rm local}=\phi(aW_q)-\phi(aW),\qquad
+ e_{\rm propagated}=\phi(aW)-h_{\rm fp}.
 $$
 
 Then raw total error is their sum. The first term measures the layer's own map change on the arriving point. The second measures where the upstream-displaced point lands under the unchanged FP layer. The three-component ledger decomposes the first term; it does not yet trace each component separately through later nonlinear layers.
@@ -302,7 +312,7 @@ Conversely, if U has a nonzero column u, take $d=u^\top$. Orthogonality gives dW
 
 ### B.3 Exact extension to a shared float bias
 
-The figures use b=0. With a shared float bias, moving $z_q=xW_q+b$ by R would also move the bias. Restore it by translating the result back by $b-bR$:
+The figures use b=0. With a shared float bias $b\in\mathbb R^{1\times m}$, moving $z_q=xW_q+b$ by R would also move the bias. Restore it by translating the result back by $b-bR$:
 
 $$
 A(v)=vR+b-bR,\qquad A(z_q)+xU=x(W_qR+U)+b=xW+b.
@@ -318,6 +328,8 @@ s_2=\phi(A(z_q)),\quad s_3=\phi(A(z_q)+xU).
 $$
 
 The same signed definitions $e_{\rm uncomp}=s_0-s_1$, $e_{\rm NL}=s_1-s_2$ and $e_{\rm range}=s_2-s_3$ telescope to Q minus FP. If activation is the identity, the nonlinear component vanishes even with bias.
+
+For the propagation comparison in Section 5, include the shared b inside each preactivation: the arriving Q output, same-input FP output, and reference FP output. Their successive differences still give local and propagated error, and the oracle still adds reference FP minus arriving Q.
 
 ### B.4 Correction extensions and attribution
 
@@ -369,9 +381,9 @@ W_q=\begin{bmatrix}1&1\\0&1\end{bmatrix},\qquad
 R=\begin{bmatrix}1.35&-0.15\\-0.35&0.8\end{bmatrix},\qquad U=0.
 $$
 
-Bounded symmetric 2-bit quantization rounds the coefficients to {−1,0,1}. Figure 2 uses this same map, fitting its post-ReLU C on the sampled grid/circle points with the named A/B probes excluded. The coefficient matrix and calibration definition are recorded in [the comparison fixture](figures/quant_geometry/repair_vs_reconstruction_fixture.json).
+Bounded symmetric 2-bit quantization rounds the coefficients to {−1,0,1}. Figure 3 uses this same map, fitting its post-ReLU C on the sampled grid/circle points with the named A/B probes excluded. The coefficient matrix and calibration definition are recorded in [the comparison fixture](figures/quant_geometry/repair_vs_reconstruction_fixture.json).
 
-Figures 3 and 5 use
+Figures 2 and 5 use
 
 $$
 W=\begin{bmatrix}1&-0.4\\0.65&0.85\end{bmatrix},\qquad
