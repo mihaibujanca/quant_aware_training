@@ -30,6 +30,7 @@ class GeometryStory:
             return [[round(float(v), 6) for v in row] for row in t]
         return {
             "key": self.key, "title": self.title, "labels": self.labels,
+            "inputs": values(self.points),
             "pathLengths": self.path_lengths, "states": [values(s) for s in self.states],
             "references": self.reference_indices,
             "W": self.decomposition.weight.tolist(), "Wq": self.decomposition.quantized_weight.tolist(),
@@ -52,7 +53,7 @@ def build_geometry_stories() -> tuple[GeometryStory, ...]:
     results = []
     specifications = [
         ("deformation", "Two different maps; the quantized route can be corrected", [[1., .65], [-.35, .8]], [[-.6, .9], [.7, -.4]]),
-        ("relu", "ReLU can erase what the correction needs", [[1., -.4], [.4, 1.]], [[-.8, 0.], [0., -.8]]),
+        ("relu", "ReLU merges points the corrected map would keep distinct", [[1., -.4], [.65, .85]], [[-.8, -.1], [-.6, -.2]]),
         ("loss", "A flattened shape has lost a direction", [[1., .3], [.25, .25]], [[.4, -.8], [.4, .8]]),
     ]
     for key, title, weights, probes in specifications:
@@ -69,13 +70,14 @@ def build_geometry_stories() -> tuple[GeometryStory, ...]:
         elif key == "relu":
             states = (x @ Wq, x @ Wq @ decomp.R, ledger.fp_post,
                       ledger.quant_post, ledger.transported_post)
-            labels = ("Quantized preactivation", "Correct before ReLU", "Then ReLU: FP recovered",
-                      "Instead: ReLU first", "Correct after ReLU: mismatch")
+            labels = ("Apply rounded weights: xWq", "Correct before ReLU: (xWq)R = xW",
+                      "Then ReLU: distinct FP outputs", "Instead: ReLU first merges A and B",
+                      "Correct after ReLU: A and B stay merged")
             references, indices = (None, None, None, 2, 2), (0, 2, 3, 4)
         else:
             states = (x, x @ W, x @ Wq, x @ Wq @ decomp.R,
                       x @ Wq @ decomp.R + x @ decomp.U, ledger.fp_post)
-            labels = ("Input", "Full-precision map", "Weights snapped: line", "Correct map: still a line",
+            labels = ("Input", "Full-precision map", "Apply rounded weights: xWq is a line", "Correct map: still a line",
                       "Add input-dependent xU", "Then ReLU: FP restored")
             references, indices = (None, None, 1, 1, 1, None), (1, 2, 3, 4)
         results.append(GeometryStory(key, title, labels, x, lengths, states,

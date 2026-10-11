@@ -131,7 +131,15 @@ One route clips and then moves; the other moves and then clips. If they commute,
 
 ![Move then clip versus clip then move, with the exact nonlinear ledger vector](figures/quant_geometry/ledger_geometry_nonlinear.png)
 
-**Figure 4 — s2 versus s1.** Here $W_q=I$, $U=0$, and $R=W=\left[\begin{smallmatrix}1&-0.4\\0.4&1\end{smallmatrix}\right]$. A=(−0.8,0) and B=(0,−0.8) both become the origin under Q's ReLU. Correcting afterwards cannot separate them. Correcting first gives activated outputs (0,0.32) and (0,0), respectively. A's nonlinear arrow points down from (0,0.32) to (0,0); B's vector is zero. The [preactivation storyboard](figures/quant_geometry/geometry_relu.png) shows where the distinction disappears.
+**Figure 4 — s2 versus s1.** The quantized map now shears the input before ReLU. The matrices are
+
+$$
+W=\begin{bmatrix}1&-0.4\\0.65&0.85\end{bmatrix},\qquad
+W_q=\begin{bmatrix}1&0\\1&1\end{bmatrix},\qquad
+R=\begin{bmatrix}1&-0.4\\-0.35&1.25\end{bmatrix},\qquad U=0.
+$$
+
+A=(−0.8,−0.1) moves to (−0.9,−0.1) under Wq; B=(−0.6,−0.2) moves to (−0.8,−0.2). Correcting these preactivations **before** ReLU gives FP outputs (0,0.235) and (0,0.07): both are nonzero and distinct. Applying Q's ReLU first merges both points at the origin. R then acts on the same zero vector for both and cannot recover either expected positive output. Their nonlinear vectors are (0,−0.235) and (0,−0.07), shown as separate curved arrows with those exact endpoints. The [preactivation storyboard](figures/quant_geometry/geometry_relu.png) shows the sheared shape before the clipping collision.
 
 In this fixture the collision proves no decoder of h alone can recover both FP outputs. In general, a nonzero nonlinear vector proves only that this declared correction fails to commute with activation; it does not prove every correction family fails.
 

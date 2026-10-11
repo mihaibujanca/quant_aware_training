@@ -13,6 +13,7 @@ Baseline: `0be49df7` (`Snapshot research state before quantization return`).
 - For each experiment record revision, seed, dataset/split, model dimensions, quantization scheme/scales/bits, selected quantized layers, correction sites, tolerances, and output paths.
 - Update this file with each meaningful implementation change. Keep research findings separate from implementation completion; append decisions and verification to the dated log.
 - Write Markdown math with `$...$` inline and `$$...$$` display blocks for VS Code preview compatibility. Check new formulas against KaTeX rather than assuming interface-specific rendering.
+- Teaching fixtures must visibly move the input under quantization; do not use identity Wq as a geometric explanation. Show the expected output alongside the failed route.
 - Each tracked ledger component needs a formal definition and a picture of the exact states it compares. Label arrow direction and distinguish preactivation cause from post-activation measurement.
 - Explanatory figures must show the geometric cause with identifiable samples or shapes across transformations. Norm curves, heatmaps and matrix plots support the reference; they do not by themselves satisfy the intuition requirement.
 
@@ -125,3 +126,11 @@ Next implementation slice:
 
 - Replaced LaTeX-style backslash math delimiters in the research note with dollar delimiters supported by VS Code's built-in Markdown preview. No equations changed.
 - Checked all 17 display equations and 55 inline expressions using the KaTeX renderer bundled with the installed VS Code, with parse errors and strict warnings treated as failures. All render without errors; delimiters are balanced.
+
+### 2026-10-11 — remove identity from the ReLU explanation
+
+- Replaced the remaining identity-quantized teaching example with W=[[1,-0.4],[0.65,0.85]], Wq=[[1,0],[1,1]], R=[[1,-0.4],[-0.35,1.25]], U=0. The quantized shear moves both probes; correcting before clipping produces distinct nonzero FP outputs (0,0.235) and (0,0.07), whereas clipping first merges them at zero.
+- Regenerated the ReLU storyboard, exact nonlinear state-pair figure, and animation endpoint data; documented matrices and both nonzero signed vectors. Separated the two overlapping nonlinear arrows visually while retaining their exact endpoints.
+- Strengthened independently specified coordinate checks and added a check that every teaching story uses non-identity Wq. Fixed the animation's left panel to display actual input points explicitly, rather than assuming its first state is the input (an assumption previously hidden by Wq=I in the ReLU story).
+- Replaced the remaining “weights snapped” storyboard label with the actual rounded-weight map operation. Core algorithms are unchanged.
+- Targeted suite: **74 passed**. Visually inspected revised ReLU figures. All 18 display equations and 52 inline expressions pass strict VS Code KaTeX rendering. Local browser verification confirms actual-input data, nonidentity movement, ReLU collision, final correction and zero JavaScript errors.

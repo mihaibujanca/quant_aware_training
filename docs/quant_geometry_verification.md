@@ -73,7 +73,7 @@ The existing Gram figure (Figure 5) illustrates why signed interaction must be r
 
 | Contribution | Source / artifact | Evidence |
 |---|---|---|
-| Three controlled grid/circle stories with persistent A/B identities | `aleph/qgeom/geometry_story.py`, `experiments/quant_geometry_visual_story.py`; `geometry_deformation.png`, `geometry_relu.png`, `geometry_loss.png` | Four geometric-claim tests; fixed scales within each sequence; Figure 1 uses non-identity Wq and independently specified FP/Q probe coordinates |
+| Three controlled grid/circle stories with persistent A/B identities | `aleph/qgeom/geometry_story.py`, `experiments/quant_geometry_visual_story.py`; `geometry_deformation.png`, `geometry_relu.png`, `geometry_loss.png` | Four geometric-claim tests; fixed scales within each sequence; All teaching stories use non-identity Wq; deformation and ReLU cases have independently specified FP/Q probe coordinates |
 | Moving view of the same endpoints | `animations/quant_geometry_story.html`; `geometry_story_states.json` | Step controls, full playback, no JavaScript errors, collision label and 360px layout checked |
 | Exact pictures for each formal ledger component | `experiments/quant_geometry_ledger_figures.py`; `ledger_geometry_uncomp.png`, `ledger_geometry_nonlinear.png`, `ledger_geometry_range.png` | Figures use the existing ErrorLedger states directly; arrow endpoints are the states in the definitions |
 | Signed cancellation path | Same figure generator; `ledger_geometry_cancellation.png` | Coordinates are the independent `(1,2)` regression example; opposite uncompensated/nonlinear vectors share endpoints |
@@ -83,4 +83,4 @@ All examples are deterministic teaching fixtures, not measurements of mechanism 
 
 ## Markdown math compatibility
 
-The research note uses `$...$` inline and `$$...$$` display blocks, as supported by VS Code's built-in Markdown preview. All 17 display equations and 55 inline expressions were parsed by the installed VS Code's bundled KaTeX renderer with `throwOnError: true` and `strict: "error"`; all rendered without errors. The equations were unchanged by the delimiter conversion.
+The research note uses `$...$` inline and `$$...$$` display blocks, as supported by VS Code's built-in Markdown preview. All 18 display equations and 52 inline expressions were parsed by the installed VS Code's bundled KaTeX renderer with `throwOnError: true` and `strict: "error"`; all rendered without errors. The equations were unchanged by the delimiter conversion.

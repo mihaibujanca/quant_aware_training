@@ -61,7 +61,7 @@
         const width = Math.max(240, svg.parentElement.getBoundingClientRect().width);
         const height = Math.max(265, Math.min(390, width));
         svg.setAttribute('viewBox', `0 0 ${width} ${height}`); svg.replaceChildren();
-        const all = story.states.flat();
+        const all = [...story.inputs, ...story.states.flat()];
         const extent = Math.max(...all.map(p => Math.max(Math.abs(p[0]), Math.abs(p[1])))) * 1.15;
         const side = Math.min(width - 75, height - 65), left = 48 + (width - 75 - side) / 2, top = 12;
         const X = x => left + side / 2 + x / extent * side / 2;
@@ -107,7 +107,7 @@
       function render() {
         const story = stories[storyIndex];
         const referenceIndex = story.references[step];
-        draw(input, story.states[0], null, true);
+        draw(input, story.inputs, null, true);
         draw(output, current, referenceIndex===null?null:story.states[referenceIndex], false);
         heading.textContent = story.title; label.textContent = story.labels[step];
         position.textContent = `${step+1} / ${story.states.length}`;

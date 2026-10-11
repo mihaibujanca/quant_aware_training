@@ -82,7 +82,8 @@ def main():
             color = ["#d97706", "#9333ea"][i - len(source) + 2]
             if torch.linalg.vector_norm(destination[i] - source[i]) > 1e-10:
                 ax.annotate("", xy=destination[i].numpy(), xytext=source[i].numpy(),
-                            arrowprops={"arrowstyle": "->", "color": color, "lw": 2.5})
+                            arrowprops={"arrowstyle": "->", "color": color, "lw": 2.5,
+                                        "connectionstyle": f"arc3,rad={.2 if i == len(source)-2 else -.2}" if key == "nonlinear" else "arc3,rad=0"})
         probes(ax, destination)
         axes_style(ax, bounds, vector_label + "\ndashed → blue, for A and B")
         fig.savefig(output / f"ledger_geometry_{key}.png", dpi=150, facecolor="white")
