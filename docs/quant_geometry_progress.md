@@ -12,6 +12,7 @@ Baseline: `0be49df7` (`Snapshot research state before quantization return`).
 - Mark DONE only with reusable implementation, relevant passing tests, and required experiment artifacts. Record paths and verification commands below.
 - For each experiment record revision, seed, dataset/split, model dimensions, quantization scheme/scales/bits, selected quantized layers, correction sites, tolerances, and output paths.
 - Update this file with each meaningful implementation change. Keep research findings separate from implementation completion; append decisions and verification to the dated log.
+- Write Markdown math with `$...$` inline and `$$...$$` display blocks for VS Code preview compatibility. Check new formulas against KaTeX rather than assuming interface-specific rendering.
 - Each tracked ledger component needs a formal definition and a picture of the exact states it compares. Label arrow direction and distinguish preactivation cause from post-activation measurement.
 - Explanatory figures must show the geometric cause with identifiable samples or shapes across transformations. Norm curves, heatmaps and matrix plots support the reference; they do not by themselves satisfy the intuition requirement.
 
@@ -119,3 +120,8 @@ Next implementation slice:
 - Removed the Figure 1 reference overlays and ambiguous probe arrows. Numbered panels, named their actual operations, and explicitly identified the matching right panels as the same endpoint reached by different routes. Replaced “weights snapped” with “apply rounded weights” and documented coefficient rounding.
 - Regenerated endpoint data and the moving fragment. Regenerated the dependent Figure 3 uncompensated comparison and updated its exact A/B coordinates. Other figure examples are unchanged.
 - Strengthened the existing deformation test with independently specified quantized weights, R, and probe coordinates, plus checks that the Q shape differs from both input and FP. Targeted acceptance suite: **74 passed**. Visually inspected revised Figures 1 and 3; `git diff --check` passes.
+
+### 2026-10-11 — VS Code math rendering compatibility
+
+- Replaced LaTeX-style backslash math delimiters in the research note with dollar delimiters supported by VS Code's built-in Markdown preview. No equations changed.
+- Checked all 17 display equations and 55 inline expressions using the KaTeX renderer bundled with the installed VS Code, with parse errors and strict warnings treated as failures. All render without errors; delimiters are balanced.

@@ -80,3 +80,7 @@ The existing Gram figure (Figure 5) illustrates why signed interaction must be r
 | One research note pairing definitions and geometric explanations | `quant_geometry_foundations.md` | API/reproduction moved to implementation README; validation/audit/contribution evidence moved here |
 
 All examples are deterministic teaching fixtures, not measurements of mechanism frequency or task performance in a trained model. No quantization, decomposition, ledger, or oracle algorithm changed in the documentation restructuring.
+
+## Markdown math compatibility
+
+The research note uses `$...$` inline and `$$...$$` display blocks, as supported by VS Code's built-in Markdown preview. All 17 display equations and 55 inline expressions were parsed by the installed VS Code's bundled KaTeX renderer with `throwOnError: true` and `strict: "error"`; all rendered without errors. The equations were unchanged by the delimiter conversion.
