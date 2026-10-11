@@ -1,0 +1,56 @@
+Cycle 278 Audit — Item 288: All-blocks c_proj output eff_rank census
+
+Commit: f780cbd (primary), ee820af (bookkeeping)
+Audit status: PASS
+
+Verdict: INCONCLUSIVE
+  block 4 eff_rank = 49.0399 <= 50 (margin 0.9601)  -- CONFIRMED clause 1 TRIGGERS
+  block 7 eff_rank = 297.7935 >= 100
+  mid-block eff_ranks {2, 3, 6, 8, 9, 10} = {1.05, 24.29, 290.97, 291.41, 195.50, 16.70}
+    blocks {2, 3, 10} below 100  -- CONFIRMED clause 2 FAILS
+  REFUTED clause (b4 AND b7 BOTH >= 100): b4 = 49.04 < 100  -- FAILS
+  -> INCONCLUSIVE
+
+Numerical checks:
+  - Sanity check vs cycle 267 (item 288 verbatim requirement):
+      block  1: cycle 267 = 1.9448, cycle 278 = 1.9448, |delta| = 0.000000  PASS
+      block  5: cycle 267 = 179.1913, cycle 278 = 179.1913, |delta| = 0.000000  PASS
+      block 11: cycle 267 = 22.4887, cycle 278 = 22.4887, |delta| = 0.000000  PASS
+    All deltas zero (identical numerics on identical 200-doc calib slice).
+  - Run log per-block eff_rank matches JSON within rounding for all 12 blocks.
+  - Run log top-1 energy matches JSON for all 12 blocks.
+  - c_proj.weight top-1 sv matches cycle 267 reference for blocks {1, 5, 11}.
+  - 0 trainable params (no fit, no Adam, no retraining). Pure analysis as required.
+
+12-block eff_rank profile:
+  block  0:  71.93   block  6: 290.97
+  block  1:   1.94   block  7: 297.79
+  block  2:   1.05   block  8: 291.41
+  block  3:  24.29   block  9: 195.50
+  block  4:  49.04   block 10:  16.70
+  block  5: 179.19   block 11:  22.49
+
+Geometric reading:
+  - U-shape hypothesis REFUTED at descriptive level. Actual pattern = bathtub-with-block-0-bump.
+  - 4 contiguous low-rank concentrators at blocks 1-4 + block 0 intermediate (71.93).
+  - 5 contiguous high-rank diffusers at blocks 5-9.
+  - 2 low-rank concentrators at the late edge blocks 10-11.
+  - Block 2 essentially rank-1 (top-1 energy 99.61%) — even more concentrated than block 1.
+  - Block 10 eff_rank 16.70 LOWER than block 11 (22.49) — most rank-concentrated late block, unexploited.
+  - Block 4 on the boundary (49.04, just under the 50 threshold).
+  - Block 7 HIGH-rank (297.79). Pareto-winning [1,4,7] cascade picks one concentrator + one boundary + one diffuser — NOT by activation eff_rank. Consistent with cycle 273 REFUTED finding (eff_rank descriptive not prescriptive).
+  - Two unexploited candidates flagged: block 2 (rank ~1) and block 10 (rank ~17), both lower than tested block 11.
+
+Pareto update:
+  - 0 new Pareto points (cycle 278 produces no PPL).
+  - Implications for future cycles: blocks 2 and 10 flagged as parallel single-block-patch candidates (cycle 270 analogue).
+
+Bookkeeping:
+  - item 288 deleted from NEXT/P1 (P1 now empty); ### Cycle 278 block at top of PAST EXPERIMENTS.
+  - TSV row appended (8 cols, hash=f780cbd).
+  - Manifest + exec_result + audit written.
+  - No dirty pre-existing files staged.
+  - Pre-commit hook fired once (end-of-file fixer on JSON), re-staged and re-committed cleanly.
+  - Bookkeeping commit ee820af with TSV hash + manifest + exec_result.
+
+Issues: none.

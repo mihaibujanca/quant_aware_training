@@ -577,6 +577,54 @@ Both formalised as orthogonal operators. Proves: within rank-distance 1, folding
 
 ---
 
+### LASER: The Truth Is In There — Improving Reasoning in Language Models with Layer-Selective Rank Reduction (Sharma, Ash, Misra, 2023)
+
+**arXiv:** 2312.13558
+
+**Main result:** Replacing certain weight matrices in pretrained transformers with their **rank-r SVD truncation** *improves* downstream task accuracy. No fine-tuning, no retraining — just truncate W ≈ U[:, :r]·diag(Σ[:r])·V[:r, :]^T and put it back. Tested on GPT-J, RoBERTa, LLaMA-2 across counterfactual reasoning benchmarks. Effect is layer-selective: gains concentrate on **MLP weight matrices in later layers** of the network, with the largest improvements when reducing to small fractions of the original rank (sometimes <10%).
+
+**Their interpretation:** the high-order singular components store noisy/hallucinated information accumulated during training; truncation acts as a denoiser. Higher-rank components are *actively harmful* to held-out performance for some layers.
+
+**Direct relevance to cycle 278/280 on this project:** cycle 280 reproduces this phenomenon on GPT-2 small block 1 c_proj — rank-2 truncation of a (3072, 768) matrix, plus a small B-factor retrain, beats float held-out PPL by 4.86. Cycle 278's eff_rank census provides the picking rule LASER lacked: cycle 280's rank choice (r=2) is predicted by `eff_rank(c_proj_1 OUTPUT) = 1.94` from the output covariance. **The runner has been doing 285 cycles of related work without referencing LASER**; this paper should be the framing reference for the cycle 270/280/282/283 line of results.
+
+**What cycle 280 adds beyond LASER:**
+1. Picks the rank from output covariance eff_rank rather than searching r empirically.
+2. Adds a small retrain step on the right factor — pure SVD truncation alone gives +6.98% PPL; retrain pushes it to −9.0% (below float). The retrain step is what crosses below float.
+3. Reports clean held-out PPL improvement on a disjoint split, not benchmark accuracy.
+4. Finds the effect on an **early** layer (block 1), where LASER reported mostly later-layer gains.
+
+**Assessment:** USEFUL — direct precedent for cycle 280. The "rank reduction can improve held-out performance" phenomenon has a name and a 2023 paper.
+
+---
+
+### ASVD: Activation-aware Singular Value Decomposition for Compressing Large Language Models (Yuan et al., 2023)
+
+**arXiv:** 2312.05821
+
+**Main idea:** Activation-aware SVD compression. Instead of plain `W ≈ U Σ V^T`, scale each input column by its activation magnitude before SVD: `W' = W · diag(s)` where `s_j = ||X[:, j]||` over a small calibration set, then SVD `W'`, truncate, and rescale back: `W ≈ U_r Σ_r V_r^T · diag(1/s)`. This makes the SVD truncation minimize *activation-weighted* reconstruction error, not raw weight reconstruction error.
+
+**Why it matters here:** plain SVD truncation (LASER, cycle 270, cycle 280) ignores which directions the data actually exercises. ASVD's activation weighting is **what cycle 278's output-covariance eff_rank computation already does implicitly** — `Y^T Y` over calib data is exactly the activation-weighted covariance of the output. So cycle 278's picking rule and ASVD's loss function point at the same quantity from opposite ends.
+
+**Direct relevance:** if a follow-up wants to push cycle 280 below 49.03 PPL, the next try should be the **input**-side activation weighting (ASVD) on top of the **output**-side eff_rank picking (cycle 278) — they're orthogonal and combine cleanly.
+
+**Assessment:** USEFUL — provides the activation-aware SVD recipe that cycle 280 should be using. The data-aware vs data-agnostic distinction is the key idea.
+
+---
+
+### SVD-LLM: Truncation-aware Singular Value Decomposition for Large Language Model Compression (Wang, Chen, Liu, et al., 2024)
+
+**arXiv:** 2403.07378
+
+**Main idea:** Combines (1) data whitening before SVD so the truncation minimizes reconstruction loss in the activation space (similar in spirit to ASVD but with a closed-form whitening derivation), and (2) **layer-wise closed-form weight update** after truncation to compensate for cumulative compression error across layers — "if you've already truncated layers 1..l−1, the optimal SVD for layer l should account for the perturbed inputs it now sees, not the original inputs." Posed as a sequential compensation problem with closed-form updates per layer.
+
+**Why it matters here:** cycle 280's retrain step is a slow Adam-driven version of SVD-LLM's closed-form sequential update. The 4000 Adam steps on B + bias buy 8.6 PPL of recovery; SVD-LLM's closed-form update buys most of the same recovery in one shot. If you want to scale cycle 280's recipe to multiple blocks simultaneously without per-block Adam runs, SVD-LLM's sequential closed-form is the textbook approach.
+
+**Direct relevance:** cycles 270, 280, 282, 283 are all **single-block** rank reductions retrained in isolation. The cycle 275 hybrid (rank-2 block 1 + rank-22 block 11) was REFUTED — composition fails. SVD-LLM's sequential compensation is exactly designed for this composition failure: it proves (under their assumptions) that *sequential* truncation + closed-form update *can* compose without the cycle 275 failure mode. The cycle 284 finding that homogeneous SVD-only hybrids compose non-destructively (52.88 PPL) is a partial replication of SVD-LLM's composability claim.
+
+**Assessment:** USEFUL — the canonical reference for "low-rank weight decomposition + retrain on transformers." Provides the composition theory the runner needs to understand why cycle 275 failed and cycle 284 worked.
+
+---
+
 ### Who Said Neural Networks Aren't Linear? — The Linearizer (Berman, Hallak, Shocher, 2025)
 
 **arXiv:** 2510.08570
@@ -832,6 +880,95 @@ Both formalised as orthogonal operators. Proves: within rank-distance 1, folding
 
 ---
 
+### TurboQuant: Online Vector Quantization with Near-optimal Distortion Rate (Zandieh et al., Google Research, ICLR 2026)
+
+**arXiv:** 2504.19874
+**Companion papers:** QJL (2406.03482, AAAI 2025), PolarQuant (AISTATS 2026)
+
+**Main idea:** Two-stage vector quantization achieving near-optimal distortion rates with zero data-dependent preprocessing:
+
+**Stage 1 — PolarQuant (b−1 bits):** Random rotation Π (QR of Gaussian matrix) maps any vector x to y = Πx uniformly distributed on the hypersphere. In high-d, coordinates of y become near-independent with known distribution → optimal scalar quantizer (Lloyd-Max) applied independently per coordinate. Data-oblivious: the codebook depends only on the bit-width, not the data.
+
+**Stage 2 — QJL on residual (1 bit):** Compute residual r = x − x̃_mse. Apply Quantized Johnson-Lindenstrauss: qjl = sign(S·r), where S is a random projection. Store 1 sign bit per coordinate + the residual norm γ = ‖r‖₂. Reconstruction: x̃ = x̃_mse + γ · (√(π/2)/d) · S⊤ · qjl. This eliminates bias in inner product estimation.
+
+**Theoretical guarantees:**
+- MSE distortion: D_mse ≤ (√(3π)/2) · 1/4^b — within factor ~2.7 of information-theoretic lower bound
+- Inner product distortion: D_prod ≤ (√(3π)/2d) · ‖y‖² · 1/4^b — unbiased estimator
+- Lower bounds proved via Yao's minimax + Shannon's source coding bound
+
+**Key results:**
+- KV cache: 3-bit quantization, 6× memory reduction, perfect downstream accuracy (Needle-in-Haystack recall 0.997 = same as full precision)
+- 4-bit: up to 8× speedup over FP32 on H100
+- Nearest neighbor search: outperforms Product Quantization and RabitQ in recall with near-zero indexing time
+- Models: Gemma, Mistral, LLaMA-3.1-8B on LongBench, RULER, ZeroSCROLLS
+
+**For our problem — the JL connection:**
+
+1. **Random rotation as geometric normalizer.** PolarQuant's key insight: random rotation makes any vector distribution look uniform on the sphere → optimal scalar quantization becomes data-independent. For weight quantization: if we randomly rotate the weight matrix columns before quantizing, we could use a fixed codebook optimized for the sphere, eliminating per-layer calibration. The rotation is invertible (Π⊤), so we dequantize and rotate back.
+
+2. **JL for error correction.** The QJL stage is a 1-bit error corrector for the residual. This is directly analogous to our correction framework: Stage 1 = quantize (introduce error), Stage 2 = correct the residual. The JL transform compresses the residual to 1 bit per dimension while preserving inner products. Question: could we use JL-compressed residuals as a lightweight alternative to our learned corrections?
+
+3. **Unbiased inner product preservation.** TurboQuant guarantees E[⟨y, x̃⟩] = ⟨y, x⟩ — the quantized representation gives unbiased dot products. For weight quantization, this means the expected output of a quantized linear layer would match the float output exactly (in expectation). The variance of this estimator decreases as 1/4^b. At 4 bits, inner product distortion is 0.047/d — essentially zero for d > 100.
+
+4. **Near-optimal distortion rate.** The 1/4^b scaling is a hard information-theoretic limit. Any b-bit quantizer must incur at least 1/4^b MSE distortion. This tells us the theoretical floor for any quantization scheme. Our topk+lstsq corrections are fighting against this floor — they can reduce effective distortion below what a b-bit quantizer alone achieves, but only by spending additional bits on the correction.
+
+5. **Composing with our geometric analysis.** The pullback metric from Curved Inference (G = U⊤U) could be combined with TurboQuant's rotation: rotate weights into the semantic basis defined by G, then apply PolarQuant. Quantization error would be minimized in the semantically important directions first.
+
+**Limitation:** Designed for KV cache (activation vectors seen once during inference), not for weight matrices (static, accessed repeatedly). Weight quantization has different tradeoffs: codebook/LUT overhead is amortized across all tokens, so more complex schemes are viable. But the theoretical framework (distortion bounds, JL residual correction) transfers.
+
+**Assessment:** USEFUL — the JL residual correction idea is directly applicable. The theoretical distortion bounds set a floor we can reason against. Random rotation as a preprocessing step for quantization is a clean, implementable idea worth testing on weight matrices.
+
+---
+
+### SqueezeLLM: Dense-and-Sparse Quantization (Kim et al., UC Berkeley, ICML 2024)
+
+**arXiv:** 2306.07629
+
+**Main idea:** Post-training quantization of LLMs using two key innovations: (1) **sensitivity-based non-uniform quantization** — k-means clustering of weights weighted by diagonal Fisher information F_ii, so centroids are pulled toward values whose perturbation most impacts the final loss; (2) **dense-and-sparse decomposition** W = D + S — outliers (0.1-0.5% of weights) plus highly sensitive values extracted to sparse FP16 matrix, remainder quantized with contracted range.
+
+**Key results:**
+- LLaMA-7B 3-bit: 7.56 PPL on C4 (FP16 baseline 7.08), 2.2× inference speedup on A6000
+- Outperforms GPTQ, AWQ, SpQR at 3-bit and 4-bit across LLaMA/OPT families
+- Non-uniform quantization with LUT dequantization adds minimal latency overhead vs uniform
+- Only 10 calibration samples needed (vs 100-200 for GPTQ/AWQ)
+- Grouped GPTQ has severe latency penalty from permutation/non-coalesced access; SqueezeLLM avoids this
+
+**For our problem:**
+
+1. **Fisher-weighted k-means = semantically-weighted quantization error.** This is the same principle as the pullback metric G = U⊤U from Curved Inference, but applied at quantization time: minimize ∑(w_i − Q(w_i))² · F_ii instead of raw ∑(w_i − Q(w_i))². The Fisher diagonal measures "how much does the final output change if this weight moves" — precisely the sensitivity our correction framework targets.
+
+2. **Dense-and-sparse decomposition parallels our topk+lstsq.** Their S matrix stores the values that would cause the most damage if quantized. Our topk correction targets the k directions of largest quantization error. Both identify and separately handle the "hard part" of quantization. The difference: SqueezeLLM preserves original values in FP16 (oracle), we learn corrections post-hoc.
+
+3. **Non-uniform quantization insight.** LLM weight distributions are non-uniform → uniform binning wastes precision. Our geometric analysis of GELU channels (bump-dominated vs compression-important) confirms this: different channels have fundamentally different distributions. Per-channel non-uniform quantization guided by geometric channel type could combine both approaches.
+
+4. **Memory-bound, not compute-bound.** Their analysis that single-batch generative inference is bottlenecked by memory bandwidth (not FLOPs) justifies compression approaches that add compute (LUT lookups, sparse matmul) in exchange for smaller memory footprint. Same economics apply to our correction approach: the correction network adds FLOPs but if it enables lower-bit quantization, net throughput improves.
+
+**Limitation:** No geometric understanding of why outliers exist or which directions they align with. The Fisher diagonal is a scalar per-weight sensitivity — doesn't capture the directional structure our pullback/curvature analysis reveals.
+
+**Assessment:** USEFUL — establishes that sensitivity-weighted non-uniform quantization works at scale. The Fisher-weighting principle directly validates our geometric approach (measure error impact, not raw error magnitude). Dense-and-sparse decomposition is a practical template for deploying corrections.
+
+---
+
+### Curved Inference: Concern-Sensitive Geometry in Large Language Model Residual Streams (Manson, 2025)
+
+**arXiv:** 2507.21107
+
+**Main result:** Defines a pullback metric G = U⊤U on the residual stream (U = unembedding matrix), giving a semantically meaningful inner product where distances correspond to output probability shifts. Under this metric, measures curvature (κ, via 3-point central differences) and salience (S = step distance) of the residual stream trajectory through layers. Key findings on Gemma-1b and LLaMA-3b: (1) salience and curvature are strongly anticorrelated (r = −0.89 in LLaMA), suggesting a "representational budget" — layers either move far or reorient sharply, not both. (2) Both metrics are sensitive to semantic perturbations (concern-shifted prompts), with statistically significant differences (p = 0.006 for curvature in LLaMA). (3) UMAP projections destroy curvature geometry (correlation < 0.47) — native-space analysis is essential.
+
+**What it gives us:**
+1. A principled semantic metric for measuring compression error: ||e||_G = ||Ue||₂ instead of ||e||_F. Error in directions that affect output probabilities is penalized more than error in semantically inert directions.
+2. Layer-level curvature as a compression difficulty signal: high-curvature layers are performing nonlinear reorientation (risky to compress), low-curvature layers are doing near-linear transport (safer to compress).
+3. The salience-curvature anticorrelation could guide compression budget allocation: layers that move far but straight (high S, low κ) may tolerate aggressive compression; layers that bend sharply (high κ) need fidelity.
+4. G-weighted lstsq: minimize ||U(y - ŷ)||² instead of ||y - ŷ||² when fitting compressed output projections. Optimizes directly for semantic fidelity rather than Frobenius reconstruction.
+
+**Limitation:** Validated on Gemma/LLaMA (26-28 layers), not on GPT-2 (12 layers — fewer curvature points, marginal statistical power). The connection to compression is hypothesized but not tested — no one has shown that curvature predicts compressibility. The metric is global (same G for all layers); a layer-local pullback (Jacobian of rest-of-network) would be more precise but much more expensive.
+
+**Assessment:** USEFUL → potentially CORE. Provides the first principled geometric framework connecting residual stream geometry to compression decisions. Items 145-150 directly test this.
+
+**Full survey:** `autoresearch/surveys/curved_inference_geometric_interpretability.md`
+
+---
+
 ## CONTEXT (background, not directly applicable)
 
 ### Geometry of Grokking: Norm Minimization on the Zero-Loss Manifold (Musat, 2025)
@@ -995,6 +1132,32 @@ This suggests a concrete algorithm:
 **Actionable:** For a network with K observed activation patterns, take O(log K) random 2D projections through the data distribution, run SplineCam on each, collect boundary densities across projections. This gives a statistically sound sample of the partition structure without full enumeration. The JL guarantee ensures these projections aren't redundant (they cover independent directions).
 
 **Open question:** How does the partition look in a JL-projected space vs. the original? Is the boundary density in the projected space predictive of the partition's complexity in the full space? This is testable empirically.
+
+---
+
+### Deep Compression: Pruning, Trained Quantization, and Huffman Coding (Han, Mao, Dally, Stanford, ICLR 2016 Best Paper)
+
+**arXiv:** 1510.00149
+
+**Main idea:** Three-stage compression pipeline: (1) magnitude pruning → retrain → sparse representation (CSR with relative indices); (2) k-means weight sharing → retrain shared centroids via gradient aggregation; (3) Huffman coding on indices and centroids.
+
+**Key results:**
+- AlexNet: 240MB → 6.9MB (35×), no accuracy loss
+- VGG-16: 552MB → 11.3MB (49×), no accuracy loss
+- Stages are orthogonal: individually each degrades below 8% model size, combined they reach 3% without loss
+- Linear initialization for k-means centroids outperforms density-based (preserves large-magnitude weights)
+- Conv layers need 8 bits, FC layers only 5 bits
+- 3-7× energy savings from fitting compressed model in SRAM cache
+
+**For our problem:** This is the foundational "pruning + quantization + encoding" pipeline that all modern methods build on. Two relevant details:
+
+1. **k-means weight sharing with gradient-aggregated retraining** is the precursor to SqueezeLLM's sensitivity-weighted k-means. Deep Compression uses uniform k-means; SqueezeLLM adds Fisher weighting. Both do non-uniform quantization via clustering — same family as model folding (Wang et al., 2502.10216).
+
+2. **Linear centroid initialization > density-based.** This is because weight distributions have long tails — density-based puts too many centroids near zero, under-representing the important large weights. Same principle as SqueezeLLM's outlier extraction and our observation that bump-dominated channels (small weights, nonlinear) need different treatment from compression-important channels (large weights, linear).
+
+**Limitation:** Pre-LLM era. Results on AlexNet/VGG; no attention layers. Retraining required between stages. But the conceptual framework (prune → quantize → encode, each stage orthogonal) remains the template.
+
+**Assessment:** CONTEXT — foundational reference. The k-means weight sharing + retraining idea is the ancestor of most modern non-uniform quantization.
 
 ---
 

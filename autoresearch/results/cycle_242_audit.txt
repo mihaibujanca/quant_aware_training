@@ -1,0 +1,14 @@
+cycle=242
+item=252
+status=PASS
+verdict=CONFIRMED
+interesting=true
+delta_A_1_2_3=+0.579
+delta_B_8_9_10=+8.636
+max_delta=+8.636
+threshold=2.0
+n_seeds=3
+std_A=0.093
+std_B=0.040
+float_ppl=53.895
+notes=max(delta) 8.636 >= 2.0 confirms criterion. 3 seeds tight on both configs. Fair contrast (only BLOCKS differs). Late-block placement [8,9,10] sits +1.30 above float; early [1,2,3] beats float by 6.76. Together with c210 [1,4,7] and c233 [3..8], rules out block-count arithmetic; suggests cascade floor set by late-block cost. B seeds all peak at step 1400 then plateau-and-climb (genuine convergence).

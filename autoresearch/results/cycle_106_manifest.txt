@@ -1,0 +1,6 @@
+item_number=101
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_106_k5_polish.json,autoresearch/results/cycle_106_k5_polish.png
+code_paths=experiments/gradient_polish_k5_stacking_gpt2.py
+final_commit_hash=ca9b779
+agenda_updated=yes

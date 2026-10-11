@@ -1,0 +1,26 @@
+Cycle 268 — Item 278: K=64 4-block sweep
+Verdict: CONFIRMED
+Commit (main): 5664a91
+Commit (bookkeeping): 1afc8c4
+
+min best_mean = 55.9533 ([1,4,7,8]); CONFIRMED by 0.047 PPL margin (threshold ≤ 56.0).
+
+Per-subset best_mean (n=3 seeds {42,137,2024}):
+  [1,2,4,7] = 56.0675 ± 0.0443  (seeds 56.125 / 56.060 / 56.017)
+  [1,4,7,8] = 55.9533 ± 0.0923  (seeds 56.017 / 56.020 / 55.823)  ← min
+  [1,2,7,8] = 57.2766 ± 0.1199  (seeds 57.350 / 57.372 / 57.108)
+
+Config: K=64, N_CALIB=200, N_EVAL=100 disjoint, SEQ_LEN=128, Adam LR=1e-4, N_STEPS=4000, EVAL_EVERY=100, MPS, GPT-2 small, wikitext-2 val.
+Trainable per config = 199,680 = 4 × (49,920 = 64×768 + 768).
+Wall: 20.9 min, 9 fits, no seed drop.
+
+Baselines:
+  cycle 257 K=64 5-block:    62.181  (delta -6.228)
+  cycle 265 K=128 4-block:   53.647  (delta +2.306)
+  cycle 255 K=512 4-block:   49.609  (delta +6.344)
+  cycle 230 K=64 3-block:    50.781  (delta +5.172)
+  float ref:                 53.895  (delta +2.058)
+
+Subset ordering FLIPS at K=64: [1,4,7,8] < [1,2,4,7] < [1,2,7,8] (cf. K=128/K=512 ordering [1,2,4,7] < [1,4,7,8] < [1,2,7,8]). [1,2,7,8] consistently last across all three K.
+
+Pareto note: cycle 268 K=64 4-block (200K, 55.95) DOMINATES cycle 251 K=128 5-block (495K, 59.12).

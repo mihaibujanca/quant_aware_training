@@ -1,0 +1,76 @@
+Cycle 282 Audit — Item 292: Block 10 c_proj rank-17 weight-SVD
+Status: PASS
+Verdict: CONFIRMED (retrain best_mean 50.0445 ± 0.0565 ≤ 55.0 by 4.956 PPL, below float by 3.850)
+Commits: 434ba6c (main), d1c4c8f (bookkeeping)
+
+Plan adherence: PASS
+  - Plan 26 lines, 8 headings, hypothesis verbatim from item 292
+  - Script: cycle 270 template, TARGET_BLOCK=10, RANKS_NORETRAIN=[5,17,50], RETRAIN_RANK=17
+  - Verdict logic rewritten per item 292 (retrain clause + combined noretrain+retrain REFUTED)
+  - Trainable assert: 13,824 = 17×768 (B) + 768 (bias)
+
+Run completion: PASS
+  - Exit 0, ~7 min wall (3 noretrain + 3 retrain × 2.1 min each)
+  - HF progress bars disabled via env var (clean log)
+  - 3/3 retrain seeds completed, per-seed restore assert PASS
+
+Numerical consistency: PASS
+  - Float PPL 53.895 matches reference
+  - Init PPL deterministic 59.378 across all 3 seeds (matches noretrain[r=17])
+  - Restored orig c_proj → PPL 53.895 (matches float within 1e-3)
+  - best_mean 50.0445 reproduces arithmetic to 4 dp
+  - Per-seed: 42→50.0048@3900, 137→50.0042@3900, 2024→50.1245@3800
+  - All 3 best_step ≥ 3800 — budget-bounded descent
+  - final@4000 overshoot only +0.060 (tight)
+  - SVD: top-5 SVs [41.59, 28.19, 21.17, 20.17, 19.66]; S[0]/S[-1]=64.3×
+  - Energy fractions: r=5: 5.03%, r=17: 10.24%, r=50: 21.18%
+
+Verdict logic: PASS
+  - CONFIRMED iff retrain best_mean ≤ 55.0 → PASS (50.0445 ≤ 55.0 by 4.956)
+  - REFUTED iff ALL noretrain ≥ 57 AND retrain ≥ 57 → noretrain PASSES,
+    retrain FAILS (50.0445 < 57.0) → CONFIRMED wins
+
+Geometric / cross-cycle reading: PASS
+  1. Headline: cycle 282 strictly DOMINATES cycle 270 block 11 r=22 on
+     BOTH axes — 22% fewer params AND 4.42 PPL better. Cycle 270 DEPRECATED.
+  2. Extends cycle 270/280 pattern — three data points now confirm
+     rank-(eff_rank-match) + Adam retrain as reproducible single-block
+     c_proj recipe.
+  3. FIRST positive eff_rank prescriptive result at single-block c_proj
+     weight-SVD + Adam retrain level — monotone ordering:
+     block 1 (1.94 → 49.03) < block 10 (16.70 → 50.04) < block 11 (22.49 → 54.47)
+  4. Weight-SVD energy ≠ activation eff_rank — SECOND confirmation
+     (block 10 top-17 energy only 10.24% yet retrained 50.04 < float).
+  5. Block 10 has the LARGEST Adam recovery of any single-block c_proj
+     weight-SVD retrain measured so far: −9.33 PPL (vs block 1: −8.63,
+     block 11: −5.22).
+  6. Δ vs float 53.895: −3.850 PPL (cycle 282 beats float)
+     Δ vs cycle 270 [11] r=22 54.4687: −4.424 PPL (dominates)
+     Δ vs cycle 280 [1]  r=2  49.0324: +1.012 PPL (dominated by cycle 280)
+
+Bookkeeping: PASS
+  - plan, brief, script, log, JSON, summary, manifest, exec_result all present
+  - agenda.md: item 292 deleted from P0, cycle 282 added to PAST EXPERIMENTS
+    (above cycle 281); cycle 270 noted as deprecated
+  - TSV row appended (line 280), hash updated to 434ba6c
+  - 2 commits clean, no pre-existing dirty files staged
+
+Pre-commit hook interaction: PASS
+  - Main commit: first attempt failed on end-of-file-fixer
+    (cycle_282_block10_lowrank.json + cycle_282_summary.md trailing newlines)
+  - Resolution: re-staged and created NEW commit (not --amend)
+    per CLAUDE.md git safety protocol
+  - Bookkeeping commit: passed all hooks first try
+
+Issues:
+  1. Cycle 270 block 11 r=22 recipe is DEPRECATED by cycle 282. Item 294
+     (hybrid block 1 rank-2 + block 11 rank-22) should be updated to use
+     block 10 rank-17 instead.
+  2. All 3 retrain seeds still descending at budget cap (best_step ≥ 3800).
+     4000-step budget is insufficient for full convergence. Longer training
+     could push best_mean further below 50.04.
+  3. REFUTED noretrain clause technically triggered (all r ≥ 57) but retrain
+     clause blocks REFUTED (50.0445 < 57.0). CONFIRMED wins cleanly.
+  4. Item 292 brief says "~13.1K params" but actual trainable = 13,824
+     (it omitted the bias). Minor arithmetic mismatch in brief — actual
+     count asserted at runtime.

@@ -1,0 +1,11 @@
+cycle=251
+item=261
+status=PASS
+interesting=true
+verdict=INCONCLUSIVE
+best_mean=59.119
+best_std=0.009
+verdict_logic=56.0_lt_59.119_lt_62.0_->_INCONCLUSIVE
+phase1=verdict_logic_correct
+phase2=data_integrity_ok_3_seeds_tight_std_adam_still_descending_at_step_4000
+phase3_interesting=5block_K128_matches_6block_K512_cycle221_at_25pct_params;per_block_K_penalty_sublinear_3b=0.81_5b=1.06_6b=1.34;cycle245_float_tie_is_K=512_specific_not_recipe_specific

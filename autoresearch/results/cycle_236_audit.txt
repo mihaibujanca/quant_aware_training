@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=inconclusive
+new_outcome=inconclusive
+reason=Verdict matches the literal criterion: effects are present (max 29x random baseline at block 11) but T1's W_U @ v vocab projections do not match actual logit shifts (1/60 directions >= 0.3 jaccard). This is exactly the "directions cause shifts but don't match T1 predictions" inconclusive case the criterion anticipated. T1's wte-column probe was the wrong decoder.
+guardrail_flags=none
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=The bump directions are causally real but their decoder is non-linear/non-wte. Either: (a) use logit-lens style decoding through ALL downstream blocks (not just wte projection), or (b) define directions by their CAUSAL effect on logit shifts rather than wte alignment. T3 (item 247) is the next gating test.
+interesting=true
+interesting_reason=Effect grows monotonically with depth [5.23 -> 29.23 at block 11]. Bump in deep blocks has 5-30x more causal logit influence than random directions. The wte-projection assumption from T1 is wrong.

@@ -1,0 +1,32 @@
+{
+  "cycle": 273,
+  "item": 283,
+  "decision": "APPROVE",
+  "checks": {
+    "brief_alignment": "PASS",
+    "blocks_1_4_7_11": "PASS",
+    "k_per_block_hetero_512_512_512_22": "PASS",
+    "control_uniform_k22": "PASS",
+    "joint_adam_w_out_b_out": "PASS",
+    "lr_1e_4_steps_4000_eval_every_100": "PASS",
+    "seeds_42_137_2024_total_6_fits": "PASS",
+    "disjoint_calib_eval_splits": "PASS",
+    "best_state_snapshot_restore": "PASS",
+    "trainable_hetero_1_200_192": "PASS",
+    "trainable_uniform_k22_70_656": "PASS",
+    "lstsq_init_cycle218_importance": "PASS",
+    "compressed_mlp_shape_chain": "PASS",
+    "per_config_fresh_model_reseed": "PASS",
+    "verdict_thresholds_match_item_283": "PASS",
+    "output_namespacing_cycle273": "PASS",
+    "run_cap_under_60_min": "PASS"
+  },
+  "risks": [
+    "Hetero CONFIRMED gate 44.5 is tight; cycle 210 [1,4,7] K=512 alone was 46.56 so block-11 K=22 patch must save >=2 PPL",
+    "Control K=22 gate (>=60) may fail if joint 4-block uniform K=22 lands in 55-58 range; would force INCONCLUSIVE even if hetero is good",
+    "EXPECTED_TRAINABLE must be recomputed inside run_seed per config; assert at runtime to catch K_PER_BLOCK plumbing bugs",
+    "Reset best_state dict per fit (per cfg-seed) to avoid stale snapshots leaking between runs",
+    "Reload GPT-2 weights fresh per (cfg, seed); do not reuse the previous fit's modified MLPs"
+  ],
+  "trainable_params": 1200192
+}

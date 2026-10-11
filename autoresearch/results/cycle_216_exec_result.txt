@@ -1,0 +1,6 @@
+item_number=230
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_216_wdown_geometry.json,autoresearch/results/cycle_216_summary.md,autoresearch/results/cycle_216_manifest.txt
+code_paths=experiments/wdown_column_census_cycle216.py
+final_commit_hash=1c594008206ffeba89dce557227c936ffc518647
+agenda_updated=yes

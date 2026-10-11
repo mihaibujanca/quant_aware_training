@@ -1,0 +1,104 @@
+cycle=260
+item=271
+verdict=INCONCLUSIVE
+main_commit=c7d405f83e754ac670cf6d7f30b9576fc0f218ee
+bookkeeping_commit=a9fd9fc7399682adf8dbe612bc18b1ecd75f599e
+
+# Key results
+trainable_params=0
+n_calib_tokens=256
+n_calib_seqs_used=2
+seq_len=128
+n_blocks=12
+seed=42
+device_model=mps
+device_linalg=cpu
+
+# Per-block median rank_95(ΔJ) over 256 tokens
+median_r95_block_0=360
+median_r95_block_1=407
+median_r95_block_2=367
+median_r95_block_3=334
+median_r95_block_4=332
+median_r95_block_5=332
+median_r95_block_6=335
+median_r95_block_7=338
+median_r95_block_8=337
+median_r95_block_9=335
+median_r95_block_10=334
+median_r95_block_11=332
+median_r95_min_across_blocks=332
+median_r95_max_across_blocks=407
+median_r95_plateau_approx=335_over_768_fraction_0.44
+
+# delta_diag stats (sigma_prime_GELU - sigma_prime_ReLU)
+delta_diag_bounded_elementwise=[-0.5,+0.5]
+delta_diag_frac_abs_gt_0.1_min=0.56
+delta_diag_frac_abs_gt_0.1_max=0.74
+
+# Frobenius ||ΔJ||_F median per-token per block
+fro_block_0=80.7
+fro_block_1=113.5
+fro_block_2=95.5
+fro_block_3=82.6
+fro_block_4=88.9
+fro_block_5=88.5
+fro_block_6=99.7
+fro_block_7=109.6
+fro_block_8=122.3
+fro_block_9=140.1
+fro_block_10=162.1
+fro_block_11=192.5
+
+# Cross-block alignment: mode-1 top-20 left SVs of DJ_avg vs c_fc reader top-20 left SVs of block l+1
+top5_cos_pair_0_1=2.727
+top5_cos_pair_1_2=2.902
+top5_cos_pair_2_3=3.043
+top5_cos_pair_3_4=2.893
+top5_cos_pair_4_5=3.459
+top5_cos_pair_5_6=3.487
+top5_cos_pair_6_7=3.358
+top5_cos_pair_7_8=3.239
+top5_cos_pair_8_9=3.260
+top5_cos_pair_9_10=2.563
+top5_cos_pair_10_11=1.926
+peak_alignment_pair=5_to_6
+peak_alignment_top5_cos_sum=3.487
+
+# Random baseline (10 seeds × 11 pairs Gaussian orthonormal)
+random_top5_cos_mean=1.2557
+random_top5_cos_std=0.0448
+random_top20_cos_mean=2.7135
+random_top20_cos_std=0.0979
+cycle218_random_reference=1.27_consistent
+
+# Verdict logic
+clause_1_rank_95_le_100_in_ge_6_blocks=False_0_of_12
+clause_2_top5_cos_ge_2.0_in_ge_6_pairs=True_10_of_11
+confirmed_both_clauses_and=False
+refuted_rank_95_ge_400_in_ge_6_blocks=False_1_of_12
+verdict=INCONCLUSIVE
+
+# Sanity
+sigma_gelu_prime_via_fresh_leaf_autograd_grad=true
+sigma_relu_prime_strict_gt_zero_convention=true
+delta_at_z_equal_0_positive_0.5_from_gelu_prime_0.5_minus_relu_prime_0=true
+hf_conv1d_layout_c_fc_weight_768_3072_c_proj_weight_3072_768=true
+preact_equals_x_at_W_fc_plus_b_fc_not_F_linear=true
+linalg_on_cpu_for_svdvals_and_svd=true
+per_token_loop_with_running_sum_for_DJ_avg=true
+n_random_seeds=10
+
+# Geometric reading
+finding_1_operator_medium_rank_not_low_rank=median_r95_plateau_335_over_768_0.44_fraction
+finding_2_alignment_stronger_than_delta_tilde_cycle218=mode_1_DJ_avg_targets_next_block_c_fc_reader_more_precisely
+finding_3_rank_and_alignment_are_separable=dominant_directions_are_targeted_clause_2_but_operator_is_not_low_rank_clause_1
+finding_4_diagonal_disagreement_spread_over_60_70_pct_of_3072_channels=reason_r95_stays_high
+finding_5_peak_alignment_at_pair_5_6_matches_cycle258_bump_load_layers_3_5=consistent
+
+# Hypothesis check
+hypothesis_clause_1_low_dim_operator_r95_le_100_in_ge_6_blocks=FAIL_0_of_12
+hypothesis_clause_2_mode_1_alignment_cos_ge_2_in_ge_6_pairs=PASS_10_of_11
+overall_hypothesis_partial_pass_only=true
+
+artifacts=experiments/jacobian_delta_cycle260.py,autoresearch/results/cycle_260_jacobian_delta.json,autoresearch/results/cycle_260_summary.md,autoresearch/logs/cycle_260_run.log,autoresearch/results/cycle_260_manifest.txt,autoresearch/plans/cycle_260.md,autoresearch/briefs/cycle_260.md,autoresearch/reviews/cycle_260.md,autoresearch/reviews/cycle_260_review.json

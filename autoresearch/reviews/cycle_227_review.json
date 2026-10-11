@@ -1,0 +1,29 @@
+{
+  "cycle": 227,
+  "item": 237,
+  "priority": "P0",
+  "verdict": "APPROVE",
+  "reviewer": "design-review-agent",
+  "checks": {
+    "hypothesis_verbatim": true,
+    "pipeline_reuse": "cycle 218 centred Delta_tilde pipeline (audit PASS)",
+    "verdict_criteria_match_item": true,
+    "random_baseline_reused": true,
+    "compute_under_30min": true,
+    "sanity_checks_present": true,
+    "bookkeeping_listed": true
+  },
+  "verdict_thresholds": {
+    "CONFIRMED": "median_specificity >= 1.0 AND n_rows_with_quiet_nonadj >= 7",
+    "REFUTED": "median_specificity < 0.3",
+    "INCONCLUSIVE": "0.3 <= median_specificity < 1.0"
+  },
+  "concerns": [],
+  "notes": [
+    "Heatmap has 66 (l,j) cells with l<j; 11 adjacent, 55 non-adjacent.",
+    "Row l=10 correctly excluded from row-quietness count (no non-adjacent j).",
+    "Row l=9 has only one non-adjacent entry (j=11) — high variance but median over rows absorbs.",
+    "Stores both top5 (verdict) and top20 (cross-check vs cycle 218) cos sums.",
+    "Specificity = row_max_at_lp1 - row_mean_nonadj is the right contrast for the generic-reading-basis null."
+  ]
+}

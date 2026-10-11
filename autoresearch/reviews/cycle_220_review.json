@@ -1,0 +1,22 @@
+{
+  "cycle": 220,
+  "item": 234,
+  "round": 2,
+  "verdict": "APPROVE",
+  "checks": {
+    "R1_novelty": "PASS",
+    "R2_falsifiability": "PASS",
+    "R3_leakage": "PASS",
+    "R4_thresholds": "PASS",
+    "R5_soundness": "PASS"
+  },
+  "round1_verdict": "REVISE",
+  "round1_issue_resolved": {
+    "id": "thresholds_hardcoded",
+    "fix_applied": "Step 9 now computes low_thresh = baseline_ppl * 1.10 and high_thresh = baseline_ppl * 1.55 after measuring in-cycle baseline, and uses these in verdict logic. JSON schema in step 10 adds low_thresh and high_thresh fields alongside baseline_ppl."
+  },
+  "notes": [
+    "Round-2 review verifies the revision. All checks pass.",
+    "Plan ready to execute."
+  ]
+}

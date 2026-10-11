@@ -1,0 +1,28 @@
+{
+  "cycle": 235,
+  "item": 245,
+  "tier": "T1",
+  "priority": "P0",
+  "verdict": "APPROVE",
+  "summary": "Interpretability extraction of centred Delta-tilde SVD features (top-32 V/S/U per GPT-2 block), decoded to vocab via W_U and to corpus via |U|, with heuristic coherence labels. Reuses cycle 218 pipeline, matches the notebook loader contract at notebooks/bump_features_explore.py.",
+  "strengths": [
+    "Filenames use cycle_235_t1_* matching the notebook loader (cycle:03d format).",
+    "V_top32 stored as (768, 32) per loader expectation at L296.",
+    "Token-stream grouping yields exact 102400 real tokens, no padding.",
+    "delta_out computed in 4096-row chunks, reusing verified cycle 218 pattern.",
+    "SVD explicitly on CPU to avoid MPS memory / device issues.",
+    "Variance-explained denominator uses FULL singular spectrum S, not just top-32.",
+    "Cross-check against cycle 218 vh_top20 is a soft sanity print, not a hard assert.",
+    "Fallback tree covers wikitext train unavailability, SVD OOM (svd_lowrank), tokenizer cache, and threshold misfire (raw counts logged)."
+  ],
+  "concerns": [
+    "Wikitext-2 train split assumed available; fallback to val split with warning is correct but should be verified at runtime.",
+    "Coherence heuristic thresholds (40/20) are rough; acknowledged, with raw counts logged for re-labelling.",
+    "wte @ v projection is correct for GPT-2 because wte is tied to lm_head (W_U = W_E^T here).",
+    "Record dict must include block: l so the summary counts rec['block'] == l works. Minor — call out during execute."
+  ],
+  "blocking_issues": [],
+  "risk": "low",
+  "unblocks": [246, 247, 248],
+  "notes": "Verdict thresholds pre-registered: CONFIRMED if >=5 coherent dirs in >=6/12 blocks; REFUTED if <2 in ALL 12 blocks; INCONCLUSIVE otherwise. Execute step should ensure each decoded record carries a 'block' key."
+}

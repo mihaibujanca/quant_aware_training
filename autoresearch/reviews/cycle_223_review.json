@@ -1,0 +1,27 @@
+{
+  "cycle": 223,
+  "item": 228,
+  "verdict": "APPROVE",
+  "preflight": {
+    "duplicate": false,
+    "duplicate_note": "Cycle 199 K-sweep had no Adam; cycle 205 K-sweep was single-block. K=256/K=128 with 3-block Adam correction is new.",
+    "dependency": "none",
+    "wall_time_ok": true,
+    "wall_time_note": "2 K x 3 seeds x 4000 steps Adam, ~comparable to cycle 221 (6 blocks x 3 seeds x 4000 steps); 3-block setup faster per step. K=256 ordered first as fallback.",
+    "program_changes": false,
+    "three_seed_rule": true
+  },
+  "pitfalls": {
+    "MP1": "n/a",
+    "MP2": "n/a",
+    "MP3": "n/a",
+    "MP4": "n/a",
+    "MP5": "n/a",
+    "MP6": "handled — K=128 has no pass/fail criterion, only contributes to efficiency curve",
+    "MP7": "n/a",
+    "MP8": "n/a"
+  },
+  "hyperparameters_match_baseline": true,
+  "validation_present": true,
+  "notes": "Verdict criterion is K=256-specific. Reuses cycle 221 machinery (loader, CompressedMLP, collect_mlp_io, fit_block_lstsq, eval_ppl, run_seed) verbatim. K=512 row of the efficiency curve uses cycle 210 baseline (46.556)."
+}

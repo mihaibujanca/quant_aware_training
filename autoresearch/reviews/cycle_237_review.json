@@ -1,0 +1,62 @@
+{
+  "cycle": 237,
+  "item": 247,
+  "tier": "T3",
+  "title": "bump-subspace ablation vs random subspace baseline",
+  "verdict": "APPROVE",
+  "reviewer": "claude-opus-4-6",
+  "date": "2026-04-06",
+  "preflight": {
+    "P1_deps": "clean",
+    "P2_no_overwrite": "clean",
+    "P3_data": "clean",
+    "P4_budget": "tight_but_workable"
+  },
+  "strengths": [
+    "hook factory correctly branches on tuple-vs-tensor output of GPT2Block.forward",
+    "restore-sanity check (baseline re-eval within 1e-4) included",
+    "random projector idempotency check (P@P - P) included",
+    "3-way comparison: bump vs random vs full-FFN-output top-10 SVs",
+    "verdict thresholds copied verbatim from agenda item 247",
+    "fallbacks cover walltime (drop per-block random, then full-FFN), MPS QR brittleness, projector orientation flip"
+  ],
+  "concerns": [
+    {
+      "level": "minor",
+      "id": "hook_shape_assert",
+      "text": "hook factory should assert output[0].shape == hs.shape after rewrite to catch silent broadcast"
+    },
+    {
+      "level": "minor",
+      "id": "V_orthonormality",
+      "text": "verify (V_l.T @ V_l - I).abs().max() < 1e-5 once before building P_bump_l; required for P = VV^T to be a true projector"
+    },
+    {
+      "level": "minor",
+      "id": "calibration_match",
+      "text": "step 11 full-FFN baseline calibration must match cycle 235's split/size/seed for Δ̃ SVD or comparator is biased"
+    },
+    {
+      "level": "minor",
+      "id": "delta_definition_match",
+      "text": "step 11 captures mlp output; cycle 235's Δ̃ should also be mlp(ln_2(x)) (FFN contribution to residual). Confirm definitions match."
+    },
+    {
+      "level": "info",
+      "id": "walltime_risk",
+      "text": "145 evals @ ~30s = 70 min; slip to 40s breaks budget. Fallbacks handle this."
+    }
+  ],
+  "blockers": [],
+  "required_changes": [],
+  "recommended_changes": [
+    "add output[0].shape == hs.shape assert in hook factory",
+    "add V_l orthonormality check (V_l.T @ V_l ≈ I) to Validation",
+    "log joint_bump_ppl / random_joint_mean ratio to stdout alongside verdict",
+    "confirm cycle 235's Δ̃ is mlp(ln_2(x)) so full-FFN comparator is apples-to-apples"
+  ],
+  "tuple_handling_check": {
+    "concern_addressed": true,
+    "note": "plan's `make_ablation_hook` correctly branches on isinstance(output, tuple) and reconstructs ((new_hs,) + output[1:]); also prints type(output) on first call as belt-and-suspenders"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "verdict": "APPROVE",
+  "round": 1,
+  "issues": [
+    "Advisory: CONFIRMED threshold 46.0 is only 0.556 PPL below single-seed joint baseline 46.556; verdict near this boundary may be noise-dominated. Plan should qualify 'CONFIRMED near boundary' as 'within noise of joint Adam' in the output.",
+    "Advisory: INCONCLUSIVE band [46, 60] is very wide; a narrower 'near-parity' band would be more informative. Not blocking since per-seed values are recorded.",
+    "Premise framing: sequential is coordinate descent on the same joint loss, not a different optimum. The legitimate claim is 'smaller per-step param count reduces overfit, early-stop catches a better generalization point'. Plan frames this correctly in the task description; just ensure the writeup doesn't overclaim 'different basin'.",
+    "Nit: ensure mean AND std are printed in summary (plan says so but worth confirming in code).",
+    "Nit: confirm end-of-all-blocks eval uses restored best_state for every block."
+  ]
+}

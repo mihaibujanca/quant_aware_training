@@ -1,0 +1,36 @@
+{
+  "cycle": 228,
+  "item": 238,
+  "priority": "P1",
+  "verdict": "APPROVE",
+  "reviewer": "design_review_agent",
+  "soundness": {
+    "sign_convention": "correct: mu_l = gelu - relu(gelu) is non-positive; adding it post-activation compensates the missing negative leak",
+    "magnitude_expected": "|mu_l| ~ 0.17 per cycle 184",
+    "c_proj_linearity": "mu_l added pre-c_proj is equivalent to adjusting c_proj output bias by c_proj @ mu_l per block",
+    "calibration_split": "eval split (in-distribution best case, fine for first pass)",
+    "restore_sanity_check": true,
+    "hook_capture": "pre-hook on c_fc captures LN2 output; fallback to c_fc output documented"
+  },
+  "concerns": [
+    "first-moment-only correction; higher moments and token-level correlations untested",
+    "calibration ≡ eval (in-distribution); follow-up should use held-out calibration if CONFIRMED"
+  ],
+  "blocking": false,
+  "preflight": {
+    "novelty": true,
+    "dependencies": true,
+    "budget_ok": true,
+    "no_overwrite": true
+  },
+  "artifacts_listed": [
+    "experiments/gelu_noneg_corrected_cycle228.py",
+    "autoresearch/results/cycle_228_gelu_noneg_corrected.json",
+    "autoresearch/results/cycle_228_summary.md",
+    "autoresearch/results/cycle_228_manifest.txt"
+  ],
+  "thresholds": {
+    "low_thresh": 49.57,
+    "refute_thresh": 100
+  }
+}

@@ -1,0 +1,79 @@
+cycle=263
+item=273
+audit_status=PASS
+verdict=REFUTED
+main_commit=62ff08e49340de9e4b6da8306eb476236e3a6518
+bookkeeping_commit=08ca519
+trainable_params=0
+
+# Verdict cross-check
+clause_a_med_GR_ge_5_in_blocks_0_4=0_of_5_FAIL
+clause_b_p99_RG_ge_1_in_blocks_0_4=5_of_5_PASS
+confirmed=False
+all_blocks_med_ratio_in_0p5_2=True
+all_blocks_p99_ratio_in_0p5_2=True
+refuted=True
+verdict=REFUTED_PASS
+
+# Methodology checks
+calib_loader_matches_cycles_218_258_260=True
+b_leak_recipe_matches_cycle_258=True
+J_formula_matches_cycle_260=True
+fresh_leaf_autograd_for_sigma_prime_GELU=True
+sigma_prime_ReLU_eq_z_gt_0=True
+pullback_norm_used_for_both_numerator_and_denominator=True
+batched_forward_per_scale_per_token=True
+n_per_l_sigma_scale=2048
+n_total_probes=196608
+direction_sampling_seed=42
+direction_sampling_unit_norm=True
+shared_directions_across_l_sigma_token=True
+
+# Numerical sanity
+median_ratio_range=[0.748,1.127]
+p99_RoverG_range=[0.964,1.218]
+p99_GoverR_range=[0.821,1.038]
+all_within_0p5_2_band=True
+sub_quadratic_scaling_observed=True
+sub_quadratic_holds_for_both_sigmas=True
+both_sigmas_share_slope_within_10pct=True
+block_11_magnitude_dominates_~10x_blocks_1_9=True
+block_0_elevated_relative_to_blocks_1_9=True
+b_leak_polarity_matches_cycle_258_negative_per_block_means=True
+
+# Hypothesis vs result
+hypothesis_median_G_gt_R_at_every_block=FALSE
+hypothesis_median_G_gt_R_at_5_of_12_blocks=False_only_blocks_5_11
+hypothesis_p99_R_gt_G_in_early_blocks=qualitatively_TRUE_5of5_quantitatively_trivial_max_22pct
+hypothesis_5x_median_threshold=FAILS_by_4.97x_factor
+linear_envelope_W_up_W_down_dominates_over_sigma=True_REFUTED_branch_alternative_supported
+b_leak_smoothing_kills_relu_kink_spikes=likely_explanation
+
+# Cycle consistency
+cycle_258_kappa_diff_~50pct_GELU_vs_ReLU_swap=consistent_with_cycle_263_block_function_insensitivity
+cycle_260_DJ_medium_rank_335of768=consistent_operator_level_disagreement_distributed
+cycle_263_block_function_curvature_sigma_insensitive=NEW_finding_extending_258_260
+geometric_picture=GELU_and_ReLU_disagree_about_WHICH_directions_are_stretched_(260)_but_agree_about_HOW_MUCH_curvature_per_direction_(263)
+
+# Bookkeeping
+agenda_item_273_deleted_from_NEXT_P2=True
+agenda_cycle_263_PAST_entry_prepended=True
+tsv_row_appended_8_fields=True
+tsv_hash_filled=62ff08e4
+manifest_written=True
+main_commit_made=True
+bookkeeping_commit_made=True
+pre_existing_dirty_files_NOT_staged=True
+
+# Files
+plan=autoresearch/plans/cycle_263.md
+brief=autoresearch/briefs/cycle_263.md
+script=experiments/local_linearity_defect_cycle263.py
+run_log=autoresearch/logs/cycle_263_run.log
+result_json=autoresearch/results/cycle_263_local_linearity_defect.json
+summary_md=autoresearch/results/cycle_263_summary.md
+manifest=autoresearch/results/cycle_263_manifest.txt
+audit_md=autoresearch/audits/cycle_263.md
+exec_result=autoresearch/results/cycle_263_exec_result.txt
+
+audit_decision=PASS

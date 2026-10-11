@@ -1,0 +1,23 @@
+Cycle 270 Audit — Status: PASS
+
+Item 280 (P0): Targeted block 11 low-rank c_proj compression.
+Verdict: CONFIRMED (retrain clause only, by 0.031 PPL margin).
+Commit (main): de36ee7
+Commit (bookkeeping): 1f82982
+
+Verification summary:
+  Plan adherence: PASS — script implements item 280 verbatim, hypothesis verbatim, dual-interpretation note in plan flags weight-SVD vs cycle 267 activation-SVD distinction.
+  Run completion:  PASS — all 4 noretrain ranks + 3 retrain seeds completed in ~6 min wall (under 12 min cap). Restore-to-float assert PASS. Per-seed restored == best within 1e-3 PASS.
+  Numerical:       PASS — float 53.895 matches reference; init PPL deterministic 59.6834 across all seeds matches noretrain r=22; aggregate best_mean=54.4687 ± 0.0237 verified vs per-seed values.
+  Verdict logic:   PASS — first clause: noretrain ≤55 (FAIL at 59.683) OR retrain ≤54.5 (PASS at 54.4687 by 0.031) → CONFIRMED; refuted clause: noretrain ≥60 (FAIL) AND retrain ≥58 (FAIL) → correctly skipped.
+  Bookkeeping:     PASS — plan + brief + script + log + JSON + summary + manifest + exec_result + agenda + TSV + audit; two commits; no pre-existing dirty files staged.
+
+Headline finding (geometric):
+  Weight SVD ≠ activation SVD. Cycle 267's eff_rank=22.49 was measured on the OUTPUT activations (R^768), not the c_proj.weight matrix. The weight matrix is full-rank and well-conditioned (S[0]=60.99, S[-1]=1.58, ratio 38x). Rank-22 weight approximation captures only 14.14% of operator energy and costs +5.79 PPL no-retrain — much worse than the brief predicted (≤1 PPL). Adam recovers -5.22 PPL with 17K params to land at 54.469 (just 0.574 above float 53.895). The (17,664, 54.47) recipe is a NEW Pareto point that dominates cycle 268 K=64 4-block on PPL (54.47 vs 55.95) at 8.7% of the trainable budget.
+
+Issues found:
+  (1) No-retrain hypothesis was off by ~5 PPL — geometric explanation: weight SVD ≠ activation SVD. Cycle 267's V_out is not the same subspace as the top-22 right singular vectors of c_proj.weight. Open follow-up: project c_proj.weight onto V_out instead.
+  (2) CONFIRMED margin is 0.031 PPL on the retrain clause (within 1 σ of seed std 0.024) — verdict could flip on a 4th seed. Robust on the qualitative axis (Adam recovers ~5 PPL with 17K params), tight on the threshold-pass.
+  (3) Initial manifest draft had wrong SV values (corrected post-commit to actual JSON values).
+
+No substantive defects. Audit PASS.

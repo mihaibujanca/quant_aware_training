@@ -1,0 +1,22 @@
+cycle=246
+item=256
+verdict=REFUTED
+best_eval_ppl_mean=57.811
+best_eval_ppl_std=0.277
+per_seed_best=[57.8992,57.4368,58.0970]
+per_seed_best_step=[2000,2000,2000]
+init_eval_ppl=106.742
+post_mu_calib_ppl=61.664
+post_mu_eval_ppl=74.301
+post_compress_eval_ppl=106.742
+baseline_ppl_eval=53.895
+delta_vs_c223_k128=+8.822
+delta_vs_c239_lora=+10.119
+delta_vs_float=+3.916
+trainable_params=595200
+n_seeds=3
+seeds=[42,137,2024]
+experiment_commit=2e10ad086d74d3b2c0cd9c116456eaaf92a34d97
+bookkeeping_commit=976f083
+status=complete
+summary=gelu_noneg+mu+LoRA r=8 stacked with K=128 topk+lstsq on [1,4,7]. REFUTED at 57.811 >= 49.5. Post-compress LoRA-zero init 106.742 (~56 PPL worse than raw-GELU K=128 init ~50.8), Adam cannot close the gap in 2000 steps. Bump-removed target is HARDER for K=128 topk+lstsq, not easier -- directly contradicts plan hypothesis. Activation fix and channel compression share a linearisation budget and do not compose.

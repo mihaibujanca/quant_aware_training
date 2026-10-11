@@ -1,0 +1,71 @@
+Cycle 280 — Item 290: Targeted block 1 low-rank c_proj compression
+Verdict: CONFIRMED (retrain clause, by 4.968 PPL margin, BELOW FLOAT)
+Commit (main): 1109243
+Commit (bookkeeping): c47da2a
+
+best_mean (retrain r=2) = 49.0324 ± 0.0246; CONFIRMED via second clause
+(retrain best_mean ≤ 54.0) by 4.968 PPL. The first clause (any r no-retrain
+≤ 55.0) FAILS at min 56.730 (r=10).
+
+Headline: **−4.862 PPL BELOW float 53.895** with only **2,304 trainable
+params** (2×768 B factor + 768 bias). New dominant Pareto anchor — strictly
+dominates cycle 270 (17,664, 54.47) on both axes (7.7× fewer params AND
+−5.44 PPL).
+
+No-retrain rank-r sweep:
+  r=  1: 59.751  Δfloat=+5.856  energy=0.0459
+  r=  2: 57.658  Δfloat=+3.763  energy=0.0757
+  r=  5: 56.833  Δfloat=+2.938  energy=0.1167
+  r= 10: 56.730  Δfloat=+2.835  energy=0.1523
+
+Retrain r=2 (3 seeds, joint Adam LR=1e-4, 4000 steps, EVAL_EVERY=100,
+best-state restore, 2,304 trainable = 2*768 (B) + 768 (bias); A=(U[:,:2]·Σ[:2])
+frozen as buffer):
+  seed 42:   init=57.6581 best=49.0603@3900
+  seed 137:  init=57.6581 best=49.0367@3900
+  seed 2024: init=57.6581 best=49.0004@4000
+  best_mean = 49.0324 ± 0.0246  (min=49.00, max=49.06)
+
+Init PPL deterministic at 57.6581 (matches noretrain[r=2]=57.6581; lstsq-style
+SVD factor init is seed-independent — only Adam shuffle differs). Per-seed
+restored best matches recorded best within 1e-3 (script-internal assert
+passed). All 3 best at step ≥3900 — still descending at the budget cap.
+
+Config: TARGET_BLOCK=1, RANKS_NORETRAIN=[1,2,5,10], RETRAIN_RANK=2,
+N_CALIB=200, N_EVAL=100 (disjoint), SEQ_LEN=128, Adam LR=1e-4, N_STEPS=4000,
+EVAL_EVERY=100, SEEDS={42,137,2024}, MPS, GPT-2 small, wikitext-2 val.
+
+SVD summary: top-5 SVs [28.71, 23.10, 18.84, 13.83, 13.74], S[-1]=0.135,
+ratio S[0]/S[-1]=213× (well-conditioned, full numerical rank). Top-2
+weight-energy 7.57%, top-10 15.23% — NOT rank-concentrated as an operator.
+
+Wall: ~8 min (4 forward-only PPL evals at ~1.3s + 3 retrain fits at 2.6 min each).
+
+Baselines:
+  float ref:                                53.895  (Δ retrain best_mean −4.862, BELOW FLOAT)
+  cycle 270 block 11 r=22 retrain:          54.4687 (Δ −5.436; cycle 280 has 7.7× fewer params)
+  cycle 266 K=512 [1,4]:                    43.85   (Δ +5.182; cycle 266 has 342× more params)
+  cycle 271 [1] K=512 W_out-only:           43.82   (Δ +5.212; cycle 271 has 171× more params)
+  cycle 269 K=1 6-block:                    91.61   (Δ −42.578; both <20K-param recipes)
+  cycle 278 eff_rank(c_proj_1 OUTPUT):      1.94    (activation; top-1 energy 0.9294)
+
+Reading: **New Pareto-dominant anchor.** (2,304, 49.03) is the smallest-
+trainable-budget recipe that beats float PPL. Adam retrain of just the
+2-dim right-factor B + bias of the block 1 c_proj weight-SVD drives the
+model below float on wikitext-2 — the retrained subset is a better fit for
+the calib distribution than the pretrained GPT-2 c_proj_1 weights.
+
+Two geometric findings:
+(i) **Weight-SVD ≠ activation-SVD, generalised.** Cycle 278 measured
+activation eff_rank=1.94 / top-1 energy 92.94%. Cycle 280 measures the
+literal weight SVD: top-2 weight-energy only 7.57%, rank-2 no-retrain still
+costs +3.76 PPL. Second independent confirmation (after cycle 270 block 11)
+that these are different objects.
+(ii) **Per-param Adam recovery is 25.7× higher at block 1 than block 11.**
+Cycle 270: -5.22 PPL / 17,664 params = -2.96e-4 PPL/param. Cycle 280:
+-8.63 PPL / 2,304 params = -3.75e-3 PPL/param. Eff_rank IS directionally
+predictive of retrained compressibility at the single-block weight-SVD
+level (refining cycle 273's "eff_rank not prescriptive at cascade level").
+
+All 3 retrain seeds best at step ≥3900 — budget-bounded, could likely
+descend further with more steps.

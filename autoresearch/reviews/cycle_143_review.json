@@ -1,0 +1,18 @@
+{
+  "cycle": 143,
+  "item": 155,
+  "round": 1,
+  "verdict": "ACCEPT",
+  "blocking_issues": [],
+  "minor_issues": [
+    "Lstsq refit absorbs linear covariance effects — whitening only helps if it selects a materially different channel subspace. Log lstsq reconstruction MSE alongside PPL to detect this.",
+    "If Jaccard(topk, whitened) > 0.95 at all blocks, declare INCONCLUSIVE immediately — the scoring difference doesn't change the actual selection."
+  ],
+  "checks": {
+    "R1_premise": "OK",
+    "R2_measurement": "OK",
+    "R3_capacity": "OK",
+    "R4_alignment": "OK",
+    "R5_pitfalls": "OK"
+  }
+}

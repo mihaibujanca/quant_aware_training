@@ -1,0 +1,29 @@
+{
+  "cycle": 243,
+  "item": 253,
+  "verdict": "APPROVE",
+  "type": "analysis",
+  "summary": "Per-block PPL attribution under cycle 221's 6-block joint Adam fit (BLOCKS=[1,2,4,5,7,8], K=512). Refit seed 42 to regenerate the W_out/b_out snapshot (no .pt on disk), then restore each compressed block's float MLP one at a time to decompose the 53.895 -> 59.515 PPL gap.",
+  "strengths": [
+    "Cheap analysis cycle: ~10 min refit + 6 swap-and-eval rounds, no new optimisation regime.",
+    "Pre-flight verified cycle 221 logs lack tensor snapshot; refit budget acknowledged upfront.",
+    "Restore-roundtrip assert (eval after un-swap matches fully_compressed_ppl to 1e-4) catches aliasing bugs.",
+    "Non-additivity of per-block deltas explicitly noted as expected, not failure.",
+    "Two complementary measurements: PPL deltas (output-side) and residual MSE (input-side).",
+    "Pre-registered verdict thresholds prevent post-hoc reframing."
+  ],
+  "concerns": [
+    "Refit nondeterminism on MPS: 0.05 PPL tolerance vs cycle 221's 59.391 is tight but defensible (same seed, same data order, same device).",
+    "Phase 3 re-runs collect_mlp_io twice; minor inefficiency, could cache calib activations from Phase 0. Not blocking.",
+    "Holding float + compressed model simultaneously is fine for GPT-2 small; OOM fallback (model_float to CPU) is in place."
+  ],
+  "risks": [
+    "If refit lands >0.3 PPL from cycle 221 reference, decomposition is on a different operating point. Plan handles by recording actual baseline.",
+    "If contributions are uniform (REFUTED branch), headline becomes 'no bottleneck, 6.0 PPL distributed' — still a valid negative result."
+  ],
+  "required_changes": [],
+  "optional_suggestions": [
+    "Cache calib activations once during Phase 0 to skip the second collect_mlp_io pass in Phase 3."
+  ],
+  "approve_to_execute": true
+}

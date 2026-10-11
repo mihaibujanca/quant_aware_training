@@ -1,0 +1,6 @@
+item_number=115
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_104_cascade_source.json,autoresearch/results/cycle_104_cascade_source.png
+code_paths=experiments/cascade_error_source_gpt2.py
+final_commit_hash=13839d0
+agenda_updated=yes

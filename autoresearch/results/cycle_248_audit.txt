@@ -1,0 +1,13 @@
+cycle=248
+item=258
+status=PASS
+interesting=true
+verdict_claimed=REFUTED
+verdict_audited=REFUTED
+best_mean=67.609
+best_std=0.047
+init_mean=115.056
+delta_vs_c231_k128_wout=+0.047
+delta_vs_c221_k512=+8.094
+wfc_drift_best_mean=7.85e-02
+note=Refute logic correct (67.609 >= 66.0). 3 seeds tight std=0.047. Init matches cycle 231 K=128 exactly (lstsq deterministic). W_fc actually trained ~8% rel Frobenius — noop is structural, not "did not train". Combined with cycle 241 (W_fc bias K=512 noop), closes W_fc surface-enlargement hypothesis at BOTH K endpoints. K=128->K=512 gap is K-bandwidth, not surface-size. Wall ~400s.

@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=inconclusive
+new_outcome=inconclusive
+reason=corrected_noneg_ppl=61.664 ∈ (49.57, 100) → INCONCLUSIVE per criterion. First-moment correction recovers ~34× from cycle 220's catastrophe (2093 → 61.66) but still 36.84% above float (45.064). Residual 16.6 PPL gap is higher-order beyond per-channel mean. μ ≤ 0 elementwise verified; restore-baseline matches cycle 220 exactly.
+guardrail_flags=none
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Test second-moment correction (per-channel std rescaling) or cycle 218-style centred Δ̃ projection of the gelu→noneg residual into the next block's reading subspace. Direction is approaching the cycle 188/190 family — close gelu_noneg lineage if no further recovery.
+interesting=true
+interesting_reason=Quantifies: per-channel mean shift accounts for ~99.2% of the cycle 220 catastrophe (2093 → 61.66 = 0.029 of original). Higher-order curvature accounts for the residual ~17 PPL.

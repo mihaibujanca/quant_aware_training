@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=inconclusive
+new_outcome=inconclusive
+reason=median_specificity=0.791 ∈ [0.3, 1.0) → INCONCLUSIVE per criterion. n_rows_with_quiet_nonadj = 0/10 (all 55 non-adjacent pairs clear 3σ random) → not Confirmed. Adjacent (l, l+1) cos_sums consistently exceed non-adjacent by ~0.8 PPL but the alignment is broadly distributed across all later blocks. Sanity check: adjacent top-5 mean reproduces cycle 218 exactly.
+guardrail_flags=none
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Update cycle 218's interpretation: "Δ̃ writes into the universal downstream c_fc reading basis with mild adjacency preference" rather than "specifically into block l+1". Useful next: weight by inverse distance to test if specificity decays smoothly with j-l, or use rank_50 (smaller subspace) instead of top-20 to test whether tighter subspaces show stronger specificity.
+interesting=true
+interesting_reason=Cycle 218's inter-block communication interpretation is partially walked back. The CONFIRMED claim was "Δ̃ aligns with next block's reading subspace"; cycle 227 shows the alignment is generic (every later block) with only mild adjacency preference (+0.79 cos_sum gap). Important nuance for future inter-block-channel claims.

@@ -1,0 +1,31 @@
+{
+  "cycle": 225,
+  "item": 235,
+  "title": "K=64/32/16 Adam compression cliff sweep",
+  "priority": "P0",
+  "verdict": "APPROVE",
+  "reviewer": "design-review-agent",
+  "summary": "Direct mechanical extension of cycle 223 into smaller K regime. Same script template, same machinery, fully disjoint K values. Verdict thresholds tight around float baseline. No methodological concerns.",
+  "pitfalls_checked": {
+    "MP1_threshold_above_trivial": "OK — verdict thresholds 53.0/60.0 are tight around float 53.895, not above null",
+    "MP3_underdetermined_fit": "OK — lstsq init is per-output-channel (K-dim with 25,600 samples, over-determined for all K). Adam phase regularized by init and best-state restore on held-out eval split.",
+    "MP5_insufficient_capacity": "OK — capacity failure is the question; 3-way verdict cleanly handles all outcomes including dual-failure (REFUTED at >=60 PPL)",
+    "MP6_refuted_on_uninformative_metric": "OK — PPL informative across observed range",
+    "MP7_post_layernorm": "N/A",
+    "MP8_rep_dim_vs_functional_rank": "N/A",
+    "MP4_domain_transfer": "OK — same model, surface, splits, optimizer as cycle 223"
+  },
+  "preflight": {
+    "disjoint_from_prior_cycles": true,
+    "k_values_overlap_check": "K in {16,32,64} disjoint from cycle 223 {128,256} and cycle 210 {512}",
+    "template_exists": "experiments/adam_lower_k_cycle223.py",
+    "param_budget_per_block": {"K=64": 49920, "K=32": 25344, "K=16": 13056},
+    "calib_samples_per_block": 25600
+  },
+  "risks": [
+    "Wall time ~1.5x cycle 223; fallback to drop K=16 documented",
+    "K=16 may be uninformative if K=64 already cliffs — fallback says run full curve anyway for monotone plot"
+  ],
+  "recommendations": [],
+  "approved_as_written": true
+}

@@ -1,0 +1,14 @@
+{
+  "cycle": 231,
+  "item": 241,
+  "verdict": "approve",
+  "reviewer": "design_review_agent",
+  "summary": "Trivial K-swap (512->128) on cycle 221's validated 6-block Adam protocol. One-variable contrast, template reused, param accounting checks out, thresholds reasonable.",
+  "concerns": [],
+  "notes": [
+    "Ensure cycle/item JSON fields updated to 231/241 in copied script",
+    "Keep restore-best tolerance 1e-3",
+    "Summary must report delta vs cycle 221 K=512 ceiling (59.515 +/- 0.094)"
+  ],
+  "blocking": false
+}

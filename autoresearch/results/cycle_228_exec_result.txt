@@ -1,0 +1,10 @@
+cycle=228
+item=238
+outcome=inconclusive
+key_metric=corrected_noneg_ppl=61.664_baseline=45.064_uncorrected_c220=2093.296_delta_pct=+36.84_recovery_PPL=2031.63_mu_grand_mean=-0.0874
+commit=5d8db8971a34145625d0b6f4e92ed0db27fd8ad0
+bookkeeping_commit=5c9dff0
+paths=experiments/gelu_noneg_corrected_cycle228.py,autoresearch/results/cycle_228_gelu_noneg_corrected.json,autoresearch/results/cycle_228_summary.md,autoresearch/results/cycle_228_manifest.txt
+learned=Cycle 220 fair gelu_noneg rerun: precompute mu_l in R^3072 = E_x[GELU(z) - relu(GELU(z))] on N=200 wikitext-2 calib (forward hook on c_fc INPUT), patch all 12 blocks with relu(GELU(z)) + mu_l (distinct instance per block), re-eval. corrected_noneg_ppl = 61.664 vs baseline 45.064 (+36.84%), vs uncorrected cycle 220 = 2093.296 (+4545%). Recovers 2031.6 PPL of the cycle 220 gap (~34x reduction in relative degradation). Lands in INCONCLUSIVE band 49.57 < 61.66 < 100. mu sanity: <= 0 elementwise across all 12 blocks (n_pos=0 for every block), per-block mean(mu) range -0.0701 (block 1) to -0.0950 (block 9), grand mean -0.0874, std per block 0.014-0.033 (~0.5x cycle 184 reference -0.17). Restore-and-eval matched baseline exactly. First-moment correction explains MOST but not all of the cycle 220 catastrophe; the negative-zone GELU curvature carries higher-order moments beyond the constant per-channel mean shift. Same family as cycle 188 c3_mean (+20.3%) and cycle 190 hybrid (+27.7%) — better than cycle 184 ReLU+bias (+87.7%) but well above the +10% near-float band.
+next=Item 238 closed (INCONCLUSIVE). Natural follow-ups: (1) second-moment correction — precompute per-channel scale s_l such that var(GELU(z)) is matched after s_l * relu(GELU(z)) + mu_l, layer on top of mu_l and re-eval; (2) learned per-block low-rank affine correction matching GELU jointly across channels; (3) test mu_l correction at intermediate block counts (1, 3, 6) to find where the residual gap collapses. Item 239 (sequential vs joint Adam at 6 blocks) is the next P2 in the queue.
+tsv_path=autoresearch/logs/experiments.tsv

@@ -1,0 +1,13 @@
+cycle=224
+item=229
+verdict=REFUTED
+key_metric=best_mean=60.938_init_mean=61.746_ce_baseline=46.424_delta_vs_ce=+14.514
+commit=be9283a068501fea777e4dedfb84171d75ee2fd8
+bookkeeping_commit=280e856
+paths=experiments/distillation_baseline_cycle224.py,autoresearch/results/cycle_224_distillation.json,autoresearch/results/cycle_224_summary.md,autoresearch/results/cycle_224_manifest.txt
+log=autoresearch/logs/cycle_224_run.log
+seed_results=42:61.075@step2500,137:60.915@step5000,2024:60.825@step3000
+config=BLOCKS=[1,4,7] K=512 N_STEPS=10000 EVAL_EVERY=500 LR=1e-4 TAU=2.0 KD_W=0.5 CE_W=0.5 SEEDS=[42,137,2024] N_CALIB=200 N_EVAL=100 SEQ_LEN=128
+baselines=cycle_206_wout_ce_1000=48.111 cycle_210_wout_ce_best=46.556 cycle_213_wout_wfc_ce=46.424 float=53.895
+learned=KD+CE (tau=2.0, 50/50) on the W_out+W_fc surface (BLOCKS=[1,4,7] K=512, 10000 steps, 3 seeds, best-state restore) reaches only 60.938+-0.103 — the KD KL gradient at tau=2.0 keeps the student stuck near init (61.746); CE-only at the same trainable surface (cycle 213) reaches 46.424, so KD is +14.51 PPL worse; distillation is not a free upper bound at this budget on this near-saturated optimum.
+next=Either tune KD aggressively (lower tau, KD-only weighting, longer schedule, higher LR for KD-only phase) to revisit a stronger distillation upper bound, or move on to interpretability items 230-234 / GELU bump follow-ups.

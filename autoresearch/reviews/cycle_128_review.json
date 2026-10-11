@@ -1,0 +1,1 @@
+{"verdict": "REVISE", "round": 1, "issues": ["MP6: strict-universal criterion makes REFUTED uninformative (same as null baseline of 0 dead); add soft census (per-channel token fraction in dead/active zone) to distinguish learned structure from trivially-strict threshold", "Missing 3-seed requirement: census depends on OWT sample; specify >= 3 seeds"]}

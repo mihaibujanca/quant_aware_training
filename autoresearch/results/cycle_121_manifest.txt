@@ -1,0 +1,6 @@
+item_number=138
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_121_moe_training.json,experiments/results/cycle_121_tiny_mixtral.pt
+code_paths=experiments/moe_train_cycle121.py
+final_commit_hash=87ea0f2
+agenda_updated=yes

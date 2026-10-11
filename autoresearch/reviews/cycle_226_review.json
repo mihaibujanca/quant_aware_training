@@ -1,0 +1,34 @@
+{
+  "cycle": 226,
+  "item": 236,
+  "priority": "P0",
+  "verdict": "APPROVE",
+  "title": "KD distillation baseline rerun with corrected loss normalization",
+  "checks": {
+    "loss_fix_correct": true,
+    "reshape_to_BT_V_before_kl_div": true,
+    "trainable_surface_matches_cycle_224": true,
+    "alpha_sweep_scoped": true,
+    "full_run_3_seeds": true,
+    "alpha_zero_reproduces_cycle_213": true,
+    "kd_magnitude_diagnostic_present": true,
+    "verdict_thresholds_match_item": true,
+    "fits_30min_budget": true,
+    "restore_best_assertion_present": true
+  },
+  "notes": [
+    "Reshaping (B*T, V) before F.kl_div(reduction='batchmean') correctly divides by B*T, matching CE per-token scale.",
+    "alpha=0 acts as built-in regression test against cycle 213 CE-only baseline (46.424).",
+    "If best alpha turns out to be 0.0, verdict should be INCONCLUSIVE regardless of PPL since KD adds nothing.",
+    "Keep alpha=0 in the sweep unless wall time is actually tight — it's the most valuable wiring diagnostic."
+  ],
+  "thresholds": {
+    "CONFIRMED": "best_mean <= 44.0",
+    "REFUTED": "best_mean >= 47.0",
+    "INCONCLUSIVE": "44.0 < best_mean < 47.0"
+  },
+  "baselines": {
+    "cycle_213_pure_ce": 46.424,
+    "cycle_224_broken_kd": 60.938
+  }
+}

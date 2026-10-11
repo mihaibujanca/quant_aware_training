@@ -1,0 +1,47 @@
+cycle=264
+item=274
+verdict=INCONCLUSIVE
+commit=8c947eaed77200bc63c6ab9e4a8bea4afc2f42c3
+bookkeeping_commit=5dd3cab
+trainable_params=0
+runtime_min=~5
+
+# Headline numbers
+baseline_ppl=45.0637
+post_restore_ppl=45.0637
+restore_roundtrip_clean=true
+diag_band_max=8.00e-4_at_k_2_l_2
+diag_band_mean=1.15e-4
+offdiag_nonzero_mean=2.15e-5
+diag_mean_over_offdiag_nonzero_mean=5.4x
+clause1_diag_band_dominant=PASS_substantively_5.4x_trivial_pass_inf_due_to_causal_zeros
+clause2_late_monotone=FAIL_0_of_4_late_cols
+verdict_logic=neither_confirmed_nor_refuted=INCONCLUSIVE
+nonzero_entries=46_of_132
+strict_lower_triangle_causal_zeros=86_of_132
+
+# L1 ranking (descending — most disruptive swap location first)
+l1_ranking=[2,3,1,4,0,5,6,7,8,9,11,10]
+l1_top1_k=2_value=1.78e-3
+l1_top2_k=3_value=1.22e-3
+l1_top3_k=1_value=6.0e-4
+l1_bottom_k=10_value=1.04e-6
+l1_top_over_bottom_dynamic_range=1700x
+
+# Comparison to cycle 173 PPL ranking
+cycle_173_block_4_max_PPL_pct=+5.91
+cycle_173_block_11_PPL_pct=+4.02
+cycle_264_block_4_kappa_L1_rank=4
+cycle_264_block_11_kappa_L1_rank=11
+kappa_and_PPL_rankings_disagree=True
+
+# Files
+plan=autoresearch/plans/cycle_264.md
+brief=autoresearch/briefs/cycle_264.md
+script=experiments/per_block_swap_curvature_cycle264.py
+result_json=autoresearch/results/cycle_264_per_block_swap_curvature.json
+summary_md=autoresearch/results/cycle_264_summary.md
+heatmap_png=autoresearch/results/cycle_264_swap_kappa_heatmap.png
+run_log=autoresearch/logs/cycle_264_run.log
+manifest=autoresearch/results/cycle_264_manifest.txt
+audit=autoresearch/audits/cycle_264.md

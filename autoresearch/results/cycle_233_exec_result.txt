@@ -1,0 +1,6 @@
+item_number=243
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_233_6block_subset_sweep.json,autoresearch/results/cycle_233_summary.md,autoresearch/results/cycle_233_manifest.txt
+code_paths=experiments/adam_6block_subset_sweep_cycle233.py
+final_commit_hash=0f4845438a921bd25dd11ae82de26c068c47c416
+agenda_updated=yes

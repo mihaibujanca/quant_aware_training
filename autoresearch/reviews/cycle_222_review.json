@@ -1,0 +1,20 @@
+{
+  "cycle": 222,
+  "item": 227,
+  "decision": "approve",
+  "pitfalls_checked": ["MP1", "MP2", "MP3", "MP4", "MP5", "MP6", "MP7", "MP8"],
+  "pitfalls_triggered": [],
+  "notes": [
+    "Cycle 207 refuted single-block PPL version; cycle 222 measures cascade init PPL, a distinct metric used by cycles 206/213/214.",
+    "Variant B score (||W_proj[c]||^2 * sum_t gelu(z)^2) is genuinely different from cycle 207's act_std * W_proj_norm: uses gelu(z) not z, squared sum not std-times-norm.",
+    "Verdict thresholds (<=60.75 confirm, <0.3 refute, 0.3-1 inconclusive) are well-defined relative to the 61.746 baseline; metric is known to vary meaningfully (MP6 not triggered).",
+    "lstsq is well-determined: 25,600 samples vs 768x512 = ~393k params is borderline, but matches cycles 206/213/214 protocol — acceptable for parity.",
+    "Non-identity assertion (Variant B selection != Variant A on >=1 block) guards against silently rerunning baseline.",
+    "HALT fallback if topk reproduction drifts >0.5 from 61.746 protects against eval-split mismatch.",
+    "3 seeds for baseline provides std for the comparison; deterministic Variant B has no seed dependence by construction.",
+    "Greedy variant C has explicit time-bounded fallback (drop if >5 min/block)."
+  ],
+  "estimated_runtime_ok": true,
+  "duplicate_of_past_cycle": false,
+  "duplicate_note": "Cycle 207 (item 218) measured single-block PPL on block 1 only; cycle 222 measures 3-block cascade init PPL. Different metric, not a duplicate."
+}

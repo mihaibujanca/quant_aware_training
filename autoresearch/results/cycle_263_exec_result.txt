@@ -1,0 +1,49 @@
+cycle=263
+item=273
+verdict=REFUTED
+main_commit=62ff08e49340de9e4b6da8306eb476236e3a6518
+bookkeeping_commit=08ca519
+trainable_params=0
+run_log=autoresearch/logs/cycle_263_run.log
+script=experiments/local_linearity_defect_cycle263.py
+result_json=autoresearch/results/cycle_263_local_linearity_defect.json
+summary_md=autoresearch/results/cycle_263_summary.md
+manifest=autoresearch/results/cycle_263_manifest.txt
+
+# Verdict logic
+clause_a_med_GR_ge_5_in_blocks_0_4=0_of_5_FAIL
+clause_b_p99_RG_ge_1_in_blocks_0_4=5_of_5_PASS
+all_blocks_med_ratio_in_0p5_2=True
+all_blocks_p99_ratio_in_0p5_2=True
+refuted_clause_TRIGGERED=True
+verdict=REFUTED
+
+# Headline numbers
+median_GoverR_block_0=0.838
+median_GoverR_block_4=1.006
+median_GoverR_block_11=1.127
+p99_RoverG_block_0=1.202
+p99_RoverG_block_1=1.218
+p99_RoverG_block_11=0.964
+median_ratio_range=[0.748,1.127]
+p99_RoverG_range=[0.964,1.218]
+max_clause_a_ratio_in_early_band=1.006_at_block_4
+factor_below_5_threshold=4.97x
+
+# Geometric reading
+hypothesis_relu_fat_tails_at_early_blocks=quantitatively_trivial_~22pct_max_not_5x
+hypothesis_gelu_everywhere_curved_relu_mostly_flat=FALSE_for_block_function_curvature
+linear_envelope_W_up_W_down_dominates_over_sigma_choice=True
+b_leak_smooths_relu_kink=likely_explanation_for_no_fat_tails
+sub_quadratic_residual_scaling_for_both_sigmas=True_~linear_in_h_not_quadratic
+block_11_dominates_~10x_blocks_1_9=True
+cycle_260_medium_rank_DJ_consistent_with_cycle_263_block_function_insensitivity=True
+
+# Files
+plan=autoresearch/plans/cycle_263.md
+brief=autoresearch/briefs/cycle_263.md
+script=experiments/local_linearity_defect_cycle263.py
+run_log=autoresearch/logs/cycle_263_run.log
+result_json=autoresearch/results/cycle_263_local_linearity_defect.json
+summary_md=autoresearch/results/cycle_263_summary.md
+manifest=autoresearch/results/cycle_263_manifest.txt

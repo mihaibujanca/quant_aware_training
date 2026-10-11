@@ -1,0 +1,70 @@
+cycle=259
+item=270
+audit_status=PASS
+verdict=CONFIRMED
+main_commit=7ac520bc8717a68350e21ebe69ed5912018c53e9
+bookkeeping_commit=a2522d327d45e1726ae4f5f6926ddf5365280770
+auditor_notes_path=autoresearch/audits/cycle_259.md
+
+# Verdict logic check
+clause_1_b_loglin_early_l1_6=0.2135
+clause_1_threshold=0.20
+clause_1_passes=true
+clause_2_n_cos_ge_0.6_in_idx_1_to_6=4
+clause_2_threshold=4
+clause_2_passes=true
+verdict_check=PASS
+
+# REFUTED branch correctly ruled out
+best_fit=log_linear
+saturating_SSR_ratio_vs_loglin=6.93
+early_ratio_d6_over_d1=2.95
+n_cos_le_0.2_in_idx_1_to_6=0
+
+# Methodology checks
+calib_slice_200x128_seed42=PASS
+two_variants_set_up_correctly=PASS
+geometry_api_pullback_norm_and_inner_calls_correct=PASS
+per_sequence_streaming_avoids_B_T_50257_blowup=PASS
+flatten_order_consistent_across_variants_and_layers=PASS
+log_linear_fit_uses_l_1_12_not_0_12_d0_is_zero=PASS
+cos_index_0_skipped_from_verdict_count=PASS
+restore_roundtrip_clean_45.0637=PASS
+distinct_module_instance_assert=PASS
+
+# Numerical sanity
+median_d_layer_0=0.0
+median_d_layer_1=225.42
+median_d_layer_6=665.81
+median_d_layer_11=2686.07
+median_d_layer_12=10162.68
+d12_over_d1=45.08
+d_l_monotone_increasing=true
+cos_profile_monotone_increasing_0.37_to_0.91=true
+final_layer_d11_to_d12_jump_3.78x=true
+
+# Hypothesis check
+hypothesis_super_linear_early_band=CONFIRMED
+hypothesis_saturation_around_l_8_10=REFUTED_d_l_grows_faster_not_slower
+hypothesis_cos_ge_0.6_in_4_early=EXACTLY_AT_THRESHOLD_4_of_6
+cycle_189_aggregate_cos_0.72_recovered_at_mid_profile=true
+coherence_lowest_early_highest_late_inverse_of_random_walk=true
+
+# Counterintuitive result checks
+d_0_exactly_0_shared_embedding_path=true
+post_restore_ppl_exactly_equals_baseline=true
+two_independent_quantities_d_and_cos_both_point_same_direction=true
+saturating_curve_SSR_7x_worse_than_loglinear=true
+final_layer_10x_jump_explained_by_unembedding_amplification=true
+
+# Bookkeeping
+agenda_item_270_deleted_from_NEXT_P0=true
+agenda_cycle_259_past_entry_prepended_above_cycle_258=true
+TSV_row_259_appended_with_hash=true
+manifest_written=true
+main_commit_clean=true
+bookkeeping_commit_clean=true
+no_pre_existing_dirty_files_staged=true
+
+# Decision
+decision=PASS

@@ -1,0 +1,55 @@
+{
+  "cycle": 218,
+  "item": 232,
+  "priority": "P0",
+  "verdict": "APPROVE",
+  "reviewer_agent": "design_review",
+  "hypothesis_well_posed": true,
+  "measurement_valid": true,
+  "signal_to_noise_adequate": true,
+  "guardrails_tripped": [],
+  "reproducibility_ok": true,
+  "scope_ok": true,
+  "blocking_issues": [],
+  "non_blocking_recommendations": [
+    "Bump random baseline seeds from 3 to 10 by default (cheap, more stable mean+3sigma null).",
+    "Record per-seed random cos_sum draws in JSON (not only mean/std) to let the audit recompute alternative thresholds.",
+    "Contrast avg rank_95 of centred Delta-tilde against cycle 217's raw rank_95 list [10,132,1,1,1,1,1,8,73,110,1,1] prominently in summary.md as the headline sanity check."
+  ],
+  "addressed_concerns": {
+    "centring_is_correct_response_to_217_TI_TD": true,
+    "top20_right_SVs_of_Delta_tilde_live_in_R768": true,
+    "HF_Conv1D_c_attn_slicing_correct": true,
+    "residual_capture_pre_LN1_via_forward_pre_hook": true,
+    "QR_orthogonalized_Gaussian_random_baseline_sound": true,
+    "OR_criterion_across_5_readers_not_too_lax": true,
+    "vocab_heuristic_loose_but_acceptable_as_triage": true
+  },
+  "or_criterion_fp_analysis": {
+    "threshold": "mean + 3*sigma (~p<0.003 under normal)",
+    "per_reader_fp_rate": 0.003,
+    "readers_per_pair": 5,
+    "per_pair_fp_rate_union_bound": 0.015,
+    "n_pairs": 11,
+    "expected_fp_count": 0.16,
+    "pass_threshold_by_chance": false,
+    "note": "Q/K/V readers share c_attn so partially correlated; correlation tightens rather than inflates the union FP rate modestly. 8/11 remains a strong bar."
+  },
+  "pitfalls_checked": {
+    "MP1": "n/a",
+    "MP2": "n/a",
+    "MP3": "n/a",
+    "MP4": "n/a",
+    "MP5": "n/a",
+    "MP6": "addressed — verdict matches corrected hypothesis (centred Delta, not mean-dominance)",
+    "MP7": "addressed — residual capture pre-LN1 via block forward_pre_hook",
+    "MP8": "n/a — SVDs are of functional weight matrices and Delta output, not representation cloud"
+  },
+  "plan_sanity_checks_present": {
+    "rank_95_comparison_vs_cycle_217": true,
+    "sigma0_tilde_vs_sigma1_raw": true,
+    "residual_hook_pre_LN1_assertion": true,
+    "Conv1D_shape_assertion": true,
+    "random_baseline_std_nonzero": true
+  }
+}

@@ -45,6 +45,12 @@ model/
 # Autoresearch supervisor runtime logs (transient)
 autoresearch/logs/claude_autoresearch_*
 autoresearch/logs/codex_autoresearch_*
+autoresearch/logs/cycle_*_run.log
+autoresearch/logs/item*_loop.out
 autoresearch/logs/item*_watchdog*
 autoresearch/logs/*_child.pid
 .mplconfig/
+
+# Generated experiment checkpoints and scratch result trees
+experiments/results/
+experiments/*_checkpoints/

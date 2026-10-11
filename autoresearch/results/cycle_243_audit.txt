@@ -1,0 +1,26 @@
+cycle=243
+item=253
+status=PASS
+verdict=CONFIRMED
+interesting=true
+criterion=any_ppl_if_X_restored<=56.0
+n_pass=5_of_6
+only_miss=block_1_at_56.699
+float=53.895
+fully_compressed=59.391
+gap=+5.496
+refit_init=86.686
+refit_best=59.391
+refit_best_step=1300
+cycle_221_s42_ref_best=59.391
+reproduces_cycle_221=yes_exact
+sorted_delta_desc=5(+5.100),4(+4.896),7(+4.135),8(+3.783),2(+3.530),1(+2.692)
+sum_delta=+24.14
+gap_non_additivity=4.4x
+mse_rank_correlates_with_delta_rank=no
+mse_sorted_desc=8(0.928),7(0.565),5(0.324),2(0.222),4(0.212),1(0.102)
+round_trip_sanity=passed_all_6
+calib_eval_disjoint=yes
+float_mlp_extraction=fresh_model_deepcopy
+interesting_notes=(1)non-additivity_4.4x_compounding;(2)MSE_does_not_rank_deltaPPL_block8_highest_mse_only_rank4_delta;(3)contradicts_cycle_242_late-block-dominance_at_face_value_possibly_interaction_effect;(4)no_single_block_remediation_can_close_the_gap
+audit_notes=Literal verdict CONFIRMED with 5 of 6 blocks satisfying threshold (only block 1 misses by 0.7). Methodology sound: phase 0 refit reproduces cycle 221 seed 42 exactly (init 86.686 best 59.391 step 1300), round-trip sanity asserted for all 6 restorations |rt-fully|<1e-4, calib/eval disjoint by id, float MLPs extracted from fresh model via deepcopy not mutation. Interesting cross-cycle tension with cycle 242: here block 5 (mid) has largest delta PPL +5.10 and block 4 (early-mid) second at +4.90 whereas blocks 7 and 8 (late) sit at +4.13 and +3.78 -- the "late-block-dominates" pattern from cycle 242 does NOT reproduce at the per-block-restoration level in a jointly-fit cascade. Both findings can coexist if the cycle 242 [8,9,10] penalty is an interaction between late blocks rather than a marginal single-block effect -- follow-up worth prioritising. Second anomaly: residual MSE does not rank delta PPL (block 8 highest MSE 0.928 but only rank-4 delta PPL 3.78) -- calib residual is not a proxy for cascade contribution. Non-additivity 4.4x quantifies cascade compounding and correctly supports the remediation conclusion that no single-block fix closes the gap.

@@ -1,0 +1,7 @@
+{
+  "cycle": 247,
+  "item": 257,
+  "decision": "approve",
+  "rationale": "Clean differential test of cycle 243 mid-block cost hypothesis; K_PER_BLOCK={1:128,2:128,4:512,5:512,7:128,8:128} at ~1.18M params; verdict thresholds bracket 221/231 baselines.",
+  "concerns": []
+}

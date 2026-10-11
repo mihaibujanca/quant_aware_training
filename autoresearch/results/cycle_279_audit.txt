@@ -1,0 +1,66 @@
+Cycle 279 Audit — Item 289: [1,4] K=512 W_out + W_fc trainable (SLICED)
+
+Status: PASS
+Commit: 4591c88 (primary) / c1da686 (bookkeeping)
+Verdict: CONFIRMED (W_fc noop)
+
+Verdict logic (item 289 verbatim):
+  CONFIRMED (W_fc noop) iff best_mean in (43.6, 44.1)
+  REFUTED (W_fc helps)  iff best_mean <= 43.5
+  INCONCLUSIVE if marginal (43.5, 43.6) or regression (>=44.1)
+
+  best_mean = 43.87751 ± 0.09921
+  43.6 < 43.87751 < 44.1 -> TRUE (margin 0.278 lower, 0.222 upper)
+  -> CONFIRMED
+
+Numerical checks (all PASS):
+  per-seed best: 42=44.0172@1700 137=43.7961@2100 2024=43.8192@2000
+  mean: (44.0172 + 43.7961 + 43.8192)/3 = 43.87750 ≈ 43.87751 (matches JSON)
+  std (pop): sqrt((0.1397² + 0.0814² + 0.0583²)/3) ≈ 0.0992 (matches JSON 0.09921)
+  init deterministic 57.05724 all seeds (lstsq init seed-independent)
+  final@4000 mean 46.62954 +2.75 PPL overshoot above best
+  best_step_mean 1933 ± 170 (vs cycle 266 W_out-only budget-bounded 4000)
+  trainable 2 × (768×512 + 512 + 512×768 + 768) = 1,575,424 (SLICED)
+  restore sanity assert |restored - best| < 1e-3 for all 3 seeds
+  wall 457.6 sec = 7.6 min
+
+Sliced-vs-full discrepancy: DOCUMENTED across plan, script docstring, JSON
+sliced_semantics_note field, summary, manifest, audit, agenda entry, commit
+message, TSV verdict_compact, exec_result. Agenda item 289 setup line
+erroneously claimed W_fc_l (768×3072) → 5,512,704 total params (full c_fc
+matrix interpretation). Cycle 279 follows cycle 213 FullCompressedMLP
+convention (topk-sliced (768, K=512) columns of c_fc → 1,575,424 total
+trainable). This is faithful continuation of cycles 213/241/248/262 W_fc
+retraining family. Full c_fc variant is a separate experiment if priority.
+
+Baselines (all match references):
+  Cycle 266 [1,4] K=512 W_out-only:   43.852  (delta +0.026 within noise)
+  Cycle 213 [1,4,7] K=512 W_out+W_fc: 46.424  (delta -2.546)
+  Cycle 248 6b K=128 W_out+W_fc:      67.609  (context only)
+  Cycle 271 [1] K=512 W_out-only:     43.821  (delta +0.057, dominates cycle 279)
+  Float:                               53.895  (delta -10.017)
+
+Pareto check: cycle 279 at (1,575,424 params, 43.878 PPL) is STRICTLY
+DOMINATED by cycle 271 [1] K=512 W_out-only at (393,984 params, 43.821 PPL)
+on BOTH axes (4× params AND 0.057 PPL worse). Does NOT enter Pareto frontier.
+
+Bookkeeping: item 289 deleted from NEXT/P2 (P2 empty; P0/P1 already empty).
+`### Cycle 279` inserted at top of PAST EXPERIMENTS above `### Cycle 278`.
+TSV row appended and hash updated post-commit. Manifest + exec_result written
+in bookkeeping commit c1da686. Pre-commit hook fired once (fixed trailing
+whitespace + end-of-file on summary/json), re-committed cleanly.
+
+Staging hygiene: primary commit staged ONLY cycle 279 files + agenda.md + TSV.
+Bookkeeping commit staged ONLY TSV + manifest + exec_result. Pre-existing
+dirty files (program.md, earlier cycle manifests, literature_map, flagged.jsonl,
+pullback_geometry.py, untracked audit/brief/plan/log files) untouched.
+
+Key findings:
+- W_fc retraining probe family CLOSED across 5 configs, all within ±0.1 PPL of W_out-only.
+- W_out absorbs the DOF pattern is universal for topk+lstsq-init compressed MLPs.
+- Best_step halves vs cycle 266 (1933 vs 4000); final@4000 overshoots best by +2.75 PPL.
+- 2-block ceiling pinned at ~43.85 regardless of trainable DOFs.
+- Cycle 271 [1] K=512 W_out-only remains the lowest-PPL Pareto winner.
+- Sliced-vs-full discrepancy flagged and documented for future follow-up.
+
+Issues: None.

@@ -1,0 +1,61 @@
+cycle=258
+item=269
+audit_status=PASS
+verdict=CONFIRMED
+main_commit=8b88a811ed2f05e88ef9593a2f13e922a8893528
+bookkeeping_commit=1891323
+auditor_notes_path=autoresearch/audits/cycle_258.md
+
+# Verdict logic check
+clause_1_kappa_early_band_max_rel_diff=0.4772
+clause_1_threshold=0.30
+clause_1_passes=true
+clause_2_abs_rho_ReLU=0.3801
+clause_2_threshold=0.50
+clause_2_passes=true
+verdict_check=PASS
+
+# Methodology checks
+calib_slice_200x128_seed42=PASS
+three_variants_set_up_correctly=PASS
+geometry_api_calls_correct=PASS
+pearson_layer_index_alignment=PASS
+b_leak_polarity_negative=PASS
+mu_polarity_nonpositive=PASS
+restore_roundtrip_clean=PASS
+distinct_module_instance_assert=PASS
+
+# Numerical sanity
+kappa_GELU_layer_2_value=2.233e-03
+kappa_GELU_layer_11_value=3.840e-06
+kappa_profile_peak_layer=2_to_3
+salience_GELU_layer_11_dominates=true
+rho_consistency_across_variants=true
+
+# Hypothesis check
+hypothesis_predicted_kappa_DROP_in_blocks_0_3=true
+reality_kappa_INCREASE_in_blocks_2_to_6=true
+hypothesis_clause_1_signed_direction_wrong_but_magnitude_passes=true
+hypothesis_clause_2_rho_baseline_was_minus_0.745_actual_minus_0.38=true
+
+# Stale baseline note
+cycle_252_referenced_as_GELU_kappa_baseline=stale
+cycle_252_actual_content=block5_std_eff_rank_NOT_pullback_kappa
+cycle_258_first_pullback_kappa_S_measurement_on_GPT2_small=true
+
+# Cycle 181 baseline mismatch
+cycle_181_recipe_W_down_projected_c_proj_bias=PPL_+88_pct
+cycle_258_recipe_per_channel_intermediate_offset=PPL_+33_pct
+follow_up_recommended=verify_cycle_181_recoverable_with_per_channel_form
+
+# Bookkeeping
+agenda_item_269_deleted_from_NEXT_P0=true
+agenda_cycle_258_past_entry_prepended=true
+TSV_row_258_appended_with_hash=true
+manifest_written=true
+main_commit_clean=true
+bookkeeping_commit_clean=true
+no_pre_existing_dirty_files_staged=true
+
+# Decision
+decision=PASS

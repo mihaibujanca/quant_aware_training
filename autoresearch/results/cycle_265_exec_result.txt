@@ -1,0 +1,36 @@
+cycle=265
+item=275
+verdict=INCONCLUSIVE
+commit=02a5936
+bookkeeping_commit=510a7db
+status=success
+fits_completed=9
+wall_time_min=21.0
+seed_drop=none
+
+# Aggregates
+min_best_mean=53.6469
+min_subset=[1,2,4,7]
+max_best_mean=54.4877
+subset_1_2_4_7_best_mean=53.6469_pm_0.0656
+subset_1_4_7_8_best_mean=53.7320_pm_0.0976
+subset_1_2_7_8_best_mean=54.4877_pm_0.1366
+
+# Verdict logic
+threshold_C_le=53.0
+threshold_R_ge=56.0
+min_53.6469_in_(53.0,56.0)=INCONCLUSIVE
+
+# Deltas
+delta_vs_c255_k512_min_49.609=+4.038
+delta_vs_c251_k128_5block_59.119=-5.472
+delta_vs_c223_k128_3block_48.989=+4.658
+delta_vs_float_53.895=-0.248
+
+# Pareto reading
+trainable_params_per_subset=396288
+all_3_subsets_within_pm1ppl_of_float=true
+dominated_by_cycle_223_K=128_3block_on_both_axes=true
+linear_extrapolation_predicted_50.7_actual_53.65_diff_2.95_PPL_subLinear_cascade=true
+
+artifacts=experiments/four_block_k128_sweep_cycle265.py,autoresearch/plans/cycle_265.md,autoresearch/briefs/cycle_265.md,autoresearch/logs/cycle_265_run.log,autoresearch/results/cycle_265_four_block_k128_sweep.json,autoresearch/results/cycle_265_summary.md,autoresearch/results/cycle_265_manifest.txt

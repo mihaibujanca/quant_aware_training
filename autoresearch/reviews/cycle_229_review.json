@@ -1,0 +1,22 @@
+{
+  "cycle": 229,
+  "item": 239,
+  "priority": "P2",
+  "verdict": "APPROVE",
+  "reviewer": "design-review-agent",
+  "summary": "Direct port of cycle 215 sequential per-block Adam recipe from 3 to 6 blocks. Same machinery, same thresholds, three baselines tracked. Wall-time fallback documented.",
+  "strengths": [
+    "Verbatim port of validated cycle 215 machinery (fresh Adam, best-state restore, collapse rollback).",
+    "Three baselines tracked: joint 6-block 59.515, sequential 3-block 47.253, joint 3-block 46.556.",
+    "Verdict thresholds (CONFIRMED <=58.0, REFUTED >=60.0) match item 239 verbatim.",
+    "n_trainable=393984 assertion guards against freezing bugs.",
+    "init_ppl ~86.7 cross-check against cycle 221 verifies build correctness.",
+    "Per-block trajectory reporting enables diagnosis of where sequential diverges from joint.",
+    "3 seeds (42/137/2024) consistent with cycle 215/221 protocol."
+  ],
+  "risks": [
+    "Wall time ~25 min stated; sequential redoes forward passes per block. Fallback to 1500 steps documented and justified by cycle 215 best step ~2000 and cycle 221 best step ~1367."
+  ],
+  "blocking_issues": [],
+  "recommendations": []
+}

@@ -1,0 +1,1 @@
+APPROVE. Heterogeneous K (512 on blocks 4,5; 128 on 1,2,7,8) directly tests cycle 243's mid-block dominance claim at ~1.18M params. Script is a clean diff from cycle 231, verdict thresholds (≤61.0 / ≥65.0) bracket the 59.5–67.6 gap.

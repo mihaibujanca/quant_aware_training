@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=confirmed
+new_outcome=confirmed
+reason=47.692 <= 48 -> CONFIRMED. Disjoint calib/eval splits verified, mu + Adam on calib only, all eval PPLs computed on held-out eval_ids. LoRA beats float on the eval slice by 6.2 PPL (-11.5%), within the family of cycle 206/210/223/225/230 corrections that also beat float on held-out. Cycle 234's leaked 32.411 was indeed ~15 PPL of calib overfit, but the residual 47.69 generalizes.
+guardrail_flags=none
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Closes the cycle 234 leakage loop. The gelu_noneg+mu+LoRA family is viable as a compression approach (~half the trainable params of K=512 W_out at 47.69 vs cycle 210's K=512 46.556). Worth comparing apples-to-apples vs the K=128 cycle 223 result (48.989) -- gelu_noneg + LoRA r=8 has a similar param budget and similar PPL.
+interesting=true
+interesting_reason=Cycle 234 audit's leakage hypothesis is fully confirmed. The gelu_noneg + mu + LoRA family generalizes to held-out at ~48 PPL, comparable to K=128 W_out correction but via a totally different mechanism (activation change + low-rank residual on c_proj instead of channel selection).

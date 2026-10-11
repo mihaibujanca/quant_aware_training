@@ -1,0 +1,48 @@
+cycle=275
+item=285
+verdict=REFUTED
+audit_status=PASS
+commit=61909c1
+bookkeeping_commit=e36ebaa
+
+plan_adherence=PASS
+numerical_consistency=PASS
+verdict_logic=PASS
+best_state_restore=PASS
+trainable_count=PASS
+baseline_cross_checks=PASS
+compose_ability_reading=PASS
+pareto_check=PASS
+bookkeeping=PASS
+staging_hygiene=PASS
+issues_found=none
+
+best_mean=48.20038
+best_std=0.04841
+threshold_C_le=43.5
+threshold_R_ge=45.0
+margin_over_R=+3.2004
+margin_to_C=-4.7004
+verdict=REFUTED
+
+per_seed_best=[48.2367@4000, 48.1320@4000, 48.2325@4000]
+per_seed_init=[60.6639, 60.6639, 60.6639]  # deterministic, both operators seed-independent
+best_step_all_at_budget_cap=true
+still_descending=true  # but 4.4 PPL gap too large for 8k extension to close
+
+trainable_params=411648  # 393216+768+16896+768 = cycle 271 393984 + cycle 270 17664
+fits=3_of_3
+no_seed_drop=true
+wall_time_min=7.8
+
+float_ppl=53.895
+delta_vs_c271=+4.379
+delta_vs_c270=-6.269
+delta_vs_c266=+4.348
+delta_vs_float=-5.695
+
+pareto=NOT_winner_strictly_dominated_by_cycle_271_1_K512_394K_43.821_on_BOTH_axes
+
+key_findings=block_11_rank22_c_proj_weight_SVD_isolated_patch_operator_NOT_cascade_compatible_operator_hybrid_411K_48.200_damages_1_K512_recipe_by_4.38_PPL_weight_SVD_4.4_PPL_milder_than_channel_K_at_equal_rank_both_REFUTED_when_composed_with_block_1_compression_Pareto_winners_compose_additively_on_disjoint_operators_hypothesis_CLOSED_REFUTED_at_2_operator_scale_all_3_seeds_best_at_N_STEPS_cap_still_descending_budget_bounded_but_REFUTED_verdict_robust_to_budget_extension_init_60.664_det_across_seeds
+
+artifacts=experiments/hybrid_block1_block11_cycle275.py,autoresearch/plans/cycle_275.md,autoresearch/briefs/cycle_275.md,autoresearch/logs/cycle_275_run.log,autoresearch/results/cycle_275_hybrid_block1_block11.json,autoresearch/results/cycle_275_summary.md,autoresearch/results/cycle_275_manifest.txt,autoresearch/results/cycle_275_exec_result.txt,autoresearch/audits/cycle_275.md

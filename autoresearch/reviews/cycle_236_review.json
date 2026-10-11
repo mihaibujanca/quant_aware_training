@@ -1,0 +1,62 @@
+{
+  "cycle": 236,
+  "item": 246,
+  "tier": "T2",
+  "verdict": "APPROVE",
+  "reviewer": "claude-opus-4-6-1m",
+  "date": "2026-04-06",
+  "summary": "Causal intervention on top-5 bump directions per block from cycle 235 T1. Inject alpha*std_l_i*v_l_i into residual stream entering next block; compare logit shifts to random-direction baseline and Jaccard vs T1 predicted boost list.",
+  "strengths": [
+    "Cleanly reuses cycle 235 artifacts (V_l, mean_delta_l, coherent counts).",
+    "std_l recomputed with identical calibration loader (same seed/N_SEQS/SEQ_LEN) — fair.",
+    "Held-out batch explicitly DISJOINT from calibration (val vs train).",
+    "Sanity checks appropriate: alpha=0 no-op, linearity (l2_a1<=l2_a3), std_l finiteness, coherent-count cross-check.",
+    "Verdict bands (confirmed/refuted/inconclusive) match item 246 hypothesis verbatim.",
+    "Concrete fallbacks for wall-time, file size, and std_l failure modes."
+  ],
+  "concerns": [
+    {
+      "id": 1,
+      "severity": "info",
+      "text": "Hook target for block 11: no h[12] exists. Plan correctly uses forward_pre_hook on transformer.ln_f for l=11. Handled."
+    },
+    {
+      "id": 2,
+      "severity": "info",
+      "text": "forward_pre_hook on h[l+1] receives args[0] = residual stream before block l+1's LN_1, which IS 'after block l'. Correct injection point."
+    },
+    {
+      "id": 3,
+      "severity": "medium",
+      "text": "Random baseline MUST rescale unit-norm Gaussian v_rand by mean(std_l) (plan step 6 says so). Without rescale, effect_size is inflated ~5-10x and 3x threshold is trivially passed. Code review: assert rescale is applied."
+    },
+    {
+      "id": 4,
+      "severity": "medium",
+      "text": "Effect size normalization (step 7) divides by random_l2_mean_alpha_3[l]. Correctness depends on concern 3 being handled."
+    },
+    {
+      "id": 5,
+      "severity": "low",
+      "text": "T1 top_vocab_boost field type: verify list-of-ids vs list-of-dicts when loading decoded.json; extract token_id only for Jaccard set."
+    },
+    {
+      "id": 6,
+      "severity": "info",
+      "text": "logit_shifts.pt size: mean_shift only ~60MB; top1000 adds ~2.4MB — negligible, keep."
+    },
+    {
+      "id": 7,
+      "severity": "info",
+      "text": "alpha=0 correctly skips hook registration and uses logits_clean. Good."
+    }
+  ],
+  "minor_notes": [
+    "Example records use char-level context truncation (last 50 chars) — fine for rendering.",
+    "std_l_i stored per entry in intervention.json — good for reproducibility.",
+    "Suggest logging n_hits[l] and max_effect_size[l] in summary.md even on INCONCLUSIVE."
+  ],
+  "blockers": [],
+  "approval": "APPROVE",
+  "notes": "Concerns 3-5 are code-review items for execute agent, not plan defects. Plan is self-contained, deps satisfied (cycle 235 DONE), verdict bands concrete, fallbacks specific."
+}

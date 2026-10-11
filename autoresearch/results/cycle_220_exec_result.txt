@@ -1,0 +1,6 @@
+item_number=234
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_220_surgical_bump.json,autoresearch/results/cycle_220_summary.md,autoresearch/results/cycle_220_manifest.txt
+code_paths=experiments/surgical_bump_removal_cycle220.py
+final_commit_hash=4f397a9
+agenda_updated=yes

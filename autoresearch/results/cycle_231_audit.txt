@@ -1,0 +1,12 @@
+status=PASS
+cycle=231
+item=241
+claimed_verdict=REFUTED
+audit_verdict=REFUTED
+best_mean=67.562
+best_std=0.061
+threshold_refuted=65.0
+threshold_confirmed=61.0
+delta_vs_c221_k512=+8.047
+seeds=42,137,2024
+notes=best_mean 67.562 >= 65.0 refutation gate; 3 seeds tight (std 0.061); restore-best sanity passes; trajectories monotone; init 115.056 deterministic across seeds; K=128 penalty triples 3->6 blocks (+2.43 -> +8.05).

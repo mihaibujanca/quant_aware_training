@@ -24,9 +24,11 @@ No-retrain rank-r sweep (HF Conv1D c_proj_11.weight (3072, 768), bias unchanged)
 
 SVD summary:
   Top-5 singular values: 60.99, 34.59, 32.18, 21.97, 21.70
-  S[21]=21.97  S[49]=12.54  S[99]=8.63  S[-1]≈0.04
+  S[21]=17.57  S[49]=15.95  S[99]=14.47  S[-1]=1.58
   Top-100 energy fraction = 34.83% (weight is well-conditioned, NOT
-  rank-concentrated, in stark contrast to cycle 267's OUTPUT eff_rank=22.49)
+  rank-concentrated, in stark contrast to cycle 267's OUTPUT eff_rank=22.49.
+  Singular values decay slowly from S[0]=60.99 down to S[-1]=1.58, ratio
+  ~38x — full numerical rank.)
 
 Retrain at r=22 (3 seeds {42,137,2024}, joint Adam LR=1e-4, 4000 steps,
 EVAL_EVERY=100, best-state restore, 17,664 trainable params = 22*768 (B) + 768

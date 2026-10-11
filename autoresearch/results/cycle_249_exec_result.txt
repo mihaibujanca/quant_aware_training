@@ -1,0 +1,27 @@
+cycle=249
+item=259
+verdict=REFUTED
+best_eval_ppl_mean=65.275
+best_eval_ppl_std=0.094
+per_seed_best=[65.4021,65.1778,65.2445]
+per_seed_best_step=[2200,2200,2200]
+per_seed_final_at_4000=[68.8932,68.6744,68.3590]
+init_eval_ppl=104.198
+final_mean_at_4000=68.642
+float_ppl=53.895
+cycle_221_k512_baseline=59.515
+cycle_231_k128_baseline=67.562
+cycle_247_hetero_baseline=64.453
+delta_vs_c221_k512=+5.760
+delta_vs_c231_k128=-2.287
+delta_vs_c247_hetero=+0.822
+gap_recovery_fraction=0.284
+K_per_block={1:128,2:128,4:128,5:128,7:512,8:512}
+trainable_params=1184256
+n_seeds=3
+seeds=[42,137,2024]
+per_block_init_residual_mse={1:0.125,2:0.172,4:0.227,5:0.312,7:0.415,8:0.579}
+experiment_commit=d4e2fb7005ee55ebbf973ca6ad787842cf9fe8ba
+bookkeeping_commit=f76f987
+status=complete
+summary=Heterogeneous K complement on BLOCKS=[1,2,4,5,7,8] with K=512 flipped onto residual-MSE-dominant blocks {7,8} and K=128 on {1,2,4,5}. Mirror of cycle 247 protocol at identical 1.18M-param budget. Mean best 65.275 +/- 0.094 at step 2200 (all three seeds). Gap recovery fraction 0.284 -- closes only 28.4% of the K=128 -> K=512 gap, WORSE than cycle 247's 38.6%. REFUTED at best_mean 65.275 >= 65.0. Residual-MSE-driven block selection is strictly worse than cycle 243 delta-PPL-driven selection at matched parameter budget. Final@4000 mean 68.642 (overshoot +3.37 PPL past best, 3x cycle 247's 1.08 overshoot) -- blocks 7, 8 K=512 surfaces are much more overfit-prone than blocks 4, 5 K=512 under identical Adam schedule. Together with cycle 247 INCONCLUSIVE, this pair closes the "localise the K-bandwidth penalty to a subset of blocks" hypothesis: neither per-block residual MSE nor per-block restoration delta-PPL predicts which 2 of 6 blocks to upgrade. At 1.18M parameters, no 2-of-6 allocation closes more than 39% of the K-gap. Follow-ups: 3-block K=512 allocations ({4,5,8} or {5,7,8} at ~1.37M), homogeneous K=256 6-block at matched 1.18M budget, weight-decay sweep on cycle 249 config to test whether the blocks 7, 8 overfit can be regularised away.

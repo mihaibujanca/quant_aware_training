@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=inconclusive
+new_outcome=inconclusive
+reason=final_ppl_mean=47.253 sits in the (46, 60) inconclusive band, 0.697 PPL above joint Adam baseline 46.556. Sequential trajectory 61.746 -> 51.486 -> 48.503 -> 47.253 is monotone, reproducible across 3 seeds (std 0.047), no collapses. Implementation matches cycle 206 hyperparameters exactly and has no bugs.
+guardrail_flags=none
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Try sequential + short joint-polish pass (all 3 W_outs trained jointly ~500 steps after sequential init) to close the 0.7 PPL gap. Alternatively extend N_STEPS_PER_BLOCK to 4000 since best_step==2000 at budget limit for almost every block-seed (training still improving). If neither closes the gap, accept joint Adam as the dominant recipe and close this line.
+interesting=false
+interesting_reason=

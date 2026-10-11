@@ -1,0 +1,6 @@
+item_number=231
+tsv_path=autoresearch/logs/experiments.tsv
+result_paths=autoresearch/results/cycle_217_delta_per_token.json,autoresearch/results/cycle_217_summary.md,autoresearch/results/cycle_217_manifest.txt
+code_paths=experiments/delta_per_token_cycle217.py
+final_commit_hash=7d8f4a27722d3572df06ae3be8e497bf999737f2
+agenda_updated=yes

@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=refuted
+new_outcome=refuted
+reason=Per-block median bump-attribution [0.0083, 0.0117, -0.0093, -0.0038, 0.0167] — all under the 0.05 refuted gate. The literal criterion uses "mean > 0.15 in 3/5", but per-block means are dominated by unbounded ratio outliers (block 9 mean 2.79 vs median 0.017, std 27.15) due to the full_patched_delta denominator being small or negative in 36-58% of pairs. Design review approved median substitution (and the experiment script's own docstring at lines 14-17 pre-declared it). The per-token attribution is genuinely near zero in the median; the bump is not a token-specific transport mechanism.
+guardrail_flags=G6_metric_choice
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=The 4-item bump investigation now closes coherently: Δ̃ subspace is causally critical (T3, 23k× random) but NOT linearly decodable (T2 wte mismatch) and NOT token-specific (T4 ≈0 attribution). The bump encodes collective cascade behavior, not interpretable per-token features. Future direction: characterize what the bump DOES encode (probe via downstream attention patterns, ablation cascades, or measurement of bump effect on attention head outputs).
+interesting=true
+interesting_reason=Closes the bump latent feature investigation (cycles 235-238). Coherent finding: bump is aggregate-critical but not interpretable as per-token features. This is a substantial reframing of the cycle 218 "inter-block communication" claim.

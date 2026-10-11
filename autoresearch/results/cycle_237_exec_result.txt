@@ -1,0 +1,11 @@
+cycle=237
+item_number=247
+outcome=confirmed
+verdict=CONFIRMED
+commit=26316156c41d013dc3b5bdad88270fd0dcade4eb
+bookkeeping_commit=af0ab59
+key_metric=verdict=CONFIRMED_joint_bump_ppl=2344385.825_joint_random_mean=101.298_ratio=23143.383_n_blocks_above_2x=9_of_12_full_ffn_joint=3114154.919_baseline=34.514
+paths=experiments/bump_t3_ablation_cycle237.py,autoresearch/results/cycle_237_t3_ablation_ppl.json,autoresearch/results/cycle_237_t3_summary.md,autoresearch/logs/cycle_237_run.log,autoresearch/results/cycle_237_manifest.txt
+learned=Cycle 237 T3: Bump subspace ablation vs random k=10 baseline. Held-out wikitext-2 val 200x512=102400 tokens gpt2 MPS fp32. Per block installed forward hook on transformer.h[l] that ablates residual stream hs <- hs - hs @ P_l where P_bump_l = V_l[:,:10] @ V_l[:,:10].T from cycle 235 centred Delta-tilde SVD. Baseline PPL 34.514. Joint bump ablation: 2344385.825 (67925x baseline). Joint random 3-seed baseline (QR orthonormal k=10, seeds [42,137,2024]): 101.298 +/- 8.137. Ratio joint_bump/joint_random = 23143.383 (gate >=1.5). Per-block ratios: [19.9, 12.9, 10.6, 30.2, 22.1, 25.2, 797.7, 11.2, 1.65, 1.45, 1.51, 928.4]. n_blocks_above_2x_random = 9/12 (gate >=3). Blocks 8-10 random-like; blocks 6 and 11 catastrophic. Full-FFN top-10 SVs joint 3114154.919 (different blocks critical: 3, 11). Sanity clean (ortho 1.07e-6, idem 5.07e-7, restore 0.00e+00). Falsifies "bump is compression slack" story.
+next=Item 247 closed CONFIRMED. Remaining bump P0 item is 248 (T4 activation patching across token pairs). Downstream: probe which downstream readers use the bump subspace via logit-lens or downstream-V overlap. Per-block pattern shows blocks 8-10 compression-irrelevant at k=10 (potential compression target); blocks 6, 11 have single-block catastrophes (do NOT compress).
+tsv_path=autoresearch/logs/experiments.tsv

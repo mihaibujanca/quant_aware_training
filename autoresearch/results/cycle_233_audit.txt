@@ -1,0 +1,7 @@
+item_number=243
+cycle=233
+status=PASS
+claimed_verdict=INCONCLUSIVE
+audited_verdict=INCONCLUSIVE
+rationale=Phase 1 bests [1,2,3,4,5,6]=61.785, [3,4,5,6,7,8]=67.826, [1,3,5,7,8,10]=60.981. CONFIRMED (<=58.0) fails (min alt=60.981). REFUTED ([59,62] for all) fails because middle subset 67.826 is outside band by +5.8 PPL. Spread 6.845 > 2 and no subset < 59.0, so INCONCLUSIVE per literal criterion. Single-seed phase 1 only is acceptable per item 243 design — phase 2 3-seed rerun was gated on any best<59.0 which no subset achieved. Protocol matches cycle 221 (K=512, LR=1e-4, 4000 steps, best-state restore, restore sanity <1e-3). Script verdict logic correct. Audit PASS.
+audit_path=autoresearch/audits/cycle_233.md

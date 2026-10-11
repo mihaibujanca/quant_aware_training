@@ -1,0 +1,24 @@
+cycle=241
+item=251
+status=PASS
+verdict=REFUTED
+best_ppl_mean=59.533
+best_ppl_std=0.104
+threshold_refuted=[59.0,60.5]
+threshold_confirmed=<=58.0
+per_seed=[59.385,59.611,59.602]
+per_seed_best_steps=[1300,1200,1600]
+seeds=[42,137,2024]
+init_ppl=86.686
+init_std=0.0
+final_ppl_at_4000_mean=71.948
+float_ppl=53.895
+trainable_params=2382336
+trainable_surface=W_out+b_out+c_fc_full_bias (W_fc matrix frozen)
+delta_vs_c221_wout_only_6b=+0.018
+c221_wout_only_6b=59.515
+c221_std=0.094
+c213_wout_wfc_bias_3b=46.424
+restore_roundtrip_clean=true
+interesting=true
+interesting_reason=c_fc bias direction is closed for both 3-block (cycle 213) and 6-block (cycle 241) cascades. Combined with cycle 240 (K=1 6-block REFUTED at 96.886) the 6-block 59.5 floor is rigid to parameter-count expansion via c_fc bias but collapses under channel capacity reduction — at 6 blocks the binding constraint is K, not trainable parameter count.

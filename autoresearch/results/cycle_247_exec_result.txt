@@ -1,0 +1,25 @@
+cycle=247
+item=257
+verdict=INCONCLUSIVE
+best_eval_ppl_mean=64.453
+best_eval_ppl_std=0.123
+per_seed_best=[64.6206,64.4055,64.3318]
+per_seed_best_step=[2300,2200,2400]
+per_seed_final_at_4000=[65.9282,65.3730,65.3017]
+init_eval_ppl=103.931
+final_mean_at_4000=65.534
+float_ppl=53.895
+cycle_221_k512_baseline=59.515
+cycle_231_k128_baseline=67.562
+delta_vs_c221_k512=+4.938
+delta_vs_c231_k128=-3.109
+gap_recovery_fraction=0.386
+K_per_block={1:128,2:128,4:512,5:512,7:128,8:128}
+trainable_params=1184256
+n_seeds=3
+seeds=[42,137,2024]
+per_block_init_residual_mse={1:0.126,2:0.172,4:0.162,5:0.224,7:0.581,8:0.818}
+experiment_commit=1f811056648544dd30eb09e94cf3080c65a68136
+bookkeeping_commit=9541bc1
+status=complete
+summary=Heterogeneous K on BLOCKS=[1,2,4,5,7,8] with K=512 on mid-cascade {4,5} and K=128 on {1,2,7,8}. Mirror of cycle 221/231 protocol, 1.18M trainable (50.1% of K=512 6-block). Mean best 64.453 +/- 0.123. Gap recovery fraction 0.386 (38.6% of the K=128->K=512 gap at 50.1% of the parameter cost). INCONCLUSIVE at 64.453 in (61.0, 65.0) but 0.55 PPL from the REFUTED threshold. Per-block lstsq residual MSE (seed 42): b1 K=128 0.126, b2 K=128 0.172, b4 K=512 0.162, b5 K=512 0.224, b7 K=128 0.581, b8 K=128 0.818 -- the two K=512 blocks already have LOWER residual MSE than the K=128 blocks 7, 8. Plan hypothesis (cycle 243 per-block ranking predicts K=128 binding blocks) REJECTED in the strong form: blocks 4, 5 are not the binding constraint under K=128; blocks 7, 8 are. Cycle 243 restoration ranking and init residual MSE disagree. Follow-ups: swap allocation (K=512 on 7, 8), single-block K upgrades from cycle 231 baseline, K=256 on 7, 8.

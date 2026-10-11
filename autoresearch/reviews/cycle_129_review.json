@@ -1,0 +1,1 @@
+{"verdict": "REVISE", "round": 1, "issues": ["R3: random-init condition has no seeds specified; need >=3 seeds for stochastic initialization", "R4 minor: ReLU hard zeros mechanically reduce isotropy ratio, making Test 2 comparison unfair without restricting to non-zero subspace"]}

@@ -1,0 +1,30 @@
+{
+  "cycle": 232,
+  "item": 242,
+  "verdict": "approve",
+  "reviewer": "claude-opus-4.6",
+  "date": "2026-04-06",
+  "summary": "Sequential-init + joint-polish hybrid at BLOCKS=[1,4,7], K=512. Combines cycle 215 sequential protocol (phase 1, LR=1e-4, 2000 steps/block) with lower-LR joint Adam polish on all 3 blocks' W_out+b_out (phase 2, LR=5e-5, 1000 steps). 3 seeds.",
+  "soundness": {
+    "novel_composition": true,
+    "dependencies_complete": true,
+    "baselines_identified": ["cycle_215_sequential_47.253", "cycle_206_joint_1k_48.111", "cycle_210_joint_4k_46.556", "cycle_213_Wout_Wfc_46.424"],
+    "phase1_sanity_check": "post_sequential_ppl_mean ~47.25 verifies phase 1 reproduces cycle 215",
+    "phase2_lr_rationale": "5e-5 (half of phase 1) appropriate for polish, unlikely to wipe sequential basin",
+    "collapse_handling": "explicit rollback + honest reporting per fallback section",
+    "seed_set_matches_baselines": true
+  },
+  "thresholds": {
+    "confirmed": "final_mean <= 45.8",
+    "refuted": "final_mean >= 46.5",
+    "inconclusive": "else",
+    "assessment": "refute band correctly anchored to joint-alone floor"
+  },
+  "risks": [
+    "phase 2 may degrade phase 1 if LR still too high for 3-block joint basin — mitigated by best-tracking + rollback",
+    "gain may be within noise of cycle 215's std (0.047) — 3 seeds adequate but not decisive"
+  ],
+  "blocking_issues": [],
+  "decision": "approve_as_written",
+  "notes": "Ensure phase 2 best-state comparison spans both phases (tracks phase-1 best as baseline), so a worse phase 2 is detectable per seed."
+}

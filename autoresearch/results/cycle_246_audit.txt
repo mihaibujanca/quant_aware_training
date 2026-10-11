@@ -1,0 +1,17 @@
+cycle=246
+item=256
+status=PASS
+interesting=true
+verdict=REFUTED
+best_mean=57.811
+best_std=0.277
+threshold_refute=49.5
+threshold_confirm=47.0
+init_eval_ppl=106.742
+post_mu_eval_ppl=74.301
+delta_vs_c223_k128=+8.822
+delta_vs_c239_lora=+10.119
+delta_vs_float=+3.916
+trainable_params=595200
+n_seeds=3
+notes=Clean refutation. 57.811 >= 49.5. Install order, disjoint splits, mu<=0 invariant, LoRA-zero init, and trainable param breakdown (595200 = 276480+21504+297216) all verified. K=128 lstsq init against bump-removed target is 106.74 (~56 PPL worse than raw GELU init in c223) and post-compress init is worse than post-mu-only EVAL (74.30), so K=128 lstsq on the patched activation is actively harmful before Adam. 2000 Adam steps close part of the gap but cannot reach either baseline. Structural finding: gelu_noneg+mu bump-removal and K=128 topk+lstsq share a linearisation budget and do not compose. Plan hypothesis directly contradicted. Follow-ups (K=512, install-order swap, topk basis diagnostic, trainable mu) are well-scoped.

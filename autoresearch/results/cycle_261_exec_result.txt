@@ -1,0 +1,42 @@
+cycle=261
+item=272
+verdict=INCONCLUSIVE
+main_commit=51ccffb66f010f1eb948a7104c480f06d474d431
+bookkeeping_commit=1b43067440c31b79e22e85caad4372bc4969ddc9
+trainable_params=0
+run_log=autoresearch/logs/cycle_261_run.log
+script=experiments/wdown_sign_geometry_cycle261.py
+result_json=autoresearch/results/cycle_261_wdown_sign_geometry.json
+summary_md=autoresearch/results/cycle_261_summary.md
+manifest=autoresearch/results/cycle_261_manifest.txt
+
+# Verdict logic
+clause_a_block2_pos_top1_ge_070=False_value=0.5517
+clause_b_monotone_decrease_b1_to_b11_ge_30deg=False_strictly_monotone=False_total_drop=-5.09deg
+clause_c_blocks_1_11_outside_null_2sigma=False_4_of_11
+refuted_all_12_inside_null_2sigma=False_5_of_12_outside
+verdict=INCONCLUSIVE
+
+# Headline numbers
+block2_mostly_pos_top1_energy_fraction=0.5517
+block2_mostly_pos_n=6
+block2_mostly_pos_svdvals=[6.819,4.446,2.821,2.194,1.842,1.361]
+median_angles_per_block=[76.27,71.87,62.30,81.08,75.28,76.99,73.21,73.59,72.32,21.35,75.71,76.96]
+n_pos_per_block=[145,12,6,7,8,6,7,3,4,2,5,9]
+n_neg_per_block=[2057,1188,1692,1897,1562,1665,1618,1592,1587,1628,1277,1084]
+blocks_outside_null_2sigma=[1,2,3,9]_4_of_12
+blocks_inside_null_2sigma=[0,4,5,6,7,8,10,11]_8_of_12
+total_drop_b1_to_b11_deg=-5.089
+strictly_monotone_decreasing=false
+
+# Geometric reading
+positive_subspace_structurally_tiny_in_11_of_12_blocks=true
+mostly_pos_group_size_excluding_b0_avg=6.3
+cycle174_rank1_NOT_explained_by_W_down_column_geometry=true
+cycle174_rank1_must_come_from_alpha_c_magnitude_weighting=true
+median_angle_oscillates_no_monotone_depth_trend=true
+blocks_1_2_3_significant_but_inconsistent_directions=true
+b1_z=-3.94_more_orthogonal_than_random
+b2_z=-4.18_more_orthogonal_than_random
+b3_z=+4.02_more_aligned_than_random
+b9_z=-5.66_but_k_used_2_degenerate_subspace

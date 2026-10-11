@@ -1,0 +1,96 @@
+cycle=259
+item=270
+verdict=CONFIRMED
+main_commit=7ac520bc8717a68350e21ebe69ed5912018c53e9
+bookkeeping_commit=a2522d327d45e1726ae4f5f6926ddf5365280770
+
+# Key results
+trainable_params=0
+n_calib=200
+seq_len=128
+n_total_tokens=25600
+seed=42
+device=mps
+
+# Variant PPLs on calib slice
+ppl_A_GELU_baseline=45.0637
+ppl_B_ReLU_per_block_per_channel_b_leak_cycle258=60.0816
+ppl_post_restore=45.0637
+restore_roundtrip_clean=true
+
+# Per-layer median d_l (pullback norm)
+median_d_layer_0=0.0e+00
+median_d_layer_1=2.2542e+02
+median_d_layer_2=2.9039e+02
+median_d_layer_3=3.9185e+02
+median_d_layer_4=4.6982e+02
+median_d_layer_5=5.4258e+02
+median_d_layer_6=6.6581e+02
+median_d_layer_7=7.9615e+02
+median_d_layer_8=1.0273e+03
+median_d_layer_9=1.2629e+03
+median_d_layer_10=1.7074e+03
+median_d_layer_11=2.6861e+03
+median_d_layer_12=1.0163e+04
+d12_over_d1=45.08x
+early_ratio_d6_over_d1=2.95
+
+# Per-layer median per-token cos(d_l, d_{l+1}) under G
+cos_layer_pair_0_1=undefined_d0_zero
+cos_layer_pair_1_2=+0.3718
+cos_layer_pair_2_3=+0.5714
+cos_layer_pair_3_4=+0.7032
+cos_layer_pair_4_5=+0.7671
+cos_layer_pair_5_6=+0.7814
+cos_layer_pair_6_7=+0.8175
+cos_layer_pair_7_8=+0.8388
+cos_layer_pair_8_9=+0.8666
+cos_layer_pair_9_10=+0.8855
+cos_layer_pair_10_11=+0.9067
+cos_layer_pair_11_12=+0.9061
+
+# Curve fits
+fit_log_linear_full_l1_12_a=+4.9763
+fit_log_linear_full_l1_12_b=+0.2771
+fit_log_linear_full_SSR=3.8505e+07
+fit_log_linear_early_l1_6_a=+5.2544
+fit_log_linear_early_l1_6_b=+0.2135
+fit_linear_a=-1.6241e+03
+fit_linear_b=+5.0920e+02
+fit_linear_SSR=4.6766e+07
+fit_saturating_a=+2.2542e+02
+fit_saturating_c=+4.6572e+04
+fit_saturating_b=+0.0200
+fit_saturating_SSR=2.6704e+08
+best_fit=log_linear
+
+# Verdict logic
+clause_1_b_loglin_l1_6=0.2135
+clause_1_threshold_for_CONFIRMED=0.20
+clause_1_passes=True
+clause_2_cos_early_idx_1_6=[+0.3718,+0.5714,+0.7032,+0.7671,+0.7814,+0.8175]
+clause_2_n_ge_0.6=4
+clause_2_threshold=4
+clause_2_passes=True
+refuted_growth_sublinear_clause=False
+refuted_n_cos_le_0.2_in_early_ge_3=False
+verdict=CONFIRMED
+
+# Hypothesis check
+hypothesis_part1_super_linear_early=CONFIRMED_b_0.21_per_layer_e_ratio_2.95_matches
+hypothesis_part2_saturate_l_8_10=REFUTED_d_l_grows_FASTER_after_l_8
+hypothesis_part3_cos_ge_0.6_in_4_early=EXACTLY_AT_THRESHOLD_4_of_6
+
+# Geometric finding
+growth_shape=log_linear_early_band_plus_super_exponential_late_band
+late_layer_10x_jump_d11_to_d12_driven_by_unembedding_read=true
+coherence_lowest_early_highest_late=true_inverse_of_random_walk
+cycle_189_aggregate_cos_0.72_recovered_at_mid_profile_cos_index_4_value_0.767=true
+
+# Setup notes
+d_0_zero_by_construction_shared_transformer_drop_output=true
+log_linear_fit_uses_l_1_to_12_not_0_to_12=true
+cos_index_0_skipped_from_verdict_count=true
+per_sequence_streaming_of_pullback_norm_avoids_B_T_50257_5GB_peak=true
+
+artifacts=experiments/per_token_divergence_cycle259.py,autoresearch/results/cycle_259_per_token_divergence.json,autoresearch/results/cycle_259_summary.md,autoresearch/results/cycle_259_divergence.png,autoresearch/logs/cycle_259_run.log,autoresearch/results/cycle_259_manifest.txt,autoresearch/plans/cycle_259.md,autoresearch/briefs/cycle_259.md,autoresearch/reviews/cycle_259.md,autoresearch/reviews/cycle_259_review.json

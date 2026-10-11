@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=confirmed
+new_outcome=confirmed
+reason=Effect sizes far exceed the literal criterion. c_fc cos_sum always ≥ +17σ above random (min 4.423, max 7.068, median +25.7σ), resPC always ≥ +20σ (min 4.769, max 8.382, median +33.1σ). These are 6-8× the classical expected cos_sum (3.23) for two random 20-dim subspaces in R^768, and 15-50× the random std, so the alignment is not a trivial consequence of Δ̃ being full-rank; the top-20 of Δ̃ genuinely selects reader-aligned directions. Deep-block V anti-alignment (-10 to -13σ) is positive evidence of non-uniform structure.
+guardrail_flags=specificity_control_missing
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Run specificity control: recompute alignment of Δ̃_l vs c_fc(j) for j ≠ l+1 (shuffled-block baseline) to test whether the alignment is specific to the immediately-adjacent block or generic across all c_fc subspaces. Also report alignment ratio cos_sum(reader_{l+1}) / median_j cos_sum(reader_j) per pair. Note V-reader negative excursions in deep blocks (-10 to -13σ) in the next agenda entry.
+interesting=true
+interesting_reason=c_fc and resPC σ-excess on the order of +20 to +56 is larger than typical cycle effects; the V-reader anti-alignment in deep blocks (blocks 8-10 → l+1 at -10 to -13σ) suggests some readers actively avoid Δ̃'s writing directions — a non-uniform structural signal worth exploring alongside item 234 (surgical bump removal).

@@ -1,7 +1,7 @@
 Cycle 282 — Item 292: Block 10 c_proj rank-17 weight-SVD
 Verdict: CONFIRMED (retrain best_mean 50.0445 ± 0.0565 ≤ 55.0, below float by 3.850 PPL)
 Main commit: 434ba6c
-Bookkeeping commit: (see next)
+Bookkeeping commit: d1c4c8f
 
 best_mean = 50.0445 ± 0.0565 (per-seed 42→50.0048, 137→50.0042, 2024→50.1245)
 Δ vs cycle 270 [11] r=22 retrain 54.4687: −4.424 PPL (cycle 282 BETTER, 22% fewer params → DOMINATES)

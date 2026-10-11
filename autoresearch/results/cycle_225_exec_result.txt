@@ -1,0 +1,9 @@
+cycle=225
+item=235
+outcome=confirmed
+key_metric=k64_best_mean=50.781+-0.021 k32_best_mean=53.038+-0.009 k16_best_mean=55.133+-0.010 float=53.895 k128_ref=48.989 k256_ref=47.509 k512_ref=46.556
+commit=3e2dafdda2deac649b55e6f479b0ff46e0b15446
+paths=experiments/adam_lower_k_cliff_cycle225.py,autoresearch/results/cycle_225_lower_k_cliff.json,autoresearch/results/cycle_225_summary.md,autoresearch/results/cycle_225_manifest.txt
+learned=Adam W_out+b_out correction extends well past K=128 — K=64 (149K params, 7.9x compression vs K=512) reaches best 50.781 (3.11 PPL below float 53.895), K=32 (76K params) reaches 53.038 (still 0.86 PPL below float), and K=16 (39K params) finally crosses float at 55.133 (+2.30%); the curve {512,256,128,64,32,16} -> {46.556,47.509,48.989,50.781,53.038,55.133} is monotone with each halving costing only ~1-2 PPL so 32x compression of W_out costs +8.58 PPL vs K=512; K=64 is the new free operating point
+next=Run item 236 (KD distillation rerun with corrected loss normalization) or open a follow-up to characterize where Adam W_out correction stops scaling — multi-block (e.g. 6-block) cliff sweep at small K, or dynamic-K-per-block selection driven by per-block fit residual
+tsv_path=autoresearch/logs/experiments.tsv

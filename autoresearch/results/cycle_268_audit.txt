@@ -1,0 +1,17 @@
+Cycle 268 Audit
+Status: PASS
+Item: 278 (P1) — K=64 4-block sweep
+Verdict: CONFIRMED (min best_mean = 55.9533 ≤ 56.0 by 0.047 PPL)
+Commit: 5664a91 (cycle files) + 1afc8c4 (bookkeeping)
+
+Checks performed:
+- Plan adherence: PASS (K-swap of cycle 265, all hyperparams identical, hypothesis verbatim)
+- Run completion: PASS (9/9 fits, 20.9 min, no seed drop, restore assertions clean)
+- Numerical consistency: PASS (per-seed → per-subset agg matches; init PPLs deterministic per subset; min/max/std all reproducible)
+- Verdict logic: PASS (CONFIRMED ≤ 56.0 PASS by 0.047; REFUTED ≥ 65.0 correctly skipped)
+- Cross-cycle deltas: PASS (vs cycles 257/265/255/230/float all consistent with K-curve concavity)
+- Pareto: PASS ((200K, 55.95) dominates cycle 251 K=128 5-block (495K, 59.12); does not displace cycle 223)
+- Bookkeeping: PASS (plan, brief, log, JSON, summary, manifest, exec_result, audit, agenda update, TSV append + hash update, two commits, no dirty file staging)
+- Pre-commit hooks: PASS (end-of-file-fixer fired on first attempt; resolved by re-staging + new commit per CLAUDE.md)
+
+Issues: One cosmetic discrepancy — brief estimated trainable params 197,376 (= 4 × 49,344); actual 199,680 (= 4 × 49,920 = 4 × (64×768 + 768)). Brief was off by 576 per block. Script value is correct. No impact on result or verdict.

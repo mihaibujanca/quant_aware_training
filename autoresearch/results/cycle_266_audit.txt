@@ -1,0 +1,76 @@
+cycle=266
+item=276
+audit_status=PASS
+verdict=CONFIRMED
+commit=c1ee079
+bookkeeping_commit=ef83384
+
+# Plan adherence
+plan_followed=true
+script_template=cycle_255_four_block_sweep.py_with_SUBSETS_swap
+hyperparameters_match_cycle_255_except_SUBSETS=true
+disjoint_splits=true
+best_state_restore_assertion=PASS_all_9_fits
+
+# Run
+fits_completed=9
+fits_expected=9
+wall_time_min=22.2
+budget_min=27
+seed_drop=none
+init_ppl_deterministic_per_subset=true_3_of_3_per_subset
+
+# Numerical
+min_best_mean=43.8525
+min_subset=[1,4]
+max_best_mean=45.7703
+subset_1_4_best_mean=43.8525_pm_0.0273
+subset_1_7_best_mean=43.9048_pm_0.0508
+subset_4_7_best_mean=45.7703_pm_0.0164
+trainable_params_per_subset=787968
+trainable_formula_2_x_(K_x_768_+_768)=true
+
+# Verdict logic
+threshold_C_le=45.0
+threshold_R_ge=47.0
+min_43.8525_le_45.0=CONFIRMED
+verdict_logic_pass=true
+
+# Baselines cross-check
+baseline_c210_k512_3block_46.556=PASS
+baseline_c255_k512_4block_min_49.609=PASS
+baseline_c245_k512_5block_53.826=PASS
+baseline_c221_k512_6block_59.515=PASS
+float_baseline_53.895=PASS_measured_in_run
+
+# Deltas
+delta_vs_c210_3b=-2.704
+delta_vs_c255_4b_min=-5.757
+delta_vs_float=-10.042
+
+# Cascade
+cascade_marginal_savings=[5.689,4.217,3.053,2.704]
+cascade_concave_monotonic_shrinking=true
+brief_prediction_43_44_PPL_and_10_below_float=PASS
+
+# Pareto
+new_lowest_PPL_pareto_winner=true
+dominates_cycle_210_3b=true
+dominates_cycle_255_4b=true
+cycle_223_k128_3b_remains_low_param_pareto_winner=true
+
+# Subset ordering
+subset_ordering=[1,4]_lt_[1,7]_lt_[4,7]
+[1,4]_vs_[1,7]_gap_within_seed_std=true_0.05_PPL
+block_1_in_every_winning_subset_across_K_and_count=true
+
+# Bookkeeping
+agenda_item_276_deleted_from_NEXT_P0=true
+agenda_cycle_266_entry_added_to_PAST=true
+tsv_row_appended_with_hash_c1ee079=true
+manifest_written_with_sha256s=true
+exec_result_written=true
+two_commits_cycle_files_and_bookkeeping=true
+
+issues_found=none
+status=PASS

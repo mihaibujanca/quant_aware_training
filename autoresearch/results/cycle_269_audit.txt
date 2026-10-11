@@ -1,0 +1,17 @@
+Cycle 269 Audit
+Status: PASS
+Item: 279 (P2) — K=1 6-block extended budget (16000 steps)
+Verdict: CONFIRMED structural (best_mean = 91.6126 ≥ 90.0 by 1.61 PPL)
+Commit: a743c60 (cycle files) + 4dbf39d (bookkeeping)
+
+Checks performed:
+- Plan adherence: PASS (N_STEPS+EVAL_EVERY swap of cycle 240, all other hyperparams identical, hypothesis verbatim from item 279)
+- Run completion: PASS (3/3 fits, ~18 min wall, no seed drop, restore assertions clean)
+- Numerical consistency: PASS (per-seed → aggregate matches; init PPL deterministic 203.246; step 4000 PPLs IDENTICAL to cycle 240 to 3 dp seed-by-seed → confirms run is reproducing cycle 240 exactly and the only difference is the additional 12k steps)
+- Verdict logic: PASS (CONFIRMED ≥ 90.0 PASS by 1.61; REFUTED ≤ 80.0 correctly skipped)
+- Cross-cycle deltas: PASS (vs cycles 240/230/221/231/float all consistent and informative; cycle 240 → cycle 269 = -5.27 PPL on 4× budget; K=1 vs K=512 6-block gap shrinks from +37.37 to +32.10, only 14% closed)
+- Trajectory descent: PASS (monotone, asymptotically slow, 0.6 PPL per 4k at the end; not flatlined but linear extrapolation to 32k stays > 89, well above REFUTED threshold)
+- Bookkeeping: PASS (plan, brief, log, JSON, summary, manifest, exec_result, audit, agenda update, TSV append + hash update, two commits, no dirty file staging)
+- Pre-commit hooks: PASS (end-of-file-fixer fired on first attempt; resolved by re-staging + new commit per CLAUDE.md)
+
+Issues: One cosmetic discrepancy — brief estimated trainable params at "≈ 9,222 (6 × (768 + 1))"; actual = 9,216 = 6 × (768 + 768). Brief had bias as 1-dim per block instead of 768-dim. Script value (asserted) is correct. No impact on result or verdict.

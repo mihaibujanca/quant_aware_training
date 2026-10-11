@@ -1,0 +1,9 @@
+cycle=226
+item=236
+outcome=inconclusive
+key_metric=best_mean=46.364+-0.047 alpha_best=0.0 alpha_0.5=47.096 alpha_1.0=61.746 init=61.746 best_step_mean=1267 c213_baseline=46.424 c224_broken=60.938 float=53.895
+commit=6da5d4835f7950d31f4084bcdb413d3e52fd3e31
+paths=experiments/distillation_corrected_cycle226.py,autoresearch/results/cycle_226_distillation_corrected.json,autoresearch/results/cycle_226_summary.md,autoresearch/results/cycle_226_manifest.txt
+learned=Corrected KD normalization (reshape (B,T,V)->(B*T,V) before kl_div batchmean) makes KD loss O(0.5-0.8) comparable to CE O(4) after τ²=4 multiplier; α-sweep at SEED=42 / 2000 steps gives α=0.0->46.430 (best step 1200), α=0.5->47.096 (best step 2000 still descending), α=1.0->61.746 (no learning); pure CE wins so 3-seed full run at α=0 reproduces cycle 213: best_mean=46.364±0.047 (Δ vs c213 −0.060, best_step 1267±94); the surface CAN train with correct KD norm (cycle 224 60.938 was a method failure) but does NOT need KD — KD as formulated provides no measurable benefit on W_out+W_fc at the matched 2k-step budget
+next=Item 237 (cycle 218 specificity control, P0) is next; for KD itself a longer α=0.5 run could test whether the still-descending trajectory beats CE eventually, or try alpha schedule (warm CE then ramp KD), or reverse-KL / adaptive temperature — but this is low priority since the surface ceiling is essentially CE
+tsv_path=autoresearch/logs/experiments.tsv

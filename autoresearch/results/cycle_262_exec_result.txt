@@ -1,0 +1,57 @@
+cycle=262
+item=268
+verdict=INCONCLUSIVE
+main_commit=81ac769589d93d6e0e0ed9834625408dc1e0b64b
+bookkeeping_commit=ef571b626fc6a0df3e11512e8cc664ab41e43779
+trainable_params=4611
+run_log=autoresearch/logs/cycle_262_run.log
+script=experiments/k1_wfc_bias_cycle262.py
+result_json=autoresearch/results/cycle_262_k1_wfc_bias.json
+summary_md=autoresearch/results/cycle_262_summary.md
+manifest=autoresearch/results/cycle_262_manifest.txt
+
+# Verdict logic
+threshold_CONFIRMED=58.5
+threshold_REFUTED=59.5
+best_mean=59.131
+best_std=0.027
+delta_vs_cycle_230=-0.114
+band_position=31pct_from_REFUTED_to_CONFIRMED
+verdict=INCONCLUSIVE
+
+# Headline numbers
+seed_42_best=59.098
+seed_137_best=59.165
+seed_2024_best=59.130
+init_ppl_all_seeds=71.409
+all_best_at_step_4000=true
+b_fc_block_1_mean=+0.4092
+b_fc_block_4_mean=+0.3558
+b_fc_block_7_mean=+1.1659
+b_fc_seed_std_block_7=0.0005
+b_fc_block_1_init_to_final_shift=+0.4
+b_fc_block_4_init_to_final_shift=+0.4
+b_fc_block_7_init_to_final_shift=+0.18
+
+# Geometric reading
+b_fc_movement_real_3x_seed_std=true
+all_3_blocks_all_3_seeds_shifted_positive=true
+K_starvation_hypothesis_fails_at_K1=true
+W_out_absorbs_DOF_uniformly_across_K_512_128_1=true
+bias_contributes_0.1_PPL_NOT_0.745=true
+strict_noop_FALSE_practical_noop_TRUE=true
+
+# Brief vs actual trainable count
+brief_claim_2313=incorrect_omitted_W_out_768
+actual_per_block=1537
+actual_total=4611
+verdict_thresholds_unaffected=true_anchored_to_cycle_230_baseline
+
+# Files
+plan=autoresearch/plans/cycle_262.md
+brief=autoresearch/briefs/cycle_262.md
+script=experiments/k1_wfc_bias_cycle262.py
+run_log=autoresearch/logs/cycle_262_run.log
+result_json=autoresearch/results/cycle_262_k1_wfc_bias.json
+summary_md=autoresearch/results/cycle_262_summary.md
+manifest=autoresearch/results/cycle_262_manifest.txt

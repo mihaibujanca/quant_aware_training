@@ -1,0 +1,62 @@
+cycle=267
+item=277
+audit_status=PASS
+verdict=CONFIRMED
+commit=d914d44
+bookkeeping_commit=6dd5d0b
+
+# Verdict logic check
+block_11_eff_rank=22.49
+threshold_C_le=50.0
+block_11_eff_rank_le_50=true
+concentration_clause_triggered=true
+block_11_med_top5_cos_top200=0.1231
+threshold_C_cos_ge=0.5
+alignment_clause_triggered=false
+OR_logic=CONFIRMED
+
+threshold_R_eff_rank_ge=200.0
+threshold_R_cos_le=0.2
+refuted_conjunct_eff_rank=false_22.49_lt_200
+refuted_clause_triggered=false
+skip_correct=true
+
+# Numerical consistency checks (from JSON)
+top_k_energy_monotone=true
+eff_rank_in_range=true
+cos_in_unit_interval=true
+cos_all_ge_cos_top200=true
+V_mlp_unit_norm=true
+V_wp_unit_norm=true
+mlp_out_shape_correct=25600x768
+lm_head_shape_correct=50257x768
+
+# Cross-block consistency
+block_ordering=b1(1.94)<<b11(22.49)<<b5(179.19)
+block_5_mid_block_high_rank_consistent_with_cycle_252_post_gelu_eff_rank_358=true
+block_1_near_rank_1_consistent_with_cycles_218_260=true
+block_11_concentration_consistent_with_cycle_173_ppl_and_cycle_264_kappa=true
+
+# Bookkeeping
+plan_written=true
+script_created=true
+log_stripped=true
+json_written=true
+summary_written=true
+manifest_written=true
+exec_result_written=true
+agenda_updated=true
+tsv_row_appended=true
+tsv_hash_updated=true
+two_commits_created=true
+no_stale_dirty_files_staged=true
+
+# Pre-commit
+precommit_fix_end_of_files_on_json=true
+resolved_via_new_commit_not_amend=true
+
+# Files
+audits_cycle_267_md_written=true
+results_cycle_267_audit_txt_written=true
+
+issues_found=none

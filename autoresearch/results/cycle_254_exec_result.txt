@@ -1,0 +1,13 @@
+cycle=254
+item=264
+verdict=REFUTED
+status=COMPLETE
+commit=5fcc3184ae815d1a3c97f157871cd747ce76e22b
+bookkeeping_commit=6a521208
+best_mean=59.018
+best_std=0.041
+threshold_refuted=58.5
+delta_vs_cycle_251_4k=-0.101
+delta_vs_float=+5.123
+notes=8000_steps_buys_-0.10_PPL_within_seed_noise_5-block_K=128_floor_structurally_bounded_near_59_PPL_all_seeds_plateau_step_4400-5200_then_climb_to_60.5_at_step_8000
+artifacts=experiments/five_block_k128_8k_cycle254.py,autoresearch/results/cycle_254_five_block_k128_8k.json,autoresearch/results/cycle_254_summary.md,autoresearch/logs/cycle_254_run.log,autoresearch/results/cycle_254_manifest.txt,autoresearch/plans/cycle_254.md

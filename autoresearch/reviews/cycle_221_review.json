@@ -1,0 +1,39 @@
+{
+  "cycle": 221,
+  "item": 226,
+  "decision": "APPROVE",
+  "preflight": {
+    "P1_duplicate": "pass",
+    "P2_dependency": "pass",
+    "P3_budget_30min": "pass_with_fallback",
+    "P4_program_prompts": "pass"
+  },
+  "hard_rules": {
+    "three_seeds": true,
+    "seeds": [42, 137, 2024]
+  },
+  "pitfalls_checked": {
+    "MP1": "n/a",
+    "MP2": "n/a",
+    "MP3": "n/a",
+    "MP4": "n/a",
+    "MP5": "n/a",
+    "MP6": "pass",
+    "MP7": "n/a",
+    "MP8": "n/a"
+  },
+  "concerns": [
+    "Wall-time tight: 3 seeds x 4000 steps x 6-block Adam may approach 30 min. Fallback to N_STEPS=3000 is sound since cycle 211 best step was 1500.",
+    "Best-state snapshot memory bounded (~10 MB CPU per seed).",
+    "Asymmetric verdict thresholds around cycle 211 baseline (59.680) are appropriate: early stopping cannot worsen the best."
+  ],
+  "baselines_referenced": {
+    "cycle_211_single_seed_best": 59.680,
+    "three_block_joint": 46.556
+  },
+  "verdict_thresholds": {
+    "confirmed": "best_ppl_mean <= 58.0",
+    "refuted": "best_ppl_mean > 62.0",
+    "inconclusive": "58.0 < best_ppl_mean <= 62.0"
+  }
+}

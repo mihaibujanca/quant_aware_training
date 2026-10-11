@@ -1,0 +1,39 @@
+{
+  "cycle": 239,
+  "item": 249,
+  "verdict": "APPROVE",
+  "reviewer": "claude-opus-4-6",
+  "date": "2026-04-06",
+  "summary": "Rerun cycle 234 (gelu_noneg + mu_l + LoRA r=8 on all 12 mlp.c_proj) with disjoint calib/eval split to close the cycle 234 data-leakage loop.",
+  "strengths": [
+    "The fix is exactly the fix: calib_ids=all_ids[:200], eval_ids=all_ids[200:300], disjointness asserted by object id and tensor equality.",
+    "mu precomputed on calib only; Adam trained on calib only; every PPL print + best-state selection + final_ppl on eval_ids only.",
+    "LoRA scaffolding reused verbatim from cycle 234 (r=8, all 12 blocks, 368640 trainable params); only the split changes.",
+    "Honest baselines: float ref on eval pre-patch, mu-only init_ppl_eval on eval post-patch; declines to assert init_ppl_eval == 61.664 since that was calib.",
+    "Sanity check final_ppl <= init_ppl_eval flagged as signal not assert; if calib training degrades held-out, that is itself the result.",
+    "Fallbacks cover wall-time (single seed flag) and data-yield (SEQ_LEN 128->64) without collapsing the experiment.",
+    "Verdict thresholds (<=48 CONFIRMED, >=58 REFUTED) published up front, bound-based not narrative-based.",
+    "Cycle 234 artefacts preserved per audit requirement."
+  ],
+  "concerns_nonblocking": [
+    "Held-out mu-only PPL could land anywhere in ~55-70 depending on which 100 sequences fall in [200:300]; plan correctly refuses to assert a specific value, just ensure JSON records where it actually lands.",
+    "3 seeds is the right ambition but single_seed=true fallback must be flagged, not silently dropped.",
+    "base_c_proj_0_unchanged check is cheap and catches a real LoraConv1D failure mode; keep it."
+  ],
+  "required_changes": [],
+  "suggested_changes": [],
+  "dependencies_ok": true,
+  "novelty_ok": true,
+  "budget_ok": true,
+  "verdict_thresholds": {
+    "CONFIRMED": "mean final_ppl <= 48.0",
+    "REFUTED": "mean final_ppl >= 58.0",
+    "INCONCLUSIVE": "48.0 < mean final_ppl < 58.0"
+  },
+  "expected_landing": {
+    "float_ref": 45.064,
+    "cycle_228_mu_only_calib": 61.664,
+    "cycle_234_leaked": 32.411
+  },
+  "decision": "APPROVE as written. No changes required. Execute per plan."
+}

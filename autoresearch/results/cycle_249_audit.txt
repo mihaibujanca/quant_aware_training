@@ -1,0 +1,22 @@
+cycle=249
+item=259
+status=PASS
+interesting=true
+claimed_verdict=REFUTED
+audit_verdict=REFUTED
+best_mean=65.275
+best_std=0.094
+threshold_refuted=65.0
+margin_over_refute=+0.275
+per_seed_best=[65.4020,65.1784,65.2439]
+per_seed_best_step=[2200,2200,2200]
+final_at_4000_mean=68.642
+overshoot=+3.367
+delta_vs_cycle_247=+0.822
+gap_recovery_fraction=0.284
+cycle_247_gap_recovery=0.386
+trainable_params=1184256
+trainable_check=ok
+block7_mse_k512_vs_k128=0.415_vs_0.581(-28.6%)
+block8_mse_k512_vs_k128=0.579_vs_0.818(-29.2%)
+note=Local residual MSE improved 28-29% on blocks 7,8 under K=512 but downstream PPL worse. Per-block residual MSE is a local diagnostic and does NOT predict cascade PPL under heterogeneous-fit joint Adam. Pair (c247 INCONCLUSIVE via deltaPPL ranking + c249 REFUTED via MSE ranking) closes the "localise K-bandwidth to 2-of-6 blocks at 1.18M budget" family. Overshoot 3.37 PPL (vs c247 1.08) indicates blocks 7,8 K=512 surfaces are more overfit-prone than blocks 4,5 K=512 under identical Adam schedule.

@@ -1,0 +1,28 @@
+{
+  "cycle": 251,
+  "item": 261,
+  "verdict": "APPROVE",
+  "reviewer": "design-review",
+  "summary": "Trivial K swap on cycle 245 template: K=512 -> K=128, BLOCKS=[1,2,4,7,8] unchanged. Isolates K=128 penalty at 5-block cascade-tolerant configuration.",
+  "strengths": [
+    "Single-variable change (K only)",
+    "Anchors (cycle 245 53.826 and cycle 231 67.562) bracket expected range",
+    "Same disjoint calib/eval split as cycle 245 for direct comparability",
+    "Working recipe: topk+lstsq init -> joint Adam W_out+b_out with best-state restore"
+  ],
+  "concerns": [
+    "INCONCLUSIVE band (56-62) is plausible if K-penalty is roughly linear in block count"
+  ],
+  "threshold_check": {
+    "confirmed": "best_mean <= 56.0",
+    "refuted": "best_mean >= 62.0",
+    "inconclusive": "(56.0, 62.0)",
+    "assessment": "appropriate given K=128 penalty of +8 at 6 blocks"
+  },
+  "bookkeeping": {
+    "new_output_paths": true,
+    "no_collision_with_cycle_245": true,
+    "cycle_item_stamped": true
+  },
+  "decision": "APPROVE — proceed to execution"
+}

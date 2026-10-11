@@ -1,0 +1,68 @@
+Cycle 280 Audit — Item 290: Targeted block 1 low-rank c_proj compression
+Status: PASS
+Verdict: CONFIRMED (retrain clause, 49.0324 ≤ 54.0 by 4.968 PPL — BELOW FLOAT)
+
+Commit (main):        1109243
+Commit (bookkeeping): c47da2a
+
+Plan adherence:          PASS  (30 lines, 8 headings, verbatim hypothesis, weight-SVD ≠ activation-SVD caveat, exact threshold logic match)
+Script semantics:        PASS  (cycle 270 template adapted correctly: TARGET_BLOCK=1, RANKS_NORETRAIN=[1,2,5,10], RETRAIN_RANK=2, thresholds 55/54/60/55)
+Hyperparameters:         PASS  (N_CALIB=200 N_EVAL=100 SEQ_LEN=128 LR=1e-4 N_STEPS=4000 EVAL_EVERY=100 SEEDS={42,137,2024})
+Trainable param count:   PASS  (2,304 = 2*768 B + 768 bias, script-internal assert)
+Float baseline:          PASS  (53.8949 matches ref 53.895 to 4 dp)
+No-retrain restore:      PASS  (post-sweep c_proj.weight restored, PPL == float)
+Init PPL match:          PASS  (seed-independent 57.6581 == noretrain[r=2])
+Best-state restore:      PASS  (all 3 seeds: restored_ppl == best_ppl within 1e-3)
+Numerical consistency:   PASS  (monotone rank sweep, best_mean/std match JSON aggregate)
+Verdict logic match:     PASS  (script implements item 290 thresholds verbatim)
+
+Key numbers:
+  No-retrain sweep:
+    r=  1: 59.751  Δfloat=+5.856  energy=0.0459
+    r=  2: 57.658  Δfloat=+3.763  energy=0.0757
+    r=  5: 56.833  Δfloat=+2.938  energy=0.1167
+    r= 10: 56.730  Δfloat=+2.835  energy=0.1523
+  Retrain r=2 (3 seeds):
+    seed  42:  init=57.6581  best=49.0603@3900  final=49.2498
+    seed 137:  init=57.6581  best=49.0367@3900  final=49.0741
+    seed 2024: init=57.6581  best=49.0004@4000  final=49.0004
+    best_mean=49.0324 ± 0.0246 (min=49.00, max=49.06)
+  SVD:
+    top-5 SVs:  28.71, 23.10, 18.84, 13.83, 13.74
+    S[0]/S[-1]: 213×  (well-conditioned, full numerical rank)
+    top-10 weight energy: 15.23%
+
+Bookkeeping:
+  Plan/brief/script/log/JSON/summary/manifest/exec_result: all present
+  Agenda: item 290 deleted from P0; cycle 280 entry at top of PAST EXPERIMENTS
+  TSV:    row 278 appended with hash 1109243
+  Commits: 2 (main 1109243, bookkeeping c47da2a)
+  Dirty files: only cycle 280 files staged; pre-existing dirty files untouched
+
+Issues noted (non-blocking):
+  1. No-retrain hypothesis wrong by 2.66 PPL — weight-SVD ≠ activation-SVD
+     lesson from cycle 270 confirmed at a second block.
+  2. Retrain passes CONFIRMED by large margin (4.968 PPL) — robust verdict,
+     NOT a threshold call like cycle 270's 0.031 margin.
+  3. All 3 seeds best at step ≥3900 — budget-bounded; longer training could
+     push best_mean further below 49.
+  4. HF tqdm progress bars polluted log (1192 bar lines) — cleaned post-run
+     with python3 filter. Worth setting HF_HUB_DISABLE_PROGRESS_BARS=1 in
+     future cycles.
+
+Geometric reading:
+  (1) New dominant Pareto anchor: (2,304 params, 49.03 PPL) strictly
+      dominates cycle 270 (17,664, 54.47) on both axes (7.7× fewer params
+      AND −5.44 PPL). Smallest-trainable recipe yet that BEATS float
+      (−4.86 PPL).
+  (2) Weight-SVD ≠ activation-SVD: cycle 278 measured activation
+      eff_rank=1.94 (top-1 energy 92.94%); cycle 280 measures weight SVD
+      top-2 energy 7.57%, rank-2 no-retrain costs +3.76 PPL. Second
+      independent confirmation after cycle 270.
+  (3) Per-param Adam recovery 25.7× higher at block 1 than block 11:
+      cycle 270 -2.96e-4 PPL/param vs cycle 280 -3.75e-3 PPL/param.
+      Eff_rank IS directionally predictive of retrained compressibility
+      at the single-block weight-SVD level — refines cycle 273's
+      "eff_rank not prescriptive at cascade level" finding.
+
+Status: PASS

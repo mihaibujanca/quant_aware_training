@@ -1,0 +1,80 @@
+cycle=262
+item=268
+audit_status=PASS
+verdict=INCONCLUSIVE
+main_commit=81ac769589d93d6e0e0ed9834625408dc1e0b64b
+bookkeeping_commit=ef571b626fc6a0df3e11512e8cc664ab41e43779
+
+# Verdict cross-check
+threshold_CONFIRMED=58.5
+threshold_REFUTED=59.5
+best_mean_recompute=(59.098+59.165+59.130)/3=59.131
+best_std_recompute=sqrt(0.000749)=0.02736
+best_mean_le_58.5=False
+best_mean_ge_59.5=False
+inconclusive_band_correct=True
+delta_vs_cycle_230=-0.114
+delta_in_seed_std_units=4.2
+real_but_tiny=True
+
+# Methodology gates
+calib_loader_matches_cycle_230=True
+disjoint_splits_calib_0_200_eval_200_300=True
+CompressedMLPBfc_W_fc_buffer_b_fc_param=True
+b_fc_added_pre_GELU_in_forward=True
+topk_init_act_std_x_W_proj_norm_K_eq_1=True
+n_trainable_per_block_1537_assert_passed=True
+n_trainable_total_4611_assert_passed=True
+adam_LR_1e-4_4000_steps_eval_every_100=True
+best_state_restore_round_trip_under_1e-3=True
+single_forward_pass_per_seed_for_io_collection=True
+
+# Numerical sanity
+init_ppl_deterministic_across_seeds_71.409=True
+all_seeds_best_at_step_4000_still_improving=True
+seed_42_best=59.098
+seed_137_best=59.165
+seed_2024_best=59.130
+b_fc_block_1_mean=+0.4092
+b_fc_block_4_mean=+0.3558
+b_fc_block_7_mean=+1.1659
+b_fc_block_7_seed_std=0.0005
+all_3_blocks_all_3_seeds_b_fc_positive_shift=True
+delta_minus_0.114_is_4.2x_seed_std=True
+
+# Hypothesis vs result
+hypothesis_K_starvation_at_K1_makes_bias_matter=False
+delta_minus_0.114_far_below_minus_0.745_threshold=True
+W_out_absorbs_DOF_uniformly_across_K_512_128_1=True
+cycle_213_241_248_262_4_endpoints_all_near_noop=True
+counterintuitive_check_PASS_intuition_was_wrong=True
+small_finding_topk_picks_under_active_channels=True
+
+# Brief vs actual trainable count
+brief_2313_omitted_W_out_768=True
+actual_per_block_1537=True
+actual_total_4611=True
+verdict_thresholds_unaffected_anchored_to_cycle_230=True
+
+# Bookkeeping
+agenda_item_268_deleted_from_NEXT_P2=True
+cycle_262_PAST_entry_prepended_above_cycle_261=True
+tsv_row_appended_with_main_commit_hash=True
+manifest_written=True
+main_commit_hash_filled=True
+bookkeeping_commit_made=True
+pre_existing_dirty_files_NOT_staged=True
+cycle_262_files_only_staged=True
+
+# Files
+plan=autoresearch/plans/cycle_262.md
+brief=autoresearch/briefs/cycle_262.md
+script=experiments/k1_wfc_bias_cycle262.py
+run_log=autoresearch/logs/cycle_262_run.log
+result_json=autoresearch/results/cycle_262_k1_wfc_bias.json
+summary_md=autoresearch/results/cycle_262_summary.md
+manifest=autoresearch/results/cycle_262_manifest.txt
+exec_result=autoresearch/results/cycle_262_exec_result.txt
+audit_md=autoresearch/audits/cycle_262.md
+
+decision=PASS

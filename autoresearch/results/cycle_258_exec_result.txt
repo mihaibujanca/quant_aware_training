@@ -1,0 +1,60 @@
+cycle=258
+item=269
+verdict=CONFIRMED
+main_commit=8b88a811ed2f05e88ef9593a2f13e922a8893528
+bookkeeping_commit=1891323
+
+# Key results
+trainable_params=0
+n_calib=200
+seq_len=128
+seed=42
+device=mps
+
+# Variant PPLs on calib slice
+ppl_A_GELU_baseline=45.064
+ppl_B_ReLU_per_block_per_channel_b_leak=60.082
+ppl_C_gelu_noneg_per_channel_mu_cycle228=61.664
+ppl_post_restore=45.064
+
+# Pearson rho(S_l, kappa_l) over kappa layers 1..11
+rho_GELU=-0.3801
+rho_ReLU_bleak=-0.3801
+rho_gelu_noneg=-0.3876
+
+# Verdict logic
+early_band_max_rel_kappa_diff_ReLU_idx_0_to_5=0.4772_at_kappa_idx_3_layer_4
+threshold_for_CONFIRMED_clause_1=0.30
+abs_rho_ReLU=0.3801
+threshold_for_CONFIRMED_clause_2=0.50
+clause_1_passes=True
+clause_2_passes=True
+verdict=CONFIRMED
+
+# All-layer max relative kappa diff (for refuted check)
+all_layer_max_rel_kappa_diff_ReLU=0.4772
+all_layer_max_rel_kappa_diff_noneg=0.5054_at_kappa_idx_10_layer_11
+
+# Polarity sanity
+b_leak_elementwise_negative=true_zero_positive_entries_in_all_12_blocks
+b_leak_block_mean_range=[-0.111, -0.091]
+mu_elementwise_nonpositive_cycle228_invariant=true
+
+# Geometric finding
+variant_B_kappa_increase_layers_2_to_7=14_to_48_percent_above_GELU
+variant_B_geometry=KINKS_trajectory_does_not_flatten_it
+variant_C_largest_late_layer_kappa_shift=50.5_percent_at_layer_11
+PPL_hit_geometric_signature=variant_B_+33pct_PPL_geometrically_visible_as_kappa_spike_in_layers_3_5
+
+# Stale agenda reference
+cycle_252_referenced_as_GELU_kappa_baseline_in_agenda=stale
+cycle_252_actually_measured=block5_std_eff_rank_NOT_pullback_kappa
+cycle_258_first_pullback_kappa_S_measurement_on_GELU=true
+
+# Cycle 181 baseline mismatch
+cycle_181_c_proj_bias_W_down_projection_PPL_pct=+88
+cycle_258_per_channel_intermediate_offset_PPL_pct=+33
+recipe_difference=cycle_181_uses_W_down_projected_first_moment_in_768d_cycle_258_uses_per_channel_first_moment_in_3072d
+follow_up_recommended=verify_cycle_181_recoverable_with_per_channel_form
+
+artifacts=experiments/pullback_geom_variants_cycle258.py,autoresearch/results/cycle_258_pullback_variants.json,autoresearch/results/cycle_258_summary.md,autoresearch/results/cycle_258_kappa_salience.png,autoresearch/logs/cycle_258_run.log,autoresearch/results/cycle_258_manifest.txt,autoresearch/plans/cycle_258.md,autoresearch/briefs/cycle_258.md,autoresearch/reviews/cycle_258.md,autoresearch/reviews/cycle_258_review.json

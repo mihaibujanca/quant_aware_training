@@ -1,0 +1,42 @@
+cycle=267
+item=277
+verdict=CONFIRMED
+commit=d914d44
+bookkeeping_commit=6dd5d0b
+status=success
+trainable_params=0
+wall_time_s<5
+seed_drop=none
+
+# Per-block eff_rank
+block_1_eff_rank=1.94
+block_5_eff_rank=179.19
+block_11_eff_rank=22.49
+
+# Per-block top-1 / top-5 energy
+block_1_top1_energy=0.9294
+block_1_top5_energy=0.9415
+block_5_top1_energy=0.2462
+block_5_top5_energy=0.3079
+block_11_top1_energy=0.4895
+block_11_top5_energy=0.6818
+
+# Alignment (V_mlp with top-200 lm_head rows by L2)
+block_1_med_top5_cos_top200=0.1586
+block_5_med_top5_cos_top200=0.1295
+block_11_med_top5_cos_top200=0.1231
+
+# Verdict logic
+threshold_confirmed_eff_rank_le=50.0
+threshold_confirmed_cos_ge=0.5
+threshold_refuted_eff_rank_ge=200.0
+threshold_refuted_cos_le=0.2
+block_11_eff_rank_22.49_le_50=CONFIRMED_concentration_clause
+
+concentration_story=HOLDS_block_11_eff_rank_22.49_top5_energy_68.18pct
+alignment_story=REFUTED_all_blocks_med_top5_cos_top200_lt_0.16
+block_1_rank_1_anomaly=true_top1_energy_92.94pct_eff_rank_1.94
+block_5_high_rank=true_eff_rank_179.19_top1_energy_24.62pct
+ordering=block_1(1.94)<<block_11(22.49)<<block_5(179.19)_inverts_mid_block_structurally_normal_picture
+
+artifacts=experiments/block11_cproj_decomp_cycle267.py,autoresearch/plans/cycle_267.md,autoresearch/briefs/cycle_267.md,autoresearch/logs/cycle_267_run.log,autoresearch/results/cycle_267_block11_cproj_decomp.json,autoresearch/results/cycle_267_summary.md,autoresearch/results/cycle_267_manifest.txt

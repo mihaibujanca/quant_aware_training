@@ -1,0 +1,14 @@
+cycle=247
+item=257
+status=PASS
+interesting=true
+verdict=INCONCLUSIVE
+best_mean=64.453
+best_std=0.123
+verdict_rule=64.453 in [61.0, 65.0) -> INCONCLUSIVE (0.547 PPL from REFUTED)
+gap_recovery_fraction=0.386
+param_fraction_vs_k512=0.501
+seeds=3
+key_finding=Per-block residual MSE at K=128 init ranks blocks {7,8} as binding (0.581, 0.818), NOT cycle 243's mid-cascade {4,5} (which at K=512 have MSE 0.162, 0.224). Cycle 243 restoration ranking and cycle 247 residual-MSE ranking disagree: two distinct measures of block difficulty do not transfer.
+plan_hypothesis=REJECTED_strong_form (upgrading blocks 4,5 to K=512 recovers only 38.6% of K=128->K=512 gap while paying 50.1% of param cost)
+notes=3 seeds with low std 0.123; lstsq init deterministic (init std ~1e-6); best-state restore clean; same plateau-then-climb trajectory as cycles 221/231; concrete pivot available (swap K=512 onto blocks 7,8).

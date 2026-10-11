@@ -1,7 +1,7 @@
 Cycle 281 — Item 291: 2-block [1, 2] K=512
 Verdict: INCONCLUSIVE (best_mean 44.339 ± 0.007, dead zone (43.9, 44.5))
 Main commit: a738a92
-Bookkeeping commit: (written after manifest commit)
+Bookkeeping commit: d6eb577
 
 best_mean = 44.3389 ± 0.0070 (per-seed 42→44.3473, 137→44.3302, 2024→44.3392)
 Δ vs cycle 266 [1,4]=43.852: +0.486 PPL (WORSE)

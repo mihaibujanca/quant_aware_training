@@ -1,7 +1,7 @@
 Cycle 270 — Item 280: Targeted block 11 low-rank c_proj compression
 Verdict: CONFIRMED (retrain clause, by 0.031 PPL)
 Commit (main): de36ee7
-Commit (bookkeeping): TBD
+Commit (bookkeeping): 1f82982
 
 best_mean (retrain r=22) = 54.4687 ± 0.0237; CONFIRMED via second clause
 (retrain best_mean ≤ 54.5) by 0.031 PPL margin. The first clause (no-retrain

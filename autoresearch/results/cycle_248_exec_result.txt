@@ -1,0 +1,22 @@
+cycle=248
+item=258
+verdict=REFUTED
+best_mean=67.609
+best_std=0.047
+init_mean=115.056
+best_step_mean=3833
+final_mean=67.635
+wfc_drift_best_mean=0.0785
+delta_vs_c231_k128_wout=+0.047
+delta_vs_c221_k512=+8.094
+float_ppl=53.895
+trainable_params=1185024
+wall_sec_per_seed=133.4
+commit=44a6db4b8406eef3ed7a4ec6341d39bcd9b02401
+bookkeeping_commit=8a9c17d
+paths=experiments/k128_wout_wfc_6block_cycle248.py,autoresearch/results/cycle_248_k128_wout_wfc.json,autoresearch/results/cycle_248_summary.md,autoresearch/logs/cycle_248_run.log,autoresearch/results/cycle_248_manifest.txt
+per_seed_best=[67.6710,67.5959,67.5592]
+per_seed_best_step=[3500,4000,4000]
+per_seed_final=[67.7510,67.5963,67.5592]
+per_seed_wfc_drift_best=[0.07359,0.08099,0.08096]
+note=W_fc retraining at K=128 6-block is a complete noop (+0.047 vs cycle 231 W_out-only, within seed noise). W_fc drifted ~8% Frobenius so the noop is not "W_fc did not train". Paired with cycle 241 (W_fc bias at K=512 noop), closes the W_fc surface hypothesis at both K endpoints. The K=128->K=512 gap is a K-bandwidth phenomenon, not a trainable-surface-size one.

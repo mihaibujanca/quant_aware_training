@@ -1,0 +1,9 @@
+status=PASS
+old_outcome=inconclusive
+new_outcome=inconclusive
+reason=best_mean=59.515 ± 0.094 lies strictly inside (58.0, 62.0] inconclusive band; 3 seeds with low variance (std 0.094) confirm reproducibility; implementation matches cycle 211 config with proper per-100-step eval, CPU best-state snapshot/restore, and assert on restore correctness; trajectory shows expected overfitting from best ~step 1367 to ~71 PPL at step 4000, mirroring cycle 211 single-seed; verdict is genuine, not a method failure
+guardrail_flags=none
+tsv_path=autoresearch/logs/experiments.tsv
+recommendations=Sequential per-block Adam (cycle 215 style) is unlikely to break the 59.5-PPL ceiling at 6 blocks — cycle 215 showed sequential 47 vs joint 46.5 at 3 blocks (essentially equal), so the 6-block bottleneck is representational, not optimization-order. Pursue (a) W_fc retraining or LoRA on c_fc/c_proj to expand trainable surface beyond W_out/b_out, (b) item 228 K-sweep to map the K → ceiling curve, (c) measure the rank of the residual error subspace at the 6 blocks — if it exceeds K=512, the ceiling is informational rather than optimizational.
+interesting=true
+interesting_reason=Reproduces and tightens the cycle 211 finding with 3 seeds: there is a structural ~59.5-PPL ceiling for 6-block joint Adam on W_out/b_out at K=512 that early stopping cannot break (delta from cycle 211 is only -0.165 PPL). Combined with the cycle 206 3-block Adam result of 46.556, this gives a clean 13-PPL gap that quantifies the cascade barrier when adding blocks 2, 5, 8 to the 3-block [1,4,7] baseline. This is the cleanest evidence so far that output-head Adam saturates at 6 blocks and motivates expanding the trainable surface.
