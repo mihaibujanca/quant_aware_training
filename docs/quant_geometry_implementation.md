@@ -8,6 +8,8 @@ The [research note](quant_geometry_foundations.md) defines the objects and their
 
 `MapDecomposition.from_weights(W, Wq, rtol=...)` uses row-vector weights `[input, output]`. It returns R/U, reconstruction residual, numerical rank, retained-spectrum conditioning, and singular spectra. The default pseudoinverse cutoff is `max(shape)*dtype_epsilon` times the largest singular value. `U_rank` uses an absolute threshold scaled to the original maps. Full-map `Wq.T @ U` need not vanish when nonzero singular values are truncated; see the research note's numerical-policy qualification.
 
+R and U are computed and retained in W's floating-point dtype (float32 or float64). R is not quantized. Wq also uses that dtype to store dequantized low-bit grid values; its floating storage does not give its coefficients the unconstrained precision of R. Quantizing R would define a different correction family and could leave residual error even for square invertible Wq.
+
 ## Ledger interface
 
 `ErrorLedger.compute(x, decomposition, bias=..., activation=...)` returns `uncomp`, `nonlinear`, `range`, and Q-minus-FP `total`, plus the states `quant_pre`, `fp_pre`, `quant_post`, `fp_post`, `recoverable_pre`, `recoverable_post`, and `transported_post`. It checks affine reconstruction and component telescoping coordinate by coordinate. Default absolute and relative tolerances are `1e-5` for float32 and `1e-10` for float64; both can be overridden. Ill-conditioned cases may need float64 or an explicitly chosen rank policy.

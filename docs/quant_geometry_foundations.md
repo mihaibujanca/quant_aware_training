@@ -8,17 +8,27 @@ An input is a row vector $x\in\mathbb R^{1\times n}$, and the weights are $W,W_q
 
 ![The same input shape under FP, quantized, and repaired preactivation maps](figures/quant_geometry/geometry_deformation.png)
 
-**Figure 1 — a changed map can be repaired.** The same grid, circle, and named samples move through each panel. FP and Q produce different shapes. Applying a second map R to the Q shape recovers the FP target: the two right panels reach the same coordinates by different routes, $xW$ and $(xW_q)R$. No activation has yet intervened. Axes stay fixed, so the deformation is a change of map rather than a change of camera.
+**Figure 1 — a changed map can be repaired.** The same grid, circle, and named samples move through each panel. FP and Q produce different shapes. Applying a full-precision map R to the Q shape recovers the FP target: the two right panels reach the same coordinates by different routes, $xW$ and $(xW_q)R$. Here Wq is square and invertible, with 2-bit coefficients; R is not quantized. No activation has yet intervened. Axes stay fixed, so the deformation is a change of map rather than a change of camera.
 
 ## 2. Which part can a map on the quantized output recover?
 
-Start with the deformation in Figure 1. **Can a transformation acting on the quantized representation undo it?** R can mix and scale the output coordinates, moving the whole Q geometry back toward its FP target. Define the best linear map repair by
+Start with the deformation in Figure 1. **Can a transformation acting on the quantized representation undo it?** R can mix and scale the output coordinates, moving the whole Q geometry back toward its FP target. **R is a full-precision correction, retained at the floating-point precision of W; it is not constrained to Wq's quantization grid.** Define the best linear map repair by
 
 $$
-R^\star\in\underset{R}{\operatorname{argmin}}\;\|W-W_qR\|_F^2.
+R^\star\in\underset{R\in\mathbb R^{m\times m}}{\operatorname{argmin}}\;\|W-W_qR\|_F^2.
 $$
 
 This minimizes map discrepancy with input directions weighted equally. If $W_qR^\star=W$, the linear deformation is exactly repaired for every input. Write R for the selected optimizer; its explicit construction is a technical detail, not the reason for introducing it.
+
+**Mathematically, when Wq is square and invertible, this repair is always exact before activation.** Its output still contains every input direction: we can undo the quantized map and apply the FP map instead,
+
+$$
+R=W_q^{-1}W,\qquad (xW_q)R=xW.
+$$
+
+Figure 1 shows this case. The exact-repair statement allows full-precision R; quantizing R would impose a further restriction on the repair.
+
+Many ANN layers change width or map a convolutional patch to output channels, so their maps are rectangular. The square-invertible guarantee therefore cannot be assumed throughout a network. Widening maps can also retain every input direction; narrowing maps can leave out directions that FP uses, even when both maps have their maximum possible rank. The examples and general criterion are developed later in [Understanding the remainder U](#a-understanding-the-remainder-u) and [Technical details](#b2-rank-conditions-and-the-fiber-criterion-for-exact-repair).
 
 ### Repair the map, rather than fit selected responses
 
@@ -74,7 +84,7 @@ $$
 W=W_qR+U,\qquad xW=(xW_q)R+xU.
 $$
 
-R supplies a motion of the quantized representation; xU is the remaining input-dependent displacement needed to reach the FP map. This definition does not assume a particular rank-loss mechanism. With activation, its output effect is $\phi(z_qR)-\phi(z_qR+xU)$, rather than simply −xU. Adding this third comparison extends the two-term story into the exact ledger.
+R supplies a motion of the quantized representation; xU is the remaining input-dependent displacement needed to reach the FP map. In the square-invertible case above, U=0. This definition does not assume a particular rank-loss mechanism. With activation, its output effect is $\phi(z_qR)-\phi(z_qR+xU)$, rather than simply −xU. Adding this third comparison extends the two-term story into the exact ledger.
 
 ## 3. The ledger: four states, three signed displacements
 
@@ -287,15 +297,7 @@ The optimum repaired map WqR is unique. R's extension away from the represented 
 
 ### B.2 Rank conditions and the fiber criterion for exact repair
 
-Suppose Wq is square and invertible. The quantized representation still contains every input direction: multiplying xWq by its inverse recovers x itself. So we can undo its map and apply the FP map instead:
-
-$$
-R=W_q^{-1}W,\qquad (xW_q)R=xW,\qquad U=0.
-$$
-
-**Before activation, any change of a square map can be repaired exactly as long as the quantized map remains invertible.** Figure 1 is precisely this case: the quantized shape differs, but it has retained the coordinates needed to get back to the FP shape. Quantization has changed the map, not made the linear response inaccessible. ReLU can subsequently remove those coordinates; that is the separate obstruction illustrated in Section 2.
-
-A square inverse is sufficient, but not necessary. A rectangular map with $m\ge n$ can also preserve all n input directions. If Wq has full row rank, $W_qW_q^\dagger=I_n$, so x can still be recovered from xWq and U=0. The dividing line is **which input directions are retained**, rather than whether the matrix happens to be square.
+Section 2 establishes exact repair for square invertible Wq. A square inverse is sufficient, but not necessary. A rectangular map with $m\ge n$ can also preserve all n input directions. If Wq has full row rank, $W_qW_q^\dagger=I_n$, so x can still be recovered from xWq and U=0. The dividing line is **which input directions are retained**, rather than whether the matrix happens to be square.
 
 For arbitrary inputs and the exact pseudoinverse, the general criterion is
 
