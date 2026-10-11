@@ -50,6 +50,18 @@ def test_line_correction_cannot_restore_missing_width_but_input_residual_can():
         assert int(torch.linalg.matrix_rank(story.states[index])) == 1
     torch.testing.assert_close(story.states[1][-2:], torch.tensor([[.2, -.08], [.6, .32]], dtype=torch.float64))
     assert int(torch.linalg.matrix_rank(story.states[1])) == 2
+    # The shared repaired point is the least-squares midpoint of the two targets.
+    torch.testing.assert_close(story.states[3][-2:],
+                               torch.tensor([[.4, .12], [.4, .12]], dtype=torch.float64))
+    torch.testing.assert_close(story.states[3][-2], story.states[1][-2:].mean(dim=0))
+    torch.testing.assert_close((story.points @ story.decomposition.U)[-2:],
+                               torch.tensor([[-.2, -.2], [.2, .2]], dtype=torch.float64))
+    # A further downstream linear motion can only increase squared map error.
+    perturbation = torch.tensor([[.3, -.2], [.4, .5]], dtype=torch.float64)
+    Wq, U = story.decomposition.quantized_weight, story.decomposition.U
+    other_error = story.decomposition.weight - Wq @ (story.decomposition.R + perturbation)
+    torch.testing.assert_close(other_error.square().sum(),
+                               U.square().sum() + (Wq @ perturbation).square().sum())
     torch.testing.assert_close(story.states[4], story.states[1])
     torch.testing.assert_close(story.states[5], torch.relu(story.states[1]))
 

@@ -134,3 +134,11 @@ Next implementation slice:
 - Strengthened independently specified coordinate checks and added a check that every teaching story uses non-identity Wq. Fixed the animation's left panel to display actual input points explicitly, rather than assuming its first state is the input (an assumption previously hidden by Wq=I in the ReLU story).
 - Replaced the remaining “weights snapped” storyboard label with the actual rounded-weight map operation. Core algorithms are unchanged.
 - Targeted suite: **74 passed**. Visually inspected revised ReLU figures. All 18 display equations and 52 inline expressions pass strict VS Code KaTeX rendering. Local browser verification confirms actual-input data, nonidentity movement, ReLU collision, final correction and zero JavaScript errors.
+
+### 2026-10-11 — derive R/U from the geometric repair problem
+
+- Rebuilt Part 2 around the available repair channel: a linear motion of the quantized preactivation must move merged samples together; the remainder requires input distinctions absent from that channel. Figure 2's A/B midpoint and separate xU displacements motivate R and U before matrix subtraction appears.
+- Formalized “best” as the least-squares map objective with equally weighted input directions, then defined U as the still-required displacement map. Retained the identity-centered choice among minimizing repairs and the explicit closed-form solution.
+- Revised Figure 2 to show one shape in each of its first three panels. The final panel overlays the repaired line and draws forward xU displacements from the shared point to the FP targets; removed arrows suggesting the collapsed representation alone could recover those targets.
+- Moved the numerical-rank qualification into a collapsed note at the end of the research document. Kept bias preservation in the main derivation because it defines the affine repair used by the ledger.
+- Strengthened the rank-loss geometric test with independent midpoint and xU coordinates, and a least-squares Pythagorean check that another linear repair cannot improve the map error. Targeted suite: **74 passed**. Visually inspected Figure 2; all 20 display equations and 39 inline expressions render in strict VS Code KaTeX; `git diff --check` passes.

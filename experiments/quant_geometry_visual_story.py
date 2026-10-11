@@ -26,11 +26,17 @@ def main():
         fig.suptitle(story.title, fontsize=19)
         if story.key == "deformation":
             fig.supxlabel("Two routes: x → xW (FP target), or x → xWq → (xWq)R (corrected)", fontsize=13)
+        elif story.key == "loss":
+            fig.supxlabel("Panel 4: dashed = R-repaired line; arrows = xU; blue = restored FP patch", fontsize=13)
         all_points = np.concatenate([s.numpy() for s in story.states])
         radius = np.abs(all_points).max() * 1.18
         for panel, (ax, index) in enumerate(zip(axes.flat, story.storyboard_indices), start=1):
             state = story.states[index].numpy()
             reference = story.reference_indices[index]
+            if story.key == "loss":
+                # Show the repair itself, not arrows promising FP recovery
+                # from a representation that has already merged A and B.
+                reference = 3 if index == 4 else None
             targets = story.states[reference].numpy() if reference is not None else None
             for geometry, color, alpha, style in [(targets, "#64748b", .55, "--"), (state, "#2563eb", .55, "-")]:
                 if geometry is None:
@@ -47,7 +53,8 @@ def main():
                 if not coincident:
                     ax.annotate("AB"[j], point, xytext=(9, 10 if j == 0 else -17), textcoords="offset points", color=color, fontsize=13)
                 if targets is not None and np.linalg.norm(point-targets[-2+j]) > 1e-6:
-                    ax.annotate("", xy=targets[-2+j], xytext=point,
+                    start, end = (targets[-2+j], point) if story.key == "loss" else (point, targets[-2+j])
+                    ax.annotate("", xy=end, xytext=start,
                                 arrowprops={"arrowstyle": "->", "color": color, "lw": 1.4})
             if coincident:
                 ax.annotate("A = B", state[-2], xytext=(9, -17), textcoords="offset points", color="#0f172a", fontsize=13)
@@ -60,6 +67,13 @@ def main():
                     "Target computed directly from the input",
                     "Use Wq instead of W on the same input",
                     "Same coordinates as panel 2; a different route",
+                )[panel - 1]
+            elif story.key == "loss":
+                title = (
+                    "1. FP target: xW\nWhere the separated inputs should land",
+                    "2. Quantized map: xWq\nA and B share one output point",
+                    "3. Repair through R: (xWq)R\nBest common target; still one point",
+                    "4. Restore xU: (xWq)R + xU\nInput-dependent displacements separate A and B",
                 )[panel - 1]
             ax.set(xlim=(-radius, radius), ylim=(-radius, radius), aspect="equal",
                    title=title, xlabel="Coordinate 1", ylabel="Coordinate 2")

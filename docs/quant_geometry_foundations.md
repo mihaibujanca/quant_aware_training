@@ -30,50 +30,69 @@ The 2-bit quantizer rounds each coefficient to the nearest value in {−1,0,1}: 
 
 ## 2. Which part can a map on the quantized output recover?
 
-Set $D=W-W_q$. Fix the identity-centered correction and remainder
+Figure 1 suggests a repair: take the quantized shape and move it until it matches the FP shape. Suppose the repair receives **only the quantized preactivation**, not the original input. Can one linear motion of that representation put every point back where it should be?
+
+When the quantized map keeps the input distinctions, as in Figure 1, it can. Now look at what happens when the map flattens a patch into a line.
+
+![A quantized line can be moved toward the FP patch, but restoring its missing width requires different input-dependent displacements](figures/quant_geometry/geometry_loss.png)
+
+**Figure 2 — what the repair channel can and cannot do.** In panel 1, A and B have distinct FP targets. Quantization merges them in panel 2. A repair seeing that shared output must move both to the same place: panel 3 puts them at the best common target, halfway between their two FP targets. It can tilt the line but cannot make the merged samples separate. Panel 4 supplies two different displacements using the original inputs; these restore A and B and the patch's missing width. The dashed line is the panel-3 state; the arrows show the added displacements. All four panels are **before activation**.
+
+Those two kinds of motion are the reason for the decomposition:
+
+- **R is the best linear repair available downstream without seeing the input again.** It acts on the quantized preactivation. Samples merged there must stay together under R.
+- **U describes what that repair channel cannot represent.** The displacement xU uses the input distinctions missing from the quantized representation. It can separate samples that R receives as the same point.
+
+For the highlighted pair, A=(0.4,−0.8) and B=(0.4,0.8) both reach (0.4,0) under the quantized map. Their FP targets are (0.2,−0.08) and (0.6,0.32). R moves their shared point to the midpoint (0.4,0.12). The remaining displacements are (−0.2,−0.2) for A and (+0.2,+0.2) for B. **R moves what is still distinguishable; xU restores the missing distinction.** ReLU's effect on these displacements comes later, in Figure 5.
+
+### Formalizing the repair we just pictured
+
+“Best” needs a distance and a family of allowed motions. Here we allow any linear map on the quantized output and minimize squared output displacement, weighting input directions equally. For row-vector weights, that is the problem
 
 $$
-R=I_m+W_q^\dagger D,\qquad
-U=(I_n-W_qW_q^\dagger)D.
+R\in\underset{T\in\mathbb R^{m\times m}}{\operatorname{argmin}}\;
+\|W-W_qT\|_F^2.
 $$
 
-Thus $R\in\mathbb R^{m\times m}$, $U\in\mathbb R^{n\times m}$, and
+For inputs uniformly distributed on the unit sphere, this objective is proportional to the average squared distance between xW and xWqT. This specifies the input weighting and distance meant by “best” here.
+
+Once R has placed the quantized shape as close as this channel allows, **define the residual map by the displacements still required**:
 
 $$
-W_qR+U=W_q+W_qW_q^\dagger D+(I_n-W_qW_q^\dagger)D=W.
+U=W-W_qR,\qquad xW=(xW_q)R+xU.
 $$
 
-The geometry of this identity is a two-part repair: **move the quantized shape by R**, then **add the input-dependent displacement xU**. R sees only the quantized preactivation; xU can use the original input.
+This gives the repair-plus-remainder identity directly. Here $R\in\mathbb R^{m\times m}$ and $U\in\mathbb R^{n\times m}$.
 
-With an exact Moore–Penrose inverse, $P=W_qW_q^\dagger$ projects onto the column space of $W_q$ in input space. Then $W_qR=PW$, $U=(I_n-P)W$, and $W_q^\top U=0$. A direction $d$ with $dW_q=0$ is invisible in the quantized preactivation. If $dW\ne0$, two inputs separated by d coincide under the Q map but separate under the FP map. No decoder of that preactivation alone can distinguish them over all inputs. A restricted dataset or activation can hide the distinction.
-
-![The patch collapses into a line; R moves the line and xU restores its missing width](figures/quant_geometry/geometry_loss.png)
-
-**Figure 2 — an actual missing direction.** Here
-$W=\left[\begin{smallmatrix}1&0.3\\0.25&0.25\end{smallmatrix}\right]$,
-$W_q=\operatorname{diag}(1,0)$,
-$R=\left[\begin{smallmatrix}1&0.3\\0&1\end{smallmatrix}\right]$, and
-$U=\left[\begin{smallmatrix}0&0\\0.25&0.25\end{smallmatrix}\right]$.
-A=(0.4,−0.8) and B=(0.4,0.8) coincide after quantization and remain together after R: a map of a line cannot restore its width. Adding xU separates them and restores the entire FP patch. These are preactivation states; Figure 5 shows the associated **activated** range-error comparison.
-
-For a shared bias, use the affine transport
+The optimum repaired map WqR is unique, but R's action away from the represented output subspace can be unspecified. We choose the minimizing R closest to leaving that output unchanged, namely the one minimizing $\|R-I_m\|_F$ among all solutions. With the exact Moore–Penrose inverse, the resulting solution is
 
 $$
-A(v)=vR+b-bR.
+R=I_m+W_q^\dagger(W-W_q),\qquad
+U=(I_n-W_qW_q^\dagger)(W-W_q).
 $$
 
-The translation $b-bR$ puts the transported bias back where it belongs. Consequently, with $z_q=xW_q+b$,
+This is where subtracting the weights becomes useful: it calculates the displacement map our repair problem has already identified. The remainder obeys $W_q^\top U=0$. Geometrically, no further change through the linear repair channel can reduce it under this objective. This orthogonality is between **maps** in the least-squares problem; it does not say the R-motion and xU arrows are perpendicular at every output point.
+
+For Figure 2, the construction yields
 
 $$
-A(z_q)+xU=x(W_qR+U)+b=xW+b.
+W=\begin{bmatrix}1&0.3\\0.25&0.25\end{bmatrix},\qquad
+W_q=\begin{bmatrix}1&0\\0&0\end{bmatrix},\qquad
+R=\begin{bmatrix}1&0.3\\0&1\end{bmatrix},\qquad
+U=\begin{bmatrix}0&0\\0.25&0.25\end{bmatrix}.
 $$
 
-The figures use b=0, so A is simply R. The definitions below retain the bias exactly.
+The first row of Wq preserves the first input coordinate: R uses it to tilt the line. The second row removes the second input coordinate: U supplies the different displacements needed as that coordinate varies.
 
-### Numerical policy and the meaning of “missing”
+### Keeping the shared bias in place
 
-If the inverse is tolerance-truncated, write it $W_{q,\tau}^\dagger$ and use that inverse in the definitions of R and U. Reconstruction still holds, but
-$U_\tau=(I-P_\tau)(W-W_q)$, where $P_\tau=W_qW_{q,\tau}^\dagger$ projects onto the retained columns. This need not equal $(I-P_\tau)W$, and only retained-space orthogonality is guaranteed. A tiny **nonzero** direction remains present in xWq: recovering it may require a large gain. A nonzero truncated remainder therefore measures what this correction policy leaves unrecovered; it does not alone establish lost information. The collapse in Figure 2 has an exact zero direction.
+The figures use b=0. With a shared float bias, moving $z_q=xW_q+b$ by R would also move the bias. Restore it by translating the result back by $b-bR$:
+
+$$
+A(v)=vR+b-bR,\qquad A(z_q)+xU=x(W_qR+U)+b=xW+b.
+$$
+
+A is therefore the bias-preserving version of the same repair. The ledger below uses A so the geometry and the accounting remain consistent with float biases.
 
 ## 3. The ledger: four states, three signed displacements
 
@@ -211,3 +230,19 @@ Then raw total error is their sum. The first term measures the layer's own map c
 An exact residual oracle adds $h_{\rm fp}-h_q$ at a chosen output. Geometrically, it moves each damaged point back to its FP location before the next layer consumes it. Immediate resets isolate local creation by giving each following layer the FP input. A delayed reset restores the accumulated discrepancy at that later layer; it is source-specific only when the named source is the sole perturbation. Following named points through those alternative trajectories is the next geometric experiment.
 
 The [implementation README](quant_geometry_implementation.md) describes the runner and oracle interfaces. The [verification report](quant_geometry_verification.md) records tests, diagnostic figures, numerical results, and contributions. The [progress tracker](quant_geometry_progress.md) records the remaining experiments.
+
+<details>
+<summary>Numerical note: an exact missing direction versus a deliberately truncated one</summary>
+
+The conceptual repair problem above uses the exact Moore–Penrose inverse. If the implementation truncates small singular values, write its inverse $W_{q,\tau}^\dagger$ and use that inverse in the formulas for R and U. The resulting R need not minimize the untruncated repair objective. Reconstruction still holds, but
+
+$$
+P_\tau=W_qW_{q,\tau}^\dagger,\qquad
+U_\tau=(I_n-P_\tau)(W-W_q).
+$$
+
+Only retained-space orthogonality is guaranteed; this remainder need not equal $(I_n-P_\tau)W$. A tiny **nonzero** direction remains present in xWq, and recovering it may require a large gain. A nonzero truncated remainder measures what this correction policy leaves unrecovered; it does not alone establish lost information. Figure 2 has an exact zero direction. A restricted input distribution or activation can also hide the output effect of an exact missing direction.
+
+See the [implementation README](quant_geometry_implementation.md#quantizer-and-decomposition) for cutoff settings and the [verification report](quant_geometry_verification.md#mathematical-audit-numerical-rank-and-attribution-conventions) for the numerical counterexample.
+
+</details>

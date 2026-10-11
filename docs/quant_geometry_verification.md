@@ -83,4 +83,6 @@ All examples are deterministic teaching fixtures, not measurements of mechanism 
 
 ## Markdown math compatibility
 
-The research note uses `$...$` inline and `$$...$$` display blocks, as supported by VS Code's built-in Markdown preview. All 18 display equations and 52 inline expressions were parsed by the installed VS Code's bundled KaTeX renderer with `throwOnError: true` and `strict: "error"`; all rendered without errors. The equations were unchanged by the delimiter conversion.
+The research note uses `$...$` inline and `$$...$$` display blocks, as supported by VS Code's built-in Markdown preview. All 20 display equations and 39 inline expressions were parsed by the installed VS Code's bundled KaTeX renderer with `throwOnError: true` and `strict: "error"`; all rendered without errors. The equations were unchanged by the delimiter conversion.
+
+The Figure 2 repair explanation additionally checks the independently specified A/B midpoint `(0.4,0.12)` and missing displacements `(-0.2,-0.2)` / `(0.2,0.2)`. A least-squares Pythagorean regression verifies that perturbing R through the repair channel adds nonnegative squared error to the remainder. The revised arrows show xU from the repaired point toward the FP targets.
