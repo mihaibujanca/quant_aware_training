@@ -76,15 +76,26 @@ R repairs the preactivation map; C fits the clipped responses on the chosen data
 
 We keep the geometric R fixed to examine how activation interferes with that repair. Choosing C to reduce calibration loss is a separate reconstruction problem. Both are least squares, but they supply different comparisons; this distinction is central to what the geometric ledger adds to PTQ correction.
 
-### Some map deformation can remain before activation
+### From exact repair to the general three-term ledger
 
-The best allowed repair need not reproduce the FP map completely. Name the residual map deformation U:
+We used exactly repairable maps above to isolate the obstruction introduced by ReLU. Now return to the general repair problem: for the rectangular maps discussed at the start of Part 2, even the best R may not reach the FP geometry. **The two-term account then stops at the activated R-repaired shape, rather than at the actual FP shape.** To account for the observed error, we need the displacement between those two shapes as well.
+
+Before activation, the gap between the R-repaired point and its FP target is xU. Define the residual map U by
 
 $$
-W=W_qR+U,\qquad xW=(xW_q)R+xU.
+U=W-W_qR,\qquad W=W_qR+U,\qquad xW=(xW_q)R+xU.
 $$
 
-R supplies a motion of the quantized representation; xU is the remaining input-dependent displacement needed to reach the FP map. In the square-invertible case above, U=0. This definition does not assume a particular rank-loss mechanism. With activation, its output effect is $\phi(z_qR)-\phi(z_qR+xU)$, rather than simply −xU. Adding this third comparison extends the two-term story into the exact ledger.
+R supplies the selected output-side motion of the Q geometry; xU completes the motion to FP using the original input. In the square-invertible case, U=0. Evaluating xU uses the original input: it is an analysis step, not another operation in the output-side repair channel.
+
+After ReLU, the FP target is $y=\phi(z_qR+xU)$. The missing comparison is therefore between $\phi(z_qR)$ and that target. Adding it makes the account exact for incomplete as well as exact map repair:
+
+$$
+h-y=(h-hR)+\big(hR-\phi(z_qR)\big)
++\big(\phi(z_qR)-\phi(z_qR+xU)\big).
+$$
+
+The first two terms are the comparisons we already understood: leaving R unapplied, and applying it on the opposite side of ReLU. The third measures the activated effect of what R could not repair in the linear map. **U lets us distinguish an incomplete linear repair from activation obstructing that repair.** Both can occur in the same layer. The next section names these three displacements, draws each one, and records them as the ledger; Figure 6 shows the third comparison.
 
 ## 3. The ledger: four states, three signed displacements
 

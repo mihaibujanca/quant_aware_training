@@ -80,7 +80,7 @@ The existing Gram figure (Figure 5) illustrates why signed interaction must be r
 | Moving view of the same endpoints | `animations/quant_geometry_story.html`; `geometry_story_states.json` | Step controls, full playback, no JavaScript errors, collision label and 360px layout checked |
 | Exact pictures for each formal ledger component | `experiments/quant_geometry_ledger_figures.py`; `ledger_geometry_uncomp.png`, `ledger_geometry_nonlinear.png`, `ledger_geometry_range.png` | Figures use the existing ErrorLedger states directly; arrow endpoints are the states in the definitions |
 | Signed cancellation path | Same figure generator; `ledger_geometry_cancellation.png` | Coordinates are the independent `(1,2)` regression example; opposite uncompensated/nonlinear vectors share endpoints |
-| One research note pairing definitions and geometric explanations | `quant_geometry_foundations.md` | Main narrative: linear map deformation → map repair versus linear calibration → introduce ReLU and its obstruction → post-ReLU reconstruction comparison → remainder → exact ledger → propagation/oracle. Scalar/fiber/rectangular/rank examples and mathematical machinery follow in A/B. API/reproduction belongs to the implementation README; validation/audit/contribution evidence belongs here |
+| One research note pairing definitions and geometric explanations | `quant_geometry_foundations.md` | Main narrative: linear map deformation → map repair versus linear calibration → introduce ReLU and its obstruction → post-ReLU reconstruction comparison → relax exact linear repair and complete the two-term account with U → exact ledger → propagation/oracle. Scalar/fiber/rectangular/rank examples and mathematical machinery follow in A/B. API/reproduction belongs to the implementation README; validation/audit/contribution evidence belongs here |
 
 All examples are deterministic teaching fixtures, not measurements of mechanism frequency or task performance in a trained model. No quantization, decomposition, ledger, or oracle algorithm changed in the documentation restructuring.
 
@@ -90,7 +90,7 @@ The reconstruction comparison uses 859 sampled grid/circle points, with equal we
 
 ## Markdown math compatibility
 
-The research note uses `$...$` inline and `$$...$$` display blocks, as supported by VS Code's built-in Markdown preview. All 32 display equations and 72 inline expressions were parsed by the installed VS Code's bundled KaTeX renderer with `throwOnError: true` and `strict: "error"`; all rendered without errors.
+The research note uses `$...$` inline and `$$...$$` display blocks, as supported by VS Code's built-in Markdown preview. All 33 display equations and 73 inline expressions were parsed by the installed VS Code's bundled KaTeX renderer with `throwOnError: true` and `strict: "error"`; all rendered without errors.
 
 The research Figure A3 rank-collapse explanation additionally checks the independently specified A/B midpoint `(0.4,0.12)` and missing displacements `(-0.2,-0.2)` / `(0.2,0.2)`. A least-squares Pythagorean regression verifies that perturbing R through the repair channel adds nonnegative squared error to the remainder. The revised arrows show xU from the repaired point toward the FP targets.
 

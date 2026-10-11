@@ -20,6 +20,7 @@ Baseline: `0be49df7` (`Snapshot research state before quantization return`).
 - Introduce each operation geometrically and define its notation before using it in an objective, figure, or ledger. In particular, explain and define ReLU before post-ReLU reconstruction; a symbol declaration in the opening does not supply the conceptual introduction.
 - Distinguish calibration-conditioned reconstruction from the geometric map repair used for attribution. Record which objective is being optimized and the data weighting; neither objective substitutes for the other.
 - Keep the square-invertible exact-repair guarantee and the prevalence of rectangular ANN layer maps explicit beside the main repair objective. State that R uses W's full floating-point precision and is not quantized; do not confuse Wq's dequantized storage dtype with its coefficient grid.
+- When introducing a new ledger term, identify the assumption being relaxed, the states the existing account compares, and the extra displacement needed to reach the actual FP target. A residual definition alone does not explain its role.
 
 ## Repository audit (initial baseline, before implementation)
 
@@ -184,3 +185,10 @@ Next implementation slice:
 - Stated in Part 2 that many ANN layer maps are rectangular (width changes and patch-to-channel convolution), so square-invertible exact repair is not a general network assumption. Preserved the distinction that widening maps can retain all input directions and narrowing maps can lose FP-relevant distinctions without a rank drop. U=0 is stated after U is defined, preserving prerequisite order.
 - Made the correction domain explicit: R is an unrestricted real matrix, implemented at W's full floating-point precision and never quantized by this apparatus. Documented Wq's dequantized floating storage separately from its low-bit coefficient grid. Quantizing R would impose an additional correction constraint.
 - Checked Figure 1 independently in float32/float64: matching R/W dtypes, inverse-system agreement, and R coefficients off Wq's grid; reconstruction residuals `2.98e-08` / `1.11e-16`. Geometry-story tests: **7 passed**. All **32 display equations and 72 inline expressions** render under strict VS Code KaTeX; local links/assets, prerequisite ordering, and `git diff --check` pass. Core algorithms, figures and milestone statuses are unchanged.
+
+### 2026-10-11 — derive the remainder's role in the ledger
+
+- Replaced “Some map deformation can remain before activation” with “From exact repair to the general three-term ledger.” Explained its position: exact-repair examples first isolate the ReLU obstruction; relaxing exact linear repair then requires another comparison to account for the actual FP output.
+- Motivated U by the geometric endpoint gap: the existing two terms reach the activated R-repaired shape, which need not be the FP shape. Defined the preactivation displacement xU, then added its activated effect explicitly to obtain the general three-term identity. The next section names and draws those terms; Figure 6 supplies the third comparison.
+- Stated the broader role: distinguish incomplete linear-map repair from activation obstructing that repair. Both can occur together. Evaluating xU uses the original input for the analysis; it is not another operation in the output-side repair channel. Retained U=0 for square invertible Wq and all formal component definitions.
+- Core algorithms and figures are unchanged. Checked the exact-to-general identities on the existing three story fixtures, local links/assets and `git diff --check`; **33 display equations and 73 inline expressions** render under strict VS Code KaTeX. No repeated acceptance-suite run was needed for this explanation change.
