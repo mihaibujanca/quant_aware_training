@@ -89,7 +89,49 @@ $$
 xW=(xW_q)R+xU,\qquad W=W_qR+U.
 $$
 
-If two inputs have the same xWq, R must give them the same repaired output. The term xU can depend on input distinctions that this channel cannot see. In input-direction space, each column of U is perpendicular to the span of Wq's measured directions—the multivariate version of $u\perp w_q$. If Wq already spans all input directions, U=0 even when quantization has changed the map substantially, as in Figure 1.
+### When an inverse really is enough
+
+Suppose Wq is square and invertible. The quantized representation still contains every input direction: multiplying xWq by its inverse recovers x itself. So we can undo its map and apply the FP map instead:
+
+$$
+R=W_q^{-1}W,\qquad (xW_q)R=xW,\qquad U=0.
+$$
+
+**Before activation, any change of a square map can be repaired exactly as long as the quantized map remains invertible.** Figure 1 is precisely this case: the quantized shape differs, but it has retained the coordinates needed to get back to the FP shape. Quantization has changed the map, not made the linear response inaccessible. ReLU can subsequently remove those coordinates; that is a separate obstruction in Section 3.
+
+A square inverse is sufficient, but not necessary. A rectangular map with $m\ge n$ can also preserve all n input directions. If Wq has full row rank, $W_qW_q^\dagger=I_n$, so x can still be recovered from xWq and U=0. The dividing line is **which input directions are retained**, rather than whether the matrix happens to be square.
+
+### Fewer measurements than input directions: why a CNN patch has no inverse
+
+A layer can deliberately make fewer measurements than it receives coordinates. For a $3\times3$ convolution with 64 input and 64 output channels, one output location measures a patch with $64\cdot3\cdot3=576$ coordinates and returns 64 values. In row-vector form that patch map is $576\times64$, not an invertible square matrix. Its dimensions follow directly from the [standard convolution weight shape](https://docs.pytorch.org/docs/stable/generated/torch.nn.Conv2d.html).
+
+An output-side correction that mixes channels **at that location** sees only those 64 measurements. It can mix and rescale them, but cannot choose independently among patches that produce the same values. A correction that also mixes neighbouring output locations has a larger repair channel; here we are examining the patch-to-channel map.
+
+Importantly, a rectangular map can have its **maximum possible rank** and still ignore input directions. If $m<n$, even rank m leaves $n-m$ directions unmeasured. The FP and Q maps can both retain rank m while their measured input subspaces turn relative to each other. Then Q ignores an input distinction that FP uses—the same phenomenon as the scalar example, with several measurements.
+
+![A 3D input fiber gives identical quantized two-dimensional outputs while full-precision targets differ, with both maps retaining rank 2](figures/quant_geometry/geometry_rectangular_fibers.png)
+
+**Figure 2b — architectural dimension reduction without a rank drop.** Both maps take three input coordinates to two measurements, and both have rank 2. In the left panel, the blue plane and orange mesh show Q and FP measured directions. Their orientations differ. Moving along the black Q fiber leaves both Q measurements unchanged. A and B sit on that fiber. On the right, they share the Q point and the R-repaired point, but need different FP targets. The green arrow is the available output-side repair; the orange and purple arrows supply the different xU contributions. Everything is before activation.
+
+The example uses bounded 2-bit quantization:
+
+$$
+W=\begin{bmatrix}1&0.25\\0.75&1\\0.25&0.8\end{bmatrix},\qquad
+W_q=\begin{bmatrix}1&0\\1&1\\0&1\end{bmatrix}.
+$$
+
+The Q fiber direction is $d=(1,-1,1)$, with $dW_q=(0,0)$ but $dW=(0.5,0.05)$. For A=(0.7,0,0.5) and B=(−0.1,0.8,−0.3),
+
+$$
+AW_q=BW_q=(0.7,0.5),\qquad
+AW=(0.825,0.575),\qquad BW=(0.425,0.535).
+$$
+
+R moves their shared representation to (0.625,0.555). The missing xU contributions are (+0.2,+0.02) and (−0.2,−0.02). Wq's two nonzero singular values are $\sqrt3$ and 1; no small direction was truncated. The dimension reduction is built into the **3→2 architecture**, while quantization changes which input distinctions its two measurements retain.
+
+### Formalize the best repair through the available measurements
+
+If two inputs have the same xWq, R must give them the same repaired output. In input-direction space, each column of U is perpendicular to the span of Wq's measured directions—the multivariate version of $u\perp w_q$. Exact recovery is possible when all FP measurement directions lie in that span. Otherwise xU records the FP response to directions this repair channel cannot see.
 
 To formalize “best,” minimize squared output displacement with equally weighted input directions:
 
@@ -123,7 +165,7 @@ A rotated scalar measurement already showed nonrecoverability without a rank cha
 
 ![A collapsed patch, an output-side repair of its line, and input-dependent displacements restoring width](figures/quant_geometry/geometry_loss.png)
 
-**Figure 2b — a limiting case with genuine dimension collapse.** Panel 1 shows distinct FP targets for A and B. Quantization merges them in panel 2. R moves their shared output to the best common target in panel 3, but cannot separate them or restore the patch's width. Panel 4 supplies different xU displacements from the original inputs and recovers the FP patch. The dashed line is the R-repaired state; the arrows are xU. All panels are before activation.
+**Figure 2c — a limiting case with genuine dimension collapse.** Panel 1 shows distinct FP targets for A and B. Quantization merges them in panel 2. R moves their shared output to the best common target in panel 3, but cannot separate them or restore the patch's width. Panel 4 supplies different xU displacements from the original inputs and recovers the FP patch. The dashed line is the R-repaired state; the arrows are xU. All panels are before activation.
 
 The matrices are
 
@@ -224,7 +266,7 @@ Compare the recovered route with the FP route after adding xU. The remainder is 
 
 ![Exact range ledger states: a recovered line versus the activated FP patch](figures/quant_geometry/ledger_geometry_range.png)
 
-**Figure 5 — s3 versus s2, using the Figure 2b map.** The recovered route places A and B together at (0.4,0.12). The FP activated route separates them to (0.2,0) and (0.6,0.32). The signed range vectors are therefore (0.2,0.12) for A and (−0.2,−0.20) for B. Their arrows return the separated FP points to the same recovered point. Figure 2b shows the missing width; this figure shows exactly what the ledger measures after clipping.
+**Figure 5 — s3 versus s2, using the Figure 2c map.** The recovered route places A and B together at (0.4,0.12). The FP activated route separates them to (0.2,0) and (0.6,0.32). The signed range vectors are therefore (0.2,0.12) for A and (−0.2,−0.20) for B. Their arrows return the separated FP points to the same recovered point. Figure 2c shows the missing width; this figure shows exactly what the ledger measures after clipping.
 
 ### What fixes the attribution?
 
@@ -293,7 +335,7 @@ P_\tau=W_qW_{q,\tau}^\dagger,\qquad
 U_\tau=(I_n-P_\tau)(W-W_q).
 $$
 
-Only retained-space orthogonality is guaranteed; this remainder need not equal $(I_n-P_\tau)W$. A tiny **nonzero** direction remains present in xWq, and recovering it may require a large gain. A nonzero truncated remainder measures what this correction policy leaves unrecovered; it does not alone establish lost information. Figure 2b has an exact zero direction. A restricted input distribution or activation can also hide the output effect of an exact missing direction.
+Only retained-space orthogonality is guaranteed; this remainder need not equal $(I_n-P_\tau)W$. A tiny **nonzero** direction remains present in xWq, and recovering it may require a large gain. A nonzero truncated remainder measures what this correction policy leaves unrecovered; it does not alone establish lost information. Figure 2c has an exact zero direction. A restricted input distribution or activation can also hide the output effect of an exact missing direction.
 
 See the [implementation README](quant_geometry_implementation.md#quantizer-and-decomposition) for cutoff settings and the [verification report](quant_geometry_verification.md#mathematical-audit-numerical-rank-and-attribution-conventions) for the numerical counterexample.
 

@@ -6,6 +6,7 @@ Active experiment scripts.
 
 | File | Description |
 |------|-------------|
+| `quant_geometry_rectangular_measurement.py` | Architectural 3→2 reduction with both maps retaining rank 2: changed measured planes, Q fibers and input-dependent remainder. Reproduces Figure 2b and exact fixture data. |
 | `quant_geometry_scalar_measurement.py` | Single-neuron measurement geometry: weight directions, scalar projection and rotated fibers without a rank drop. Reproduces research Figure 2 and exact fixture data. |
 | `quant_geometry_visual_story.py` | Geometry-first storyboards and animation states: reversible map deformation, correction versus ReLU order, and rank-loss collapse. See the [research note](../docs/quant_geometry_foundations.md). |
 | `quant_geometry_ledger_figures.py` | Exact state-pair pictures for each formal ledger component and a signed cancellation path. See the [research note](../docs/quant_geometry_foundations.md) and [reproduction instructions](../docs/quant_geometry_implementation.md#reproduce-the-artifacts). |

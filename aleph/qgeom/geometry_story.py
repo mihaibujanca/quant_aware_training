@@ -33,6 +33,24 @@ def build_scalar_measurement_story() -> ScalarMeasurementStory:
 
 
 @dataclass(frozen=True)
+class RectangularMeasurementStory:
+    decomposition: MapDecomposition
+    points: torch.Tensor
+    fiber_direction: torch.Tensor
+
+
+def build_rectangular_measurement_story() -> RectangularMeasurementStory:
+    """A 3→2 measurement keeps rank 2 but changes its blind direction."""
+    W = torch.tensor([[1., .25], [.75, 1.], [.25, .8]], dtype=torch.float64)
+    Wq = WeightQuantizer(2)(W).quantized
+    direction = torch.tensor([1., -1., 1.], dtype=W.dtype)
+    center = torch.tensor([.3, .4, .1], dtype=W.dtype)
+    return RectangularMeasurementStory(MapDecomposition.from_weights(W, Wq),
+                                       torch.stack((center + .4*direction, center - .4*direction)),
+                                       direction)
+
+
+@dataclass(frozen=True)
 class GeometryStory:
     key: str
     title: str

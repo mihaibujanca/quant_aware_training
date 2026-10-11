@@ -1,7 +1,9 @@
 """Verify the geometric claims made by the teaching pictures and animation."""
 import torch
 
-from aleph.qgeom.geometry_story import build_geometry_stories, build_scalar_measurement_story
+from aleph.qgeom.geometry_story import (
+    build_geometry_stories, build_scalar_measurement_story, build_rectangular_measurement_story,
+)
 
 
 def test_scalar_quantization_changes_direction_without_changing_rank():
@@ -43,8 +45,27 @@ def test_deformation_is_recoverable_without_collapsing_samples():
                                torch.tensor([[-.6, .3], [.7, .3]], dtype=torch.float64))
     assert story.decomposition.rank == 2
     torch.testing.assert_close(story.decomposition.U, torch.zeros(2, 2, dtype=torch.float64))
+    torch.testing.assert_close(story.decomposition.R,
+                               torch.linalg.solve(story.decomposition.quantized_weight, story.decomposition.weight))
     torch.testing.assert_close(story.states[3], story.states[1])
     assert not torch.equal(story.states[2][-2], story.states[2][-1])
+
+
+def test_rectangular_full_rank_measurements_change_fibers_without_rank_drop():
+    story = build_rectangular_measurement_story()
+    W, Wq = story.decomposition.weight, story.decomposition.quantized_weight
+    assert W.shape == Wq.shape == (3, 2)
+    assert torch.linalg.matrix_rank(W) == torch.linalg.matrix_rank(Wq) == story.decomposition.rank == 2
+    torch.testing.assert_close(torch.linalg.svdvals(Wq),
+                               torch.tensor([3**.5, 1.], dtype=W.dtype))
+    torch.testing.assert_close(story.fiber_direction @ Wq, torch.zeros(2, dtype=W.dtype))
+    torch.testing.assert_close(story.fiber_direction @ W, torch.tensor([.5, .05], dtype=W.dtype))
+    torch.testing.assert_close(story.points @ Wq, torch.tensor([[.7, .5], [.7, .5]], dtype=W.dtype))
+    torch.testing.assert_close(story.points @ W, torch.tensor([[.825, .575], [.425, .535]], dtype=W.dtype))
+    torch.testing.assert_close(story.points @ Wq @ story.decomposition.R,
+                               torch.tensor([[.625, .555], [.625, .555]], dtype=W.dtype))
+    torch.testing.assert_close(story.points @ story.decomposition.U,
+                               torch.tensor([[.2, .02], [-.2, -.02]], dtype=W.dtype))
 
 
 def test_relu_discards_distinction_preserved_by_linear_map():

@@ -70,10 +70,11 @@ Run from the repository root:
 ```sh
 MPLCONFIGDIR=/tmp/qgeom-mpl XDG_CACHE_HOME=/tmp/qgeom-cache .venv/bin/python -m experiments.quant_geometry_foundations
 MPLCONFIGDIR=/tmp/qgeom-mpl XDG_CACHE_HOME=/tmp/qgeom-cache .venv/bin/python -m experiments.quant_geometry_scalar_measurement
+MPLCONFIGDIR=/tmp/qgeom-mpl XDG_CACHE_HOME=/tmp/qgeom-cache .venv/bin/python -m experiments.quant_geometry_rectangular_measurement
 MPLCONFIGDIR=/tmp/qgeom-mpl XDG_CACHE_HOME=/tmp/qgeom-cache .venv/bin/python -m experiments.quant_geometry_visual_story
 MPLCONFIGDIR=/tmp/qgeom-mpl XDG_CACHE_HOME=/tmp/qgeom-cache .venv/bin/python -m experiments.quant_geometry_ledger_figures
 ```
 
-The foundations command produces eight diagnostic figures and the run manifest. The scalar-measurement command produces the weight-direction/fiber figure and `scalar_measurement_fixture.json`, with the exact weights, repair gain, residual and A/B responses. The visual-story command produces three geometric storyboards and exact endpoint data. The ledger-figure command draws the exact state comparisons that define each component and a signed cancellation path. Outputs are under `docs/figures/quant_geometry/`.
+The foundations command produces eight diagnostic figures and the run manifest. The scalar-measurement command produces the weight-direction/fiber figure and `scalar_measurement_fixture.json`, with the exact weights, repair gain, residual and A/B responses. The rectangular-measurement command produces the 3→2 measured-plane/fiber figure and `rectangular_measurement_fixture.json`, recording both ranks, the nonzero Q singular values, and exact A/B states. The visual-story command produces three geometric storyboards and exact endpoint data. The ledger-figure command draws the exact state comparisons that define each component and a signed cancellation path. Outputs are under `docs/figures/quant_geometry/`.
 
 To populate the animation template, add `--fragment /absolute/path/story.html` to the visual-story command. Its source is `animations/quant_geometry_story.html`, and its geometry is supplied by `aleph/qgeom/geometry_story.py`. Playback interpolates corresponding points between exact endpoint states; intermediate frames are explanatory motion, not additional bit widths or inference states. The payload rounds endpoint coordinates to six decimals for display. The static figures use the float64 tensors directly.
