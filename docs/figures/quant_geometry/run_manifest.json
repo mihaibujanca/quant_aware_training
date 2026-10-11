@@ -1,5 +1,5 @@
 {
-  "revision": "0be49df71ca0f987b4f09f4355847071581870b7",
+  "revision": "aeaad556ae33553748dfe33f040910c91e8a9778",
   "working_tree_dirty": true,
   "seed": 24,
   "torch_version": "2.9.1",
@@ -209,12 +209,79 @@
       "rtol": 1e-05
     }
   },
+  "rank_policy_audit": {
+    "matrix_source": "prescribed diagnostic fixture, not the 2-bit quantizer",
+    "W": [
+      [
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        1.0
+      ]
+    ],
+    "Wq": [
+      [
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        1e-08
+      ]
+    ],
+    "dtype": "float64",
+    "truncated_rtol": 1e-06,
+    "retained_rtol": 1e-10,
+    "truncated_R": [
+      [
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        1.0
+      ]
+    ],
+    "truncated_U": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.99999999
+      ]
+    ],
+    "retained_R": [
+      [
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        100000000.0
+      ]
+    ],
+    "retained_U": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        -1.1102230246251565e-16
+      ]
+    ]
+  },
   "figures": [
     "map_decomposition.png",
     "component_uncomp.png",
     "component_nonlinear.png",
     "component_range.png",
     "ledger_accounting.png",
+    "rank_policy_audit.png",
     "activation_trace.png",
     "oracle_trace.png"
   ]

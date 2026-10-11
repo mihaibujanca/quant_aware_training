@@ -18,6 +18,7 @@ from torch import nn
 from aleph.qgeom import CorrectionBridge, ErrorLedger, InstrumentedMLP, MapDecomposition, WeightQuantizer
 from aleph.qgeom.ledger_plots import (
     plot_activation_trace, plot_component_2d, plot_ledger_accounting, plot_map_decomposition,
+    plot_rank_policy,
 )
 
 
@@ -49,6 +50,14 @@ def main():
     for component in ledger.components():
         save(plot_component_2d(x, ledger, component), f"component_{component}.png")
     save(plot_ledger_accounting(ledger), "ledger_accounting.png")
+
+    # Deliberately prescribed matrices, NOT an output of the 2-bit quantizer:
+    # show that numerical truncation is different from a true null direction.
+    audit_weight = torch.eye(2, dtype=torch.float64)
+    audit_quantized = torch.diag(torch.tensor([1., 1e-8], dtype=torch.float64))
+    truncated = MapDecomposition.from_weights(audit_weight, audit_quantized, rtol=1e-6)
+    retained = MapDecomposition.from_weights(audit_weight, audit_quantized, rtol=1e-10)
+    save(plot_rank_policy(truncated, retained), "rank_policy_audit.png")
 
     # Untrained model: tests the apparatus, not quantization performance.
     model = nn.Sequential(nn.Linear(2, 5), nn.ReLU(), nn.Linear(5, 3), nn.ReLU(), nn.Linear(3, 2))
@@ -91,6 +100,13 @@ def main():
                 "single_source_output_max_residual": float((immediate.output-immediate.fp.post_acts[-1]).abs().max()),
                 "all_immediate_output_max_residual": float((all_immediate.output-all_immediate.fp.post_acts[-1]).abs().max()),
                 "oracle_check_tolerances": tolerance},
+        "rank_policy_audit": {
+            "matrix_source": "prescribed diagnostic fixture, not the 2-bit quantizer",
+            "W": audit_weight.tolist(), "Wq": audit_quantized.tolist(),
+            "dtype": "float64", "truncated_rtol": truncated.rtol, "retained_rtol": retained.rtol,
+            "truncated_R": truncated.R.tolist(), "truncated_U": truncated.U.tolist(),
+            "retained_R": retained.R.tolist(), "retained_U": retained.U.tolist(),
+        },
         "figures": figures,
     }
     (output / "run_manifest.json").write_text(json.dumps(manifest, indent=2, allow_nan=False) + "\n")

@@ -9,7 +9,7 @@ from aleph.qgeom.map_decomposition import MapDecomposition
 
 @dataclass(frozen=True)
 class ErrorLedger:
-    """Three telescoping mechanisms, each signed quantized minus FP.
+    """Three telescoping counterfactual differences; total is Q minus FP.
 
     All comparisons use the SAME input. Define A(v)=vR+b(I-R).
     h=phi(zq), a=phi(A(zq)), y=phi(x W+b).

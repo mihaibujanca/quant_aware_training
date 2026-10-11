@@ -57,9 +57,10 @@ Next implementation slice:
 - Implemented row-vector weights `[in, out]` internally; the MLP adapter transposes `nn.Linear.weight` at the boundary.
 - Resolved float bias with affine transport `A(v)=vR+b-bR`. Use uncompensated `h-A(h)`, nonlinear `A(h)-phi(A(zq))`, and range `phi(A(zq))-y`. This preserves exactness and zero nonlinear error for the identity activation. The zero-bias case reduces to the written plan.
 - Ledger error is Q minus FP; oracle residual is FP minus Q. Name these signs explicitly.
-- Full row rank of a widening `Wq` can make `U` numerically zero. Include deliberately rank-deficient/narrowing examples; zero range error is not automatically a bug.
+- Full row rank of a widening `Wq` gives `U=0` in exact arithmetic if no nonzero singular values are discarded. Under truncation, `U` is a correction-policy remainder and need not be orthogonal to the full `Wq` or prove lost information. See the mathematical audit and Figure 8 in the foundations report.
 - A same-input ledger measures local creation. Comparing layers fed different upstream states also includes propagation and needs separate accounting.
 - Components are not generally orthogonal. Their norm/energy ratios are not additive percentages of total error; report cross terms or use clearly defined allocations.
+- Attribution also depends on the declared extension of `R`: a change `R -> R+N` with `Wq N=0` can alter post-ReLU components while preserving the original linear map and total error. The implementation fixes the identity-centered convention.
 - An exact additive oracle can restore FP states after ReLU. The nonlinear ledger term measures failure of the particular linear correction to commute with ReLU, not proof that every correction family fails.
 - Recoverability horizons require a named correction family, held-out evaluation and tolerance. Error may become easier to recover again at later bottlenecks; report full curves alongside any first-threshold-crossing statistic.
 
@@ -82,3 +83,11 @@ Next implementation slice:
 - Explanations, equations, example vectors, source provenance, API usage and a contribution-to-figure/test mapping are in [quant_geometry_foundations.md](quant_geometry_foundations.md). Every named mechanism has its own figure (Figures 2–4); decomposition, accounting and runner/oracle steps also have figures.
 - Visually inspected all seven generated figures. The saved manifest records the pre-commit base revision and dirty state; implementation and artifacts are preserved together in the branch's foundations checkpoint.
 - M1–M4 acceptance gates pass. M4 validation follows naturally from the extracted runner; no constrained recoverability or trained-model conclusions are claimed.
+
+### 2026-10-11 — documentation mathematics audit
+
+- Verified reconstruction, affine-bias handling, telescoping, Gram-energy identity, the `(1,2)` example and local/propagated accounting. Added explicit derivations and dimensions to the report.
+- Corrected interpretation of tolerance-truncated pseudoinverses: orthogonality is only to the retained span; a discarded nonzero direction can remain recoverable by a high-gain decoder. Added Figure 8 and its separate prescribed-matrix manifest fixture.
+- Clarified that individual components are counterfactual differences, not each Q-minus-FP, and depend on the chosen extension of `R`; only the total is fixed by FP/Q outputs. Added a zero-quantization-error counterexample with nonzero cancelling components under an alternative correction.
+- Corrected Figure 3's explanation to cover both signs of the first input coordinate, including its selected negative-input example; documented the exact fixture formula `e_NL=(0,-0.35*abs(s))`.
+- Added five independent mathematical regression tests. Targeted suite: **70 passed** using the same command recorded above. Regenerated eight figures, checked the new audit figure visually, and preserved the original numerical results.

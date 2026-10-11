@@ -12,8 +12,10 @@ class MapDecomposition:
 
     R = I + pinv(Wq) (W-Wq); U is the remainder outside the retained
     column space of Wq. Near-null singular values are governed by rtol.
-    U is linearly inaccessible from x Wq under this numerical rank policy,
-    not a claim about all possible data-dependent or nonlinear decoders.
+    For an exact inverse, U is orthogonal to the full column space of Wq.
+    Truncation instead makes U orthogonal only to the retained column space;
+    discarded nonzero directions may still be recovered from x Wq by a
+    high-gain decoder. A truncation residual is not proof of information loss.
     """
 
     weight: torch.Tensor

@@ -182,3 +182,37 @@ def plot_activation_trace(ordinary: ActivationTrace, corrected: ActivationTrace,
         ax.set_xticks(depth)
         ax.grid(axis="y", alpha=.2)
     return fig
+
+
+def plot_rank_policy(truncated: MapDecomposition, retained: MapDecomposition):
+    """2D diagnostic distinguishing a discarded singular value from a null one."""
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.8), constrained_layout=True)
+    fig.suptitle("A truncation residual need not mean lost information", fontsize=17, fontweight="bold")
+    spectra = _array(truncated.singular_values)
+    axes[0].semilogy([1, 2], spectra, "o-", color="#334155", label="Nonzero singular values of Wq")
+    for decomp, color, label in [(truncated, "#d97706", "rtol = 1e-6 (rank 1)"),
+                                 (retained, "#2563eb", "rtol = 1e-10 (rank 2)")]:
+        axes[0].axhline(decomp.rtol * spectra.max(), color=color, linestyle="--", label=label)
+    axes[0].set(title="Wq = diag(1, 1e-8) is invertible", xlabel="Singular index", ylabel="Singular value / cutoff", xticks=[1, 2])
+    axes[0].legend(fontsize=8)
+    norms = [float(torch.linalg.norm(d.U)) for d in (truncated, retained)]
+    axes[1].bar([0, 1], norms, color=["#d97706", "#2563eb"])
+    axes[1].set(title="W = I: remainder depends on cutoff", xticks=[0, 1], xticklabels=["Rank 1 policy", "Rank 2 policy"], ylabel="Frobenius norm of U")
+    for i, value in enumerate(norms):
+        axes[1].text(i, value + .03, f"{value:.3g}", ha="center")
+    axes[1].set_ylim(0, 1.15)
+    # The second input direction is weak, not absent, in the quantized map.
+    x = torch.tensor([[0., 1.]], dtype=retained.weight.dtype, device=retained.weight.device)
+    zq = x @ retained.quantized_weight
+    values = [float((zq @ truncated.R)[0, 1]),
+              float((zq @ truncated.R + x @ truncated.U)[0, 1]),
+              float((zq @ retained.R)[0, 1])]
+    axes[2].bar(range(3), values, color=["#d97706", "#059669", "#2563eb"])
+    axes[2].set(title="Second output for x = (0, 1)", xticks=range(3),
+                xticklabels=["Truncated R", "Truncated R\n+ oracle xU", "Full R\n(gain 1e8)"], ylabel="Recovered coordinate")
+    for i, value in enumerate(values):
+        axes[2].text(i, value + .03, f"{value:.3g}", ha="center")
+    axes[2].set_ylim(0, 1.15)
+    for ax in axes:
+        ax.grid(axis="y", alpha=.2)
+    return fig

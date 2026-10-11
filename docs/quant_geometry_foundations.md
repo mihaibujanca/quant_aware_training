@@ -12,13 +12,21 @@ Implementation of the first three next steps in [the progress tracker](quant_geo
 R=I+W_q^\dagger(W-W_q),\qquad U=(W-W_q)-W_qW_q^\dagger(W-W_q).
 \]
 
-Thus `Wq @ R + U` reconstructs `W`. `R` transports the quantized output representation; `U` contains the input directions not reconstructed through the retained column space of `Wq`. Its inaccessibility is relative to this linear map and numerical rank policy, not a claim that every nonlinear decoder or restricted data manifold loses that information.
+Let `W,Wq` have shape `[n,m]`, so `R` has shape `[m,m]` and `U` has shape `[n,m]`. Writing `D=W-Wq`, reconstruction follows directly:
 
-The pseudoinverse tolerance is exposed (`rtol`, default `max(shape)*dtype_epsilon`). Diagnostics report numerical rank, retained-spectrum conditioning, all three singular spectra, range orthogonality, and reconstruction residual. `U_rank` uses an absolute threshold scaled to the original maps so that tiny floating-point leftovers are not counted as meaningful rank.
+\[
+W_qR+U=W_q+W_qW_q^\dagger D+(I-W_qW_q^\dagger)D=W_q+D=W.
+\]
+
+For the **exact Moore–Penrose inverse**, `P=Wq Wq†` is the orthogonal projector onto the column space of `Wq` in input space. Then `U=(I-P)W` and `Wq.T @ U=0`. `R` recovers the projection `PW` through the quantized **preactivation**, while `U` maps input information unavailable from `xWq`. If `U!=0`, no linear decoder can reconstruct `xW` from `xWq` for all inputs. Restricted data distributions can change that conclusion, and ReLU can hide a missing direction's output effect.
+
+**Numerical truncation is a different statement.** The implementation uses a tolerance-truncated inverse `Wq†_τ`: singular values at or below `τ=rtol*σmax` are omitted. With `Pτ=Wq Wq†_τ`, the implemented remainder is `Uτ=(I-Pτ)(W-Wq)`. Reconstruction still holds, and `Uτ` is orthogonal to the **retained** column space. However, it need not satisfy `Wq.T @ Uτ=0` or equal `(I-Pτ)W`. A discarded nonzero singular direction is still present in the original quantized preactivation; recovering it may require a very large gain. Accordingly, a nonzero `Uτ` is not by itself proof of information loss from the full `Wq`.
+
+The pseudoinverse tolerance is exposed (`rtol`, default `max(shape)*dtype_epsilon`). Diagnostics report numerical rank, retained-spectrum conditioning, all three singular spectra, `max(abs(Wq.T @ U))`, and reconstruction residual. The reported full-map orthogonality residual need not vanish under truncation; it is not an acceptance criterion in that case. `U_rank` uses an absolute threshold scaled to the original maps so that tiny floating-point leftovers are not counted as meaningful rank.
 
 ![Map decomposition and singular spectra](figures/quant_geometry/map_decomposition.png)
 
-**Figure 1.** A bounded 2-bit quantizer maps `W=[[1,-0.35],[0.28,0.22]]` to `Wq=[[1,0],[0,0]]`. The resulting `R=[[1,-0.35],[0,1]]` recovers the first input row. `U=[[0,0],[0.28,0.22]]` retains the second row, which is absent from `Wq`. The displayed matrices and spectra distinguish recoverable deformation from missing input information. A full-row-rank widening map can instead have `U≈0`; that is expected.
+**Figure 1.** A bounded 2-bit quantizer maps `W=[[1,-0.35],[0.28,0.22]]` to `Wq=[[1,0],[0,0]]`. The resulting `R=[[1,-0.35],[0,1]]` recovers the first input row. `U=[[0,0],[0.28,0.22]]` retains the second row, which is absent from `Wq`. This example has an exact null direction, so its missing-information interpretation is valid. A full-row-rank widening map has `U=0` in exact arithmetic when no nonzero singular values are discarded.
 
 ## 2. Three exact error components, with float bias
 
@@ -28,7 +36,13 @@ The pseudoinverse tolerance is exposed (`rtol`, default `max(shape)*dtype_epsilo
 z_q=xW_q+b,\quad h=\phi(z_q),\quad y=\phi(xW+b),\quad A(v)=vR+b-bR.
 \]
 
-The affine offset preserves the shared float bias: `A(zq)+xU = xW+b`. Apply the same affine correction after activation when defining the ledger:
+The affine offset preserves the shared float bias:
+
+\[
+A(z_q)+xU=(xW_q+b)R+b-bR+xU=x(W_qR+U)+b=xW+b.
+\]
+
+Apply the same affine correction after activation when defining the ledger:
 
 \[
 e_{\rm uncomp}=h-A(h),\qquad
@@ -36,7 +50,15 @@ e_{\rm uncomp}=h-A(h),\qquad
  e_{\rm range}=\phi(A(z_q))-y.
 \]
 
-Their sum is exactly `h-y` up to floating-point arithmetic. With `b=0`, these reduce to the plan's equations. Using this affine extension rather than moving bias transport into the nonlinear component means an identity activation produces zero nonlinear error, with or without bias.
+Their sum telescopes:
+
+\[
+[h-A(h)]+[A(h)-\phi(A(z_q))]+[\phi(A(z_q))-y]=h-y.
+\]
+
+The **total** is signed Q-minus-FP; each component is a signed difference between successive counterfactual states, not individually a Q-minus-FP error. With `b=0`, these reduce to the plan's equations. With the identity activation, `h=zq` and `A(h)=phi(A(zq))`, so nonlinear error is zero even with bias.
+
+These mechanisms are an **accounting convention**, not a unique causal decomposition. The choice `R=I+Wq†(W-Wq)` fixes an identity-centered extension. For an exact pseudoinverse, adding any `N` with `Wq N=0` leaves the reconstructed linear map unchanged. But ReLU can move `h` outside the row space of `Wq`, so `hN` can be nonzero and change the uncompensated/nonlinear terms. The implementation fixes `R`; comparisons across different rank policies or correction extensions must state those choices.
 
 The API exposes preactivations, postactivations, `recoverable_pre=A(zq)`, `recoverable_post=phi(A(zq))`, and `transported_post=A(h)`. `ErrorLedger.compute` checks both affine reconstruction and telescoping coordinate by coordinate and raises on failed checks. Default absolute/relative tolerances are `1e-5` for float32 and `1e-10` for float64; callers may override them. Ill-conditioned maps may require float64 or an explicitly changed rank tolerance rather than silently relaxing the check.
 
@@ -54,11 +76,11 @@ The API exposes preactivations, postactivations, `recoverable_pre=A(zq)`, `recov
 
 ![Nonlinearity-induced error: input footprint, signed vectors and example](figures/quant_geometry/component_nonlinear.png)
 
-**Figure 3.** ReLU clips the negative coordinate created by the shear. The orange vectors show the discrepancy between transporting the activated representation and activating the transported preactivation. They oppose part of the blue uncompensated component. Nonlinear error can therefore cancel another component rather than increase the total norm.
+**Figure 3.** For a positive first input coordinate, ReLU clips the negative second coordinate created by the shear; the orange and blue components cancel. For a negative first coordinate (the selected example in the figure), applying the shear before ReLU creates a positive second coordinate, whereas applying ReLU first removes the input needed to create it. The orange vectors capture both cases. Nonlinear error can therefore cancel another component rather than increase the total norm.
 
 ### Linearly inaccessible range error
 
-`ledger.range = phi(A(zq))-y` measures the output effect of adding back `xU`. It depends on the input and activation: a nonzero `U` can be masked by ReLU, while another sample exposes it. It is inaccessible from the quantized linear representation under the map split, but still correctable by an oracle with FP access.
+`ledger.range = phi(A(zq))-y` measures the output effect of adding back `xU`. It depends on the input and activation: a nonzero `U` can be masked by ReLU, while another sample exposes it. For an exact null-space split, the missing input contribution cannot be reconstructed linearly from `xWq` for all inputs. Under numerical truncation, this term can instead reflect intentionally uncorrected, small nonzero singular directions. Both remain correctable by an oracle with FP access.
 
 ![Range error: input footprint, signed vectors and example](figures/quant_geometry/component_range.png)
 
@@ -79,7 +101,20 @@ For the specific zero-bias input `x=(1,2)`, the states are:
 | Range | `(-0.56, -0.09)` |
 | Total Q-minus-FP | `(-0.56, -0.09)` |
 
-The first two vectors cancel. Reporting their individual energies as additive fractions of total energy would be misleading. `ledger.gram()` provides `Gij=mean(<ei,ej>)`, with `sum(G)=mean(||total||²)`. Diagonal entries are source energies; off-diagonal entries account for cancellation or reinforcement. This is a local interaction summary, not downstream component propagation.
+The first two vectors cancel at this input; they do not cancel over the whole grid. For this particular fixture, writing the first input coordinate as `s` and `s_+=max(s,0)` gives
+
+\[
+e_{\rm uncomp}=(0,0.35s_+),\qquad
+e_{\rm NL}=(0,-0.35|s|).
+\]
+
+Thus they cancel for `s>=0`, but for `x=(-1,0)`, uncompensated error is zero and nonlinear error is `(0,-0.35)`. Reporting individual energies as additive fractions of total energy would be misleading. `ledger.gram()` provides `Gij=mean(<ei,ej>)`, with
+
+\[
+\mathbb E\|e_{\rm total}\|^2=\sum_iG_{ii}+2\sum_{i<j}G_{ij}=\sum_{i,j}G_{ij}.
+\]
+
+Each off-diagonal pair contributes **twice** to total energy. This is an uncentered second-moment Gram matrix, not a covariance matrix or unique allocation of error percentages.
 
 ![Ledger norms, interaction matrix and exactness](figures/quant_geometry/ledger_accounting.png)
 
@@ -149,7 +184,7 @@ From repository root:
 .venv/bin/python -m pytest tests/test_qgeom_exact_ledger.py tests/test_qgeom_instrumented_mlp.py tests/test_qgeom_metrics.py tests/test_qgeom_policy.py -q
 ```
 
-The experiment saves all seven figures plus [the run manifest](figures/quant_geometry/run_manifest.json). The manifest records revision/dirty state, seed, package versions, exact model weights and biases, dataset/grid, precision, quantization scales, sites, tolerances and measured residuals. The grid example uses no trained or fitted component, so no train/test split is claimed.
+The experiment saves eight figures plus [the run manifest](figures/quant_geometry/run_manifest.json). The manifest records revision/dirty state, seed, package versions, exact model weights and biases, dataset/grid, precision, quantization scales, sites, tolerances and measured residuals. The grid example uses no trained or fitted component, so no train/test split is claimed. The rank-policy audit uses separately prescribed matrices, explicitly identified in the manifest; they are not outputs of the 2-bit quantizer.
 
 | Contribution | Files | Verification / associated visual |
 |---|---|---|
@@ -158,6 +193,20 @@ The experiment saves all seven figures plus [the run manifest](figures/quant_geo
 | Bias-aware exact creation ledger and interaction summary | `aleph/qgeom/ledger.py` | Per-sample telescoping, affine reconstruction, identity activation, ReLU cancellation and Gram identity; Figures 2–5 |
 | Shared traces and model adapter | `aleph/qgeom/instrumented_mlp.py` | FP equivalence, arbitrary layer selection, detached snapshots, biasless/final-ReLU models and unsupported architecture checks; Figure 6 |
 | Explicit residual oracle and correction bridges | `aleph/qgeom/instrumented_mlp.py` | Immediate correction at each selected source, all-layer reset of inputs, delayed target sanity check, raw-state preservation and residual sign; Figures 6–7 |
-| Reusable plotting and reproducible example | `aleph/qgeom/ledger_plots.py`, `experiments/quant_geometry_foundations.py` | Generated artifacts and manifest; Figures 1–7 |
+| Reusable plotting and reproducible example | `aleph/qgeom/ledger_plots.py`, `experiments/quant_geometry_foundations.py` | Generated artifacts and manifest; Figures 1–8 |
 
 This implements the plan's single-layer foundation and shared MLP/oracle apparatus. The causal tests also establish immediate single-layer and all-layer restoration. Delayed-site plumbing has a sanity test, but fitted correction families, held-out recoverability curves, ordered component propagation and source-specific tracking remain future work. Existing notebook research claims were not revalidated by retraining here.
+
+## Mathematical audit: numerical rank and attribution conventions
+
+The reconstruction, affine-bias, telescoping, Gram-energy, and local/propagated identities above were checked algebraically and numerically. The zero-bias table and a biased example now have independent expected-coordinate tests. Two interpretation limits needed clarification:
+
+**Truncation can create a residual without losing information.** For prescribed `W=I` and `Wq=diag(1,1e-8)`, a cutoff of `1e-6` gives `R=I` and `U=diag(0,1-1e-8)`. Retaining the small singular value instead gives `R=diag(1,1e8)` and `U=0`. The second input coordinate is weakly represented, not absent. In the truncated case, `Wq.T @ U=diag(0,1e-8*(1-1e-8))` is nonzero; only retained-space orthogonality holds.
+
+![Numerical truncation versus an invertible high-gain correction](figures/quant_geometry/rank_policy_audit.png)
+
+**Figure 8.** Singular values and both cutoffs, the resulting remainder norms, and recovery of the second output. The rank-2 decoder recovers the FP coordinate from Q alone at gain `1e8`; the truncated correction needs the remainder. This figure distinguishes a numerical policy decision from actual loss through an exact null direction.
+
+**The three components depend on the chosen extension of R.** Take `W=Wq=[[1,-1],[0,0]]` and `x=(1,0)`. The implemented identity-centered choice gives `R=I`, `U=0`, and all errors zero. Alternatively, let `N` have every entry `0.5`. Since `Wq N=0`, `R'=I+N` reconstructs the same weights. Yet `h=(1,0)` gives `hR'=(1.5,0.5)`: uncompensated error is `(-0.5,-0.5)` and nonlinear error is `(0.5,0.5)`. They cancel and total error remains zero. Nonzero components alone therefore do not establish physical information destruction; the declared correction convention matters.
+
+The existing Gram figure (Figure 5) illustrates why signed interaction must be reported alongside component magnitudes. No numerical correction was needed to the original `(1,2)` table or the affine-bias equations.

@@ -130,3 +130,78 @@ def test_input_validation():
         ErrorLedger.compute(torch.ones(2, 3), decomp)
     with pytest.raises(ValueError):
         ErrorLedger.compute(torch.ones(2, 2), decomp, bias=torch.ones(3))
+
+
+def test_documented_zero_bias_example_values():
+    """Check the report's table against independently calculated coordinates."""
+    W = torch.tensor([[1., -.35], [.28, .22]], dtype=torch.float64)
+    decomp = MapDecomposition.from_weights(W, WeightQuantizer(2)(W).quantized)
+    ledger = ErrorLedger.compute(torch.tensor([[1., 2.]], dtype=W.dtype), decomp)
+    for actual, expected in [
+        (ledger.quant_post, [1., 0.]),
+        (ledger.transported_post, [1., -.35]),
+        (ledger.recoverable_post, [1., 0.]),
+        (ledger.fp_post, [1.56, .09]),
+        (ledger.uncomp, [0., .35]),
+        (ledger.nonlinear, [0., -.35]),
+        (ledger.range, [-.56, -.09]),
+        (ledger.total, [-.56, -.09]),
+    ]:
+        torch.testing.assert_close(actual, torch.tensor([expected], dtype=W.dtype))
+
+
+def test_documented_affine_bias_example_values():
+    W = torch.tensor([[1., -.35], [.28, .22]], dtype=torch.float64)
+    decomp = MapDecomposition.from_weights(W, WeightQuantizer(2)(W).quantized)
+    ledger = ErrorLedger.compute(torch.tensor([[1., 2.]], dtype=W.dtype), decomp,
+                                 bias=torch.tensor([.2, -.1], dtype=W.dtype))
+    torch.testing.assert_close(ledger.quant_pre, torch.tensor([[1.2, -.1]], dtype=W.dtype))
+    torch.testing.assert_close(ledger.recoverable_pre, torch.tensor([[1.2, -.45]], dtype=W.dtype))
+    torch.testing.assert_close(ledger.transported_post, torch.tensor([[1.2, -.35]], dtype=W.dtype))
+    torch.testing.assert_close(ledger.fp_post, torch.tensor([[1.76, 0.]], dtype=W.dtype))
+    torch.testing.assert_close(ledger.total, torch.tensor([[-.56, 0.]], dtype=W.dtype))
+
+
+def test_truncation_residual_is_not_information_loss_from_full_map():
+    W = torch.eye(2, dtype=torch.float64)
+    Wq = torch.diag(torch.tensor([1., 1e-8], dtype=W.dtype))
+    truncated = MapDecomposition.from_weights(W, Wq, rtol=1e-6)
+    full = MapDecomposition.from_weights(W, Wq, rtol=1e-10)
+    torch.testing.assert_close(truncated.U, torch.diag(torch.tensor([0., 1.-1e-8], dtype=W.dtype)))
+    # Outside retained span, but not orthogonal to the original Wq.
+    retained_map = torch.diag(torch.tensor([1., 0.], dtype=W.dtype))
+    torch.testing.assert_close(retained_map.T @ truncated.U, torch.zeros_like(W))
+    assert float((Wq.T @ truncated.U).abs().max()) > 0
+    torch.testing.assert_close(full.U, torch.zeros_like(W), atol=1e-15, rtol=0)
+    assert full.R[1, 1] == pytest.approx(1e8)
+    x = torch.tensor([[0., 1.]], dtype=W.dtype)
+    torch.testing.assert_close((x @ Wq) @ full.R, x @ W)
+
+
+def test_nonunique_correction_changes_components_without_changing_total():
+    from dataclasses import replace
+    Wq = torch.tensor([[1., -1.], [0., 0.]], dtype=torch.float64)
+    chosen = MapDecomposition.from_weights(Wq, Wq)
+    # Wq N = 0, so I+N reconstructs the SAME map as I.
+    N = torch.full((2, 2), .5, dtype=Wq.dtype)
+    alternative = replace(chosen, R=chosen.R + N)
+    x = torch.tensor([[1., 0.]], dtype=Wq.dtype)
+    original = ErrorLedger.compute(x, chosen)
+    counterfactual = ErrorLedger.compute(x, alternative)
+    torch.testing.assert_close(original.total, counterfactual.total)
+    torch.testing.assert_close(counterfactual.total, torch.zeros_like(counterfactual.total))
+    torch.testing.assert_close(counterfactual.uncomp, torch.tensor([[-.5, -.5]], dtype=Wq.dtype))
+    torch.testing.assert_close(counterfactual.nonlinear, torch.tensor([[.5, .5]], dtype=Wq.dtype))
+
+
+def test_documented_nonlinear_fixture_both_relu_branches():
+    W = torch.tensor([[1., -.35], [.28, .22]], dtype=torch.float64)
+    decomp = MapDecomposition.from_weights(W, WeightQuantizer(2)(W).quantized)
+    x = torch.tensor([[-2., -2.], [-1., 0.], [0., 2.], [1., 2.], [2., -2.]], dtype=W.dtype)
+    ledger = ErrorLedger.compute(x, decomp)
+    expected_uncomp = torch.zeros_like(x)
+    expected_uncomp[:, 1] = .35 * x[:, 0].clamp_min(0)
+    expected_nonlinear = torch.zeros_like(x)
+    expected_nonlinear[:, 1] = -.35 * x[:, 0].abs()
+    torch.testing.assert_close(ledger.uncomp, expected_uncomp)
+    torch.testing.assert_close(ledger.nonlinear, expected_nonlinear)
