@@ -15,10 +15,10 @@ An input is a row vector $x\in\mathbb R^{1\times n}$, and the weights are $W,W_q
 Start with the deformation in Figure 1. **Can a transformation acting on the quantized representation undo it?** R can mix and scale the output coordinates, moving the whole Q geometry back toward its FP target. **R is a full-precision correction, retained at the floating-point precision of W; it is not constrained to Wq's quantization grid.** Define the best linear map repair by
 
 $$
-R^\star\in\underset{R\in\mathbb R^{m\times m}}{\operatorname{argmin}}\;\|W-W_qR\|_F^2.
+R_{\rm map}\in\underset{R\in\mathbb R^{m\times m}}{\operatorname{argmin}}\;\|W-W_qR\|_F^2.
 $$
 
-This minimizes map discrepancy with input directions weighted equally. If $W_qR^\star=W$, the linear deformation is exactly repaired for every input. Write R for the selected optimizer; its explicit construction is a technical detail, not the reason for introducing it.
+This minimizes map discrepancy with input directions weighted equally. If $W_qR_{\rm map}=W$, the linear deformation is exactly repaired for every input. Use $R=R_{\rm map}$ in the geometric ledger; the subscript distinguishes it from the data-conditioned fits below. Its explicit construction is a technical detail, not the reason for introducing it.
 
 **Mathematically, when Wq is square and invertible, this repair is always exact before activation.** Its output still contains every input direction: we can undo the quantized map and apply the FP map instead,
 
@@ -32,7 +32,20 @@ Many ANN layers change width or map a convolutional patch to output channels, so
 
 ### Repair the map, rather than fit selected responses
 
-The repair objective compares the maps themselves, weighting input directions equally. Ordinary calibration instead fits FP responses for selected inputs, weighting directions according to the data. These objectives can favor different repairs when the map cannot be repaired exactly. The distinction is already present for linear maps; we will see a further difference once the layer applies an activation.
+The map objective gives every input direction equal weight. A calibration set $\mathcal D$ instead supplies a cloud of inputs: fitting their FP responses gives more weight to the directions and correlations that occur in that cloud. Before introducing activation, this gives a second objective,
+
+$$
+R_{\rm pre,data}\in\underset{R\in\mathbb R^{m\times m}}{\operatorname{argmin}}\;
+\sum_{x\in\mathcal D}\|xW_qR-xW\|^2.
+$$
+
+The transformation being fitted is still linear. What changed is **where we ask it to be accurate**: all input directions equally, or the particular input geometry sampled by the data.
+
+![Equal directional weighting on a sphere versus a correlated calibration cloud around a tilted plane](figures/quant_geometry/geometry_reconstruction_inputs.png)
+
+**Figure 1b — changing the input weighting.** The sphere on the left represents equal directional weighting for the map objective. The green cloud on the right is the calibration geometry used in Figure 3: inputs concentrate near a tilted plane, with finite thickness in the third direction. A data fit can favor motions that match FP on this cloud while accepting larger map error elsewhere. Both panels use the same input axes and camera.
+
+The two optimizers can coincide—for example, with isotropic input weighting, or when an exact repair is identified by the calibration samples. Figure 3 uses a full-rank rectangular map so the distribution's effect is visible. No activation is involved in this first change of objective.
 
 ### Introduce ReLU: clipping changes the repair problem
 
@@ -61,24 +74,32 @@ $$
 
 ### Fitting the clipped outputs answers a different question
 
-Now we can state the post-ReLU calibration objective. For a calibration sample set $\mathcal D$, fit a matrix to the activated Q and FP samples instead of reusing the map repair R:
+Keep the same calibration set and the same full-precision linear correction family. Now fit the activated Q and FP responses:
 
 $$
-C_{\mathcal D}\in\underset{C}{\operatorname{argmin}}\;
-\sum_{x\in\mathcal D}\|\phi(xW_q)C-\phi(xW)\|^2.
+R_{\rm post,data}\in\underset{R\in\mathbb R^{m\times m}}{\operatorname{argmin}}\;
+\sum_{x\in\mathcal D}\|\phi(xW_q)R-\phi(xW)\|^2.
 $$
 
-R repairs the preactivation map; C fits the clipped responses on the chosen data. A post-ReLU fit can incorporate the effect of clipping and favor a different matrix even when R repairs the linear map exactly.
+This changes **what information the fit can use and what target it matches**. ReLU removes negative coordinates and changes the correlations between the available representation and the FP response. The preferred matrix can therefore change again, even with the same inputs and correction capacity.
 
-![FP activated shape, geometric map repair after ReLU, and post-ReLU calibration reconstruction](figures/quant_geometry/geometry_repair_vs_reconstruction.png)
+| Repair | Objective to minimize | Weighting / available information |
+|---|---|---|
+| $R_{\rm map}$ | $\lVert W-W_qR\rVert_F^2$ | Input directions weighted equally |
+| $R_{\rm pre,data}$ | $\sum_{x\in\mathcal D}\lVert xW_qR-xW\rVert^2$ | Input distribution and its linear correlations |
+| $R_{\rm post,data}$ | $\sum_{x\in\mathcal D}\lVert\phi(xW_q)R-\phi(xW)\rVert^2$ | The clipped representation and its remaining correlations |
 
-**Figure 3 — the map repair and the activation fit differ.** Return to the Figure 1 map, now with ReLU applied. The middle panel reuses R after activation; the right fits C to the displayed grid/circle samples. Both are compared with the same dashed FP target. C reduces activation error on those samples by choosing a different motion of the shape; it no longer exactly repairs the preactivation map. A/B were excluded from fitting.
+![Four columns compare Q, map repair, preactivation data fit, and activation data fit, before and after ReLU](figures/quant_geometry/geometry_repair_vs_reconstruction.png)
 
-We keep the geometric R fixed to examine how activation interferes with that repair. Choosing C to reduce calibration loss is a separate reconstruction problem. Both are least squares, but they supply different comparisons; this distinction is central to what the geometric ledger adds to PTQ correction.
+**Figure 3 — map geometry → data-conditioned map reconstruction → data-conditioned activation reconstruction.** The four columns show Q without correction and the three fitted matrices. The top row applies each matrix to the Q preactivation; the bottom row applies it to the already clipped Q output. Dashed gray is the corresponding FP target for the same inputs. Each correction column uses the same matrix in both rows; there is no further ReLU after correction.
+
+The map fit has the smallest weight-map error. The preactivation data fit matches the displayed central input sheet exactly, so its blue shape covers the dashed target in the top row; its calibration error remains nonzero because the fit also sees two parallel sheets. Applying that same matrix after clipping misses the activated target. The post-ReLU fit changes the motion again and has the lowest activation error on the full calibration cloud. A/B were excluded from all fits. Both FP and Q maps retain rank 2 throughout this comparison.
+
+**All three are least squares, but they answer different questions.** The geometric ledger fixes $R=R_{\rm map}$ to examine the changed map and activation's interference with its repair. The other two fits ask how well a correction reconstructs responses under a particular data distribution. Their losses alone do not supply that geometric accounting.
 
 ### From exact repair to the general three-term ledger
 
-We used exactly repairable maps above to isolate the obstruction introduced by ReLU. Now return to the general repair problem: for the rectangular maps discussed at the start of Part 2, even the best R may not reach the FP geometry. **The two-term account then stops at the activated R-repaired shape, rather than at the actual FP shape.** To account for the observed error, we need the displacement between those two shapes as well.
+Figures 1 and 2 used exactly repairable maps to isolate the obstruction introduced by ReLU. Figure 3 returns to the general repair problem: even the best map repair can leave a gap to FP before activation. **The two-term account then stops at the activated R-repaired shape, rather than at the actual FP shape.** To account for the observed error, we need the displacement between those two shapes as well.
 
 Before activation, the gap between the R-repaired point and its FP target is xU. Define the residual map U by
 
@@ -304,7 +325,17 @@ $$
 
 Here R is m×m and U is n×m. With $P=W_qW_q^\dagger$, $W_qR=PW$ and $U=(I_n-P)W$. P projects onto the input-direction span measured by Wq, and $W_q^\top U=0$. This orthogonality is between measurement directions/maps; it does not make their output displacements perpendicular for every sample.
 
-The optimum repaired map WqR is unique. R's extension away from the represented output subspace need not be unique; the identity-centered construction fixes that extension. The geometric objective is also proportional to the mean squared preactivation error for inputs uniform on the unit sphere. Empirical preactivation reconstruction instead weights directions by the data second moment; the objectives coincide under suitable isotropic sampling.
+The optimum repaired map WqR is unique. R's extension away from the represented output subspace need not be unique; the identity-centered construction fixes that extension. The geometric objective is also proportional to the mean squared preactivation error for inputs uniform on the unit sphere.
+
+For the preactivation data objective, let $\Delta_R=W-W_qR$ and $N=|\mathcal D|$. Its input weighting is explicit in
+
+$$
+S_{\mathcal D}=\frac1N\sum_{x\in\mathcal D}x^\top x,\qquad
+\frac1N\sum_{x\in\mathcal D}\|x\Delta_R\|^2
+=\operatorname{tr}(\Delta_R^\top S_{\mathcal D}\Delta_R).
+$$
+
+S is the uncentered input second moment. With $S_{\mathcal D}=cI_n$ for c>0, this objective is a positive multiple of the map objective and has the same minimizers. A different S changes the cost of map discrepancy in different directions; it need not change the minimizer when an exact repair is available. The post-ReLU objective generally cannot be written using this same linear-map weighting because both its representation and target have been clipped.
 
 ### B.2 Rank conditions and the fiber criterion for exact repair
 
@@ -394,7 +425,7 @@ W_q=\begin{bmatrix}1&1\\0&1\end{bmatrix},\qquad
 R=\begin{bmatrix}1.35&-0.15\\-0.35&0.8\end{bmatrix},\qquad U=0.
 $$
 
-Bounded symmetric 2-bit quantization rounds the coefficients to {−1,0,1}. Figure 3 uses this same map, fitting its post-ReLU C on the sampled grid/circle points with the named A/B probes excluded. The coefficient matrix and calibration definition are recorded in [the comparison fixture](figures/quant_geometry/repair_vs_reconstruction_fixture.json).
+Bounded symmetric 2-bit quantization rounds the coefficients to {−1,0,1}.
 
 Figures 2 and 5 use
 
@@ -405,6 +436,17 @@ R=\begin{bmatrix}1&-0.4\\-0.35&1.25\end{bmatrix},\qquad U=0.
 $$
 
 A=(−0.8,−0.1) and B=(−0.6,−0.2) become Q preactivations (−0.9,−0.1) and (−0.8,−0.2). Correcting first gives the positive FP responses shown in Figure 5; Q's ReLU instead merges both at zero. This particular collision proves no decoder of h alone can recover both FP targets. A nonzero nonlinear component in general establishes only noncommutation of the declared repair and activation.
+
+Figures 1b and 3 use the full-rank rectangular W/Wq from Figure A2. To specify the correlated calibration geometry, let p be the sampled 2D grid/circle coordinates, $d=(1,-1,1)$, and $\alpha=(0.7,-0.7)^\top$. Construct
+
+$$
+x(p,t)=pW_q^\dagger+(p\alpha+t)d,\qquad
+t\in\{-0.15,0,0.15\}.
+$$
+
+Since dWq=0, the Q preactivation is p on all three sheets. The central sheet t=0 is displayed; all three supply calibration samples. Named A/B are excluded on every sheet. The input sample matrix has rank 3, and both W/Wq have rank 2 with no nonzero Q singular value truncated. The correlation term is predictable from p before ReLU, giving $R_{\rm pre,data}=R_{\rm map}+\alpha(dW)$ for this balanced construction. Clipping p changes that predictor, so the post-ReLU fit solves a different regression.
+
+The exact three matrices, all three objective values, input second moment, generator, displayed inputs and fit residuals are recorded in [the comparison fixture](figures/quant_geometry/repair_vs_reconstruction_fixture.json).
 
 <details>
 <summary>Numerical note: an exact missing direction versus a deliberately truncated one</summary>

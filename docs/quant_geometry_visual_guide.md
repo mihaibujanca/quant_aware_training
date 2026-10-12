@@ -4,6 +4,7 @@ The visual explanation and formal definitions live together in [Quantization geo
 
 - [Maps and geometric deformation](quant_geometry_foundations.md#1-what-shape-does-the-layer-move)
 - [Map repair, calibration, and the ReLU obstruction](quant_geometry_foundations.md#2-which-part-can-a-map-on-the-quantized-output-recover)
+- [Three correction objectives and their geometric comparison](quant_geometry_foundations.md#fitting-the-clipped-outputs-answers-a-different-question)
 - [The four-state ledger and its three components](quant_geometry_foundations.md#3-the-ledger-four-states-three-signed-displacements)
 - [Signed cancellation and interaction](quant_geometry_foundations.md#4-why-component-magnitudes-cannot-be-added)
 - [Creation, propagation, and oracle interventions](quant_geometry_foundations.md#5-creation-here-versus-propagation-through-the-network)
