@@ -14,8 +14,8 @@ class ErrorLedger:
     All comparisons use the SAME input. Define A(v)=vR+b(I-R).
     h=phi(zq), a=phi(A(zq)), y=phi(x W+b).
     Then uncomp=h-A(h), nonlinear=A(h)-a, range=a-y.
-    The legacy range field stores the residual deformation error e_U:
-    the activated effect of the map remainder U.
+    In the forward repair account, c_R=-uncomp, c_NL=-nonlinear,
+    c_U=-range and c_total=-total. The range field keeps its legacy name.
     This affine extension reduces to the plan's h-hR and hR-phi(zq R)
     for zero bias. With an identity activation, nonlinear is exactly zero.
     The oracle residual restoring y is -total. Cross terms matter: the

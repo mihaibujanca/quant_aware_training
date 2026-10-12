@@ -1,10 +1,10 @@
-# Quantization geometry: deformation, repair, and an exact error ledger
+# Quantization geometry: deformation, repair, and an exact ledger
 
-Quantization changes the map of a layer. We follow the same points through that changed geometry, ask what an output-side transformation can repair, and examine what happens when activation intervenes. The ledger records the resulting signed displacements exactly; propagation experiments then ask what becomes of them downstream.
+Weight quantization changes the linear map of a layer. We follow the same points through that changed geometry, ask what an output-side transformation can repair, and examine what happens when activation intervenes. The ledger starts with the correction owed to FP, applies the available repair, and explains its remaining balance. Network experiments then follow that balance downstream.
 
 ## 1. What shape does the layer move?
 
-An input is a row vector $x\in\mathbb R^{1\times n}$, and the weights are $W,W_q\in\mathbb R^{n\times m}$. Start with the linear part of the layer: full precision (FP) sends x to xW; the quantized map (Q) sends the same x to xWq. The main argument uses zero bias; the float-bias extension comes later in [Technical details](#b3-exact-extension-to-a-shared-float-bias).
+An input is a row vector $x\in\mathbb R^{1\times n}$, and the weights are $W,W_q\in\mathbb R^{n\times m}$. Start with the linear part of the layer: full precision (FP) sends x to xW; the quantized map (Q) sends the same x to xWq. The main argument uses zero bias; the float-bias extension comes later in [Technical details](#b3-float-bias-and-the-implementation-sign-convention).
 
 ![The same input shape under FP, quantized, and repaired preactivation maps](figures/quant_geometry/geometry_deformation.png)
 
@@ -61,12 +61,7 @@ $$
 
 **Figure 2 — the order of repair and clipping matters.** This second map is exactly repairable before ReLU. Correcting first produces distinct positive FP outputs for A and B. Clipping the Q preactivations first merges both at zero; the same R then receives the same point for both. The obstruction arose after the linear map, even though that map's deformation was repairable.
 
-Because repair is exact here, $y=\phi(z_qR)$. This gives a two-term account:
-
-$$
-h-y=\underbrace{h-hR}_{\text{repair left unapplied}}
-+\underbrace{hR-\phi(z_qR)}_{\text{repair and activation do not commute}}.
-$$
+Here $y=\phi(z_qR)$, but applying R after ReLU need not reach y. We will account for that remaining gap in the ledger.
 
 ### Fitting the clipped outputs answers a different question
 
@@ -93,9 +88,9 @@ The grid and circle show a representative subset of inputs; the fits and reporte
 
 **All three are least squares, but they answer different questions.** The geometric ledger fixes $R=R_{\rm map}$ to examine the changed map and activation's interference with its repair. The other two fits ask how well a correction reconstructs responses under a particular data distribution. Their losses alone do not supply that geometric accounting.
 
-### From exact repair to the general three-term ledger
+### When the linear map repair is incomplete
 
-Figures 1 and 2 used exactly repairable maps to isolate the obstruction introduced by ReLU. Figure 3 returns to the general repair problem: even the best map repair can leave a gap to FP before activation. **The two-term account then stops at the activated R-repaired shape, rather than at the actual FP shape.** To account for the observed error, we need the displacement between those two shapes as well.
+Figures 1 and 2 used exactly repairable maps to isolate the obstruction introduced by ReLU. Figure 3 returns to the general repair problem: even the best map repair can leave a gap to FP before activation. The activated R-repaired shape can therefore differ from FP for a second reason, beyond the ordering of repair and ReLU.
 
 Before activation, the gap between the R-repaired point and its FP target is xU. Define the residual map U by
 
@@ -105,102 +100,114 @@ $$
 
 R supplies the selected output-side motion of the Q geometry; xU completes the motion to FP using the original input. In the square-invertible case, U=0. Evaluating xU uses the original input: it is an analysis step, not another operation in the output-side repair channel.
 
-After ReLU, the FP target is $y=\phi(z_qR+xU)$. The missing comparison is therefore between $\phi(z_qR)$ and that target. Adding it makes the account exact for incomplete as well as exact map repair:
+After ReLU, the FP target is $y=\phi(z_qR+xU)$. We now have both limits of the output-side repair: activation can obstruct it, and the linear map repair can itself be incomplete. The ledger starts with the observed gap to FP, applies R, and uses these two comparisons to explain what remains.
+
+## 3. The ledger: what correction is still owed?
+
+For input x, the layer produced h; FP would produce y. The correction owed is:
 
 $$
-h-y=(h-hR)+\big(hR-\phi(z_qR)\big)
-+\big(\phi(z_qR)-\phi(z_qR+xU)\big).
+c_{\rm total}=y-h.
 $$
 
-The first two terms are the comparisons we already understood: leaving R unapplied, and applying it on the opposite side of ReLU. The third measures the activated effect of what R could not repair in the linear map. **U lets us distinguish an incomplete linear repair from activation obstructing that repair.** Both can occur in the same layer. The next section names these three displacements, draws each one, and records them as the ledger; Figure 6 shows the third comparison.
+This vector points from Q to FP. Now try the available map repair.
 
-## 3. The ledger: four states, three signed displacements
+### Apply R and inspect the balance
 
-For the same input x on both routes, define the four counterfactual states
-
-| State | Definition | Geometric meaning |
-|---|---|---|
-| $s_0$ | $h=\phi(z_q)$ | Activated Q shape |
-| $s_1$ | $hR$ | Apply the map repair after activation |
-| $s_2$ | $\phi(z_qR)$ | Apply it before activation |
-| $s_3$ | $\phi(z_qR+xU)=y$ | Restore the residual map displacement before activation |
-
-These are comparisons, not four consecutive network layers. In particular s1 can have negative coordinates because R acts after ReLU. The local ledger records
+R moves the point from h to hR, supplying
 
 $$
-\mathcal L(x)=(e_{\rm uncomp},e_{\rm NL},e_U;e_{\rm total}),
-\qquad e_{\rm total}=h-y.
+c_R=hR-h,\qquad c_{\rm total}=c_R+(y-hR).
 $$
 
-### Uncompensated deformation
+**The balance after R is y−hR.** Explain it by inspecting the two limits of the repair.
+
+![The correction needed, the forward motion supplied by R, and the balance after R](figures/quant_geometry/ledger_geometry_uncomp.png)
+
+**Figure 4 — correction owed → R applied → balance remaining.** B reaches FP after R; A still has a balance. R acts after ReLU, so hR can have negative coordinates.
+
+### Exact linear repair: the remaining balance comes from activation ordering
+
+With U=0, repair before ReLU reaches FP: $y=\phi(z_qR)$. The balance after applying R to the clipped output is
 
 $$
-e_{\rm uncomp}=s_0-s_1=h-hR.
+c_{\rm NL}=\phi(z_qR)-hR=y-hR,\qquad
+c_{\rm total}=c_R+c_{\rm NL}\quad(U=0).
 $$
 
-This is the displacement left by not applying the available repair. Its negative is the correcting motion; this comparison alone does not say that correcting after activation would reach FP.
+First use the map repair; then account for the gap left because activation came first.
 
-![The activated Q shape and its transported shape, with signed uncompensated displacements](figures/quant_geometry/ledger_geometry_uncomp.png)
+![The outstanding activation-order balance points from hR toward the exact FP target](figures/quant_geometry/ledger_geometry_nonlinear.png)
 
-**Figure 4 — s1→s0, using the Figure 1 map.** The right panel overlays the repaired-after-activation shape and the uncorrected shape. Each arrow returns a named point from s1 to s0. The negative coordinates in s1 are legitimate counterfactual coordinates, not ReLU outputs.
+**Figure 5 — hR→φ(zqR)=y.** Clipping first leaves A/B together at zero. The arrows reconcile this with their distinct FP targets, (0,0.235) and (0,0.07). The linear repair was exact; activation obstructed it.
 
-### Nonlinearity-induced error
+### Incomplete linear repair: reconcile the rest of the balance
 
-$$
-e_{\rm NL}=s_1-s_2=hR-\phi(z_qR).
-$$
-
-This compares activation-then-repair with repair-then-activation, the two routes established in Figure 2. It measures failure of the chosen map repair to commute with activation.
-
-![Exact nonlinear state comparisons, with signed arrows between the two orders](figures/quant_geometry/ledger_geometry_nonlinear.png)
-
-**Figure 5 — s2→s1, using the Figure 2 map.** Correcting first gives A/B outputs (0,0.235) and (0,0.07). Correcting after clipping leaves both at zero. The two arrows show the exact nonlinear vectors (0,−0.235) and (0,−0.07).
-
-### Residual deformation error: the activated effect of U
+Incomplete map repair can leave a further gap from $\phi(z_qR)$ to FP—the activated effect of U:
 
 $$
-e_U=s_2-s_3=\phi(z_qR)-\phi(z_qR+xU).
+c_U=y-\phi(z_qR)=\phi(z_qR+xU)-\phi(z_qR).
 $$
 
-U records the residual map deformation before activation; this component measures its effect on the activated output. ReLU can hide or expose its contribution. Specific reasons U can be nonzero are explored later, in [Understanding the remainder U](#a-understanding-the-remainder-u).
-
-![Recovered activated shape versus FP activated shape, with exact residual deformation displacements](figures/quant_geometry/ledger_geometry_range.png)
-
-**Figure 6 — s3→s2.** In this example, the R-repaired route puts A/B together at (0.4,0.12), while FP activation separates them to (0.2,0) and (0.6,0.32). Their signed residual deformation vectors are (0.2,0.12) and (−0.2,−0.20). The preactivation cause is shown later in Figure A3; the definition above applies to any residual U.
-
-### The accounting closes exactly
-
-All three arrows point backwards along the same repair sequence. Consequently,
+Thus the balance after R has two parts:
 
 $$
-e_{\rm uncomp}+e_{\rm NL}+e_U
-=(s_0-s_1)+(s_1-s_2)+(s_2-s_3)=s_0-s_3=h-y.
+y-hR=
+\underbrace{\phi(z_qR)-hR}_{c_{\rm NL}:\ \text{activation obstructed the repair}}
++\underbrace{y-\phi(z_qR)}_{c_U:\ \text{linear map repair was incomplete}}.
 $$
 
-The total is signed **Q minus FP**. Each component has a declared state comparison; it is not independently a Q-minus-FP error. The [bias extension](#b3-exact-extension-to-a-shared-float-bias) preserves this same identity for the implemented ledger.
+![The residual-deformation balance points from the activated repaired route toward FP](figures/quant_geometry/ledger_geometry_range.png)
 
-## 4. Why component magnitudes cannot be added
+**Figure 6 — φ(zqR)→y.** The repaired route puts A/B together at (0.4,0.12). Their FP targets differ, requiring balances (−0.2,−0.12) and (+0.2,+0.20).
 
-The arrows can oppose one another. A repair that moves a point into a coordinate ReLU would remove can create two nonzero ledger components whose displacements cancel.
-
-![A signed ledger path doubles back, cancelling uncompensated and nonlinear displacements](figures/quant_geometry/ledger_geometry_cancellation.png)
-
-**Figure 7 — the ledger can double back.** The residual deformation arrow reaches s2; the nonlinear arrow moves down to s1; the uncompensated arrow comes back to s0=s2. The last two vectors cancel, leaving total error equal to the residual deformation vector at this sample. This is sample-dependent, not a universal cancellation. Component magnitudes therefore cannot be reported as additive percentages of total error. The formal interaction and Gram accounting are in [Technical details](#b5-signed-interaction-and-the-gram-identity).
-
-## 5. Creation here versus propagation through the network
-
-A local ledger uses the same input on both routes. In a network, the quantized run may arrive with input a while FP arrives with a_fp. Keeping the same zero-bias convention, let $h_q=\phi(aW_q)$ and $h_{\rm fp}=\phi(a_{\rm fp}W)$ and define
+The account closes:
 
 $$
-e_{\rm local}=\phi(aW_q)-\phi(aW),\qquad
- e_{\rm propagated}=\phi(aW)-h_{\rm fp}.
+\boxed{c_{\rm total}=c_R+c_{\rm NL}+c_U.}
 $$
 
-Then raw total error is their sum. The first term measures the layer's own map change on the arriving point. The second measures where the upstream-displaced point lands under the unchanged FP layer. The three-component ledger decomposes the first term; it does not yet trace each component separately through later nonlinear layers.
+**$c_R$ is the available repair; $c_{\rm NL}$ and $c_U$ explain its outstanding balance.** The ledger records these contributions against the total owed, following
 
-An exact residual oracle adds $h_{\rm fp}-h_q$ at a chosen output. Geometrically, it moves each damaged point back to its FP location before the next layer consumes it. Immediate resets isolate local creation by giving each following layer the FP input. A delayed reset restores the accumulated discrepancy at that later layer; it is source-specific only when the named source is the sole perturbation. Following named points through those alternative trajectories is the next geometric experiment.
+$$
+h\ \longrightarrow\ hR\ \longrightarrow\ \phi(z_qR)\ \longrightarrow\ y.
+$$
 
-The [implementation README](quant_geometry_implementation.md) describes the runner and oracle interfaces. The [verification report](quant_geometry_verification.md) records tests, diagnostic figures, numerical results, and contributions. The [progress tracker](quant_geometry_progress.md) records the remaining experiments.
+Only the first arrow uses h and R alone; the two explanatory comparisons use zq and the FP target, respectively. Bias and implementation signs are handled in [Technical Details](#b3-float-bias-and-the-implementation-sign-convention).
+
+## 4. Repair contributions can cancel
+
+Contributions are vectors: a repair motion can be undone by a later balance. Their norms are therefore not additive percentages of the total correction needed.
+
+![A forward repair path moves down, returns, and then reaches FP](figures/quant_geometry/ledger_geometry_cancellation.png)
+
+**Figure 7 — a repair can be partly undone.** R moves down, the activation-order balance returns, and the residual-deformation balance reaches FP. Here $c_{\rm total}=c_U$. The Gram identity is in [Technical Details](#b5-signed-interaction-and-the-gram-identity).
+
+## 5. From one layer to a network: incoming and local balances
+
+In a network, the arriving input a can already differ from the reference a_fp. Compare the actual Q output $h_q=\phi(aW_q)$ with same-input FP $g=\phi(aW)$, then reference FP $y_{\rm ref}=\phi(a_{\rm fp}W)$. This separates what the layer changed from what arrived upstream.
+
+They reconcile the outstanding output balance:
+
+$$
+y_{\rm ref}-h_q=
+\underbrace{g-h_q}_{c_{\rm local}}+
+\underbrace{y_{\rm ref}-g}_{c_{\rm incoming}}.
+$$
+
+Section 3 reconciles the local balance on the arriving input. The incoming balance measures where the earlier displacement lands under this FP map.
+
+![Incoming input displacement, local output balance, incoming output balance and the oracle reset](figures/quant_geometry/repair_network_balance.png)
+
+**Figure 8 — incoming versus newly created discrepancy.** Right: local hq→g, then incoming g→reference FP. The oracle resets the whole balance directly.
+
+### The oracle resets the outstanding balance
+
+Adding $y_{\rm ref}-h_q$ resets the balance before the next layer. Immediate resets give each following layer the FP input, isolating local creation. A delayed reset restores the accumulated discrepancy at its output; it isolates a named source only if that source was the sole perturbation.
+
+Recording each operation's change and updating the balance lets us follow alternative network trajectories.
+
+[Implementation](quant_geometry_implementation.md), [verification](quant_geometry_verification.md), and [next experiments](quant_geometry_progress.md) are documented separately.
 
 ## A. Understanding the remainder U
 
@@ -350,66 +357,76 @@ The first equivalence follows from $U=(I_n-P)W$; the second takes orthogonal com
 
 Conversely, if U has a nonzero column u, take $d=u^\top$. Orthogonality gives dWq=0, while dW=dU has the positive entry $u^\top u$ in that column. Thus A and A+d share the same Q representation but have different FP preactivations. No function of the Q representation alone can recover both for an unrestricted input domain. Figures A1–A3 show this criterion with named points; it makes no assumption that quantization has reduced rank. An activated target or a restricted data domain poses a different recovery question.
 
-### B.3 Exact extension to a shared float bias
+### B.3 Float bias and the implementation sign convention
 
-The figures use b=0. With a shared float bias $b\in\mathbb R^{1\times m}$, moving $z_q=xW_q+b$ by R would also move the bias. Restore it by translating the result back by $b-bR$:
-
-$$
-A(v)=vR+b-bR,\qquad A(z_q)+xU=x(W_qR+U)+b=xW+b.
-$$
-
-A is the bias-preserving version of the same repair. The implemented ledger uses A so the geometry and accounting remain consistent with float biases.
-
-For shared float bias, the exact states are
+With shared float bias $b\in\mathbb R^{1\times m}$, use the affine repair
 
 $$
-z_q=xW_q+b,\quad s_0=\phi(z_q),\quad s_1=A(s_0),\quad
-s_2=\phi(A(z_q)),\quad s_3=\phi(A(z_q)+xU).
+A(v)=vR+b-bR,\qquad z_q=xW_q+b,\qquad
+A(z_q)+xU=xW+b.
 $$
 
-The same signed definitions $e_{\rm uncomp}=s_0-s_1$, $e_{\rm NL}=s_1-s_2$ and $e_U=s_2-s_3$ telescope to Q minus FP. If activation is the identity, the nonlinear component vanishes even with bias.
+The forward path becomes $h\to A(h)\to\phi(A(z_q))\to y$, with
 
-For the propagation comparison in Section 5, include the shared b inside each preactivation: the arriving Q output, same-input FP output, and reference FP output. Their successive differences still give local and propagated error, and the oracle still adds reference FP minus arriving Q.
+$$
+c_R=A(h)-h,\qquad c_{\rm NL}=\phi(A(z_q))-A(h),\qquad
+c_U=y-\phi(A(z_q)).
+$$
+
+These contributions sum to y−h. With identity activation, the activation-order contribution is zero even with bias.
+
+The implementation stores the opposite, **Q minus FP**, convention. Its fields map to the forward account as follows:
+
+| Stored field | Forward correction / balance contribution |
+|---|---|
+| `uncomp` | $-c_R$ |
+| `nonlinear` | $-c_{\rm NL}$ |
+| `range` (historical name) | $-c_U$ |
+| `total` | $-c_{\rm total}$ |
+
+This sign convention is unchanged. The oracle adds FP minus Q and therefore uses the forward total correction directly. The stored network `propagated` and local vectors likewise have the opposite signs to Section 5's incoming and local balances.
+
+For the network comparison with bias, use $h_q=\phi(aW_q+b)$, $g=\phi(aW+b)$ and $y_{\rm ref}=\phi(a_{\rm fp}W+b)$. The same incoming/local identity follows by adding and subtracting g.
 
 ### B.4 Correction extensions and attribution
 
-The ledger is an exact accounting convention relative to the chosen R and rank policy, rather than a unique partition into physical causes. With the exact pseudoinverse, replacing R by R+N with $W_qN=0$ preserves the linear reconstruction with the same U. But the bias-preserving affine transport becomes $A'(v)=A(v)+(v-b)N$. Activation can move $h-b$ outside the row space of Wq, so uncompensated and nonlinear components can change while their sum and the total remain unchanged. We fix the identity-centered R above whenever comparing component values.
+The repair account is relative to the chosen R and rank policy. With the exact pseudoinverse, replacing R by R+N with $W_qN=0$ preserves the linear reconstruction with the same U. But the bias-preserving affine transport becomes $A'(v)=A(v)+(v-b)N$. Activation can move $h-b$ outside the row space of Wq, so the applied motion $c_R$ and activation-order balance $c_{\rm NL}$ can change while their sum and the total remain unchanged. We fix the identity-centered R above whenever comparing contribution values.
 
 ### B.5 Signed interaction and the Gram identity
 
-Take the zero-bias map
+Figure 7 uses the zero-bias map
 $W=\left[\begin{smallmatrix}1&-0.35\\0.28&0.22\end{smallmatrix}\right]$,
-$W_q=\operatorname{diag}(1,0)$, and x=(1,2). The four states are
+$W_q=\operatorname{diag}(1,0)$, and x=(1,2). Its repair path is
 
 $$
-s_0=(1,0),\quad s_1=(1,-0.35),\quad s_2=(1,0),\quad s_3=(1.56,0.09).
+h=(1,0)\ \longrightarrow\ hR=(1,-0.35)\ \longrightarrow\
+\phi(z_qR)=(1,0)\ \longrightarrow\ y=(1.56,0.09).
 $$
 
-In Figure 7, starting at FP (s3), the residual deformation arrow reaches s2. The nonlinear arrow goes down to s1; the uncompensated arrow comes straight back to s0=s2. Their vertical displacements cancel:
+Consequently,
 
 $$
-e_{\rm uncomp}=(0,0.35),\qquad e_{\rm NL}=(0,-0.35),\qquad
- e_U=e_{\rm total}=(-0.56,-0.09).
+c_R=(0,-0.35),\qquad c_{\rm NL}=(0,+0.35),\qquad
+c_U=c_{\rm total}=(0.56,0.09).
 $$
 
-This cancellation is sample-dependent. For this same map, writing $x=(s,t)$ and $s_+=\max(s,0)$ gives
-$e_{\rm uncomp}=(0,0.35s_+)$ and $e_{\rm NL}=(0,-0.35|s|)$; they cancel for s≥0 but not s<0.
+The first two contributions cancel at this sample. For this same map, writing $x=(s,t)$ and $s_+=\max(s,0)$ gives $c_R=(0,-0.35s_+)$ and $c_{\rm NL}=(0,+0.35|s|)$; they cancel for s≥0 but not s<0.
 
-For a dataset $\{x_k\}_{k=1}^N$, define the interaction ledger
-
-$$
-G_{ij}=\frac1N\sum_k\langle e_i(x_k),e_j(x_k)\rangle,
-\qquad i,j\in\{\mathrm{uncomp},\mathrm{NL},\mathrm{U}\}.
-$$
-
-The inner product measures alignment: same-direction arrows reinforce, opposing arrows cancel, perpendicular arrows have zero cross term. Therefore
+For a dataset $\{x_k\}_{k=1}^N$, define
 
 $$
-\frac1N\sum_k\|e_{\rm total}(x_k)\|^2
+G_{ij}=\frac1N\sum_k\langle c_i(x_k),c_j(x_k)\rangle,
+\qquad i,j\in\{\mathrm{R},\mathrm{NL},\mathrm{U}\}.
+$$
+
+The inner product measures alignment: same-direction contributions reinforce, opposing contributions cancel, and perpendicular contributions have zero cross term. Thus
+
+$$
+\frac1N\sum_k\|c_{\rm total}(x_k)\|^2
 =\sum_iG_{ii}+2\sum_{i<j}G_{ij}.
 $$
 
-G is an uncentered second-moment Gram matrix. Its diagonal entries are individual mean squared magnitudes; its off-diagonal entries record interaction. Figure 7 supplies the intuitive picture for a negative cross term. Individual energies are not additive percentages of total error.
+G is an uncentered second-moment Gram matrix. The diagonal entries are individual mean squared magnitudes; the off-diagonal entries record interaction. Reversing all stored implementation signs leaves every inner product, and hence this Gram matrix, unchanged.
 
 ### B.6 Matrices for the main geometric examples
 
@@ -431,7 +448,7 @@ W_q=\begin{bmatrix}1&0\\1&1\end{bmatrix},\qquad
 R=\begin{bmatrix}1&-0.4\\-0.35&1.25\end{bmatrix},\qquad U=0.
 $$
 
-A=(−0.8,−0.1) and B=(−0.6,−0.2) become Q preactivations (−0.9,−0.1) and (−0.8,−0.2). Correcting first gives the positive FP responses shown in Figure 5; Q's ReLU instead merges both at zero. This particular collision proves no decoder of h alone can recover both FP targets. A nonzero nonlinear component in general establishes only noncommutation of the declared repair and activation.
+A=(−0.8,−0.1) and B=(−0.6,−0.2) become Q preactivations (−0.9,−0.1) and (−0.8,−0.2). Correcting first gives the positive FP responses shown in Figure 5; Q's ReLU instead merges both at zero. This particular collision proves no decoder of h alone can recover both FP targets. A nonzero activation-order balance in general establishes only noncommutation of the declared repair and activation.
 
 Figure 3 uses the full-rank rectangular W/Wq from Figure A2. To specify the correlated calibration geometry, let p be the sampled 2D grid/circle coordinates, $d=(1,-1,1)$, and $\alpha=(0.7,-0.7)^\top$. Construct
 
