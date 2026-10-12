@@ -16,8 +16,9 @@ from aleph.qgeom.map_decomposition import MapDecomposition
 COMPONENT_LABELS = {
     "uncomp": "Uncompensated recoverable deformation",
     "nonlinear": "Nonlinearity-induced error",
-    "range": "Linearly inaccessible range error",
+    "range": "Residual deformation error",
 }
+COMPONENT_SHORT_LABELS = {"uncomp": "uncomp", "nonlinear": "nonlinear", "range": "residual (U)"}
 COLORS = {"uncomp": "#2563eb", "nonlinear": "#d97706", "range": "#9333ea"}
 
 
@@ -83,7 +84,7 @@ def plot_map_decomposition(decomposition: MapDecomposition):
     matrices = [(decomposition.weight, "Full-precision W"),
                 (decomposition.quantized_weight, "Quantized Wq"),
                 (decomposition.R, "Recoverable correction R"),
-                (decomposition.U, "Inaccessible remainder U"),
+                (decomposition.U, "Residual deformation U"),
                 (decomposition.weight - decomposition.quantized_weight @ decomposition.R - decomposition.U,
                  "Reconstruction residual")]
     for ax, (matrix, title) in zip(axes.flat, matrices):
@@ -110,14 +111,14 @@ def plot_ledger_accounting(ledger: ErrorLedger):
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.5), constrained_layout=True)
     fig.suptitle("Exact per-sample accounting, including interaction", fontsize=16)
     for name, vector in ledger.components().items():
-        axes[0].plot(_array(torch.linalg.vector_norm(vector, dim=1)), label=name, color=COLORS[name], alpha=.8)
+        axes[0].plot(_array(torch.linalg.vector_norm(vector, dim=1)), label=COMPONENT_SHORT_LABELS[name], color=COLORS[name], alpha=.8)
     axes[0].plot(_array(torch.linalg.vector_norm(ledger.total, dim=1)), color="#0f172a", label="total", linewidth=2)
     axes[0].set(title="Component norms need not sum", xlabel="Sample (grid order)", ylabel="Vector norm")
     axes[0].legend()
     gram = _array(ledger.gram())
     lim = max(np.abs(gram).max(), 1e-15)
     im = axes[1].imshow(gram, cmap="RdBu_r", vmin=-lim, vmax=lim)
-    labels = list(ledger.components())
+    labels = [COMPONENT_SHORT_LABELS[name] for name in ledger.components()]
     axes[1].set(xticks=range(3), yticks=range(3), xticklabels=labels, yticklabels=labels,
                 title="Gram: negative = cancellation")
     for (row, col), value in np.ndenumerate(gram):
@@ -171,7 +172,7 @@ def plot_activation_trace(ordinary: ActivationTrace, corrected: ActivationTrace,
     axes[1, 0].legend(fontsize=9)
     for name, vectors in {**{k: [l.ledger.components()[k] for l in corrected.layers] for k in COLORS},
                           "oracle residual": [l.oracle_residual for l in corrected.layers]}.items():
-        axes[1, 1].plot(depth, [norm(v) for v in vectors], "o-", label=name,
+        axes[1, 1].plot(depth, [norm(v) for v in vectors], "o-", label=COMPONENT_SHORT_LABELS.get(name, name),
                        color=COLORS.get(name, "#0f172a"))
     sites = [l.index for l in corrected.layers if l.correction_applied]
     for site in sites:

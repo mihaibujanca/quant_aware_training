@@ -52,8 +52,8 @@ def main():
          "s₁ = A(h): corrected after activation", "s₀ = h: quantized activation", "e_uncomp = s₀ − s₁"),
         ("nonlinear", stories[1], "Nonlinear: changing the order changes the shape",
          "s₂ = φ(A(zq)): correct, then activate", "s₁ = A(h): activate, then correct", "e_NL = s₁ − s₂"),
-        ("range", stories[2], "Range: the output effect of the missing input contribution",
-         "s₃ = φ(A(zq) + xU): full precision", "s₂ = φ(A(zq)): recovered route", "e_range = s₂ − s₃"),
+        ("range", stories[2], "Residual deformation: its effect after activation",
+         "s₃ = φ(A(zq) + xU): full precision", "s₂ = φ(A(zq)): repaired route", "e_U = s₂ − s₃"),
     ]
     for key, story, title, source_label, destination_label, vector_label in specifications:
         ledger = story.ledger
@@ -105,7 +105,7 @@ def main():
     for i, (name, color, curvature) in enumerate([
         ("uncomp: (0, +0.35)", "#2563eb", .2),
         ("nonlinear: (0, −0.35)", "#d97706", .2),
-        ("range: (−0.56, −0.09)", "#9333ea", 0),
+        ("e_U (residual): (−0.56, −0.09)", "#9333ea", 0),
     ]):
         ax.annotate("", xy=states[i], xytext=states[i+1],
                     arrowprops={"arrowstyle": "->", "color": color, "lw": 2.5,

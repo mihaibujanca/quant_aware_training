@@ -128,7 +128,7 @@ For the same input x on both routes, define the four counterfactual states
 These are comparisons, not four consecutive network layers. In particular s1 can have negative coordinates because R acts after ReLU. The local ledger records
 
 $$
-\mathcal L(x)=(e_{\rm uncomp},e_{\rm NL},e_{\rm range};e_{\rm total}),
+\mathcal L(x)=(e_{\rm uncomp},e_{\rm NL},e_U;e_{\rm total}),
 \qquad e_{\rm total}=h-y.
 $$
 
@@ -156,24 +156,24 @@ This compares activation-then-repair with repair-then-activation, the two routes
 
 **Figure 5 — s2→s1, using the Figure 2 map.** Correcting first gives A/B outputs (0,0.235) and (0,0.07). Correcting after clipping leaves both at zero. The two arrows show the exact nonlinear vectors (0,−0.235) and (0,−0.07).
 
-### Range error: the activated effect of the remainder
+### Residual deformation error: the activated effect of U
 
 $$
-e_{\rm range}=s_2-s_3=\phi(z_qR)-\phi(z_qR+xU).
+e_U=s_2-s_3=\phi(z_qR)-\phi(z_qR+xU).
 $$
 
-This is the output difference caused by the residual map deformation after the available repair. ReLU can hide or expose its contribution. Specific reasons U can be nonzero are explored later, in [Understanding the remainder U](#a-understanding-the-remainder-u).
+U records the residual map deformation before activation; this component measures its effect on the activated output. ReLU can hide or expose its contribution. Specific reasons U can be nonzero are explored later, in [Understanding the remainder U](#a-understanding-the-remainder-u).
 
-![Recovered activated shape versus FP activated shape, with exact range displacements](figures/quant_geometry/ledger_geometry_range.png)
+![Recovered activated shape versus FP activated shape, with exact residual deformation displacements](figures/quant_geometry/ledger_geometry_range.png)
 
-**Figure 6 — s3→s2.** In this example, the R-repaired route puts A/B together at (0.4,0.12), while FP activation separates them to (0.2,0) and (0.6,0.32). Their signed range vectors are (0.2,0.12) and (−0.2,−0.20). The preactivation cause is shown later in Figure A3; the definition above applies to any residual U.
+**Figure 6 — s3→s2.** In this example, the R-repaired route puts A/B together at (0.4,0.12), while FP activation separates them to (0.2,0) and (0.6,0.32). Their signed residual deformation vectors are (0.2,0.12) and (−0.2,−0.20). The preactivation cause is shown later in Figure A3; the definition above applies to any residual U.
 
 ### The accounting closes exactly
 
 All three arrows point backwards along the same repair sequence. Consequently,
 
 $$
-e_{\rm uncomp}+e_{\rm NL}+e_{\rm range}
+e_{\rm uncomp}+e_{\rm NL}+e_U
 =(s_0-s_1)+(s_1-s_2)+(s_2-s_3)=s_0-s_3=h-y.
 $$
 
@@ -185,7 +185,7 @@ The arrows can oppose one another. A repair that moves a point into a coordinate
 
 ![A signed ledger path doubles back, cancelling uncompensated and nonlinear displacements](figures/quant_geometry/ledger_geometry_cancellation.png)
 
-**Figure 7 — the ledger can double back.** The range arrow reaches s2; the nonlinear arrow moves down to s1; the uncompensated arrow comes back to s0=s2. The last two vectors cancel, leaving total error equal to the range vector at this sample. This is sample-dependent, not a universal cancellation. Component magnitudes therefore cannot be reported as additive percentages of total error. The formal interaction and Gram accounting are in [Technical details](#b5-signed-interaction-and-the-gram-identity).
+**Figure 7 — the ledger can double back.** The residual deformation arrow reaches s2; the nonlinear arrow moves down to s1; the uncompensated arrow comes back to s0=s2. The last two vectors cancel, leaving total error equal to the residual deformation vector at this sample. This is sample-dependent, not a universal cancellation. Component magnitudes therefore cannot be reported as additive percentages of total error. The formal interaction and Gram accounting are in [Technical details](#b5-signed-interaction-and-the-gram-identity).
 
 ## 5. Creation here versus propagation through the network
 
@@ -367,7 +367,7 @@ z_q=xW_q+b,\quad s_0=\phi(z_q),\quad s_1=A(s_0),\quad
 s_2=\phi(A(z_q)),\quad s_3=\phi(A(z_q)+xU).
 $$
 
-The same signed definitions $e_{\rm uncomp}=s_0-s_1$, $e_{\rm NL}=s_1-s_2$ and $e_{\rm range}=s_2-s_3$ telescope to Q minus FP. If activation is the identity, the nonlinear component vanishes even with bias.
+The same signed definitions $e_{\rm uncomp}=s_0-s_1$, $e_{\rm NL}=s_1-s_2$ and $e_U=s_2-s_3$ telescope to Q minus FP. If activation is the identity, the nonlinear component vanishes even with bias.
 
 For the propagation comparison in Section 5, include the shared b inside each preactivation: the arriving Q output, same-input FP output, and reference FP output. Their successive differences still give local and propagated error, and the oracle still adds reference FP minus arriving Q.
 
@@ -385,11 +385,11 @@ $$
 s_0=(1,0),\quad s_1=(1,-0.35),\quad s_2=(1,0),\quad s_3=(1.56,0.09).
 $$
 
-In Figure 7, starting at FP (s3), the range arrow reaches s2. The nonlinear arrow goes down to s1; the uncompensated arrow comes straight back to s0=s2. Their vertical displacements cancel:
+In Figure 7, starting at FP (s3), the residual deformation arrow reaches s2. The nonlinear arrow goes down to s1; the uncompensated arrow comes straight back to s0=s2. Their vertical displacements cancel:
 
 $$
 e_{\rm uncomp}=(0,0.35),\qquad e_{\rm NL}=(0,-0.35),\qquad
- e_{\rm range}=e_{\rm total}=(-0.56,-0.09).
+ e_U=e_{\rm total}=(-0.56,-0.09).
 $$
 
 This cancellation is sample-dependent. For this same map, writing $x=(s,t)$ and $s_+=\max(s,0)$ gives
@@ -399,7 +399,7 @@ For a dataset $\{x_k\}_{k=1}^N$, define the interaction ledger
 
 $$
 G_{ij}=\frac1N\sum_k\langle e_i(x_k),e_j(x_k)\rangle,
-\qquad i,j\in\{\mathrm{uncomp},\mathrm{NL},\mathrm{range}\}.
+\qquad i,j\in\{\mathrm{uncomp},\mathrm{NL},\mathrm{U}\}.
 $$
 
 The inner product measures alignment: same-direction arrows reinforce, opposing arrows cancel, perpendicular arrows have zero cross term. Therefore

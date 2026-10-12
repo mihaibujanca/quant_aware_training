@@ -26,7 +26,7 @@ The current targeted suite has **77 passing tests**. The geometric fixtures test
 
 **Figure 3.** For a positive first input coordinate, ReLU clips the negative second coordinate created by the shear; the orange and blue components cancel. For a negative first coordinate (the selected example in the figure), applying the shear before ReLU creates a positive second coordinate, whereas applying ReLU first removes the input needed to create it. The orange vectors capture both cases. Nonlinear error can therefore cancel another component rather than increase the total norm.
 
-![Range error: input footprint, signed vectors and example](figures/quant_geometry/component_range.png)
+![Residual deformation error: input footprint, signed vectors and example](figures/quant_geometry/component_range.png)
 
 **Figure 4.** The removed second input row changes the FP output while leaving the quantized preactivation unchanged for inputs with the same first coordinate. The purple arrows compare the recovered affine output with the actual FP output. This isolates missing input information from the recoverable shear.
 
@@ -47,7 +47,7 @@ The current targeted suite has **77 passing tests**. The geometric fixtures test
 | Contribution | Files | Verification / associated visual |
 |---|---|---|
 | Bounded weight-only quantization and metadata | `aleph/qgeom/weight_quantizer.py` | Bit bounds, ties, zero weights, deterministic output and snapshot ownership; Figure 1 |
-| Recoverable/range map split and diagnostics | `aleph/qgeom/map_decomposition.py` | Rectangular, zero, rank-deficient and explicitly truncated maps; Figure 1 |
+| Repair/residual-deformation map split and diagnostics | `aleph/qgeom/map_decomposition.py` | Rectangular, zero, rank-deficient and explicitly truncated maps; Figure 1 |
 | Bias-aware exact creation ledger and interaction summary | `aleph/qgeom/ledger.py` | Per-sample telescoping, affine reconstruction, identity activation, ReLU cancellation and Gram identity; Figures 2–5 |
 | Shared traces and model adapter | `aleph/qgeom/instrumented_mlp.py` | FP equivalence, arbitrary layer selection, detached snapshots, biasless/final-ReLU models and unsupported architecture checks; Figure 6 |
 | Explicit residual oracle and correction bridges | `aleph/qgeom/instrumented_mlp.py` | Immediate correction at each selected source, all-layer reset of inputs, delayed target sanity check, raw-state preservation and residual sign; Figures 6–7 |
@@ -78,7 +78,7 @@ The existing Gram figure (Figure 5) illustrates why signed interaction must be r
 | Scalar measurement projection and rotated fibers without rank loss | `aleph/qgeom/geometry_story.py::build_scalar_measurement_story`, `experiments/quant_geometry_scalar_measurement.py`; `geometry_scalar_fibers.png`, `scalar_measurement_fixture.json` | Two independent coordinate tests: unchanged scalar rank, changed length/direction, orthogonal residual, equal Q readings, distinct FP readings and opposite missing contributions |
 | Three controlled grid/circle stories with persistent A/B identities | `aleph/qgeom/geometry_story.py`, `experiments/quant_geometry_visual_story.py`; `geometry_deformation.png`, `geometry_relu.png`, `geometry_loss.png` | Four geometric-claim tests; fixed scales within each sequence; All teaching stories use non-identity Wq; deformation and ReLU cases have independently specified FP/Q probe coordinates |
 | Moving view of the same endpoints | `animations/quant_geometry_story.html`; `geometry_story_states.json` | Step controls, full playback, no JavaScript errors, collision label and 360px layout checked |
-| Exact pictures for each formal ledger component | `experiments/quant_geometry_ledger_figures.py`; `ledger_geometry_uncomp.png`, `ledger_geometry_nonlinear.png`, `ledger_geometry_range.png` | Figures use the existing ErrorLedger states directly; arrow endpoints are the states in the definitions |
+| Exact pictures for each formal ledger component | `experiments/quant_geometry_ledger_figures.py`; `ledger_geometry_uncomp.png`, `ledger_geometry_nonlinear.png`, `ledger_geometry_range.png` | Figures use the existing ErrorLedger states directly; arrow endpoints are the states in the definitions. The third component is labelled residual deformation error e_U; its historical filename/API field uses `range` |
 | Signed cancellation path | Same figure generator; `ledger_geometry_cancellation.png` | Coordinates are the independent `(1,2)` regression example; opposite uncompensated/nonlinear vectors share endpoints |
 | One research note pairing definitions and geometric explanations | `quant_geometry_foundations.md` | Main narrative: linear map deformation → map repair versus linear calibration → introduce ReLU and its obstruction → post-ReLU reconstruction comparison → relax exact linear repair and complete the two-term account with U → exact ledger → propagation/oracle. Scalar/fiber/rectangular/rank examples and mathematical machinery follow in A/B. API/reproduction belongs to the implementation README; validation/audit/contribution evidence belongs here |
 

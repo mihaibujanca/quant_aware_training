@@ -14,7 +14,9 @@ R and U are computed and retained in W's floating-point dtype (float32 or float6
 
 `ErrorLedger.compute(x, decomposition, bias=..., activation=...)` returns `uncomp`, `nonlinear`, `range`, and Q-minus-FP `total`, plus the states `quant_pre`, `fp_pre`, `quant_post`, `fp_post`, `recoverable_pre`, `recoverable_post`, and `transported_post`. It checks affine reconstruction and component telescoping coordinate by coordinate. Default absolute and relative tolerances are `1e-5` for float32 and `1e-10` for float64; both can be overridden. Ill-conditioned cases may need float64 or an explicitly chosen rank policy.
 
-`ledger.gram()` returns the mean inner-product matrix of the three components, ordered uncompensated/nonlinear/range. It is an uncentered second moment, not covariance or an allocation into additive percentages.
+The historical field/key `range` is the research note's [residual deformation error e_U](quant_geometry_foundations.md#residual-deformation-error-the-activated-effect-of-u), the activated effect of U. Exported keys and figure filenames retain `range` for compatibility; explanatory labels and mathematical notation use residual deformation / e_U.
+
+`ledger.gram()` returns the mean inner-product matrix of the three components, ordered uncompensated/nonlinear/residual deformation. It is an uncentered second moment, not covariance or an allocation into additive percentages.
 
 ## Shared MLP traces and residual oracle
 

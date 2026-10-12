@@ -31,7 +31,7 @@ Baseline: `0be49df7` (`Snapshot research state before quantization return`).
 | General quantization | `aleph/quantization.py` | Fake quantization, rounding modes, 2/4/8-bit ranges and QAT exist. Reuse arithmetic selectively; QAT and activation calibration are outside this phase. |
 | Map decomposition | `aleph/qgeom/canonical.py::CanonicalSpaceTracker` | Cumulative-map pseudoinverse exists, but is not the plan's per-layer `W = Wq R + U`. Implement the latter independently. |
 | Error attribution | `aleph/qgeom/canonical.py::error_attribution` | Reusable per-sample local/propagated preactivation errors exist. Three post-activation mechanism vectors and numerical telescoping checks are missing. |
-| Alternate geometric split | `notebooks/canonical_learned_correction.py::geometric_error_decomposition` | ReLU agreement/disagreement split exists; it is not the recoverable/nonlinear/range ledger. |
+| Alternate geometric split | `notebooks/canonical_learned_correction.py::geometric_error_decomposition` | ReLU agreement/disagreement split exists; it is not the uncompensated/nonlinear/residual-deformation ledger. |
 | Traces / ReLU states | `aleph/qgeom/canonical.py::ForwardTrace`, `ReLUDisagreementTracker` | Reusable pre/post tensor containers and mask diagnostics exist. Forward runner is notebook-local; corrected/raw states and layer metadata need adding. |
 | ReLU MLP / datasets | `aleph/models.py::MLP`; `aleph/datasets.py`; canonical notebooks | Reuse float model and synthetic data. Add a runner for independently selected weight-quantized layers, retaining float biases and activations. |
 | Exact oracle / selected sites | `notebooks/canonical_error_correction.py::PerfectCorrection` | Weight-only oracle prototype corrects preactivation and supports selected sites. Extract/adapt to explicit post-activation residual injection; retain raw states before correction. |
@@ -65,7 +65,7 @@ Next implementation slice:
 ## Mathematical / protocol decisions
 
 - Implemented row-vector weights `[in, out]` internally; the MLP adapter transposes `nn.Linear.weight` at the boundary.
-- Resolved float bias with affine transport `A(v)=vR+b-bR`. Use uncompensated `h-A(h)`, nonlinear `A(h)-phi(A(zq))`, and range `phi(A(zq))-y`. This preserves exactness and zero nonlinear error for the identity activation. The zero-bias case reduces to the written plan.
+- Resolved float bias with affine transport `A(v)=vR+b-bR`. Use uncompensated `h-A(h)`, nonlinear `A(h)-phi(A(zq))`, and residual deformation `phi(A(zq))-y`. This preserves exactness and zero nonlinear error for the identity activation. The zero-bias case reduces to the written plan.
 - Ledger error is Q minus FP; oracle residual is FP minus Q. Name these signs explicitly.
 - Full row rank of a widening `Wq` gives `U=0` in exact arithmetic if no nonzero singular values are discarded. Under truncation, `U` is a correction-policy remainder and need not be orthogonal to the full `Wq` or prove lost information. See the mathematical audit and Figure 8 in the verification report.
 - A same-input ledger measures local creation. Comparing layers fed different upstream states also includes propagation and needs separate accounting.
@@ -208,3 +208,10 @@ Next implementation slice:
 - Removed Figure 1b from the research note, its generated asset, and its plotting helper. The sphere/input-cloud comparison switched geometric objects without showing the consequence for repair; the narrative now explains that consequence through Figure 3's different motions of the same Q points.
 - Preserved all three formal objectives and their comparison table. The input second-moment derivation and exact correlated-data construction remain in the technical appendix. Simplified Figure 3's caption/footer to distinguish displayed representative inputs from the full calibration set without requiring a new input-space picture.
 - Updated reproduction and contribution records so the removed asset is not regenerated or referenced. Regenerated and visually inspected Figure 3; all comparison assertions still pass and numerical results are unchanged. Local links/assets, prerequisite order, strict VS Code KaTeX (**36 display equations / 87 inline expressions**) and `git diff --check` pass. No core algorithm or acceptance-suite change required another broad test run.
+
+### 2026-10-12 — name the activated U effect from the geometric story
+
+- Replaced “range error” with “residual deformation error,” written e_U, throughout the research note: ledger record, formal component definition, telescope, bias extension, cancellation example and Gram component labels. The name now follows the already-defined residual map deformation U and distinguishes its preactivation displacement from its activated effect.
+- Updated Figure 6, the cancellation legend and diagnostic titles/legends, including the U matrix label. Regenerated the main ledger figures and diagnostic/MLP figures. Visually inspected the residual state-pair, cancellation, component diagnostic and Gram/accounting figures for label readability.
+- Retained the historical Python field/dictionary key `range` and artifact filenames. Documented their mapping to residual deformation error e_U in the implementation README and class docstring; no compatibility note was added to the conceptual narrative. Updated current protocol and contribution terminology.
+- Compared regenerated fixture/ledger/oracle manifest sections with the prior manifest: numerical results are identical. Targeted acceptance suite: **77 passed**. Local links/assets, narrative prerequisites, `git diff --check`, and strict VS Code KaTeX (**36 display equations / 87 inline expressions**) pass. Component definitions, signs, ordering and arithmetic are unchanged.
