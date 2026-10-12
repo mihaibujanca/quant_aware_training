@@ -5,48 +5,10 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import numpy as np
 import torch
 
 from aleph.qgeom.geometry_story import build_geometry_stories, build_rectangular_measurement_story
 from experiments.quant_geometry_ledger_figures import axes_style, probes, shape
-
-
-def input_figure(output, inputs, calibration, lengths):
-    fig = plt.figure(figsize=(11, 5.5), constrained_layout=True)
-    fig.suptitle("The input geometry that each linear objective weights", fontsize=17)
-    angles = np.linspace(0, 2*np.pi, 25)
-    polar = np.linspace(0, np.pi, 13)
-    sphere = (np.outer(np.cos(angles), np.sin(polar)),
-              np.outer(np.sin(angles), np.sin(polar)),
-              np.outer(np.ones_like(angles), np.cos(polar)))
-    limit = max(1.1, float(calibration.abs().max())*1.08)
-    for i in range(2):
-        ax = fig.add_subplot(1, 2, i+1, projection="3d")
-        ax.plot_wireframe(*sphere, color="#94a3b8", alpha=.45, lw=.6)
-        if i == 0:
-            for direction in np.vstack((np.eye(3), -np.eye(3))):
-                ax.quiver(0, 0, 0, *direction, color="#2563eb", lw=1.7, arrow_length_ratio=.1)
-        else:
-            points = calibration[::7].numpy()
-            ax.scatter(*points.T, color="#059669", s=5, alpha=.35, depthshade=False)
-            grid = inputs[:sum(lengths[:-1])].numpy().reshape(len(lengths)-1, lengths[0], 3)[::2]
-            ax.plot_surface(grid[:, :, 0], grid[:, :, 1], grid[:, :, 2],
-                            color="#059669", alpha=.12)
-            offset = 0
-            for length in lengths:
-                line = inputs[offset:offset+length].numpy()
-                ax.plot(*line.T, color="#059669", alpha=.6, lw=.7)
-                offset += length
-        ax.set(xlim=(-limit, limit), ylim=(-limit, limit), zlim=(-limit, limit),
-               xlabel="Input 1", ylabel="Input 2", zlabel="Input 3",
-               title=["Map fit: equal weight to input directions",
-                      "Data fit: correlated samples near a tilted plane"][i])
-        ax.set_box_aspect((1, 1, 1))
-        ax.view_init(elev=28, azim=-120)
-    fig.supxlabel("Gray unit sphere = equal directional weighting. Green = calibration geometry, with finite thickness.", fontsize=11)
-    fig.savefig(output / "geometry_reconstruction_inputs.png", dpi=150, facecolor="white")
-    plt.close(fig)
 
 
 def main():
@@ -97,7 +59,6 @@ def main():
 
     output = Path("docs/figures/quant_geometry")
     output.mkdir(parents=True, exist_ok=True)
-    input_figure(output, inputs, calibration, paths.path_lengths)
     raw = inputs @ Wq
     targets = [inputs @ W, torch.relu(inputs @ W)]
     rows = [[raw] + [raw@R for R in matrices.values()],
@@ -125,7 +86,7 @@ def main():
             mse = ((Q-F).square().mean() if row == 0 else (H-Y).square().mean()).item() if column == 0 else losses[list(matrices)[column-1]][key]
             ax.text(.03, .04, f"Calibration MSE: {mse:.4f}", transform=ax.transAxes, fontsize=10,
                     bbox={"facecolor": "white", "alpha": .85, "edgecolor": "none"})
-    fig.supxlabel("Dashed = FP target for the same inputs. Grid/circle = central input sheet; fits also see two parallel sheets. A/B excluded.", fontsize=11)
+    fig.supxlabel("Dashed = FP target for the same inputs. Grid/circle = representative inputs; fits use the full calibration set. A/B excluded.", fontsize=11)
     fig.savefig(output / "geometry_repair_vs_reconstruction.png", dpi=150, facecolor="white")
     plt.close(fig)
     payload = {"W": W.tolist(), "Wq": Wq.tolist(),

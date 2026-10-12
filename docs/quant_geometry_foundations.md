@@ -39,11 +39,7 @@ R_{\rm pre,data}\in\underset{R\in\mathbb R^{m\times m}}{\operatorname{argmin}}\;
 \sum_{x\in\mathcal D}\|xW_qR-xW\|^2.
 $$
 
-The transformation being fitted is still linear. What changed is **where we ask it to be accurate**: all input directions equally, or the particular input geometry sampled by the data.
-
-![Equal directional weighting on a sphere versus a correlated calibration cloud around a tilted plane](figures/quant_geometry/geometry_reconstruction_inputs.png)
-
-**Figure 1b — changing the input weighting.** The sphere on the left represents equal directional weighting for the map objective. The green cloud on the right is the calibration geometry used in Figure 3: inputs concentrate near a tilted plane, with finite thickness in the third direction. A data fit can favor motions that match FP on this cloud while accepting larger map error elsewhere. Both panels use the same input axes and camera.
+The transformation being fitted is still linear. What changed is **where we ask it to be accurate**. The data fit prioritizes matching FP responses for the inputs that occur in the calibration set, even if this costs larger map error elsewhere. Figure 3's top row shows the consequence directly: the two fits move the same Q points differently.
 
 The two optimizers can coincide—for example, with isotropic input weighting, or when an exact repair is identified by the calibration samples. Figure 3 uses a full-rank rectangular map so the distribution's effect is visible. No activation is involved in this first change of objective.
 
@@ -93,7 +89,7 @@ This changes **what information the fit can use and what target it matches**. Re
 
 **Figure 3 — map geometry → data-conditioned map reconstruction → data-conditioned activation reconstruction.** The four columns show Q without correction and the three fitted matrices. The top row applies each matrix to the Q preactivation; the bottom row applies it to the already clipped Q output. Dashed gray is the corresponding FP target for the same inputs. Each correction column uses the same matrix in both rows; there is no further ReLU after correction.
 
-The map fit has the smallest weight-map error. The preactivation data fit matches the displayed central input sheet exactly, so its blue shape covers the dashed target in the top row; its calibration error remains nonzero because the fit also sees two parallel sheets. Applying that same matrix after clipping misses the activated target. The post-ReLU fit changes the motion again and has the lowest activation error on the full calibration cloud. A/B were excluded from all fits. Both FP and Q maps retain rank 2 throughout this comparison.
+The grid and circle show a representative subset of inputs; the fits and reported errors use the full calibration set. The map fit has the smallest weight-map error. The preactivation data fit matches FP on the displayed subset exactly, so its blue shape covers the dashed target in the top row; error on the additional calibration inputs keeps its reported MSE nonzero. Applying that same matrix after clipping misses the activated target. The post-ReLU fit changes the motion again and has the lowest activation error on the full calibration set. A/B were excluded from all fits. Both FP and Q maps retain rank 2 throughout this comparison.
 
 **All three are least squares, but they answer different questions.** The geometric ledger fixes $R=R_{\rm map}$ to examine the changed map and activation's interference with its repair. The other two fits ask how well a correction reconstructs responses under a particular data distribution. Their losses alone do not supply that geometric accounting.
 
@@ -437,7 +433,7 @@ $$
 
 A=(−0.8,−0.1) and B=(−0.6,−0.2) become Q preactivations (−0.9,−0.1) and (−0.8,−0.2). Correcting first gives the positive FP responses shown in Figure 5; Q's ReLU instead merges both at zero. This particular collision proves no decoder of h alone can recover both FP targets. A nonzero nonlinear component in general establishes only noncommutation of the declared repair and activation.
 
-Figures 1b and 3 use the full-rank rectangular W/Wq from Figure A2. To specify the correlated calibration geometry, let p be the sampled 2D grid/circle coordinates, $d=(1,-1,1)$, and $\alpha=(0.7,-0.7)^\top$. Construct
+Figure 3 uses the full-rank rectangular W/Wq from Figure A2. To specify the correlated calibration geometry, let p be the sampled 2D grid/circle coordinates, $d=(1,-1,1)$, and $\alpha=(0.7,-0.7)^\top$. Construct
 
 $$
 x(p,t)=pW_q^\dagger+(p\alpha+t)d,\qquad
