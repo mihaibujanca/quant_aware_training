@@ -33,16 +33,16 @@ def test_same_scalar_fiber_has_distinct_fp_responses_and_opposite_missing_terms(
 def test_deformation_is_recoverable_without_collapsing_samples():
     story = build_geometry_stories()[0]
     torch.testing.assert_close(story.decomposition.quantized_weight,
-                               torch.tensor([[1., 1.], [0., 1.]], dtype=torch.float64))
+                               torch.tensor([[1., 0.], [1., 1.]], dtype=torch.float64))
     # Neither quantization nor the FP map returns the input shape unchanged.
     assert not torch.allclose(story.states[2], story.states[0])
     assert not torch.allclose(story.states[2], story.states[1])
     torch.testing.assert_close(story.decomposition.R,
-                               torch.tensor([[1.35, -.15], [-.35, .8]], dtype=torch.float64))
+                               torch.tensor([[1., -.4], [-.35, 1.25]], dtype=torch.float64))
     torch.testing.assert_close(story.states[1][-2:],
-                               torch.tensor([[-.915, .33], [.84, .135]], dtype=torch.float64))
+                               torch.tensor([[-.865, .235], [-.73, .07]], dtype=torch.float64))
     torch.testing.assert_close(story.states[2][-2:],
-                               torch.tensor([[-.6, .3], [.7, .3]], dtype=torch.float64))
+                               torch.tensor([[-.9, -.1], [-.8, -.2]], dtype=torch.float64))
     assert story.decomposition.rank == 2
     torch.testing.assert_close(story.decomposition.U, torch.zeros(2, 2, dtype=torch.float64))
     torch.testing.assert_close(story.decomposition.R,
@@ -69,7 +69,12 @@ def test_rectangular_full_rank_measurements_change_fibers_without_rank_drop():
 
 
 def test_relu_discards_distinction_preserved_by_linear_map():
-    story = build_geometry_stories()[1]
+    deformation, story = build_geometry_stories()[:2]
+    # Figure 2 continues Figure 1's map and point identities, then adds ReLU.
+    torch.testing.assert_close(story.points, deformation.points)
+    torch.testing.assert_close(story.decomposition.weight, deformation.decomposition.weight)
+    torch.testing.assert_close(story.states[0], deformation.states[2])
+    torch.testing.assert_close(story.states[1], deformation.states[3])
     torch.testing.assert_close(story.decomposition.quantized_weight,
                                torch.tensor([[1., 0.], [1., 1.]], dtype=torch.float64))
     torch.testing.assert_close(story.decomposition.R,

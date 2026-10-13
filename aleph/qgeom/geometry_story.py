@@ -89,9 +89,12 @@ def _geometry(probes):
 
 def build_geometry_stories() -> tuple[GeometryStory, ...]:
     results = []
+    # Follow one map and the same A/B inputs from deformation through ReLU.
+    repair_weights = [[1., -.4], [.65, .85]]
+    repair_probes = [[-.8, -.1], [-.6, -.2]]
     specifications = [
-        ("deformation", "Two different maps; the quantized route can be corrected", [[1., .65], [-.35, .8]], [[-.6, .9], [.7, -.4]]),
-        ("relu", "ReLU merges points the corrected map would keep distinct", [[1., -.4], [.65, .85]], [[-.8, -.1], [-.6, -.2]]),
+        ("deformation", "Two different maps; the quantized route can be corrected", repair_weights, repair_probes),
+        ("relu", "ReLU merges points the corrected map would keep distinct", repair_weights, repair_probes),
         ("loss", "A flattened shape has lost a direction", [[1., .3], [.25, .25]], [[.4, -.8], [.4, .8]]),
     ]
     for key, title, weights, probes in specifications:

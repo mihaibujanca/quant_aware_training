@@ -86,4 +86,6 @@ The comparison uses the full-rank 3→2 fixture from `build_rectangular_measurem
 
 The script checks each fit's normal equation, each optimizer's strict preference under its own objective, the analytic preactivation fit and its agreement with FP on the displayed central sheet, and the second-moment weighting identity. A separate isotropic preactivation fit recovers the map repair. This is a deterministic explanatory fixture, not a held-out correction experiment or a new runner API.
 
+Research Figures 1, 2, 4, and 5 share W, Wq, R, the grid/circle and A/B inputs. The `deformation` and `relu` story keys select different stages of this one example; the rank-collapse story is a separate fixture. The network/oracle figure has its own propagation fixture.
+
 To populate the animation template, add `--fragment /absolute/path/story.html` to the visual-story command. Its source is `animations/quant_geometry_story.html`, and its geometry is supplied by `aleph/qgeom/geometry_story.py`. Playback interpolates corresponding points between exact endpoint states; intermediate frames are explanatory motion, not additional bit widths or inference states. The payload rounds endpoint coordinates to six decimals for display. The static figures use the float64 tensors directly.

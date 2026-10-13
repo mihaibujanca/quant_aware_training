@@ -101,7 +101,7 @@ def main():
         [L.quant_post, L.quant_post, L.transported_post],
         [L.fp_post, L.transported_post, L.fp_post],
         [r"Need $c_{\rm total}=y-h$", r"Apply $c_R=hR-h$", r"Still owed: $y-hR$"]):
-        pair(ax, source, destination, stories[0].path_lengths, bounds, title)
+        pair(ax, source, destination, stories[0].path_lengths, bounds, title, curved=True)
     fig.supxlabel("Arrows go from the dashed starting shape to the blue destination. Filled A/B mark where each motion arrives.", fontsize=10)
     fig.savefig(output / "ledger_geometry_uncomp.png", dpi=150, facecolor="white")
     plt.close(fig)
@@ -159,7 +159,9 @@ def main():
                                 "corrections_R_NL_U": expected.tolist(), "total": (.56, .09)}
 
     # One layer receiving an upstream-displaced input: actual vectors, not a symbolic flowchart.
-    W, Wq = stories[0].decomposition.weight, stories[0].decomposition.quantized_weight
+    # This separate propagation fixture is independent of the shared repair story.
+    W = torch.tensor([[1., .65], [-.35, .8]], dtype=torch.float64)
+    Wq = WeightQuantizer(2)(W).quantized
     a = torch.tensor([1., .5], dtype=W.dtype)
     a_fp = torch.tensor([.7, .8], dtype=W.dtype)
     hq, g, target = torch.relu(a@Wq), torch.relu(a@W), torch.relu(a_fp@W)

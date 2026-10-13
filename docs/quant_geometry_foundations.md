@@ -4,7 +4,7 @@ Weight quantization changes the linear map of a layer. We follow the same points
 
 ## 1. What shape does the layer move?
 
-An input is a row vector $x\in\mathbb R^{1\times n}$, and the weights are $W,W_q\in\mathbb R^{n\times m}$. Start with the linear part of the layer: full precision (FP) sends x to xW; the quantized map (Q) sends the same x to xWq. The main argument uses zero bias; the float-bias extension comes later in [Technical details](#b3-float-bias-and-the-implementation-sign-convention).
+An input is a row vector $x\in\mathbb R^{1\times n}$, and the weights are $W,W_q\in\mathbb R^{n\times m}$. Start with the linear part of the layer: full precision (FP) sends x to xW; the quantized map Q sends the same x to xWq. The main argument uses zero bias; the float-bias extension comes later in [Technical details](#b3-float-bias-and-the-implementation-sign-convention).
 
 ![The same input shape under FP, quantized, and repaired preactivation maps](figures/quant_geometry/geometry_deformation.png)
 
@@ -18,15 +18,13 @@ $$
 R_{\rm map}\in\underset{R\in\mathbb R^{m\times m}}{\operatorname{argmin}}\;\|W-W_qR\|_F^2.
 $$
 
-This minimizes map discrepancy with input directions weighted equally. If $W_qR_{\rm map}=W$, the linear deformation is exactly repaired for every input. Use $R=R_{\rm map}$ in the geometric ledger; the subscript distinguishes it from the data-conditioned fits below. Its explicit construction is a technical detail, not the reason for introducing it.
+This minimizes map discrepancy with input directions weighted equally. If $W_qR_{\rm map}=W$, the linear deformation is exactly repaired for every input. $R=R_{\rm map}$ is a distinct component from the data-conditioned fits below.
 
-**Mathematically, when Wq is square and invertible, this repair is always exact before activation.** Its output still contains every input direction: we can undo the quantized map and apply the FP map instead,
+**When Wq is square and invertible, this repair is always exact before activation.** Its output still contains every input direction: we can undo the quantized map and apply the FP map instead (Fig. 1, requires **full-precision** R):
 
 $$
 R=W_q^{-1}W,\qquad (xW_q)R=xW.
 $$
-
-Figure 1 shows this case. The exact-repair statement allows full-precision R; quantizing R would impose a further restriction on the repair.
 
 Many ANN layers change width or map a convolutional patch to output channels, so their maps are rectangular. The square-invertible guarantee therefore cannot be assumed throughout a network. Widening maps can also retain every input direction; narrowing maps can leave out directions that FP uses, even when both maps have their maximum possible rank. The examples and general criterion are developed later in [Understanding the remainder U](#a-understanding-the-remainder-u) and [Technical details](#b2-rank-conditions-and-the-fiber-criterion-for-exact-repair).
 
@@ -59,7 +57,7 @@ $$
 
 ![An exact preactivation repair before ReLU versus a failed repair after ReLU](figures/quant_geometry/geometry_relu.png)
 
-**Figure 2 — the order of repair and clipping matters.** This second map is exactly repairable before ReLU. Correcting first produces distinct positive FP outputs for A and B. Clipping the Q preactivations first merges both at zero; the same R then receives the same point for both. The obstruction arose after the linear map, even though that map's deformation was repairable.
+**Figure 2 — the order of repair and clipping matters.** Continue Figure 1 with the same W, Wq, R, grid, circle, and A/B inputs; now introduce ReLU. Correcting first produces distinct positive FP outputs for A and B. Clipping the Q preactivations first merges both at zero; the same R then receives the same point for both. The obstruction arose after the linear map, even though that map's deformation was repairable.
 
 Here $y=\phi(z_qR)$, but applying R after ReLU need not reach y. We will account for that remaining gap in the ledger.
 
@@ -124,7 +122,7 @@ $$
 
 ![The correction needed, the forward motion supplied by R, and the balance after R](figures/quant_geometry/ledger_geometry_uncomp.png)
 
-**Figure 4 — correction owed → R applied → balance remaining.** B reaches FP after R; A still has a balance. R acts after ReLU, so hR can have negative coordinates.
+**Figure 4 — correction owed → R applied → balance remaining.** The same map and inputs from Figures 1–2, now viewed as a repair account. R moves the clipped shape, but the marked A/B both start at zero and stay there: their full correction is still owed. R acts after ReLU, so other points in hR can have negative coordinates.
 
 ### Exact linear repair: the remaining balance comes from activation ordering
 
@@ -139,7 +137,7 @@ First use the map repair; then account for the gap left because activation came 
 
 ![The outstanding activation-order balance points from hR toward the exact FP target](figures/quant_geometry/ledger_geometry_nonlinear.png)
 
-**Figure 5 — hR→φ(zqR)=y.** Clipping first leaves A/B together at zero. The arrows reconcile this with their distinct FP targets, (0,0.235) and (0,0.07). The linear repair was exact; activation obstructed it.
+**Figure 5 — hR→φ(zqR)=y.** Account for Figure 4's remaining balance using the repair-before-clipping route already shown in Figure 2. Clipping first leaves A/B together at zero. The arrows reconcile this with their distinct FP targets, (0,0.235) and (0,0.07). The linear repair was exact; activation obstructed it.
 
 ### Incomplete linear repair: reconcile the rest of the balance
 
@@ -430,23 +428,15 @@ G is an uncentered second-moment Gram matrix. The diagonal entries are individua
 
 ### B.6 Matrices for the main geometric examples
 
-Figure 1 uses
-
-$$
-W=\begin{bmatrix}1&0.65\\-0.35&0.8\end{bmatrix},\qquad
-W_q=\begin{bmatrix}1&1\\0&1\end{bmatrix},\qquad
-R=\begin{bmatrix}1.35&-0.15\\-0.35&0.8\end{bmatrix},\qquad U=0.
-$$
-
-Bounded symmetric 2-bit quantization rounds the coefficients to {−1,0,1}.
-
-Figures 2 and 5 use
+Figures 1, 2, 4, and 5 follow one map and the same A/B inputs:
 
 $$
 W=\begin{bmatrix}1&-0.4\\0.65&0.85\end{bmatrix},\qquad
 W_q=\begin{bmatrix}1&0\\1&1\end{bmatrix},\qquad
 R=\begin{bmatrix}1&-0.4\\-0.35&1.25\end{bmatrix},\qquad U=0.
 $$
+
+Bounded symmetric 2-bit quantization rounds the coefficients to {−1,0,1}.
 
 A=(−0.8,−0.1) and B=(−0.6,−0.2) become Q preactivations (−0.9,−0.1) and (−0.8,−0.2). Correcting first gives the positive FP responses shown in Figure 5; Q's ReLU instead merges both at zero. This particular collision proves no decoder of h alone can recover both FP targets. A nonzero activation-order balance in general establishes only noncommutation of the declared repair and activation.
 
