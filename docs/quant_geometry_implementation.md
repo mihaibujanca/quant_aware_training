@@ -1,6 +1,6 @@
 # Quantization geometry: implementation and reproduction
 
-The [research note](quant_geometry_foundations.md) defines the objects and their geometric meaning. This document describes the current package, its conventions, and how to reproduce the artifacts. Verification evidence is in the [verification report](quant_geometry_verification.md); work status is in the [progress tracker](quant_geometry_progress.md).
+The [research note](quant_geometry_foundations.md) defines the objects and their geometric meaning. This document describes the current package, its conventions, and how to reproduce the artifacts. Work status is in the [progress tracker](quant_geometry_progress.md).
 
 ## Quantizer and decomposition
 
@@ -14,7 +14,7 @@ R and U are computed and retained in W's floating-point dtype (float32 or float6
 
 `ErrorLedger.compute(x, decomposition, bias=..., activation=...)` returns `uncomp`, `nonlinear`, `range`, and Q-minus-FP `total`, plus the states `quant_pre`, `fp_pre`, `quant_post`, `fp_post`, `recoverable_pre`, `recoverable_post`, and `transported_post`. It checks affine reconstruction and component telescoping coordinate by coordinate. Default absolute and relative tolerances are `1e-5` for float32 and `1e-10` for float64; both can be overridden. Ill-conditioned cases may need float64 or an explicitly chosen rank policy.
 
-The implementation stores Q-minus-FP vectors. The research note's [forward repair account](quant_geometry_foundations.md#b3-float-bias-and-the-implementation-sign-convention) uses their negatives: `uncomp = -c_R`, `nonlinear = -c_NL`, `range = -c_U`, and `total = -c_total`. The available map correction is c_R; c_NL and c_U explain its remaining balance. Exported keys and historical filenames are preserved. The Gram matrix is unchanged when all vector signs are reversed.
+The implementation stores Q-minus-FP vectors. The research note's [forward repair account](quant_geometry_foundations.md#b3-bias-and-the-sign-convention-in-the-code) uses their negatives: `uncomp = -c_R`, `nonlinear = -c_NL`, `range = -c_U`, and `total = -c_total`. The available map correction is c_R; c_NL and c_U explain its remaining balance. Exported keys and historical filenames are preserved. The Gram matrix is unchanged when all vector signs are reversed.
 
 `ledger.gram()` returns the mean inner-product matrix of the three components, ordered uncompensated/nonlinear/residual deformation. It is an uncentered second moment, not covariance or an allocation into additive percentages.
 
@@ -37,8 +37,6 @@ For a run input `a` that may already differ from the FP input, the runner define
 `ActivationTrace.fp` is the reference `ForwardTrace`; `.raw_quantized` contains pre/post states before each intervention; `.consumed_post_acts` contains states passed to the next layer. A raw trace in an oracle run is conditioned on earlier corrected inputs, so it must not be confused with ordinary quantized inference. `.output` is the final consumed state.
 
 `ResidualOracle.residual(hq, layer)` returns `h_fp-hq`, the **opposite sign** to the ledger. A `CorrectionBridge(source=i,target=i)` restores the output of linear layer `i` before layer `i+1` consumes it. A later target restores at that later layer. Indices are zero-based **linear-layer indices**, not Sequential module positions. An exact bridge restores all accumulated discrepancy at its target; it is a source-specific intervention only when the named source is the sole perturbed layer.
-
-The [verification report](quant_geometry_verification.md#diagnostic-figures-and-numerical-evidence) records the runner and oracle diagnostic figures and measured restoration results.
 
 ### API example
 
@@ -72,7 +70,6 @@ corrected = runner.run(x.float(), quantized_layers=[0],
 Run from the repository root:
 
 ```sh
-MPLCONFIGDIR=/tmp/qgeom-mpl XDG_CACHE_HOME=/tmp/qgeom-cache .venv/bin/python -m experiments.quant_geometry_foundations
 MPLCONFIGDIR=/tmp/qgeom-mpl XDG_CACHE_HOME=/tmp/qgeom-cache .venv/bin/python -m experiments.quant_geometry_scalar_measurement
 MPLCONFIGDIR=/tmp/qgeom-mpl XDG_CACHE_HOME=/tmp/qgeom-cache .venv/bin/python -m experiments.quant_geometry_rectangular_measurement
 MPLCONFIGDIR=/tmp/qgeom-mpl XDG_CACHE_HOME=/tmp/qgeom-cache .venv/bin/python -m experiments.quant_geometry_visual_story
@@ -80,12 +77,18 @@ MPLCONFIGDIR=/tmp/qgeom-mpl XDG_CACHE_HOME=/tmp/qgeom-cache .venv/bin/python -m 
 MPLCONFIGDIR=/tmp/qgeom-mpl XDG_CACHE_HOME=/tmp/qgeom-cache .venv/bin/python -m experiments.quant_geometry_reconstruction_comparison
 ```
 
-The foundations command produces eight diagnostic figures and the run manifest. The scalar-measurement command produces the weight-direction/fiber figure and `scalar_measurement_fixture.json`, with the exact weights, repair gain, residual and A/B responses. The rectangular-measurement command produces the 3→2 measured-plane/fiber figure and `rectangular_measurement_fixture.json`, recording both ranks, the nonzero Q singular values, and exact A/B states. The visual-story command produces three geometric storyboards and exact endpoint data. The ledger-figure command draws the forward Q→FP repair account (Figures 4–7), the incoming/local/oracle balance (Figure 8), and `repair_ledger_figure_fixture.json` with exact endpoints and signed contributions. Historical `ledger_geometry_uncomp` / `ledger_geometry_nonlinear` / `ledger_geometry_range` filenames now contain the forward c_R / c_NL / c_U explanation. The reconstruction-comparison command produces the two-row/four-column `geometry_repair_vs_reconstruction.png` and `repair_vs_reconstruction_fixture.json`. It records all three repairs, the uncorrected baseline, all three objective values, and the input geometry. Outputs are under `docs/figures/quant_geometry/`.
+The scalar-measurement command produces the weight-direction/fiber figure and `scalar_measurement_fixture.json`, with the exact weights, repair gain, residual and A/B responses. The rectangular-measurement command produces the 3→2 measured-plane/fiber figure and `rectangular_measurement_fixture.json`, recording both ranks, the nonzero Q singular values, and exact C/D states. The visual-story command produces three geometric storyboards and exact endpoint data. The ledger-figure command draws the forward Q→FP repair account (Figures 3, 4, 6, 7), the incoming/local/oracle balance (Figure 8), and `repair_ledger_figure_fixture.json` with exact endpoints and signed contributions. Historical `ledger_geometry_uncomp` / `ledger_geometry_nonlinear` / `ledger_geometry_range` filenames now contain the forward c_R / c_NL / c_U explanation. The reconstruction-comparison command produces the two-row/four-column `geometry_repair_vs_reconstruction.png` and `repair_vs_reconstruction_fixture.json`. It records all three repairs, the uncorrected baseline, all three objective values, and the input geometry. Outputs are under `docs/figures/quant_geometry/`.
 
-The comparison uses the full-rank 3→2 fixture from `build_rectangular_measurement_story`. The 2D grid/circle parameters specify a tilted 3D input sheet; offsets of −0.15, 0, and +0.15 along the Q blind direction give 2,577 calibration samples with rank-3 input data. All samples have equal weight, including duplicate intersections; named A/B probes are excluded on all three sheets. The pictures show the central sheet; reported losses use the whole cloud. Map, preactivation data, and post-ReLU data fits all use the same full-precision 2×2 correction family.
+The comparison uses the full-rank 3→2 fixture from `build_rectangular_measurement_story`. The 2D grid/circle parameters specify a tilted 3D input sheet; offsets of −0.15, 0, and +0.15 along the Q blind direction give 2,577 calibration samples with rank-3 input data. All samples have equal weight, including duplicate intersections; the two named probe points are excluded on all three sheets. The pictures show the central sheet; reported losses use the whole cloud. Map, preactivation data, and post-ReLU data fits all use the same full-precision 2×2 correction family.
 
 The script checks each fit's normal equation, each optimizer's strict preference under its own objective, the analytic preactivation fit and its agreement with FP on the displayed central sheet, and the second-moment weighting identity. A separate isotropic preactivation fit recovers the map repair. This is a deterministic explanatory fixture, not a held-out correction experiment or a new runner API.
 
-Research Figures 1, 2, 4, and 5 share W, Wq, R, the grid/circle and A/B inputs. The `deformation` and `relu` story keys select different stages of this one example; the rank-collapse story is a separate fixture. The network/oracle figure has its own propagation fixture.
+Research Figures 1–4 share the simplified map W₁, its R, the grid/circle and A/B inputs; the `deformation` and `relu` story keys select different stages of this one example. Figures 5–9 use the typical 3→2 map W₂ (`build_rectangular_measurement_story` / `build_typical_ledger_story`) and the fiber pair C/D. The rank-collapse story (Figure A2) is a separate, deliberately atypical fixture.
+
+Tests:
+
+```sh
+MPLCONFIGDIR=/tmp/qgeom-mpl .venv/bin/python -m pytest tests/test_qgeom_geometry_story.py tests/test_qgeom_exact_ledger.py tests/test_qgeom_instrumented_mlp.py tests/test_qgeom_metrics.py tests/test_qgeom_policy.py tests/test_models.py -q
+```
 
 To populate the animation template, add `--fragment /absolute/path/story.html` to the visual-story command. Its source is `animations/quant_geometry_story.html`, and its geometry is supplied by `aleph/qgeom/geometry_story.py`. Playback interpolates corresponding points between exact endpoint states; intermediate frames are explanatory motion, not additional bit widths or inference states. The payload rounds endpoint coordinates to six decimals for display. The static figures use the float64 tensors directly.

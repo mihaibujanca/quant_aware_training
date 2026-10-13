@@ -1,6 +1,6 @@
 # Geometric Neural Network Compression Plan
 
-For the weight-only quantization workstream, start with the [research note](docs/quant_geometry_foundations.md), which pairs formal ledger definitions with geometric pictures. The [implementation README](docs/quant_geometry_implementation.md) covers APIs and reproduction; the [verification report](docs/quant_geometry_verification.md) records evidence. The [research plan](docs/quantization_geometry_plan.md) and [progress tracker](docs/quant_geometry_progress.md) describe scope and current status.
+For the weight-only quantization workstream, start with the [research note](docs/quant_geometry_foundations.md), which pairs formal ledger definitions with geometric pictures. The [implementation README](docs/quant_geometry_implementation.md) covers APIs, reproduction and tests. The [research plan](docs/quantization_geometry_plan.md) and [progress tracker](docs/quant_geometry_progress.md) describe scope and current status.
 
 ## What This Project Is About
 
