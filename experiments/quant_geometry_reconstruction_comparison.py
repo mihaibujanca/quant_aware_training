@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import torch
 
 from aleph.qgeom.geometry_story import build_geometry_stories, build_rectangular_measurement_story
-from experiments.quant_geometry_ledger_figures import axes_style, probes, shape
+from experiments import quant_geometry_style as style
 
 
 def main():
@@ -69,25 +69,24 @@ def main():
     bounds = tuple((c-radius, c+radius) for c in center)
     fig, axes = plt.subplots(2, 4, figsize=(17, 9.2), constrained_layout=True)
     fig.suptitle("Three objectives choose three different repairs", fontsize=19)
-    labels = ["Q: no correction", r"$R_{\rm map}$: fit the map",
+    labels = ["Q: no correction", r"$R$: map repair",
               r"$R_{\rm pre,data}$: fit preactivations", r"$R_{\rm post,data}$: fit activations"]
     for row, states in enumerate(rows):
         for column, state in enumerate(states):
             ax = axes[row, column]
-            shape(ax, targets[row], paths.path_lengths, color="#64748b", dashed=True)
-            shape(ax, state, paths.path_lengths)
-            probes(ax, state)
+            style.shape(ax, targets[row], paths.path_lengths, "fp")
+            style.shape(ax, state, paths.path_lengths, "q" if column == 0 else "repaired")
             map_loss = (W-Wq).square().sum().item() if column == 0 else losses[list(matrices)[column-1]]["map_frobenius_squared"]
             label = f"{labels[column]}\nMap loss: {map_loss:.4f}" if row == 0 else ""
-            axes_style(ax, bounds, label)
+            style.axes_style(ax, bounds, label)
             if column == 0:
                 ax.set_ylabel(("Before ReLU" if row == 0 else "ReLU first, then correction") + "\nOutput coordinate 2")
             key = "calibration_pre_mse" if row == 0 else "calibration_post_mse"
             mse = ((Q-F).square().mean() if row == 0 else (H-Y).square().mean()).item() if column == 0 else losses[list(matrices)[column-1]][key]
             ax.text(.03, .04, f"Calibration MSE: {mse:.4f}", transform=ax.transAxes, fontsize=10,
                     bbox={"facecolor": "white", "alpha": .85, "edgecolor": "none"})
-    fig.supxlabel("Dashed = FP target for the same inputs. Grid/circle = representative inputs; fits use the full calibration set. A/B excluded.", fontsize=11)
-    fig.savefig(output / "geometry_repair_vs_reconstruction.png", dpi=150, facecolor="white")
+    style.legend(fig, [style.state_handle("fp"), style.state_handle("q"), style.state_handle("repaired")])
+    fig.savefig(output / "geometry_repair_vs_reconstruction.png", dpi=150, facecolor="white", bbox_inches="tight")
     plt.close(fig)
     payload = {"W": W.tolist(), "Wq": Wq.tolist(),
                **{name: R.tolist() for name, R in matrices.items()},

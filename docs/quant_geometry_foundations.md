@@ -1,55 +1,98 @@
 # Quantization geometry: deformation, repair, and an exact ledger
 
-Weight quantization changes the linear map of a layer. We follow the same points through that changed geometry, ask what an output-side transformation can repair, and examine what happens when activation intervenes. The ledger starts with the correction owed to FP, applies the available repair, and explains its remaining balance. Network experiments then follow that balance downstream.
+Quantizing a layer's weights changes the function the layer computes. This note asks: **how much of that change can a linear map applied to the quantized layer's output undo, and why does the rest remain?** The answer is a ledger. The correction needed to get back to full precision (FP) splits exactly into three terms.
 
-## 1. What shape does the layer move?
+**Contents.** [The ledger at a glance](#the-ledger-at-a-glance) ·
+Part I, a square layer: [deformation](#1-how-quantization-deforms-a-layers-output), [linear repair](#2-what-a-linear-map-on-the-quantized-output-can-repair), [ReLU](#3-relu-repairing-before-or-after-it-gives-different-results), [ledger](#4-the-ledger-for-the-square-layer) ·
+Part II, fewer outputs than inputs: [fibers and the residual](#5-switch-to-a-layer-with-fewer-outputs-than-inputs), [complete ledger](#6-the-complete-ledger), [cancellation](#7-the-terms-can-cancel), [networks and the oracle](#8-from-one-layer-to-a-network), [calibration fitting](#9-comparison-fitting-a-correction-to-calibration-data) ·
+[More examples of $U$](#a-more-examples-of-the-residual-u) · [Technical details](#b-technical-details).
+An animated version of Figures 1–2 can be generated as described in the [implementation README](quant_geometry_implementation.md#reproduce-the-artifacts).
 
-An input is a row vector $x\in\mathbb R^{1\times n}$, and the weights are $W,W_q\in\mathbb R^{n\times m}$. Start with the linear part of the layer: full precision (FP) sends x to xW; the quantized map Q sends the same x to xWq. The main argument uses zero bias; the float-bias extension comes later in [Technical details](#b3-float-bias-and-the-implementation-sign-convention).
+## The ledger at a glance
+
+Take one layer with input row vector $x$, FP weights $W$, quantized weights $W_q$ and ReLU $\phi$.
+
+- The FP layer outputs $y=\phi(xW)$. The quantized layer outputs $h=\phi(z_q)$, where $z_q=xW_q$ is the quantized preactivation.
+- $R$ is the best **linear** repair: the matrix that brings $W_qR$ as close as possible to $W$, $R=\operatorname{argmin}_R\lVert W-W_qR\rVert_F$. It is computed from the weights alone, with no data, and kept at full precision.
+- $U=W-W_qR$ is the part of $W$ that no linear map applied after $W_q$ can reproduce.
+
+Geometrically, a layer with fewer outputs than inputs flattens its input space: inputs that differ only along certain directions give the same output. This already happens at full precision. Quantization **tilts the flattened directions**. Inputs that $W_q$ sends to the same point, but $W$ does not, cannot be separated again by anything applied after $W_q$. $U$ is what $W$ does along those directions. $U=0$ exactly when $W_q$ flattens no direction that $W$ uses. This holds for square layers whose $W_q$ stays invertible, and for layers with more outputs than inputs and full rank. It generally fails for layers with fewer outputs than inputs, such as convolutions and MLP down-projections.
+
+The correction needed, $y-h$, splits into three terms:
+
+| Term | Name | Definition | In words |
+|---|---|---|---|
+| $c_R$ | map repair | $hR-h$ | The correction $R$ makes when applied to the quantized output $h$. |
+| $c_{\rm NL}$ | activation-order error | $\phi(z_qR)-hR$ | How much better $R$ would have done before ReLU. ReLU has already set some coordinates of $h$ to zero, and $R$ cannot recover them. |
+| $c_U$ | residual deformation | $y-\phi(z_qR)$ | What $R$ misses even before ReLU. $W_q$ flattens some input directions that $W$ does not; inputs that differ along them have the same quantized preactivation but different FP outputs. |
+
+$$
+y-h=c_R+c_{\rm NL}+c_U.
+$$
+
+Each term needs more information to correct than the one before. $c_R$ needs only the layer output $h$, $c_{\rm NL}$ needs the preactivation $z_q$, and $c_U$ needs the original input $x$.
+
+**Reading the figures.** Every figure uses the same key, and each repeats it in a legend:
+
+| What you see | Meaning |
+|---|---|
+| orange, dashed, hollow markers | the FP target |
+| gray, solid | the quantized layer, uncorrected |
+| blue, solid | after a correction |
+| near-black | inputs, before any map |
+| blue / green / purple arrows | $c_R$ / $c_{\rm NL}$ / $c_U$ |
+| black dashed arrow | $c_{\rm total}$ |
+
+Marker shape tells inputs apart: circles for $A$ and $C$, squares for $B$ and $D$. Where $C$ and $D$ appear together they need different FP targets, so $D$'s target is purple instead of orange, and an arrow that belongs to only one of them is drawn in that point's color.
+
+**Two example layers.** Part I uses a square layer $W_1$ whose quantized weights stay invertible. Its map repair is exact ($U=0$), so ReLU is the only source of error. Part II switches once, to a layer $W_2$ with three inputs and two outputs. There quantization tilts the flattened direction, the repair is incomplete, and $c_U$ appears. Part II keeps $W_2$ to the end, including the network section and the comparison with calibration fitting. The appendix uses other matrices for a zoomed-in view and for an atypical case, and says so each time.
+
+Inputs are row vectors $x\in\mathbb R^{1\times n}$, and $W,W_q\in\mathbb R^{n\times m}$. The main text uses zero bias; bias is handled in [Technical details](#b3-bias-and-the-sign-convention-in-the-code).
+
+# Part I — a square layer: the repair is exact, but ReLU gets in the way
+
+## 1. How quantization deforms a layer's output
+
+Start with the linear part of the layer. FP sends $x$ to $xW$; the quantized layer, Q, sends it to $xW_q$. Throughout Part I,
+
+$$
+W_1=\begin{bmatrix}1&-0.4\\0.65&0.85\end{bmatrix},\qquad
+W_{1,q}=\begin{bmatrix}1&0\\1&1\end{bmatrix},
+$$
+
+where 2-bit symmetric quantization rounds each coefficient to $\{-1,0,1\}$. In Part I, $W$ and $W_q$ mean these two matrices.
 
 ![The same input shape under FP, quantized, and repaired preactivation maps](figures/quant_geometry/geometry_deformation.png)
 
-**Figure 1 — a changed map can be repaired.** The same grid, circle, and named samples move through each panel. FP and Q produce different shapes. Applying a full-precision map R to the Q shape recovers the FP target: the two right panels reach the same coordinates by different routes, $xW$ and $(xW_q)R$. Here Wq is square and invertible, with 2-bit coefficients; R is not quantized. No activation has yet intervened. Axes stay fixed, so the deformation is a change of map rather than a change of camera.
+**Figure 1 — the quantized layer deforms the output, and a linear map can undo it.** A grid, a circle and two inputs $A=(-0.8,-0.1)$ and $B=(-0.6,-0.2)$ pass through each map. FP and Q produce different shapes. Applying $R$ to the Q output recovers the FP output exactly: the two right panels arrive at the same points, one by $xW$ and the other by $(xW_q)R$. There is no activation yet. The axes are the same in every panel, so the change in shape comes from the map, not the viewpoint.
 
-## 2. Which part can a map on the quantized output recover?
+## 2. What a linear map on the quantized output can repair
 
-Start with the deformation in Figure 1. **Can a transformation acting on the quantized representation undo it?** R can mix and scale the output coordinates, moving the whole Q geometry back toward its FP target. **R is a full-precision correction, retained at the floating-point precision of W; it is not constrained to Wq's quantization grid.** Define the best linear map repair by
+$R$ can mix and rescale the output coordinates, moving the whole Q output back toward FP. **$R$ is kept at full precision; it is not rounded to the quantization grid.** We choose it by
 
 $$
-R_{\rm map}\in\underset{R\in\mathbb R^{m\times m}}{\operatorname{argmin}}\;\|W-W_qR\|_F^2.
+R\in\underset{R\in\mathbb R^{m\times m}}{\operatorname{argmin}}\;\|W-W_qR\|_F^2.
 $$
 
-This minimizes map discrepancy with input directions weighted equally. If $W_qR_{\rm map}=W$, the linear deformation is exactly repaired for every input. $R=R_{\rm map}$ is a distinct component from the data-conditioned fits below.
+This objective weights every input direction equally and uses no data.
 
-**When Wq is square and invertible, this repair is always exact before activation.** Its output still contains every input direction: we can undo the quantized map and apply the FP map instead (Fig. 1, requires **full-precision** R):
+When $W_q$ is square and invertible, the repair is exact. No input direction has been lost, so we can undo the quantized map and apply the FP map instead:
 
 $$
 R=W_q^{-1}W,\qquad (xW_q)R=xW.
 $$
 
-Many ANN layers change width or map a convolutional patch to output channels, so their maps are rectangular. The square-invertible guarantee therefore cannot be assumed throughout a network. Widening maps can also retain every input direction; narrowing maps can leave out directions that FP uses, even when both maps have their maximum possible rank. The examples and general criterion are developed later in [Understanding the remainder U](#a-understanding-the-remainder-u) and [Technical details](#b2-rank-conditions-and-the-fiber-criterion-for-exact-repair).
+<!-- For $W_1$, $R=\left[\begin{smallmatrix}1&-0.4\\-0.35&1.25\end{smallmatrix}\right]$. -->
 
-### Repair the map, rather than fit selected responses
+## 3. ReLU: repairing before or after it gives different results
 
-The map objective gives every input direction equal weight. A calibration set $\mathcal D$ instead supplies a cloud of inputs: fitting their FP responses gives more weight to the directions and correlations that occur in that cloud. Before introducing activation, this gives a second objective,
-
-$$
-R_{\rm pre,data}\in\underset{R\in\mathbb R^{m\times m}}{\operatorname{argmin}}\;
-\sum_{x\in\mathcal D}\|xW_qR-xW\|^2.
-$$
-
-The transformation being fitted is still linear. What changed is **where we ask it to be accurate**. The data fit prioritizes matching FP responses for the inputs that occur in the calibration set, even if this costs larger map error elsewhere. Figure 3's top row shows the consequence directly: the two fits move the same Q points differently.
-
-The two optimizers can coincide—for example, with isotropic input weighting, or when an exact repair is identified by the calibration samples. Figure 3 uses a full-rank rectangular map so the distribution's effect is visible. No activation is involved in this first change of objective.
-
-### Introduce ReLU: clipping changes the repair problem
-
-The linear map produces a preactivation; the layer then applies ReLU. Geometrically, ReLU presses each negative coordinate onto zero: a shape can acquire edges on the axes, and distinct points can land together. Formally, $\phi(v)_j=\max(v_j,0)$. The two layer outputs are now
+The layer applies ReLU to the preactivation. ReLU sets every negative coordinate to zero, so a shape gets pressed flat against the axes and different points can land on the same point. Formally, $\phi(v)_j=\max(v_j,0)$, and
 
 $$
 z_q=xW_q,\qquad h=\phi(z_q),\qquad y=\phi(xW).
 $$
 
-First suppose R repairs the linear map exactly. Repairing before clipping gives the FP output. But a correction applied to the layer's output receives the already clipped shape. Moving a shape and then clipping it generally differs from clipping it and then moving it:
+Because $R$ repairs $W_1$ exactly, applying it before ReLU gives the FP output: $y=\phi(z_qR)$. A correction applied to the layer's output, however, only sees the output after ReLU. Applying a map and then ReLU generally differs from applying ReLU and then the map:
 
 $$
 \phi(z_q)R\ne\phi(z_qR).
@@ -57,135 +100,116 @@ $$
 
 ![An exact preactivation repair before ReLU versus a failed repair after ReLU](figures/quant_geometry/geometry_relu.png)
 
-**Figure 2 — the order of repair and clipping matters.** Continue Figure 1 with the same W, Wq, R, grid, circle, and A/B inputs; now introduce ReLU. Correcting first produces distinct positive FP outputs for A and B. Clipping the Q preactivations first merges both at zero; the same R then receives the same point for both. The obstruction arose after the linear map, even though that map's deformation was repairable.
+**Figure 2 — repair then ReLU, versus ReLU then repair.** Same $W_1$, $R$, grid, circle, $A$ and $B$ as Figure 1, now with ReLU. Repairing first gives $A$ and $B$ different FP outputs, $(0,0.235)$ and $(0,0.07)$. Applying ReLU first sends both to zero, so $R$ receives the same point for both and cannot separate them. The linear map was fully repairable; the problem comes from ReLU.
 
-Here $y=\phi(z_qR)$, but applying R after ReLU need not reach y. We will account for that remaining gap in the ledger.
+## 4. The ledger for the square layer
 
-### Fitting the clipped outputs answers a different question
-
-Keep the same calibration set and the same full-precision linear correction family. Now fit the activated Q and FP responses:
-
-$$
-R_{\rm post,data}\in\underset{R\in\mathbb R^{m\times m}}{\operatorname{argmin}}\;
-\sum_{x\in\mathcal D}\|\phi(xW_q)R-\phi(xW)\|^2.
-$$
-
-This changes **what information the fit can use and what target it matches**. ReLU removes negative coordinates and changes the correlations between the available representation and the FP response. The preferred matrix can therefore change again, even with the same inputs and correction capacity.
-
-| Repair | Objective to minimize | Weighting / available information |
-|---|---|---|
-| $R_{\rm map}$ | $\lVert W-W_qR\rVert_F^2$ | Input directions weighted equally |
-| $R_{\rm pre,data}$ | $\sum_{x\in\mathcal D}\lVert xW_qR-xW\rVert^2$ | Input distribution and its linear correlations |
-| $R_{\rm post,data}$ | $\sum_{x\in\mathcal D}\lVert\phi(xW_q)R-\phi(xW)\rVert^2$ | The clipped representation and its remaining correlations |
-
-![Four columns compare Q, map repair, preactivation data fit, and activation data fit, before and after ReLU](figures/quant_geometry/geometry_repair_vs_reconstruction.png)
-
-**Figure 3 — map geometry → data-conditioned map reconstruction → data-conditioned activation reconstruction.** The four columns show Q without correction and the three fitted matrices. The top row applies each matrix to the Q preactivation; the bottom row applies it to the already clipped Q output. Dashed gray is the corresponding FP target for the same inputs. Each correction column uses the same matrix in both rows; there is no further ReLU after correction.
-
-The grid and circle show a representative subset of inputs; the fits and reported errors use the full calibration set. The map fit has the smallest weight-map error. The preactivation data fit matches FP on the displayed subset exactly, so its blue shape covers the dashed target in the top row; error on the additional calibration inputs keeps its reported MSE nonzero. Applying that same matrix after clipping misses the activated target. The post-ReLU fit changes the motion again and has the lowest activation error on the full calibration set. A/B were excluded from all fits. Both FP and Q maps retain rank 2 throughout this comparison.
-
-**All three are least squares, but they answer different questions.** The geometric ledger fixes $R=R_{\rm map}$ to examine the changed map and activation's interference with its repair. The other two fits ask how well a correction reconstructs responses under a particular data distribution. Their losses alone do not supply that geometric accounting.
-
-### When the linear map repair is incomplete
-
-Figures 1 and 2 used exactly repairable maps to isolate the obstruction introduced by ReLU. Figure 3 returns to the general repair problem: even the best map repair can leave a gap to FP before activation. The activated R-repaired shape can therefore differ from FP for a second reason, beyond the ordering of repair and ReLU.
-
-Before activation, the gap between the R-repaired point and its FP target is xU. Define the residual map U by
-
-$$
-U=W-W_qR,\qquad W=W_qR+U,\qquad xW=(xW_q)R+xU.
-$$
-
-R supplies the selected output-side motion of the Q geometry; xU completes the motion to FP using the original input. In the square-invertible case, U=0. Evaluating xU uses the original input: it is an analysis step, not another operation in the output-side repair channel.
-
-After ReLU, the FP target is $y=\phi(z_qR+xU)$. We now have both limits of the output-side repair: activation can obstruct it, and the linear map repair can itself be incomplete. The ledger starts with the observed gap to FP, applies R, and uses these two comparisons to explain what remains.
-
-## 3. The ledger: what correction is still owed?
-
-For input x, the layer produced h; FP would produce y. The correction owed is:
+For input $x$, the quantized layer outputs $h$ and the FP layer outputs $y$. The correction needed is
 
 $$
 c_{\rm total}=y-h.
 $$
 
-This vector points from Q to FP. Now try the available map repair.
-
-### Apply R and inspect the balance
-
-R moves the point from h to hR, supplying
+Applying $R$ to the output moves $h$ to $hR$. That step is the map repair:
 
 $$
 c_R=hR-h,\qquad c_{\rm total}=c_R+(y-hR).
 $$
 
-**The balance after R is y−hR.** Explain it by inspecting the two limits of the repair.
+![The correction needed, the correction made by R, and what is still needed](figures/quant_geometry/ledger_geometry_uncomp.png)
 
-![The correction needed, the forward motion supplied by R, and the balance after R](figures/quant_geometry/ledger_geometry_uncomp.png)
+**Figure 3 — correction needed, correction made by $R$, correction still needed.** Same $W_1$ and inputs as Figures 1–2. $R$ moves the shape, but $A$ and $B$ start at zero and stay there, so they still need their full correction. Because $R$ acts after ReLU, some points of $hR$ have negative coordinates.
 
-**Figure 4 — correction owed → R applied → balance remaining.** The same map and inputs from Figures 1–2, now viewed as a repair account. R moves the clipped shape, but the marked A/B both start at zero and stay there: their full correction is still owed. R acts after ReLU, so other points in hR can have negative coordinates.
-
-### Exact linear repair: the remaining balance comes from activation ordering
-
-With U=0, repair before ReLU reaches FP: $y=\phi(z_qR)$. The balance after applying R to the clipped output is
+For $W_1$ the repair is exact, so everything $R$ leaves uncorrected is due to applying it after ReLU:
 
 $$
-c_{\rm NL}=\phi(z_qR)-hR=y-hR,\qquad
-c_{\rm total}=c_R+c_{\rm NL}\quad(U=0).
+c_{\rm NL}=\phi(z_qR)-hR=y-hR,\qquad c_{\rm total}=c_R+c_{\rm NL}.
 $$
 
-First use the map repair; then account for the gap left because activation came first.
+![The activation-order error points from hR toward the exact FP target](figures/quant_geometry/ledger_geometry_nonlinear.png)
 
-![The outstanding activation-order balance points from hR toward the exact FP target](figures/quant_geometry/ledger_geometry_nonlinear.png)
+**Figure 4 — $hR\to\phi(z_qR)=y$.** The correction still needed in Figure 3 is exactly the difference between repairing after ReLU and repairing before it (Figure 2). Applying ReLU first leaves $A$ and $B$ together at zero; the arrows take them to their different FP outputs.
 
-**Figure 5 — hR→φ(zqR)=y.** Account for Figure 4's remaining balance using the repair-before-clipping route already shown in Figure 2. Clipping first leaves A/B together at zero. The arrows reconcile this with their distinct FP targets, (0,0.235) and (0,0.07). The linear repair was exact; activation obstructed it.
+This ledger has only two terms because $W_1$ was chosen so that $U=0$. Part II drops that assumption.
 
-### Incomplete linear repair: reconcile the rest of the balance
+# Part II — a layer with fewer outputs than inputs: the repair is incomplete
 
-Incomplete map repair can leave a further gap from $\phi(z_qR)$ to FP—the activated effect of U:
+## 5. Switch to a layer with fewer outputs than inputs
+
+Square layers whose quantized weights stay invertible are common, for example the attention projections in a transformer. But many layers have fewer outputs than inputs. A convolution maps a patch to output channels: for a $3\times3$ convolution with 64 input and 64 output channels, each output location reads $64\cdot3\cdot3=576$ input values and produces 64. In row-vector form that is a $576\times64$ map, which flattens 512 input directions even at full precision. An MLP down-projection similarly maps a wide hidden layer back to the model width.
+
+From here to the end of the main text we use a small layer of the same kind, with three inputs and two outputs:
 
 $$
-c_U=y-\phi(z_qR)=\phi(z_qR+xU)-\phi(z_qR).
+W_2=\begin{bmatrix}1&0.25\\0.75&1\\0.25&0.8\end{bmatrix},\qquad
+W_{2,q}=\begin{bmatrix}1&0\\1&1\\0&1\end{bmatrix}.
 $$
 
-Thus the balance after R has two parts:
+Again 2-bit quantization rounds to $\{-1,0,1\}$, and $W$ and $W_q$ now mean these two matrices. Both have rank 2, the maximum possible; the singular values of $W_q$ are $\sqrt3$ and $1$, so no direction is close to being lost.
+
+**The repair from Part I now only goes part of the way.** Each map keeps two of the three input dimensions and flattens the third: moving an input along the flattened direction does not change the output. $W_q$ flattens $d=(1,-1,1)$, since $dW_q=0$. $W$ flattens a different direction, because quantization has tilted it; in particular $dW=(0.5,0.05)\ne0$.
+
+**Fibers.** The set of all inputs that a map sends to the same output is called a *fiber* of the map. For a layer with three inputs and two outputs, each fiber is a line parallel to the flattened direction, and the fibers of $W_q$ are the lines parallel to $d$. Every input on one fiber of $W_q$ has the same quantized output, so nothing computed from that output can tell them apart. Because quantization tilted the flattened direction, those inputs lie on *different* fibers of $W$, so their FP outputs differ. That is exactly the part of the error a correction applied to the output cannot fix.
+
+$R$ is still the least-squares solution from Section 2. Let $P$ be the projection onto the input directions $W_q$ keeps. Then (derived in [B.1](#b1-constructing-the-map-repair))
+
+$$
+W_qR=PW,\qquad U=W-W_qR=(I-P)W,\qquad xW=(xW_q)R+xU.
+$$
+
+**$R$ reproduces what $W$ does on the input directions $W_q$ keeps. $U$ is what $W$ does on the direction $W_q$ flattens.** For $W_2$,
+
+$$
+R=\begin{bmatrix}0.8\overline3&0.2\overline3\\0.08\overline3&0.78\overline3\end{bmatrix},\qquad
+U=\tfrac16\begin{bmatrix}1&0.1\\-1&-0.1\\1&0.1\end{bmatrix}.
+$$
+
+$xU$ depends on the original input, so no correction applied to the layer's output can produce it. The ledger uses it to account for the error, not as a step of the repair.
+
+![Two inputs on the same fiber of the quantized map get the same quantized output but different FP outputs](figures/quant_geometry/geometry_rectangular_fibers.png)
+
+**Figure 5 — two inputs the quantized layer cannot tell apart.** 1: in input space, each map flattens one direction; quantization has tilted it. $C=(0.8,-0.2,-0.1)$ and $D=(0.2,0.4,-0.7)$ differ only along $d$ ($C-D=0.6\,d$), so they lie on the same fiber of $W_q$ (gray line). 2: they get the same quantized output. 3: their FP outputs differ. 4: $R$ moves the shared point to the best common position, but it is still one point; the remaining arrows are the different $xU$. There is no activation in this figure.
+
+Any correction that only sees the quantized output of $C$ and $D$ must give both the same answer, but FP gives them different outputs. This is a limit on the information available, not on the repair method. The general condition is in [B.2](#b2-when-the-repair-is-exact), and appendix A gives two more examples.
+
+## 6. The complete ledger
+
+With $U\ne0$, repairing before ReLU no longer reaches FP: in general $y=\phi(z_qR+xU)\ne\phi(z_qR)$. What $R$ leaves uncorrected now has two parts, one for each limitation of the repair:
 
 $$
 y-hR=
-\underbrace{\phi(z_qR)-hR}_{c_{\rm NL}:\ \text{activation obstructed the repair}}
-+\underbrace{y-\phi(z_qR)}_{c_U:\ \text{linear map repair was incomplete}}.
+\underbrace{\phi(z_qR)-hR}_{c_{\rm NL}:\ \text{ReLU acted before the repair}}
++\underbrace{y-\phi(z_qR)}_{c_U:\ \text{the linear repair is incomplete}},
+\qquad c_U=\phi(z_qR+xU)-\phi(z_qR).
 $$
 
-![The residual-deformation balance points from the activated repaired route toward FP](figures/quant_geometry/ledger_geometry_range.png)
+![The residual deformation points from the repaired output toward FP](figures/quant_geometry/ledger_geometry_range.png)
 
-**Figure 6 — φ(zqR)→y.** The repaired route puts A/B together at (0.4,0.12). Their FP targets differ, requiring balances (−0.2,−0.12) and (+0.2,+0.20).
+**Figure 6 — $\phi(z_qR)\to y$.** Two copies of the grid and circle, one shifted along $d$ to pass through $C$ and one to pass through $D$. Shifting along $d$ moves each input along its fiber of $W_q$, so it does not change the quantized output. Left: both copies give the same repaired output. Middle: their FP targets differ (orange for $C$, purple for $D$). Right (zoomed): $C$ and $D$ start from the same point and need opposite corrections, $c_U=(0.15,0)$ and $(-0.15,0)$.
 
-The account closes:
+The full ledger follows one path,
 
 $$
+h\ \longrightarrow\ hR\ \longrightarrow\ \phi(z_qR)\ \longrightarrow\ y,
+\qquad
 \boxed{c_{\rm total}=c_R+c_{\rm NL}+c_U.}
 $$
 
-**$c_R$ is the available repair; $c_{\rm NL}$ and $c_U$ explain its outstanding balance.** The ledger records these contributions against the total owed, following
+The terms add up to $y-h$ by construction: each intermediate point is added in one term and subtracted in the next. What carries meaning is the choice of intermediate points. Each one is the best correction possible with more information: first $h$, then $z_q$, then $x$. A different path, or a different $R$ where $R$ is not unique, would split the same total differently ([B.4](#b4-the-split-depends-on-the-choice-of-r)). We always use this path and the $R$ constructed in B.1.
 
-$$
-h\ \longrightarrow\ hR\ \longrightarrow\ \phi(z_qR)\ \longrightarrow\ y.
-$$
+## 7. The terms can cancel
 
-Only the first arrow uses h and R alone; the two explanatory comparisons use zq and the FP target, respectively. Bias and implementation signs are handled in [Technical Details](#b3-float-bias-and-the-implementation-sign-convention).
+The terms are vectors, so a later term can undo an earlier one. Their lengths do not add up to the length of the total correction.
 
-## 4. Repair contributions can cancel
+![C and D share every step up to the residual, then diverge: for C the three terms nearly cancel, for D they reinforce](figures/quant_geometry/ledger_geometry_cancellation.png)
 
-Contributions are vectors: a repair motion can be undone by a later balance. Their norms are therefore not additive percentages of the total correction needed.
+**Figure 7 — the full ledger for $C$ and $D$.** $C$ and $D$ have the same $h=(0.6,0)$, so they have the same $c_R=(-0.1,0.14)$ and $c_{\rm NL}=(-0.025,-0.14)$: $R$ moves the point off the axis, and the activation-order error moves it back. Only $c_U$ differs. For $C$, the three terms have lengths $0.17$, $0.14$ and $0.15$, but the total is only $(0.025,0)$. For $D$, the horizontal parts of all three terms point the same way, and the total is $(-0.275,0)$.
 
-![A forward repair path moves down, returns, and then reaches FP](figures/quant_geometry/ledger_geometry_cancellation.png)
+To compare the terms over a dataset, use their inner products ([B.5](#b5-interaction-between-terms-the-gram-identity)), not just their lengths.
 
-**Figure 7 — a repair can be partly undone.** R moves down, the activation-order balance returns, and the residual-deformation balance reaches FP. Here $c_{\rm total}=c_U$. The Gram identity is in [Technical Details](#b5-signed-interaction-and-the-gram-identity).
+## 8. From one layer to a network
 
-## 5. From one layer to a network: incoming and local balances
-
-In a network, the arriving input a can already differ from the reference a_fp. Compare the actual Q output $h_q=\phi(aW_q)$ with same-input FP $g=\phi(aW)$, then reference FP $y_{\rm ref}=\phi(a_{\rm fp}W)$. This separates what the layer changed from what arrived upstream.
-
-They reconcile the outstanding output balance:
+In a network, the input $a$ reaching a layer may already differ from its FP value $a_{\rm fp}$. Compare three outputs: the quantized output $h_q=\phi(aW_q)$, the FP layer's output on the same input, $g=\phi(aW)$, and the FP network's output, $y_{\rm ref}=\phi(a_{\rm fp}W)$. This separates the error this layer adds from the error it received:
 
 $$
 y_{\rm ref}-h_q=
@@ -193,142 +217,120 @@ y_{\rm ref}-h_q=
 \underbrace{y_{\rm ref}-g}_{c_{\rm incoming}}.
 $$
 
-Section 3 reconciles the local balance on the arriving input. The incoming balance measures where the earlier displacement lands under this FP map.
+$c_{\rm local}$ is the Section 6 ledger applied to the input the layer actually receives: $c_{\rm local}=c_R(a)+c_{\rm NL}(a)+c_U(a)$. $c_{\rm incoming}$ is the earlier error after passing through this layer's FP map.
 
-![Incoming input displacement, local output balance, incoming output balance and the oracle reset](figures/quant_geometry/repair_network_balance.png)
+**The oracle** adds $y_{\rm ref}-h_q$ to a layer's output, so the next layer receives its FP input. Applying it after every layer isolates the error each layer creates on its own. Applying it only after a later layer removes all error accumulated up to that point; that tells you about a particular layer only if it was the only source of error in between.
 
-**Figure 8 — incoming versus newly created discrepancy.** Right: local hq→g, then incoming g→reference FP. The oracle resets the whole balance directly.
+![Incoming input error, local error, incoming error at the output, and the oracle correction](figures/quant_geometry/repair_network_balance.png)
 
-### The oracle resets the outstanding balance
+**Figure 8 — error added by this layer versus error it received, on $W_2$.** The FP input is $a_{\rm fp}=D$; the input actually received is $a=(0.4,0.4,-0.4)$. Right: the local part goes from $h_q=(0.8,0)$ to $g=(0.6,0.18)$, and the incoming part from $g$ to $y_{\rm ref}=(0.325,0)$. The oracle applies the whole correction $y_{\rm ref}-h_q$ in one step.
 
-Adding $y_{\rm ref}-h_q$ resets the balance before the next layer. Immediate resets give each following layer the FP input, isolating local creation. A delayed reset restores the accumulated discrepancy at its output; it isolates a named source only if that source was the sole perturbation.
+[Implementation](quant_geometry_implementation.md) and [next experiments](quant_geometry_progress.md) are documented separately.
 
-Recording each operation's change and updating the balance lets us follow alternative network trajectories.
+## 9. Comparison: fitting a correction to calibration data
 
-[Implementation](quant_geometry_implementation.md), [verification](quant_geometry_verification.md), and [next experiments](quant_geometry_progress.md) are documented separately.
+The ledger chooses $R$ from the weights alone. The usual alternative fits a correction to the errors observed on a calibration set $\mathcal D$. With the same full-precision linear correction and the same layer $W_2$, two such fits are
 
-## A. Understanding the remainder U
+$$
+R_{\rm pre,data}\in\operatorname{argmin}_R\sum_{x\in\mathcal D}\|xW_qR-xW\|^2,\qquad
+R_{\rm post,data}\in\operatorname{argmin}_R\sum_{x\in\mathcal D}\|\phi(xW_q)R-\phi(xW)\|^2.
+$$
 
-These examples explain how a residual can arise once the main repair/activation/ledger argument is established. Neither a scalar neuron nor rank collapse is the generic premise of the decomposition.
+| Correction | Objective | What it uses |
+|---|---|---|
+| $R$ (map repair) | $\lVert W-W_qR\rVert_F^2$ | the weights alone; every input direction weighted equally |
+| $R_{\rm pre,data}$ | preactivation error on $\mathcal D$ | the input distribution and its correlations |
+| $R_{\rm post,data}$ | output error on $\mathcal D$ | the outputs after ReLU, and whatever correlations survive ReLU |
 
-### A.1 A single measurement: gain, direction, and fibers
+All three are least-squares fits, but they answer different questions. The data fits find the matrix that best reproduces FP outputs on this data. They do not say which part of the quantization error that matrix removes, and their loss cannot tell you.
 
-For a view of individual measurement directions, take one neuron with no bias or activation. In this picture, write the input point x and weight vector w as **column vectors** in two dimensions. The neuron returns the scalar $x^\top w$. Its weight arrow tells us both **which input direction it measures** and **the gain of that measurement**.
+![Four columns compare Q, map repair, preactivation data fit, and output data fit, before and after ReLU](figures/quant_geometry/geometry_repair_vs_reconstruction.png)
 
-Quantization changes w into wq. Generally, the arrow changes length and turns: the neuron now measures a different input direction with a different gain. Assume $w_q\ne0$. Suppose we keep only its quantized scalar output and try to repair it by multiplying by a scalar r. Can that put every input's response back where it should be?
+**Figure 9 — three objectives give three different matrices.** The columns show Q with no correction, then the three fitted matrices. The top row applies each matrix to the quantized preactivation; the bottom row applies it to the quantized output after ReLU. The calibration inputs are correlated with the flattened direction $d$ (construction in [B.6](#b6-calibration-set-for-figure-9)), so on this data the FP output along $d$ can be partly predicted from the quantized output. The grid and circle show a subset of the inputs; the fits use the full calibration set.
 
-Changing r stretches or reverses the arrow wq along its own line. It cannot turn it toward w. Consequently, exact repair for every input is possible precisely when w lies on that line:
+On this example:
+
+| | Map error $\lVert W-W_qR\rVert_F^2$ | Calibration output MSE |
+|---|---|---|
+| Q, no correction | 0.228 | 0.0236 |
+| $R$ (map repair) | **0.084** | 0.0257 |
+| $R_{\rm pre,data}$ | 0.332 | 0.0140 |
+| $R_{\rm post,data}$ | 0.361 | **0.0101** |
+
+The output fit has the lowest calibration error, yet its corrected map $W_qR_{\rm post,data}$ is **further from $W$ than $W_q$ is**. It does not undo the quantization error. It finds a different matrix, which uses correlations in this calibration set to predict the FP output, including the part along the direction $W_q$ flattens. That prediction only holds as long as those correlations do. The map repair is the reverse: it is the closest to $W$, but on this calibration set it does slightly worse than no correction, both before ReLU (MSE $0.0497$ versus $0.0483$) and after it. The calibration inputs are concentrated along the flattened direction, and the map objective gives that direction no extra weight.
+
+This is a single constructed example. It shows that the two kinds of fit can disagree sharply, not how often they do in trained networks. The ledger makes that question measurable: for any correction, compute which of $c_R$, $c_{\rm NL}$ and $c_U$ it reduces.
+
+## A. More examples of the residual $U$
+
+These examples use matrices other than $W_2$, for the reasons given in each.
+
+### A.1 Zoomed in: one output, two inputs
+
+To draw fibers as lines in the plane, look at **a single output of a layer with two inputs**. This is the smallest case of the effect in Section 5, not a new example. In this subsection only, $x$ and the weight vector $w$ are **column vectors**. The output is the number $x^\top w$. The direction of $w$ is the input direction the output responds to, and its length is the gain.
+
+Quantization changes $w$ into $w_q$, which in general has a different length and direction. Suppose we keep only the quantized output and try to repair it by multiplying by a number $r$. Changing $r$ stretches or flips $w_q$ along its own line, but cannot rotate it toward $w$. So an exact repair for every input exists only when $w$ lies on that line:
 
 $$
 r\,x^\top w_q=x^\top w\quad\text{for every }x
 \quad\Longleftrightarrow\quad w=r w_q.
 $$
 
-A parallel weight change can be repaired by changing gain. A change of direction leaves a part of the FP measurement outside the direction that this scalar correction can access.
+![Weight-vector projection and rotated fibers; two inputs have equal quantized outputs but different FP outputs](figures/quant_geometry/geometry_scalar_fibers.png)
 
-![Weight-vector projection and rotated scalar measurement fibers; two inputs have equal Q readings but different FP readings](figures/quant_geometry/geometry_scalar_fibers.png)
+**Figure A1 — the weight rotates without losing rank.** Left: $w$ and $w_q$ differ in length and direction. The blue arrow $rw_q$ is the projection of $w$ onto the line through $w_q$, which is as far as rescaling can go. The purple arrow $u$ is the rest. Right: each line is a fiber, a set of inputs with the same output. $A$ and $B$ lie on the same quantized fiber (gray) but on different FP fibers (dashed orange).
 
-**Figure A1 — a direction changes without a rank collapse.** On the left, the FP arrow w and the quantized arrow wq differ in length and direction. The green arrow rwq is the projection of w onto the line of wq: scalar gain can reach it. The purple arrow u supplies the remaining change of direction. On the right, each line is a **fiber**: all inputs on it give the same scalar response. A and B lie on one blue Q fiber but on different orange FP fibers. Any correction receiving just their shared Q reading must return the same answer for both, although FP requires different answers.
-
-Here the bounded 2-bit quantizer changes $w=(1,0.55)^\top$ to $w_q=(1,1)^\top$. Both measurements have rank 1, as a nonzero scalar measurement in 2D must. **Quantization has rotated the fibers, not reduced the rank.** The distinction FP wants is now along a direction Q ignores.
-
-#### Recover the accessible part; name the part that remains
-
-The closest arrow to w on the line of wq is its orthogonal projection. Call its scalar gain r and the remaining arrow u:
+2-bit quantization changes $w=(1,0.55)^\top$ to $w_q=(1,1)^\top$. Both have rank 1, as any nonzero single-output map must. **Quantization has rotated the fibers without reducing rank.** The best gain and the remainder are
 
 $$
 r=\frac{w_q^\top w}{w_q^\top w_q},\qquad
-w=r w_q+u,\qquad w_q^\top u=0.
-$$
-
-This is the least-squares repair of the weight direction: r minimizes $\|w-tw_q\|^2$ over scalar gains t. For each input, the same split becomes
-
-$$
+w=r w_q+u,\qquad w_q^\top u=0,\qquad
 x^\top w=r\,(x^\top w_q)+x^\top u.
 $$
 
-The first term can be generated from the Q scalar alone. The second measures the input component along u, perpendicular to the direction Q measures. That is exactly the distinction lost when we keep only $x^\top w_q$.
+The first term can be computed from the quantized output alone. The second depends on the component of the input along $u$, which is perpendicular to $w_q$ and so invisible to the quantized output. Here each fiber of the quantized output, $F_q(c)=\{x:x^\top w_q=c\}$, is a line perpendicular to $w_q$. Multiplying by $r$ changes the value assigned to each fiber but not which inputs share one. If $u\ne0$, moving an input along $u$ keeps it on the same quantized fiber but changes its FP output, since $u^\top w_q=0$ while $u^\top w=\|u\|^2>0$.
 
-A fiber has the formal definition $F_q(c)=\{x:x^\top w_q=c\}$. In the plane, it is a line perpendicular to wq. Multiplying the scalar by r changes the values assigned to these fibers; it cannot change which inputs share a fiber. If $u\ne0$, moving along u stays on a Q fiber but changes the FP reading, because $u^\top w_q=0$ while $u^\top w=\|u\|^2>0$. This proves that no function of the Q scalar alone can recover every FP response in this case.
+For $A=(0.8,-0.2)^\top$ and $B=(-0.2,0.8)^\top$: $A^\top w_q=B^\top w_q=0.6$, while $A^\top w=0.69$ and $B^\top w=0.24$. The projection gives $r=0.775$ and $u=(0.225,-0.225)^\top$. The repair outputs $0.465$ for both, so $A$ still needs $+0.225$ and $B$ needs $-0.225$.
 
-For the highlighted points, $A=(0.8,-0.2)^\top$ and $B=(-0.2,0.8)^\top$:
+### A.2 Atypical: quantization that reduces rank
 
-$$
-A^\top w_q=B^\top w_q=0.6,\qquad
-A^\top w=0.69,\qquad B^\top w=0.24.
-$$
-
-The projection gives $r=0.775$ and $u=(0.225,-0.225)^\top$. The output-side repair therefore gives 0.465 for **both** points. To reach FP, A still needs +0.225 while B needs −0.225. Their shared Q scalar contains no way to choose between those two input-dependent additions.
-
-### A.2 Rectangular measurements and CNN patch channels
-
-A layer can deliberately make fewer measurements than it receives coordinates. For a $3\times3$ convolution with 64 input and 64 output channels, one output location measures a patch with $64\cdot3\cdot3=576$ coordinates and returns 64 values. In row-vector form that patch map is $576\times64$, not an invertible square matrix. Its dimensions follow directly from the [standard convolution weight shape](https://docs.pytorch.org/docs/stable/generated/torch.nn.Conv2d.html).
-
-An output-side correction that mixes channels **at that location** sees only those 64 measurements. It can mix and rescale them, but cannot choose independently among patches that produce the same values. A correction that also mixes neighbouring output locations has a larger repair channel; here we are examining the patch-to-channel map.
-
-Importantly, a rectangular map can have its **maximum possible rank** and still ignore input directions. If $m<n$, even rank m leaves $n-m$ directions unmeasured. The FP and Q maps can both retain rank m while their measured input subspaces turn relative to each other. Then Q ignores an input distinction that FP uses—the same phenomenon as the scalar example, with several measurements.
-
-![A 3D input fiber gives identical quantized two-dimensional outputs while full-precision targets differ, with both maps retaining rank 2](figures/quant_geometry/geometry_rectangular_fibers.png)
-
-**Figure A2 — architectural dimension reduction without a rank drop.** Both maps take three input coordinates to two measurements, and both have rank 2. In the left panel, the blue plane and orange mesh show Q and FP measured directions. Their orientations differ. Moving along the black Q fiber leaves both Q measurements unchanged. A and B sit on that fiber. On the right, they share the Q point and the R-repaired point, but need different FP targets. The green arrow is the available output-side repair; the orange and purple arrows supply the different xU contributions. Everything is before activation.
-
-The example uses bounded 2-bit quantization:
+Sections 5–7 showed information loss without any loss of rank. Less commonly, quantization can also reduce a map's rank, for example when rounding sets a whole row to zero. To show this case we construct a separate matrix $W_3$:
 
 $$
-W=\begin{bmatrix}1&0.25\\0.75&1\\0.25&0.8\end{bmatrix},\qquad
-W_q=\begin{bmatrix}1&0\\1&1\\0&1\end{bmatrix}.
-$$
-
-The Q fiber direction is $d=(1,-1,1)$, with $dW_q=(0,0)$ but $dW=(0.5,0.05)$. For A=(0.7,0,0.5) and B=(−0.1,0.8,−0.3),
-
-$$
-AW_q=BW_q=(0.7,0.5),\qquad
-AW=(0.825,0.575),\qquad BW=(0.425,0.535).
-$$
-
-R moves their shared representation to (0.625,0.555). The missing xU contributions are (+0.2,+0.02) and (−0.2,−0.02). Wq's two nonzero singular values are $\sqrt3$ and 1; no small direction was truncated. The dimension reduction is built into the **3→2 architecture**, while quantization changes which input distinctions its two measurements retain.
-
-### A.3 Exact rank collapse: a particularly visible limiting case
-
-A rotated scalar measurement already showed nonrecoverability without a rank change. An outright rank drop makes the missing distinction particularly easy to see: an entire patch flattens into a line.
-
-![A collapsed patch, an output-side repair of its line, and input-dependent displacements restoring width](figures/quant_geometry/geometry_loss.png)
-
-**Figure A3 — a limiting case with genuine dimension collapse.** Panel 1 shows distinct FP targets for A and B. Quantization merges them in panel 2. R moves their shared output to the best common target in panel 3, but cannot separate them or restore the patch's width. Panel 4 supplies different xU displacements from the original inputs and recovers the FP patch. The dashed line is the R-repaired state; the arrows are xU. All panels are before activation.
-
-The matrices are
-
-$$
-W=\begin{bmatrix}1&0.3\\0.25&0.25\end{bmatrix},\qquad
-W_q=\begin{bmatrix}1&0\\0&0\end{bmatrix},\qquad
+W_3=\begin{bmatrix}1&0.3\\0.25&0.25\end{bmatrix},\qquad
+W_{3,q}=\begin{bmatrix}1&0\\0&0\end{bmatrix},\qquad
 R=\begin{bmatrix}1&0.3\\0&1\end{bmatrix},\qquad
 U=\begin{bmatrix}0&0\\0.25&0.25\end{bmatrix}.
 $$
 
-A=(0.4,−0.8) and B=(0.4,0.8) share the Q point (0.4,0). Their FP targets are (0.2,−0.08) and (0.6,0.32). R moves both to the midpoint (0.4,0.12); xU then contributes (−0.2,−0.2) for A and (+0.2,+0.2) for B. The second input direction has disappeared outright. This illustrates an extreme case, rather than an assumption that quantization usually reduces rank. Figure 6 measures the effect after activation.
+![A collapsed square, a repair of the line it collapses to, and input-dependent corrections restoring its width](figures/quant_geometry/geometry_loss.png)
+
+**Figure A2 — quantization collapses a dimension.** Panel 1: the FP outputs of $A=(0.4,-0.8)$ and $B=(0.4,0.8)$ differ. Panel 2: quantization sends both to $(0.4,0)$, and the whole square collapses onto a line. Panel 3: $R$ moves their shared output to the best common point $(0.4,0.12)$, but cannot separate them or restore the square's width. Panel 4: adding their different $xU$, $(-0.2,-0.2)$ for $A$ and $(0.2,0.2)$ for $B$, recovers the FP output. There is no activation in this figure.
+
+Here the second input direction is lost entirely. The mechanism is the same as in Section 5, where a direction is lost only because the layer has fewer outputs than inputs.
 
 ## B. Technical details
 
-### B.1 Constructing the chosen repair
+### B.1 Constructing the map repair
 
-The map objective is $\min_R\|W-W_qR\|_F^2$. To select the optimizer closest to the unchanged output map, write $R=I_m+C$ and choose the minimum-norm least-squares increment:
+Among all minimizers, we choose the one closest to leaving the output unchanged. Write $R=I_m+E$ and take the minimum-norm least-squares solution:
 
 $$
-\min_C\|W-W_q-W_qC\|_F^2,\qquad C=W_q^\dagger(W-W_q).
+\min_E\|W-W_q-W_qE\|_F^2,\qquad E=W_q^\dagger(W-W_q).
 $$
 
-For the exact Moore–Penrose inverse,
+With the exact Moore–Penrose pseudoinverse,
 
 $$
 R=I_m+W_q^\dagger(W-W_q),\qquad
 U=(I_n-W_qW_q^\dagger)(W-W_q).
 $$
 
-Here R is m×m and U is n×m. With $P=W_qW_q^\dagger$, $W_qR=PW$ and $U=(I_n-P)W$. P projects onto the input-direction span measured by Wq, and $W_q^\top U=0$. This orthogonality is between measurement directions/maps; it does not make their output displacements perpendicular for every sample.
+$R$ is $m\times m$ and $U$ is $n\times m$. With $P=W_qW_q^\dagger$, $W_qR=PW$ and $U=(I_n-P)W$. $P$ projects onto the input directions $W_q$ keeps, and $W_q^\top U=0$. This orthogonality is between the maps; it does not make the output corrections perpendicular for each input.
 
-The optimum repaired map WqR is unique. R's extension away from the represented output subspace need not be unique; the identity-centered construction fixes that extension. The geometric objective is also proportional to the mean squared preactivation error for inputs uniform on the unit sphere.
+The best repaired map $W_qR$ is unique, but $R$ itself is not unique when $W_q$ has rank below $m$; choosing the solution closest to the identity fixes it. The map objective also equals, up to a constant factor, the mean squared preactivation error for inputs drawn uniformly from the unit sphere.
 
-For the preactivation data objective, let $\Delta_R=W-W_qR$ and $N=|\mathcal D|$. Its input weighting is explicit in
+For the preactivation data objective, let $\Delta_R=W-W_qR$ and $N=|\mathcal D|$:
 
 $$
 S_{\mathcal D}=\frac1N\sum_{x\in\mathcal D}x^\top x,\qquad
@@ -336,13 +338,13 @@ S_{\mathcal D}=\frac1N\sum_{x\in\mathcal D}x^\top x,\qquad
 =\operatorname{tr}(\Delta_R^\top S_{\mathcal D}\Delta_R).
 $$
 
-S is the uncentered input second moment. With $S_{\mathcal D}=cI_n$ for c>0, this objective is a positive multiple of the map objective and has the same minimizers. A different S changes the cost of map discrepancy in different directions; it need not change the minimizer when an exact repair is available. The post-ReLU objective generally cannot be written using this same linear-map weighting because both its representation and target have been clipped.
+$S_{\mathcal D}$ is the uncentered second moment of the inputs. If $S_{\mathcal D}=cI_n$ with $c>0$, this objective is a multiple of the map objective and has the same minimizers. Any other $S_{\mathcal D}$ weights map error more in some directions than others; this need not change the minimizer when an exact repair exists. The objective after ReLU generally cannot be written this way, because both the corrected output and the target have passed through ReLU.
 
-### B.2 Rank conditions and the fiber criterion for exact repair
+### B.2 When the repair is exact
 
-Section 2 establishes exact repair for square invertible Wq. A square inverse is sufficient, but not necessary. A rectangular map with $m\ge n$ can also preserve all n input directions. If Wq has full row rank, $W_qW_q^\dagger=I_n$, so x can still be recovered from xWq and U=0. The dividing line is **which input directions are retained**, rather than whether the matrix happens to be square.
+An invertible square $W_q$ is enough for an exact repair, but not necessary. If $W_q$ has full row rank (possible only when $m\ge n$), $W_qW_q^\dagger=I_n$, so $x$ can still be recovered from $xW_q$ and $U=0$. What matters is **which input directions $W_q$ keeps**, not whether it is square.
 
-For arbitrary inputs and the exact pseudoinverse, the general criterion is
+For arbitrary inputs and the exact pseudoinverse,
 
 $$
 U=0\quad\Longleftrightarrow\quad
@@ -351,64 +353,46 @@ U=0\quad\Longleftrightarrow\quad
 \ker(W_q^\top)\subseteq\ker(W^\top).
 $$
 
-The first equivalence follows from $U=(I_n-P)W$; the second takes orthogonal complements. Inputs A and B share a Q preactivation exactly when their difference d satisfies dWq=0. The kernel condition says every such difference must also satisfy dW=0: FP must be constant on each Q fiber.
+The first equivalence follows from $U=(I_n-P)W$; the second by taking orthogonal complements. Two inputs have the same quantized preactivation exactly when their difference $d$ satisfies $dW_q=0$. The kernel condition says every such $d$ must also satisfy $dW=0$: the FP output must be constant on each quantized fiber.
 
-Conversely, if U has a nonzero column u, take $d=u^\top$. Orthogonality gives dWq=0, while dW=dU has the positive entry $u^\top u$ in that column. Thus A and A+d share the same Q representation but have different FP preactivations. No function of the Q representation alone can recover both for an unrestricted input domain. Figures A1–A3 show this criterion with named points; it makes no assumption that quantization has reduced rank. An activated target or a restricted data domain poses a different recovery question.
+Conversely, if $U$ has a nonzero column $u$, take $d=u^\top$. Then $dW_q=0$, while $dW=dU$ has the positive entry $u^\top u$ in that column. So $x$ and $x+d$ have the same quantized preactivation but different FP preactivations, and no function of the quantized output alone can recover both when inputs are unrestricted. Figures 5, A1 and A2 show this with specific points; it does not require quantization to reduce rank. Recovering the output after ReLU, or recovering it only on a restricted set of inputs, is a different question.
 
-### B.3 Float bias and the implementation sign convention
+### B.3 Bias and the sign convention in the code
 
-With shared float bias $b\in\mathbb R^{1\times m}$, use the affine repair
-
-$$
-A(v)=vR+b-bR,\qquad z_q=xW_q+b,\qquad
-A(z_q)+xU=xW+b.
-$$
-
-The forward path becomes $h\to A(h)\to\phi(A(z_q))\to y$, with
+With a float bias $b\in\mathbb R^{1\times m}$ shared by both layers, use the affine repair
 
 $$
-c_R=A(h)-h,\qquad c_{\rm NL}=\phi(A(z_q))-A(h),\qquad
-c_U=y-\phi(A(z_q)).
+T(v)=vR+b-bR,\qquad z_q=xW_q+b,\qquad
+T(z_q)+xU=xW+b.
 $$
 
-These contributions sum to y−h. With identity activation, the activation-order contribution is zero even with bias.
+The path becomes $h\to T(h)\to\phi(T(z_q))\to y$, with
 
-The implementation stores the opposite, **Q minus FP**, convention. Its fields map to the forward account as follows:
+$$
+c_R=T(h)-h,\qquad c_{\rm NL}=\phi(T(z_q))-T(h),\qquad
+c_U=y-\phi(T(z_q)).
+$$
 
-| Stored field | Forward correction / balance contribution |
+These sum to $y-h$. Without an activation, $c_{\rm NL}$ is zero even with bias.
+
+The code stores the opposite sign, **Q minus FP**:
+
+| Stored field | Ledger term |
 |---|---|
 | `uncomp` | $-c_R$ |
 | `nonlinear` | $-c_{\rm NL}$ |
 | `range` (historical name) | $-c_U$ |
 | `total` | $-c_{\rm total}$ |
 
-This sign convention is unchanged. The oracle adds FP minus Q and therefore uses the forward total correction directly. The stored network `propagated` and local vectors likewise have the opposite signs to Section 5's incoming and local balances.
+The oracle adds FP minus Q, so it uses $c_{\rm total}$ directly. The stored network vectors `propagated` and local likewise have the opposite sign to $c_{\rm incoming}$ and $c_{\rm local}$ in Section 8.
 
-For the network comparison with bias, use $h_q=\phi(aW_q+b)$, $g=\phi(aW+b)$ and $y_{\rm ref}=\phi(a_{\rm fp}W+b)$. The same incoming/local identity follows by adding and subtracting g.
+With bias, the network comparison uses $h_q=\phi(aW_q+b)$, $g=\phi(aW+b)$ and $y_{\rm ref}=\phi(a_{\rm fp}W+b)$. The same local/incoming split follows by adding and subtracting $g$.
 
-### B.4 Correction extensions and attribution
+### B.4 The split depends on the choice of R
 
-The repair account is relative to the chosen R and rank policy. With the exact pseudoinverse, replacing R by R+N with $W_qN=0$ preserves the linear reconstruction with the same U. But the bias-preserving affine transport becomes $A'(v)=A(v)+(v-b)N$. Activation can move $h-b$ outside the row space of Wq, so the applied motion $c_R$ and activation-order balance $c_{\rm NL}$ can change while their sum and the total remain unchanged. We fix the identity-centered R above whenever comparing contribution values.
+The ledger depends on the chosen $R$ and path. With the exact pseudoinverse, replacing $R$ by $R+K$ with $W_qK=0$ gives the same repaired map and the same $U$. But the affine repair becomes $T'(v)=T(v)+(v-b)K$. ReLU can move $h-b$ outside the row space of $W_q$, so $c_R$ and $c_{\rm NL}$ can change while their sum and the total stay the same. For example, with $W=W_q=\left[\begin{smallmatrix}1&-1\\0&0\end{smallmatrix}\right]$ and $x=(1,0)$, the identity-centered $R=I$ makes every term zero. Taking $K$ with every entry $0.5$ gives the same repaired map, but with $R'=I+K$, $hR'=(1.5,0.5)$: now $c_R=(0.5,0.5)$ and $c_{\rm NL}=(-0.5,-0.5)$, which cancel. We always use the identity-centered $R$ from B.1 when comparing terms.
 
-### B.5 Signed interaction and the Gram identity
-
-Figure 7 uses the zero-bias map
-$W=\left[\begin{smallmatrix}1&-0.35\\0.28&0.22\end{smallmatrix}\right]$,
-$W_q=\operatorname{diag}(1,0)$, and x=(1,2). Its repair path is
-
-$$
-h=(1,0)\ \longrightarrow\ hR=(1,-0.35)\ \longrightarrow\
-\phi(z_qR)=(1,0)\ \longrightarrow\ y=(1.56,0.09).
-$$
-
-Consequently,
-
-$$
-c_R=(0,-0.35),\qquad c_{\rm NL}=(0,+0.35),\qquad
-c_U=c_{\rm total}=(0.56,0.09).
-$$
-
-The first two contributions cancel at this sample. For this same map, writing $x=(s,t)$ and $s_+=\max(s,0)$ gives $c_R=(0,-0.35s_+)$ and $c_{\rm NL}=(0,+0.35|s|)$; they cancel for s≥0 but not s<0.
+### B.5 Interaction between terms: the Gram identity
 
 For a dataset $\{x_k\}_{k=1}^N$, define
 
@@ -417,52 +401,44 @@ G_{ij}=\frac1N\sum_k\langle c_i(x_k),c_j(x_k)\rangle,
 \qquad i,j\in\{\mathrm{R},\mathrm{NL},\mathrm{U}\}.
 $$
 
-The inner product measures alignment: same-direction contributions reinforce, opposing contributions cancel, and perpendicular contributions have zero cross term. Thus
+Terms pointing the same way add, opposite ones cancel, and perpendicular ones do not interact:
 
 $$
 \frac1N\sum_k\|c_{\rm total}(x_k)\|^2
 =\sum_iG_{ii}+2\sum_{i<j}G_{ij}.
 $$
 
-G is an uncentered second-moment Gram matrix. The diagonal entries are individual mean squared magnitudes; the off-diagonal entries record interaction. Reversing all stored implementation signs leaves every inner product, and hence this Gram matrix, unchanged.
+For $C$ in Figure 7, the diagonal terms are $\|c_R\|^2=0.0296$, $\|c_{\rm NL}\|^2=0.0202$ and $\|c_U\|^2=0.0225$, summing to $0.0723$. The cross terms $\langle c_R,c_{\rm NL}\rangle=-0.0171$, $\langle c_R,c_U\rangle=-0.015$ and $\langle c_{\rm NL},c_U\rangle=-0.0038$ contribute $-0.0717$, leaving $\|c_{\rm total}\|^2=0.000625$. For $D$, the two cross terms involving $c_U$ change sign and the total is $0.275^2$.
 
-### B.6 Matrices for the main geometric examples
+The diagonal of $G$ holds the mean squared length of each term, and the off-diagonal entries their interactions. Flipping the sign of every term, as the code's convention does, leaves $G$ unchanged.
 
-Figures 1, 2, 4, and 5 follow one map and the same A/B inputs:
+### B.6 Calibration set for Figure 9
 
-$$
-W=\begin{bmatrix}1&-0.4\\0.65&0.85\end{bmatrix},\qquad
-W_q=\begin{bmatrix}1&0\\1&1\end{bmatrix},\qquad
-R=\begin{bmatrix}1&-0.4\\-0.35&1.25\end{bmatrix},\qquad U=0.
-$$
-
-Bounded symmetric 2-bit quantization rounds the coefficients to {−1,0,1}.
-
-A=(−0.8,−0.1) and B=(−0.6,−0.2) become Q preactivations (−0.9,−0.1) and (−0.8,−0.2). Correcting first gives the positive FP responses shown in Figure 5; Q's ReLU instead merges both at zero. This particular collision proves no decoder of h alone can recover both FP targets. A nonzero activation-order balance in general establishes only noncommutation of the declared repair and activation.
-
-Figure 3 uses the full-rank rectangular W/Wq from Figure A2. To specify the correlated calibration geometry, let p be the sampled 2D grid/circle coordinates, $d=(1,-1,1)$, and $\alpha=(0.7,-0.7)^\top$. Construct
+Figure 9 uses $W_2$. Let $p$ be the 2D grid and circle points, $d=(1,-1,1)$ and $\alpha=(0.7,-0.7)^\top$. The inputs are
 
 $$
 x(p,t)=pW_q^\dagger+(p\alpha+t)d,\qquad
 t\in\{-0.15,0,0.15\}.
 $$
 
-Since dWq=0, the Q preactivation is p on all three sheets. The central sheet t=0 is displayed; all three supply calibration samples. Named A/B are excluded on every sheet. The input sample matrix has rank 3, and both W/Wq have rank 2 with no nonzero Q singular value truncated. The correlation term is predictable from p before ReLU, giving $R_{\rm pre,data}=R_{\rm map}+\alpha(dW)$ for this balanced construction. Clipping p changes that predictor, so the post-ReLU fit solves a different regression.
+Since $dW_q=0$, the quantized preactivation is $p$ on all three planes. The figure shows the plane $t=0$; all three are used for fitting. The input matrix has rank $3$. Before ReLU, the offset along $d$ can be predicted from $p$, which gives $R_{\rm pre,data}=R+\alpha(dW)$ for this construction. ReLU changes $p$, so the fit after ReLU solves a different regression.
 
-The exact three matrices, all three objective values, input second moment, generator, displayed inputs and fit residuals are recorded in [the comparison fixture](figures/quant_geometry/repair_vs_reconstruction_fixture.json).
+The exact matrices, objective values, input second moment, inputs and fit residuals are in [the comparison fixture](figures/quant_geometry/repair_vs_reconstruction_fixture.json). The paths and terms in the ledger figures are in [the ledger fixture](figures/quant_geometry/repair_ledger_figure_fixture.json).
 
 <details>
-<summary>Numerical note: an exact missing direction versus a deliberately truncated one</summary>
+<summary>Numerical note: a direction that is truly lost versus one dropped by truncation</summary>
 
-The conceptual repair problem above uses the exact Moore–Penrose inverse. If the implementation truncates small singular values, write its inverse $W_{q,\tau}^\dagger$ and use that inverse in the formulas for R and U. The resulting R need not minimize the untruncated repair objective. Reconstruction still holds, but
+Everything above uses the exact Moore–Penrose pseudoinverse. If the code drops small singular values, write the truncated pseudoinverse as $W_{q,\tau}^\dagger$ and use it in the formulas for $R$ and $U$. The resulting $R$ need not minimize the original objective. The decomposition $W=W_qR+U$ still holds, with
 
 $$
 P_\tau=W_qW_{q,\tau}^\dagger,\qquad
 U_\tau=(I_n-P_\tau)(W-W_q).
 $$
 
-Only retained-space orthogonality is guaranteed; this remainder need not equal $(I_n-P_\tau)W$. A tiny **nonzero** direction remains present in xWq, and recovering it may require a large gain. A nonzero truncated remainder measures what this correction policy leaves unrecovered; it does not alone establish lost information. Figure A3 has an exact zero direction. A restricted input distribution or activation can also hide the output effect of an exact missing direction.
+$U_\tau$ is only guaranteed to be orthogonal to the directions that were kept, and need not equal $(I_n-P_\tau)W$. A direction with a tiny **nonzero** singular value is still present in $xW_q$; recovering it may just need a large gain. So a nonzero $U_\tau$ shows what this choice of cutoff leaves uncorrected, not that information was lost. Figure A2 has a direction that is truly lost. A restricted set of inputs, or ReLU, can also hide the effect of a lost direction on the output.
 
-See the [implementation README](quant_geometry_implementation.md#quantizer-and-decomposition) for cutoff settings and the [verification report](quant_geometry_verification.md#mathematical-audit-numerical-rank-and-attribution-conventions) for the numerical counterexample.
+For example, take $W=I$ and $W_q=\operatorname{diag}(1,10^{-8})$. A cutoff of $10^{-6}$ gives $R=I$ and $U=\operatorname{diag}(0,1-10^{-8})$. Keeping the small singular value instead gives $R=\operatorname{diag}(1,10^8)$ and $U=0$. The second input coordinate is weakly represented, not lost. In the truncated case $W_q^\top U=\operatorname{diag}(0,10^{-8}(1-10^{-8}))\ne0$.
+
+See the [implementation README](quant_geometry_implementation.md#quantizer-and-decomposition) for cutoff settings.
 
 </details>

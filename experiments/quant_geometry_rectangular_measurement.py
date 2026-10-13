@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from aleph.qgeom.geometry_story import build_rectangular_measurement_story
+from experiments import quant_geometry_style as style
 
 
 def main():
@@ -19,51 +20,57 @@ def main():
     center = inputs.mean(axis=0)
     direction = story.fiber_direction.numpy()
     q, fp, repaired = inputs @ Wq, inputs @ W, inputs @ Wq @ R
-    fig = plt.figure(figsize=(12, 6.8))
-    fig.subplots_adjust(left=.05, right=.98, bottom=.15, top=.83, wspace=.22)
-    fig.suptitle("Three input directions, two measurements: rank stays 2", fontsize=18, y=.97)
-    ax = fig.add_subplot(1, 2, 1, projection="3d")
-    grid = np.linspace(-.5, .5, 5)
-    a, b = np.meshgrid(grid, grid)
-    plane = a[..., None]*Wq[:, 0] + b[..., None]*Wq[:, 1]
-    ax.plot_surface(plane[:, :, 0], plane[:, :, 1], plane[:, :, 2], alpha=.2, color="#2563eb")
-    ax.plot_wireframe(plane[:, :, 0], plane[:, :, 1], plane[:, :, 2], color="#2563eb", alpha=.35, lw=.7)
-    fp_plane = a[..., None]*W[:, 0] + b[..., None]*W[:, 1]
-    ax.plot_wireframe(fp_plane[:, :, 0], fp_plane[:, :, 1], fp_plane[:, :, 2], color="#d97706", alpha=.6, lw=.8)
-    fiber = center + np.linspace(-.6, .6, 30)[:, None]*direction
-    ax.plot(*fiber.T, color="#0f172a", lw=2)
-    for point, label, color in zip(inputs, ["A", "B"], ["#d97706", "#9333ea"]):
-        ax.scatter(*point, color=color, s=65, depthshade=False)
-        ax.text(*(point + np.array([.04, .04, .05])), label, color=color, fontsize=13)
-    ax.scatter(*center, color="#059669", s=35, depthshade=False)
-    ax.set(title="1. Measured input planes turn; rank stays 2",
-           xlabel="Input 1", ylabel="Input 2", zlabel="Input 3",
-           xlim=(-.8, 1.), ylim=(-.8, 1.), zlim=(-.8, 1.))
-    ax.view_init(elev=20, azim=35)
-    ax.set_box_aspect((1, 1, 1))
-    fig.supxlabel("Left: blue = Q measured directions; orange mesh = FP directions; black fiber = constant Q output", fontsize=11, y=.03)
+    # A 3->2 map flattens exactly one input direction. W_q flattens d; W flattens a tilted direction n.
+    n = np.linalg.svd(W.T)[2][-1]
+    n = n / n[0]
+    np.testing.assert_allclose(n @ W, 0, atol=1e-12)
+    np.testing.assert_allclose(direction @ Wq, 0, atol=1e-12)
+    from matplotlib.lines import Line2D
+    fig = plt.figure(figsize=(17, 5.4), constrained_layout=True)
+    fig.suptitle("Inputs that differ only along the direction $W_q$ flattens", fontsize=17)
 
-    ax = fig.add_subplot(1, 2, 2)
-    ax.set(title="2. Shared Q output; distinct FP targets", xlabel="Output coordinate 1", ylabel="Output coordinate 2",
-           xlim=(.3, .95), ylim=(.38, .75), aspect="equal")
-    ax.grid(alpha=.15)
-    ax.scatter(*q[0], color="#2563eb", marker="s", s=80, zorder=5)
-    ax.annotate("Q: A = B = (0.7, 0.5)", q[0], xytext=(-15, -30), textcoords="offset points", fontsize=11)
-    ax.scatter(*repaired[0], color="#059669", s=65, zorder=5)
-    ax.annotate("R-repaired: A = B", repaired[0], xytext=(-65, 35), textcoords="offset points", color="#059669", fontsize=11)
-    ax.annotate("", xy=repaired[0], xytext=q[0], arrowprops={"arrowstyle": "->", "lw": 2, "color": "#059669"})
-    for point, label, color, offset in zip(fp, ["A", "B"], ["#d97706", "#9333ea"], [(-20, 15), (-45, -25)]):
-        ax.scatter(*point, color=color, s=70, zorder=5)
-        ax.annotate(f"FP {label}", point, xytext=offset, textcoords="offset points", color=color, fontsize=12)
-        ax.annotate("", xy=point, xytext=repaired[0], arrowprops={"arrowstyle": "->", "lw": 2, "color": color})
-    ax.text(.02, .95, "Green arrow: output-side repair R\nOrange/purple arrows: input-dependent xU", transform=ax.transAxes,
-            va="top", fontsize=11)
+    ax = fig.add_subplot(1, 4, 1, projection="3d")
+    t = np.linspace(-.55, .55, 2)[:, None]
+    ax.plot(*(center + t*direction).T, color=style.Q, lw=3)
+    ax.plot(*(center + .5*t*n).T, "--", color=style.FP, lw=3)
+    for point, name in zip(inputs, "CD"):
+        ax.scatter(*point, color=style.INPUT, marker=style.MARKER[name], s=70, depthshade=False)
+        ax.text(*(point + .06), name, fontsize=13)
+    ax.set(title="1. Input space: C and D lie on one fiber of $W_q$", xlabel="Input 1", ylabel="Input 2",
+           zlabel="Input 3", xticks=[], yticks=[], zticks=[])
+    ax.view_init(elev=18, azim=35)
+    ax.set_box_aspect((1, 1, 1))
+
+    bounds = ((.25, .7), (-.35, .05))
+    panels = [("2. Quantized: the same point", [("q", q, None)], []),
+              ("3. FP: different points", [("fp", fp, True)], []),
+              ("4. $R$ moves the shared point;\n$xU$ supplies the difference", [("fp", fp, True), ("repaired", repaired, None)],
+               [(q[0], repaired[0], "R", None)] + [(repaired[0], fp[j], "U", style.IDENTITY[c]) for j, c in enumerate("CD")])]
+    for i, (title, states, arrows) in enumerate(panels):
+        ax = fig.add_subplot(1, 4, i + 2)
+        if i == 2:
+            style.named(ax, q, "CD", "q", offsets=[(8, 8), (8, -18)])
+        for kind, state, by_identity in states:
+            style.named(ax, state, "CD", kind, by_identity=bool(by_identity),
+                        offsets=[(-4, 10), (-4, 10)] if kind == "fp" else [(8, 8), (-30, -22)])
+        for start, end, term, color in arrows:
+            style.arrow(ax, start, end, term, color=color)
+        style.axes_style(ax, bounds, title)
+        ax.grid(alpha=.15)
+    style.legend(fig, [Line2D([], [], color=style.Q, lw=3, label="fiber of $W_q$ through C and D (direction $d$)"),
+                       Line2D([], [], color=style.FP, lw=3, linestyle="--", label="a fiber of $W$ (the direction $W$ flattens)"),
+                       style.state_handle("q", "quantized"), style.state_handle("fp", "FP target for C"),
+                       Line2D([], [], color=style.IDENTITY["D"], lw=0, marker="s", markerfacecolor="white",
+                              markeredgewidth=2, label="FP target for D"),
+                       style.state_handle("repaired", "after $R$"),
+                       Line2D([], [], color=style.IDENTITY["C"], lw=2.4, label="$xU$ for C"),
+                       Line2D([], [], color=style.IDENTITY["D"], lw=2.4, label="$xU$ for D")], ncol=4)
     output = Path("docs/figures/quant_geometry")
     output.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output / "geometry_rectangular_fibers.png", dpi=150, facecolor="white")
+    fig.savefig(output / "geometry_rectangular_fibers.png", dpi=150, facecolor="white", bbox_inches="tight")
     plt.close(fig)
     payload = {"bits": 2, "W": W.tolist(), "Wq": Wq.tolist(), "R": R.tolist(), "U": U.tolist(),
-               "inputs": inputs.tolist(), "fiber_direction": direction.tolist(),
+               "inputs": inputs.tolist(), "fiber_direction": direction.tolist(), "fp_flattened_direction": n.tolist(),
                "fp_rank": int(np.linalg.matrix_rank(W)), "q_rank": int(np.linalg.matrix_rank(Wq)),
                "q_singular_values": np.linalg.svd(Wq, compute_uv=False).tolist(),
                "q_outputs": q.tolist(), "fp_outputs": fp.tolist(), "repaired_outputs": repaired.tolist()}

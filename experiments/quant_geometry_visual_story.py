@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from aleph.qgeom.geometry_story import build_geometry_stories
+from experiments import quant_geometry_style as style
 
 
 def main():
@@ -21,63 +22,54 @@ def main():
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     stories = build_geometry_stories()
+    # Panel kinds follow experiments/quant_geometry_style.py: what state each shape is in.
+    panels = {
+        "deformation": [
+            (0, "input", False, "1. Input $x$"),
+            (1, "fp", False, "2. FP target: $xW$"),
+            (2, "q", True, "3. Quantized: $xW_q$"),
+            (3, "repaired", True, "4. Corrected: $(xW_q)R$, equal to the target"),
+        ],
+        "relu": [
+            (0, "q", False, "1. Quantized preactivation $z_q=xW_q$"),
+            (2, "fp", False, "2. FP target: $y=\\phi(z_qR)$"),
+            (3, "q", True, "3. ReLU first: $h=\\phi(z_q)$\nA and B merge at zero"),
+            (4, "repaired", True, "4. Then correct: $hR$\nA and B stay merged"),
+        ],
+        "loss": [
+            (1, "fp", False, "1. FP target: $xW$"),
+            (2, "q", True, "2. Quantized: $xW_q$\nthe square collapses to a line"),
+            (3, "repaired", True, "3. Corrected: $(xW_q)R$\nstill a line"),
+            (3, "repaired", True, "4. Adding $xU$ (purple) reaches the target"),
+        ],
+    }
     for story in stories:
-        fig, axes = plt.subplots(2, 2, figsize=(11, 10), constrained_layout=True)
+        fp_index = {"deformation": 1, "relu": 2, "loss": 1}[story.key]
+        fp_state = story.states[fp_index].numpy()
+        fig, axes = plt.subplots(2, 2, figsize=(11, 10.6), constrained_layout=True)
         fig.suptitle(story.title, fontsize=19)
-        if story.key == "deformation":
-            fig.supxlabel("Two routes: x → xW (FP target), or x → xWq → (xWq)R (corrected)", fontsize=13)
-        elif story.key == "loss":
-            fig.supxlabel("Panel 4: dashed = R-repaired line; arrows = xU; blue = restored FP patch", fontsize=13)
         all_points = np.concatenate([s.numpy() for s in story.states])
         radius = np.abs(all_points).max() * 1.18
-        for panel, (ax, index) in enumerate(zip(axes.flat, story.storyboard_indices), start=1):
+        bounds = ((-radius, radius), (-radius, radius))
+        names = "AB"
+        for ax, (index, kind, overlay, title) in zip(axes.flat, panels[story.key]):
             state = story.states[index].numpy()
-            reference = story.reference_indices[index]
-            if story.key == "loss":
-                # Show the repair itself, not arrows promising FP recovery
-                # from a representation that has already merged A and B.
-                reference = 3 if index == 4 else None
-            targets = story.states[reference].numpy() if reference is not None else None
-            for geometry, color, alpha, style in [(targets, "#64748b", .55, "--"), (state, "#2563eb", .55, "-")]:
-                if geometry is None:
-                    continue
-                offset = 0
-                for j, length in enumerate(story.path_lengths):
-                    line = geometry[offset:offset+length]
-                    ax.plot(line[:, 0], line[:, 1], style, color=color,
-                            linewidth=2.8 if j == len(story.path_lengths)-1 else .8, alpha=alpha)
-                    offset += length
-            coincident = np.linalg.norm(state[-2]-state[-1]) < 1e-10
-            for j, (point, color, marker) in enumerate(zip(state[-2:], ["#d97706", "#9333ea"], ["o", "s"])):
-                ax.scatter(*point, c=color, marker=marker, s=80, zorder=6)
-                if not coincident:
-                    ax.annotate("AB"[j], point, xytext=(9, 10 if j == 0 else -17), textcoords="offset points", color=color, fontsize=13)
-                if targets is not None and np.linalg.norm(point-targets[-2+j]) > 1e-6:
-                    start, end = (targets[-2+j], point) if story.key == "loss" else (point, targets[-2+j])
-                    ax.annotate("", xy=end, xytext=start,
-                                arrowprops={"arrowstyle": "->", "color": color, "lw": 1.4})
-            if coincident:
-                ax.annotate("A = B", state[-2], xytext=(9, -17), textcoords="offset points", color="#0f172a", fontsize=13)
-            ax.axhline(0, color="#cbd5e1", linewidth=.8)
-            ax.axvline(0, color="#cbd5e1", linewidth=.8)
-            title = story.labels[index]
-            if story.key == "deformation":
-                title = f"{panel}. {title}\n" + (
-                    "The shape before either map",
-                    "Target computed directly from the input",
-                    "Use Wq instead of W on the same input",
-                    "Same coordinates as panel 2; a different route",
-                )[panel - 1]
-            elif story.key == "loss":
-                title = (
-                    "1. FP target: xW\nWhere the separated inputs should land",
-                    "2. Quantized map: xWq\nA and B share one output point",
-                    "3. Repair through R: (xWq)R\nBest common target; still one point",
-                    "4. Restore xU: (xWq)R + xU\nInput-dependent displacements separate A and B",
-                )[panel - 1]
-            ax.set(xlim=(-radius, radius), ylim=(-radius, radius), aspect="equal",
-                   title=title, xlabel="Coordinate 1", ylabel="Coordinate 2")
-        fig.savefig(args.output_dir / f"geometry_{story.key}.png", dpi=140, facecolor="white")
+            if overlay:
+                style.shape(ax, fp_state, story.path_lengths, "fp")
+            style.shape(ax, state, story.path_lengths, kind)
+            style.named(ax, state[-2:], names, kind)
+            if story.key == "loss" and title.startswith("4."):
+                for j in range(2):
+                    style.arrow(ax, state[-2+j], fp_state[-2+j], "U")
+            style.axes_style(ax, bounds, title,
+                             xlabel="Input coordinate 1" if kind == "input" else "Coordinate 1",
+                             ylabel="Input coordinate 2" if kind == "input" else "Coordinate 2")
+        kinds = ["input", "fp", "q", "repaired"] if story.key == "deformation" else ["fp", "q", "repaired"]
+        handles = [style.state_handle(k) for k in kinds]
+        if story.key == "loss":
+            handles.append(style.term_handle("U", "$xU$"))
+        style.legend(fig, handles)
+        fig.savefig(args.output_dir / f"geometry_{story.key}.png", dpi=140, facecolor="white", bbox_inches="tight")
         plt.close(fig)
     payload = {"stories": [s.payload() for s in stories]}
     serialized = json.dumps(payload, separators=(",", ":"), allow_nan=False)

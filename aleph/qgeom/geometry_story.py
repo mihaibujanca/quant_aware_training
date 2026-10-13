@@ -44,10 +44,39 @@ def build_rectangular_measurement_story() -> RectangularMeasurementStory:
     W = torch.tensor([[1., .25], [.75, 1.], [.25, .8]], dtype=torch.float64)
     Wq = WeightQuantizer(2)(W).quantized
     direction = torch.tensor([1., -1., 1.], dtype=W.dtype)
-    center = torch.tensor([.3, .4, .1], dtype=W.dtype)
+    # C and D share the Q preactivation (0.6, -0.3); they sit on either side of the measured plane.
+    center = torch.tensor([.6, -.3], dtype=W.dtype) @ torch.linalg.pinv(Wq)
     return RectangularMeasurementStory(MapDecomposition.from_weights(W, Wq),
-                                       torch.stack((center + .4*direction, center - .4*direction)),
+                                       torch.stack((center + .3*direction, center - .3*direction)),
                                        direction)
+
+
+@dataclass(frozen=True)
+class TypicalLedgerStory:
+    """The typical 3→2 map through ReLU: one shared Q route, two FP targets.
+
+    The grid/circle is parameterized by its Q preactivation p; each sheet
+    x = p Wq^+ + t d has the same Q route and a different FP target.
+    """
+
+    decomposition: MapDecomposition
+    preactivations: torch.Tensor
+    path_lengths: tuple[int, ...]
+    offsets: tuple[float, float]
+    sheets: tuple[ErrorLedger, ErrorLedger]
+    pair: torch.Tensor
+    ledger: ErrorLedger
+
+
+def build_typical_ledger_story() -> TypicalLedgerStory:
+    rectangular = build_rectangular_measurement_story()
+    decomposition, d = rectangular.decomposition, rectangular.fiber_direction
+    p, lengths = _geometry([[.6, -.3], [.6, -.3]])
+    offsets = (.3, -.3)
+    lift = p @ torch.linalg.pinv(decomposition.quantized_weight)
+    sheets = tuple(ErrorLedger.compute(lift + t*d, decomposition) for t in offsets)
+    return TypicalLedgerStory(decomposition, p, lengths, offsets, sheets, rectangular.points,
+                              ErrorLedger.compute(rectangular.points, decomposition))
 
 
 @dataclass(frozen=True)
@@ -93,9 +122,9 @@ def build_geometry_stories() -> tuple[GeometryStory, ...]:
     repair_weights = [[1., -.4], [.65, .85]]
     repair_probes = [[-.8, -.1], [-.6, -.2]]
     specifications = [
-        ("deformation", "Two different maps; the quantized route can be corrected", repair_weights, repair_probes),
-        ("relu", "ReLU merges points the corrected map would keep distinct", repair_weights, repair_probes),
-        ("loss", "A flattened shape has lost a direction", [[1., .3], [.25, .25]], [[.4, -.8], [.4, .8]]),
+        ("deformation", "The quantized layer deforms the output; a linear map undoes it", repair_weights, repair_probes),
+        ("relu", "ReLU first merges points that correcting first keeps apart", repair_weights, repair_probes),
+        ("loss", "Quantization collapses a dimension", [[1., .3], [.25, .25]], [[.4, -.8], [.4, .8]]),
     ]
     for key, title, weights, probes in specifications:
         x, lengths = _geometry(probes)

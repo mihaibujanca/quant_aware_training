@@ -3,6 +3,7 @@ import torch
 
 from aleph.qgeom.geometry_story import (
     build_geometry_stories, build_scalar_measurement_story, build_rectangular_measurement_story,
+    build_typical_ledger_story,
 )
 
 
@@ -60,12 +61,31 @@ def test_rectangular_full_rank_measurements_change_fibers_without_rank_drop():
                                torch.tensor([3**.5, 1.], dtype=W.dtype))
     torch.testing.assert_close(story.fiber_direction @ Wq, torch.zeros(2, dtype=W.dtype))
     torch.testing.assert_close(story.fiber_direction @ W, torch.tensor([.5, .05], dtype=W.dtype))
-    torch.testing.assert_close(story.points @ Wq, torch.tensor([[.7, .5], [.7, .5]], dtype=W.dtype))
-    torch.testing.assert_close(story.points @ W, torch.tensor([[.825, .575], [.425, .535]], dtype=W.dtype))
+    torch.testing.assert_close(story.points, torch.tensor([[.8, -.2, -.1], [.2, .4, -.7]], dtype=W.dtype))
+    torch.testing.assert_close(story.points @ Wq, torch.tensor([[.6, -.3], [.6, -.3]], dtype=W.dtype))
+    torch.testing.assert_close(story.points @ W, torch.tensor([[.625, -.08], [.325, -.11]], dtype=W.dtype))
     torch.testing.assert_close(story.points @ Wq @ story.decomposition.R,
-                               torch.tensor([[.625, .555], [.625, .555]], dtype=W.dtype))
+                               torch.tensor([[.475, -.095], [.475, -.095]], dtype=W.dtype))
     torch.testing.assert_close(story.points @ story.decomposition.U,
-                               torch.tensor([[.2, .02], [-.2, -.02]], dtype=W.dtype))
+                               torch.tensor([[.15, .015], [-.15, -.015]], dtype=W.dtype))
+
+
+def test_typical_map_shows_every_ledger_term_and_cancellation():
+    story = build_typical_ledger_story()
+    L = story.ledger
+    c_R = L.transported_post - L.quant_post
+    c_NL = L.recoverable_post - L.transported_post
+    c_U = L.fp_post - L.recoverable_post
+    torch.testing.assert_close(c_R, torch.tensor([[-.1, .14]]*2, dtype=c_R.dtype))
+    torch.testing.assert_close(c_NL, torch.tensor([[-.025, -.14]]*2, dtype=c_R.dtype))
+    torch.testing.assert_close(c_U, torch.tensor([[.15, 0.], [-.15, 0.]], dtype=c_R.dtype))
+    # C nearly cancels; D reinforces.
+    torch.testing.assert_close(c_R+c_NL+c_U, torch.tensor([[.025, 0.], [-.275, 0.]], dtype=c_R.dtype))
+    # Both sheets share the Q route; only the FP target moves along the fiber.
+    C, D = story.sheets
+    torch.testing.assert_close(C.quant_post, D.quant_post)
+    torch.testing.assert_close(C.recoverable_post, D.recoverable_post)
+    assert (C.fp_post - D.fp_post).abs().max() > .1
 
 
 def test_relu_discards_distinction_preserved_by_linear_map():

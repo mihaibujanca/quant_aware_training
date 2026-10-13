@@ -11,53 +11,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from aleph.qgeom import ErrorLedger, MapDecomposition, WeightQuantizer
-from aleph.qgeom.geometry_story import build_geometry_stories
-
-
-def shape(ax, state, lengths, *, color="#2563eb", dashed=False):
-    points = state.numpy()
-    offset = 0
-    for j, length in enumerate(lengths):
-        path = points[offset:offset + length]
-        ax.plot(path[:, 0], path[:, 1], "--" if dashed else "-", color=color,
-                lw=2.5 if j == len(lengths) - 1 else .7, alpha=.65)
-        offset += length
-
-
-def probes(ax, state):
-    points = state[-2:].numpy()
-    collision = np.linalg.norm(points[0] - points[1]) < 1e-10
-    for i, (p, color, marker) in enumerate(zip(points, ["#d97706", "#9333ea"], ["o", "s"])):
-        ax.scatter(*p, color=color, marker=marker, s=65, zorder=5)
-        if not collision:
-            ax.annotate("AB"[i], p, xytext=(8, 10 if i == 0 else -18),
-                        textcoords="offset points", color=color, fontsize=12)
-    if collision:
-        ax.annotate("A = B", points[0], xytext=(8, -18), textcoords="offset points", fontsize=12)
-
-
-def axes_style(ax, bounds, title):
-    ax.axhline(0, color="#cbd5e1", lw=.7)
-    ax.axvline(0, color="#cbd5e1", lw=.7)
-    ax.set(xlim=bounds[0], ylim=bounds[1], aspect="equal",
-           title=title, xlabel="Output coordinate 1", ylabel="Output coordinate 2")
-
-
-def pair(ax, source, destination, lengths, bounds, title, *, curved=False):
-    """Draw actual forward displacements, retaining each input's identity."""
-    shape(ax, source, lengths, color="#64748b", dashed=True)
-    shape(ax, destination, lengths)
-    for j in range(len(source)-2, len(source)):
-        color = ["#d97706", "#9333ea"][j-len(source)+2]
-        ax.scatter(*source[j].numpy(), facecolors="none", edgecolors=color,
-                   marker=["o", "s"][j-len(source)+2], s=65, zorder=5)
-        if torch.linalg.vector_norm(destination[j]-source[j]) > 1e-10:
-            ax.annotate("", xy=destination[j].numpy(), xytext=source[j].numpy(),
-                        arrowprops={"arrowstyle": "->", "color": color, "lw": 2.5,
-                                    "connectionstyle": f"arc3,rad={.2 if j == len(source)-2 else -.2}" if curved else "arc3,rad=0"})
-    probes(ax, destination)
-    axes_style(ax, bounds, title)
+from aleph.qgeom.geometry_story import build_geometry_stories, build_typical_ledger_story
+from experiments import quant_geometry_style as style
 
 
 def main():
@@ -65,7 +20,8 @@ def main():
     output.mkdir(parents=True, exist_ok=True)
     stories = build_geometry_stories()
     fixture = {}
-    for story in stories:
+    typical = build_typical_ledger_story()
+    for story in stories[:2]:
         L = story.ledger
         h, transported, repaired, y = L.quant_post, L.transported_post, L.recoverable_post, L.fp_post
         c_R, c_NL, c_U = transported-h, repaired-transported, y-repaired
@@ -86,125 +42,188 @@ def main():
     # Independent coordinates verify the signs promised in the captions.
     torch.testing.assert_close(-stories[1].ledger.nonlinear[-2:],
                                torch.tensor([[0., .235], [0., .07]], dtype=torch.float64))
-    torch.testing.assert_close(-stories[2].ledger.range[-2:],
-                               torch.tensor([[-.2, -.12], [.2, .2]], dtype=torch.float64))
+    L = typical.ledger
+    path = torch.stack((L.quant_post, L.transported_post, L.recoverable_post, L.fp_post))
+    c_R, c_NL, c_U = path[1]-path[0], path[2]-path[1], path[3]-path[2]
+    torch.testing.assert_close(c_R, torch.tensor([[-.1, .14]]*2, dtype=torch.float64))
+    torch.testing.assert_close(c_NL, torch.tensor([[-.025, -.14]]*2, dtype=torch.float64))
+    torch.testing.assert_close(c_U, torch.tensor([[.15, 0.], [-.15, 0.]], dtype=torch.float64))
+    torch.testing.assert_close(c_R+c_NL+c_U, -L.total)
+    fixture["typical"] = {"W": typical.decomposition.weight.tolist(),
+                          "Wq": typical.decomposition.quantized_weight.tolist(),
+                          "R": typical.decomposition.R.tolist(), "U": typical.decomposition.U.tolist(),
+                          "inputs_CD": typical.pair.tolist(),
+                          "path_CD": {"h": path[0].tolist(), "hR": path[1].tolist(),
+                                      "phi_zqR": path[2].tolist(), "y": path[3].tolist()},
+                          "corrections_CD": {"total": (path[3]-path[0]).tolist(), "R": c_R.tolist(),
+                                             "NL": c_NL.tolist(), "U": c_U.tolist()}}
 
-    L = stories[0].ledger
-    values = [L.quant_post, L.transported_post, L.fp_post]
-    points = torch.cat(values).numpy()
-    low, high = points.min(axis=0), points.max(axis=0)
-    center, radius = (low+high)/2, max(high-low)*.625
-    bounds = tuple((c-radius, c+radius) for c in center)
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4.8), constrained_layout=True)
-    fig.suptitle("Correction needed → apply R → inspect the outstanding balance", fontsize=16)
-    for ax, source, destination, title in zip(axes,
-        [L.quant_post, L.quant_post, L.transported_post],
-        [L.fp_post, L.transported_post, L.fp_post],
-        [r"Need $c_{\rm total}=y-h$", r"Apply $c_R=hR-h$", r"Still owed: $y-hR$"]):
-        pair(ax, source, destination, stories[0].path_lengths, bounds, title, curved=True)
-    fig.supxlabel("Arrows go from the dashed starting shape to the blue destination. Filled A/B mark where each motion arrives.", fontsize=10)
-    fig.savefig(output / "ledger_geometry_uncomp.png", dpi=150, facecolor="white")
-    plt.close(fig)
-
-    for key, story, title, source_label, destination_label, vector_label in [
-        ("nonlinear", stories[1], "Exact linear repair: activation leaves a balance after R",
-         r"$hR$: R applied after ReLU", r"$\phi(z_qR)=y$: repair before ReLU", r"$c_{\rm NL}=\phi(z_qR)-hR$"),
-        ("range", stories[2], "Incomplete linear repair: finish the account at FP",
-         r"$\phi(z_qR)$: activated repaired route", r"$y=\phi(z_qR+xU)$: FP target", r"$c_U=y-\phi(z_qR)$")]:
-        L = story.ledger
-        source, destination = (L.transported_post, L.recoverable_post) if key == "nonlinear" else (L.recoverable_post, L.fp_post)
-        points = torch.cat((source, destination)).numpy()
-        low, high = points.min(axis=0), points.max(axis=0)
-        center, radius = (low+high)/2, max(high-low)*.625
-        bounds = tuple((c-radius, c+radius) for c in center)
-        fig, axes = plt.subplots(1, 3, figsize=(14, 4.8), constrained_layout=True)
-        fig.suptitle(title, fontsize=16)
-        for ax, state, label in zip(axes[:2], (source, destination), (source_label, destination_label)):
-            shape(ax, state, story.path_lengths)
-            probes(ax, state)
-            axes_style(ax, bounds, label)
-        pair(axes[2], source, destination, story.path_lengths, bounds,
-             vector_label + "\nstarting state → next state", curved=key == "nonlinear")
-        fig.savefig(output / f"ledger_geometry_{key}.png", dpi=150, facecolor="white")
+    def save(fig, name):
+        fig.savefig(output / name, dpi=150, facecolor="white", bbox_inches="tight")
         plt.close(fig)
 
-    W = torch.tensor([[1., -.35], [.28, .22]], dtype=torch.float64)
-    decomposition = MapDecomposition.from_weights(W, WeightQuantizer(2)(W).quantized)
-    L = ErrorLedger.compute(torch.tensor([[1., 2.]], dtype=W.dtype), decomposition)
-    states = [t[0].numpy() for t in (L.quant_post, L.transported_post, L.recoverable_post, L.fp_post)]
-    expected = torch.tensor([[0., -.35], [0., .35], [.56, .09]], dtype=W.dtype)
-    torch.testing.assert_close(torch.stack([-L.uncomp[0], -L.nonlinear[0], -L.range[0]]), expected)
-    fig, ax = plt.subplots(figsize=(8, 5), constrained_layout=True)
-    ax.set_title(r"Q → FP: $h\rightarrow hR\rightarrow\phi(z_qR)\rightarrow y$", fontsize=14)
-    labels = [r"$h=\phi(z_qR)=(1,0)$", r"$hR=(1,-0.35)$", "", r"$y=(1.56,0.09)$"]
-    for point, label, offset in zip(states, labels, [(-105, 14), (-115, -22), (0, 0), (8, 10)]):
-        ax.scatter(*point, color="#0f172a", s=55, zorder=5)
-        if label:
-            ax.annotate(label, point, xytext=offset, textcoords="offset points", fontsize=12)
-    for i, (name, color, curvature) in enumerate([
-        (r"$c_R=(0,-0.35)$", "#2563eb", -.2),
-        (r"$c_{\rm NL}=(0,+0.35)$", "#d97706", -.2),
-        (r"$c_U=(+0.56,+0.09)$", "#9333ea", 0)]):
-        ax.annotate("", xy=states[i+1], xytext=states[i],
-                    arrowprops={"arrowstyle": "->", "color": color, "lw": 2.5,
-                                "connectionstyle": f"arc3,rad={curvature}"})
-        ax.plot([], [], color=color, lw=2.5, label=name)
-    ax.legend(loc="lower right", fontsize=11)
-    ax.set(xlim=(.65, 1.85), ylim=(-.55, .23), aspect="equal",
-           xlabel="Output coordinate 1", ylabel="Output coordinate 2")
-    ax.grid(alpha=.15)
-    fig.savefig(output / "ledger_geometry_cancellation.png", dpi=150, facecolor="white")
-    plt.close(fig)
-    fixture["cancellation"] = {"input": [1., 2.], "path": [s.tolist() for s in states],
-                                "corrections_R_NL_U": expected.tolist(), "total": (.56, .09)}
+    def n(t):
+        return t.numpy()
 
-    # One layer receiving an upstream-displaced input: actual vectors, not a symbolic flowchart.
-    # This separate propagation fixture is independent of the shared repair story.
-    W = torch.tensor([[1., .65], [-.35, .8]], dtype=torch.float64)
-    Wq = WeightQuantizer(2)(W).quantized
-    a = torch.tensor([1., .5], dtype=W.dtype)
-    a_fp = torch.tensor([.7, .8], dtype=W.dtype)
+    # Figure 3: correction needed, the step R makes, correction still needed (square layer W1).
+    L, lengths = stories[0].ledger, stories[0].path_lengths
+    h, hR, y = n(L.quant_post), n(L.transported_post), n(L.fp_post)
+    bounds = style.bounds_for(h, hR, y, pad=.625)
+    fig, axes = plt.subplots(1, 3, figsize=(14, 5.2), constrained_layout=True)
+    fig.suptitle("Correction needed → apply $R$ → correction still needed", fontsize=16)
+    panels = [(h, "q", None, r"1. Needed: $c_{\rm total}=y-h$"),
+              (hR, "repaired", h, r"2. Apply $R$: $c_R=hR-h$"),
+              (hR, "repaired", None, r"3. Still needed: $y-hR$")]
+    for ax, (state, kind, before, title) in zip(axes, panels):
+        style.shape(ax, y, lengths, "fp")
+        if before is not None:
+            style.shape(ax, before, lengths, "q", alpha=.35)
+        style.shape(ax, state, lengths, kind)
+        style.named(ax, state[-2:], "AB", kind)
+        style.named(ax, y[-2:], "AB", "fp", offsets=[(-18, 6), (-18, -14)])
+        for j in (-2, -1):
+            if np.linalg.norm(y[j]-state[j]) > 1e-9:
+                style.arrow(ax, state[j], y[j], "total", curvature=.25)
+        style.axes_style(ax, bounds, title)
+    style.legend(fig, [style.state_handle("fp"), style.state_handle("q"), style.state_handle("repaired"),
+                       style.term_handle("total", "correction needed (named points)")])
+    save(fig, "ledger_geometry_uncomp.png")
+
+    # Figure 4: for W1 the correction still needed is c_NL: repair before ReLU reaches y.
+    L, lengths = stories[1].ledger, stories[1].path_lengths
+    hR, before_relu, y = n(L.transported_post), n(L.recoverable_post), n(L.fp_post)
+    bounds = style.bounds_for(hR, y, pad=.625)
+    fig, axes = plt.subplots(1, 3, figsize=(14, 5.2), constrained_layout=True)
+    fig.suptitle("The linear repair is exact, but ReLU acts first", fontsize=16)
+    for ax, state, title in [(axes[0], hR, r"1. Correct after ReLU: $hR$"),
+                             (axes[1], before_relu, r"2. Correct before ReLU: $\phi(z_qR)=y$")]:
+        style.shape(ax, y, lengths, "fp")
+        style.shape(ax, state, lengths, "repaired")
+        style.named(ax, state[-2:], "AB", "repaired")
+        style.axes_style(ax, bounds, title)
+    style.shape(axes[2], y, lengths, "fp")
+    style.shape(axes[2], hR, lengths, "repaired")
+    style.named(axes[2], hR[-2:], "AB", "repaired")
+    style.named(axes[2], y[-2:], "AB", "fp", offsets=[(-18, 6), (-18, -14)])
+    for j in (-2, -1):
+        style.arrow(axes[2], hR[j], y[j], "NL", curvature=.25)
+    style.axes_style(axes[2], bounds, r"3. $c_{\rm NL}=\phi(z_qR)-hR$")
+    style.legend(fig, [style.state_handle("fp"), style.state_handle("repaired"),
+                       style.term_handle("NL", r"$c_{\rm NL}$")])
+    save(fig, "ledger_geometry_nonlinear.png")
+
+    # Figure 6: W2, two input planes through C and D share phi(z_qR); their FP targets differ.
+    sheet_C, sheet_D = typical.sheets
+    lengths = typical.path_lengths
+    shared, yC, yD = n(sheet_C.recoverable_post), n(sheet_C.fp_post), n(sheet_D.fp_post)
+    torch.testing.assert_close(sheet_C.recoverable_post, sheet_D.recoverable_post)
+    bounds = style.bounds_for(shared, yC, yD)
+    fig, axes = plt.subplots(1, 3, figsize=(15, 6.4), constrained_layout=True)
+    fig.suptitle("Same corrected output, different FP targets", fontsize=16)
+    style.shape(axes[0], shared, lengths, "repaired")
+    style.named(axes[0], shared[-2:], "CD", "repaired")
+    style.axes_style(axes[0], bounds, r"1. Corrected before ReLU: $\phi(z_qR)$" + "\nthe same for both planes")
+    style.shape(axes[1], yC, lengths, "fp", color=style.IDENTITY["C"])
+    style.shape(axes[1], yD, lengths, "fp", color=style.IDENTITY["D"])
+    style.named(axes[1], np.stack((yC[-2], yD[-1])), "CD", "fp", by_identity=True)
+    style.axes_style(axes[1], bounds, "2. FP targets $y$\nplane through C (orange), through D (purple)")
+    zoom = ((.25, .7), (-.15, .3))
+    style.shape(axes[2], yC, lengths, "fp", color=style.IDENTITY["C"])
+    style.shape(axes[2], yD, lengths, "fp", color=style.IDENTITY["D"])
+    style.shape(axes[2], shared, lengths, "repaired")
+    style.named(axes[2], shared[-2:], "CD", "repaired", offsets=[(8, 8), (-8, -20)])
+    style.named(axes[2], np.stack((yC[-2], yD[-1])), "CD", "fp", offsets=[(4, -20), (-14, -20)], by_identity=True)
+    style.arrow(axes[2], shared[-2], yC[-2], "U", curvature=-.5, color=style.IDENTITY["C"])
+    style.arrow(axes[2], shared[-1], yD[-1], "U", curvature=.5, color=style.IDENTITY["D"])
+    style.axes_style(axes[2], zoom, r"3. $c_U=y-\phi(z_qR)$ (zoomed)" + "\nopposite for C and D")
+    style.legend(fig, [style.state_handle("repaired"), style.state_handle("fp", "FP target for C"),
+                       style.Line2D([], [], color=style.IDENTITY["D"], linestyle="--", lw=2.5, marker="s",
+                                    markerfacecolor="white", markeredgewidth=2, label="FP target for D"),
+                       style.Line2D([], [], color=style.IDENTITY["C"], lw=2.4, label="$c_U$ for C"),
+                       style.Line2D([], [], color=style.IDENTITY["D"], lw=2.4, label="$c_U$ for D")])
+    save(fig, "ledger_geometry_range.png")
+
+    # Figure 7: the full ledger for C and D.
+    h, hR, rep_, ys = n(path[0, 0]), n(path[1, 0]), n(path[2, 0]), n(path[3])
+    fig, ax = plt.subplots(figsize=(9, 6), constrained_layout=True)
+    ax.set_title(r"$C$ and $D$: $h\rightarrow hR\rightarrow\phi(z_qR)\rightarrow y$", fontsize=14)
+    for point, kind, label, offset in [(h, "q", r"$h=(0.6,0)$", (-25, -42)), (hR, "repaired", r"$hR=(0.5,0.14)$", (8, 6)),
+                                       (rep_, "repaired", r"$\phi(z_qR)=(0.475,0)$", (-55, -24)),
+                                       (ys[0], "fp", r"$y_C=(0.625,0)$", (8, -24)), (ys[1], "fpD", r"$y_D=(0.325,0)$", (-30, -24))]:
+        color = style.IDENTITY["D"] if kind == "fpD" else style.STATE[kind][0]
+        kind = "fp" if kind == "fpD" else kind
+        ax.scatter(*point, s=60, zorder=6, linewidths=2, edgecolors=color,
+                   facecolors="white" if kind == "fp" else color)
+        ax.annotate(label, point, xytext=offset, textcoords="offset points", fontsize=11)
+    style.arrow(ax, h, hR, "R", curvature=.2)
+    style.arrow(ax, hR, rep_, "NL", curvature=.2)
+    style.arrow(ax, rep_, ys[0], "U", curvature=-.5, color=style.IDENTITY["C"])
+    style.arrow(ax, rep_, ys[1], "U", curvature=.5, color=style.IDENTITY["D"])
+    style.arrow(ax, h, ys[0], "total", curvature=.6, lw=1.6, color=style.IDENTITY["C"])
+    style.arrow(ax, h, ys[1], "total", curvature=.6, lw=1.6, color=style.IDENTITY["D"])
+    ax.set(xlim=(.25, .7), ylim=(-.12, .3), aspect="equal", xlabel="Output coordinate 1", ylabel="Output coordinate 2")
+    ax.grid(alpha=.15)
+    from matplotlib.lines import Line2D
+    style.legend(fig, [style.state_handle("q"), style.state_handle("repaired"),
+                       style.state_handle("fp", "FP target for C"),
+                       Line2D([], [], color=style.IDENTITY["D"], lw=0, marker="o", markerfacecolor="white",
+                              markeredgewidth=2, label="FP target for D"),
+                       style.term_handle("R", r"$c_R$ (shared)"), style.term_handle("NL", r"$c_{\rm NL}$ (shared)"),
+                       Line2D([], [], color=style.IDENTITY["C"], lw=2.4, label=r"$c_U$ for C"),
+                       Line2D([], [], color=style.IDENTITY["D"], lw=2.4, label=r"$c_U$ for D"),
+                       Line2D([], [], color=style.IDENTITY["C"], lw=1.6, linestyle="--", label=r"$c_{\rm total}$ for C"),
+                       Line2D([], [], color=style.IDENTITY["D"], lw=1.6, linestyle="--", label=r"$c_{\rm total}$ for D")],
+                 ncol=4)
+    save(fig, "ledger_geometry_cancellation.png")
+
+    # Figure 8: one W2 layer receiving an input that already differs from FP; the FP input is D.
+    W, Wq = typical.decomposition.weight, typical.decomposition.quantized_weight
+    a_fp = typical.pair[1]
+    a = torch.tensor([.4, .4, -.4], dtype=W.dtype)
     hq, g, target = torch.relu(a@Wq), torch.relu(a@W), torch.relu(a_fp@W)
     local, incoming, total = g-hq, target-g, target-hq
     torch.testing.assert_close(local+incoming, total)
-    torch.testing.assert_close(local, torch.tensor([-.175, -.45], dtype=W.dtype))
-    torch.testing.assert_close(incoming, torch.tensor([-.405, .045], dtype=W.dtype))
-    fig, axes = plt.subplots(1, 2, figsize=(11, 5.2), constrained_layout=True)
-    fig.suptitle("One layer: what arrived, what changed here, what the oracle resets", fontsize=16)
-    ax = axes[0]
-    for value, label, color, offset in [(a, r"Arriving $a$", "#2563eb", (8, -22)),
-                                       (a_fp, r"Reference $a_{\rm fp}$", "#9333ea", (8, 12))]:
-        ax.scatter(*value.numpy(), color=color, s=65)
-        ax.annotate(label, value.numpy(), xytext=offset, textcoords="offset points", fontsize=12)
-    ax.annotate("", xy=a_fp.numpy(), xytext=a.numpy(), arrowprops={"arrowstyle": "->", "lw": 2.5, "color": "#9333ea"})
-    ax.set(title="The arriving input already differs", xlim=(.5, 1.2), ylim=(.3, 1.), aspect="equal",
-           xlabel="Input coordinate 1", ylabel="Input coordinate 2")
-    ax.grid(alpha=.15)
-    ax = axes[1]
-    for value, label, offset in [(hq, r"Q output $h_q$", (-115, 12)),
-                                 (g, r"Same-input FP $g$", (10, -20)),
-                                 (target, r"Reference FP $y_{\rm ref}$", (-5, 15))]:
-        ax.scatter(*value.numpy(), color="#0f172a", s=65, zorder=5)
-        ax.annotate(label, value.numpy(), xytext=offset, textcoords="offset points", fontsize=11)
-    for source, destination, label, color, style, curvature in [
-        (hq, g, r"Local: $g-h_q$", "#2563eb", "-", 0),
-        (g, target, r"Incoming: $y_{\rm ref}-g$", "#9333ea", "-", 0),
-        (hq, target, r"Oracle reset: $y_{\rm ref}-h_q$", "#0f172a", "--", .3)]:
-        ax.annotate("", xy=destination.numpy(), xytext=source.numpy(),
-                    arrowprops={"arrowstyle": "->", "lw": 2.3, "color": color, "linestyle": style,
+    torch.testing.assert_close(local, torch.tensor([-.2, .18], dtype=W.dtype))
+    torch.testing.assert_close(incoming, torch.tensor([-.275, -.18], dtype=W.dtype))
+    fig = plt.figure(figsize=(11, 5.8), constrained_layout=True)
+    fig.suptitle("One layer in a network: error received, error added, and the oracle", fontsize=16)
+    ax = fig.add_subplot(1, 2, 1, projection="3d")
+    for value, kind, label in [(a, "q", r"received $a$"), (a_fp, "fp", r"FP input $a_{\rm fp}=D$")]:
+        color = style.STATE[kind][0]
+        ax.scatter(*n(value), s=65, depthshade=False, edgecolors=color, linewidths=2,
+                   facecolors="white" if kind == "fp" else color)
+        ax.text(*(n(value) + .05), label, fontsize=11)
+    ax.plot(*n(torch.stack((a, a_fp)).T), color="#0f172a", lw=1.5, linestyle=":")
+    ax.set(title="Input space", xlabel="Input 1", ylabel="Input 2", zlabel="Input 3",
+           xlim=(0, .6), ylim=(.2, .6), zlim=(-.8, -.2))
+    ax.view_init(elev=20, azim=35)
+    ax = fig.add_subplot(1, 2, 2)
+    for value, kind, label, offset in [(hq, "q", r"$h_q=\phi(aW_q)$", (-30, -22)),
+                                       (g, "repaired", r"$g=\phi(aW)$", (10, -4)),
+                                       (target, "fp", r"$y_{\rm ref}=\phi(a_{\rm fp}W)$", (-40, -22))]:
+        color = style.STATE[kind][0] if kind != "repaired" else "#0f172a"
+        ax.scatter(*n(value), s=65, zorder=6, linewidths=2, edgecolors=color,
+                   facecolors="white" if kind == "fp" else color)
+        ax.annotate(label, n(value), xytext=offset, textcoords="offset points", fontsize=11)
+    for source, destination, color, ls, curvature in [(hq, g, "#0f172a", "-", 0), (g, target, "#0f172a", ":", 0),
+                                                       (hq, target, "#0f172a", "--", .3)]:
+        ax.annotate("", xy=n(destination), xytext=n(source),
+                    arrowprops={"arrowstyle": "->", "lw": 2.3, "color": color, "linestyle": ls,
                                 "connectionstyle": f"arc3,rad={curvature}"})
-        ax.plot([], [], color=color, linestyle=style, lw=2.3, label=label)
-    ax.set(title="Reconcile the output balance", xlim=(.25, 1.15), ylim=(.82, 1.72), aspect="equal",
+    ax.set(title="Output space", xlim=(.2, .9), ylim=(-.2, .3), aspect="equal",
            xlabel="Output coordinate 1", ylabel="Output coordinate 2")
-    ax.legend(loc="lower left", fontsize=10)
     ax.grid(alpha=.15)
-    fig.savefig(output / "repair_network_balance.png", dpi=150, facecolor="white")
-    plt.close(fig)
+    style.legend(fig, [style.state_handle("q"), style.state_handle("fp"),
+                       style.Line2D([], [], marker="o", color="#0f172a", lw=0, label="FP layer on the received input, $g$"),
+                       style.Line2D([], [], color="#0f172a", lw=2.3, label=r"local $c_{\rm local}=g-h_q$"),
+                       style.Line2D([], [], color="#0f172a", lw=2.3, linestyle=":", label=r"incoming $c_{\rm incoming}=y_{\rm ref}-g$"),
+                       style.term_handle("total", r"oracle: $y_{\rm ref}-h_q$")], ncol=3)
+    save(fig, "repair_network_balance.png")
     fixture["network"] = {"W": W.tolist(), "Wq": Wq.tolist(), "a": a.tolist(), "a_fp": a_fp.tolist(),
                           "h_q": hq.tolist(), "g": g.tolist(), "y_ref": target.tolist(),
                           "local": local.tolist(), "incoming": incoming.tolist(), "oracle_reset": total.tolist()}
     (output / "repair_ledger_figure_fixture.json").write_text(json.dumps(fixture, indent=2)+"\n")
-    print("Generated four forward repair figures, a network/oracle balance, and exact fixture data")
+    print("Generated forward repair figures, a network/oracle balance, and exact fixture data")
 
 
 if __name__ == "__main__":
