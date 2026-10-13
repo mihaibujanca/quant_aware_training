@@ -68,9 +68,9 @@ def main():
     center, radius = (low+high)/2, max(high-low)*.58
     bounds = tuple((c-radius, c+radius) for c in center)
     fig, axes = plt.subplots(2, 4, figsize=(17, 9.2), constrained_layout=True)
-    fig.suptitle("Three objectives choose three different repairs", fontsize=19)
+    fig.suptitle("Three objectives give three different matrices", fontsize=19)
     labels = ["Q: no correction", r"$R$: map repair",
-              r"$R_{\rm pre,data}$: fit preactivations", r"$R_{\rm post,data}$: fit activations"]
+              r"$R_{\rm pre,data}$: preactivation fit", r"$R_{\rm post,data}$: output fit"]
     for row, states in enumerate(rows):
         for column, state in enumerate(states):
             ax = axes[row, column]

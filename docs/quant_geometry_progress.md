@@ -46,7 +46,7 @@ The research note's single-layer argument is in a state we are happy with. Next 
 2. **Calibration fitting versus map repair (M5, and Section 9 of the note on real data).** Fit $R_{\rm pre,data}$ and $R_{\rm post,data}$ on a calibration split and evaluate on held-out data. For each correction, report map error $\lVert W-W_qR\rVert_F$, held-out output error, and which ledger terms it reduces. The toy example's claim to test: the data fit lowers calibration error while moving $W_qR$ further from $W$, and its gains do not transfer when input correlations change.
 3. **Ordered component propagation (L1)** only after 1–2, before interpreting where each term goes downstream. MNIST or transformers only after these protocols are validated.
 
-Small documentation leftovers: Figure 9's column label says "fit activations" where the note says "output fit"; Section 5 still uses "projection" and singular values without explanation; `quantization_geometry_plan.md` uses old term names (uncompensated/range) and its module-design sections describe code that now exists.
+Small documentation leftover: `quantization_geometry_plan.md` uses old term names (uncompensated/range) and its module-design sections describe code that now exists.
 
 ## Mathematical / protocol decisions
 

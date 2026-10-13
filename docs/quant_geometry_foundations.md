@@ -229,7 +229,7 @@ $c_{\rm local}$ is the Section 6 ledger applied to the input the layer actually 
 
 ## 9. Comparison: fitting a correction to calibration data
 
-The ledger chooses $R$ from the weights alone. The usual alternative fits a correction to the errors observed on a calibration set $\mathcal D$. With the same full-precision linear correction and the same layer $W_2$, two such fits are
+The ledger chooses $R$ from the weights alone. The usual alternative fits a correction to the errors observed on a calibration set $\mathcal D$. With the same full-precision linear correction and the same layer $W_2$, the two natural choices are the **preactivation fit** and the **output fit**:
 
 $$
 R_{\rm pre,data}\in\operatorname{argmin}_R\sum_{x\in\mathcal D}\|xW_qR-xW\|^2,\qquad
@@ -239,12 +239,12 @@ $$
 | Correction | Objective | What it uses |
 |---|---|---|
 | $R$ (map repair) | $\lVert W-W_qR\rVert_F^2$ | the weights alone; every input direction weighted equally |
-| $R_{\rm pre,data}$ | preactivation error on $\mathcal D$ | the input distribution and its correlations |
-| $R_{\rm post,data}$ | output error on $\mathcal D$ | the outputs after ReLU, and whatever correlations survive ReLU |
+| $R_{\rm pre,data}$ (preactivation fit) | preactivation error on $\mathcal D$ | the input distribution and its correlations |
+| $R_{\rm post,data}$ (output fit) | output error on $\mathcal D$ | the outputs after ReLU, and whatever correlations survive ReLU |
 
-All three are least-squares fits, but they answer different questions. The data fits find the matrix that best reproduces FP outputs on this data. They do not say which part of the quantization error that matrix removes, and their loss cannot tell you.
+All three are least-squares fits, but they answer different questions. The two data fits find the matrix that best reproduces FP outputs on this data. They do not say which part of the quantization error that matrix removes, and their loss cannot tell you.
 
-![Four columns compare Q, map repair, preactivation data fit, and output data fit, before and after ReLU](figures/quant_geometry/geometry_repair_vs_reconstruction.png)
+![Four columns compare Q, map repair, preactivation fit, and output fit, before and after ReLU](figures/quant_geometry/geometry_repair_vs_reconstruction.png)
 
 **Figure 9 — three objectives give three different matrices.** The columns show Q with no correction, then the three fitted matrices. The top row applies each matrix to the quantized preactivation; the bottom row applies it to the quantized output after ReLU. The calibration inputs are correlated with the flattened direction $d$ (construction in [B.6](#b6-calibration-set-for-figure-9)), so on this data the FP output along $d$ can be partly predicted from the quantized output. The grid and circle show a subset of the inputs; the fits use the full calibration set.
 
@@ -254,8 +254,8 @@ On this example:
 |---|---|---|
 | Q, no correction | 0.228 | 0.0236 |
 | $R$ (map repair) | **0.084** | 0.0257 |
-| $R_{\rm pre,data}$ | 0.332 | 0.0140 |
-| $R_{\rm post,data}$ | 0.361 | **0.0101** |
+| $R_{\rm pre,data}$ (preactivation fit) | 0.332 | 0.0140 |
+| $R_{\rm post,data}$ (output fit) | 0.361 | **0.0101** |
 
 The output fit has the lowest calibration error, yet its corrected map $W_qR_{\rm post,data}$ is **further from $W$ than $W_q$ is**. It does not undo the quantization error. It finds a different matrix, which uses correlations in this calibration set to predict the FP output, including the part along the direction $W_q$ flattens. That prediction only holds as long as those correlations do. The map repair is the reverse: it is the closest to $W$, but on this calibration set it does slightly worse than no correction, both before ReLU (MSE $0.0497$ versus $0.0483$) and after it. The calibration inputs are concentrated along the flattened direction, and the map objective gives that direction no extra weight.
 
